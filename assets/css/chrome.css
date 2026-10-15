@@ -1,0 +1,213 @@
+/* =====================================================================
+   PHANTOM LOG · chrome.css
+   页头 HUD / 阅读进度 / 跑马灯 / 页脚 / 斜切转场
+   ===================================================================== */
+
+/* ---------- HUD ---------- */
+.hud {
+  position: fixed; inset: 0 0 auto; z-index: 300; height: var(--hud);
+  display: flex; align-items: center; gap: 20px; padding: 0 var(--pad);
+  background: linear-gradient(rgba(10, 10, 11, .9), rgba(10, 10, 11, 0));
+  transition: background-color .2s, box-shadow .2s;
+}
+.hud.solid { background: var(--black); box-shadow: 0 3px 0 var(--red); }
+.brand { display: flex; align-items: center; gap: 10px; flex: none; }
+.b-mark {
+  width: 38px; height: 38px; display: grid; place-items: center; background: var(--red);
+  font: 400 26px/1 'P5Ransom', var(--f-disp); transform: rotate(-7deg);
+  clip-path: polygon(8% 0, 100% 7%, 92% 100%, 0 92%); transition: transform .2s var(--ease);
+}
+.brand:hover .b-mark { transform: rotate(5deg) scale(1.08); }
+.b-t { font: 400 22px/1 var(--f-disp); letter-spacing: .04em; }
+.b-t em { font-style: normal; color: var(--red); margin-left: 4px; }
+.hud-nav { margin-left: auto; display: flex; gap: 2px; }
+.hud-nav a {
+  position: relative; isolation: isolate; display: flex; align-items: baseline; gap: 6px; padding: 8px 14px;
+  font: 400 17px/1 var(--f-disp); letter-spacing: .06em; text-transform: uppercase; transition: color .12s;
+}
+.hud-nav a i { font: 500 11px/1 var(--f-cjk); font-style: normal; letter-spacing: .1em; color: var(--dim); transition: color .12s; }
+.hud-nav a::before {
+  content: ""; position: absolute; inset: 1px -3px; z-index: -1; background: var(--paper);
+  clip-path: polygon(4% 12%, 100% 0, 95% 90%, 0 100%); transform: scaleX(0); transform-origin: left;
+  transition: transform .18s var(--ease);
+}
+.hud-nav a:hover, .hud-nav a:focus-visible, .hud-nav a:hover i, .hud-nav a:focus-visible i { color: var(--black); }
+.hud-nav a:hover::before, .hud-nav a:focus-visible::before { transform: scaleX(1); }
+.hud-nav a[aria-current="page"]::after {
+  content: ""; position: absolute; left: 12px; right: 12px; bottom: -2px; height: 4px;
+  background: var(--red); transform: skewX(-30deg);
+}
+.hud-cal { flex: none; margin-left: 12px; }
+.hud-cal .cal { --cal: 40px; }
+.hud-cal .cal-md { -webkit-text-stroke-width: 2px; text-shadow: 3px 3px 0 var(--red); }
+
+/* ---------- 阅读进度 ---------- */
+.progress {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 301; height: 4px; background: var(--red);
+  transform: scaleX(var(--p, 0)); transform-origin: left; pointer-events: none;
+}
+
+/* ---------- 跑马灯 ---------- */
+.ticker {
+  position: relative; z-index: 2; overflow: hidden; background: var(--red); color: var(--black);
+  border-block: 3px solid var(--black); transform: rotate(-1.4deg) scale(1.03);
+}
+.ticker-in { display: flex; width: max-content; animation: tick 32s linear infinite; }
+.ticker span { padding: 12px 0; font: 400 clamp(22px, 3vw, 32px)/1 var(--f-disp); letter-spacing: .04em; white-space: nowrap; }
+.ticker span em { font-style: normal; color: var(--paper); }
+@keyframes tick { to { transform: translateX(-50%); } }
+
+/* ---------- 页脚 ---------- */
+.foot { margin-top: 130px; background: #000; border-top: 6px solid var(--red); padding-bottom: 28px; }
+.foot .ticker { margin: -30px 0 60px; }
+.foot-in { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr); gap: 36px; }
+.foot-brand img { width: 190px; margin-bottom: 14px; }
+.foot-brand p { margin: 0; max-width: 42ch; font-size: 13px; line-height: 1.85; color: var(--dim); }
+.foot-brand p b { color: var(--paper); font-weight: 500; }
+.foot h3 { margin: 0 0 12px; }
+.foot-links a {
+  display: block; width: max-content; padding: 3px 0; font: 400 22px/1.2 var(--f-disp); text-transform: uppercase;
+  letter-spacing: .03em; transition: color .12s, transform .15s var(--ease);
+}
+.foot-links a:hover, .foot-links a:focus-visible { color: var(--red); transform: translateX(8px) skewX(-8deg); }
+.foot-legal {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px;
+  margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--dim);
+}
+
+/* ---------- 转场：白 / 红 / 黑 三层斜切 ---------- */
+.wipe { position: fixed; inset: 0; z-index: 900; overflow: hidden; pointer-events: none; }
+.wipe i {
+  position: absolute; top: -10%; bottom: -10%; left: -30%; width: 160%;
+  animation: wipeOut .56s var(--ease) both;
+}
+.wipe i:nth-child(1) { background: var(--paper); animation-delay: .14s; }
+.wipe i:nth-child(2) { background: var(--red); animation-delay: .07s; background-image: var(--dots); }
+.wipe i:nth-child(3) { background: var(--black); }
+.wipe.go { pointer-events: auto; }
+.wipe.go i { animation: wipeIn .4s var(--ease) both; }
+.wipe.go i:nth-child(1) { animation-delay: 0s; }
+.wipe.go i:nth-child(2) { animation-delay: .05s; }
+.wipe.go i:nth-child(3) { animation-delay: .1s; }
+@keyframes wipeOut { from { transform: skewX(-20deg) translateX(0); } to { transform: skewX(-20deg) translateX(120%); } }
+@keyframes wipeIn { from { transform: skewX(-20deg) translateX(-120%); } to { transform: skewX(-20deg) translateX(0); } }
+
+/* ---------- 页面转场片段（由 core.js 的 chrome() 挂载） ----------
+   .clip-dive    = 进文章：VP9+alpha 抠像视频，底衬纯红兜底
+   .clip-curtain = 站内导航：《过场joker拉下帷幕》蓝幕转红的视频，黑底自带遮盖
+   视频没下完、被自动播放策略拦了、或浏览器不支持 alpha 视频时，看到的是底色而不是穿帮画面。 */
+.clip {
+  position: fixed; inset: 0; z-index: 898; background: #000;
+  opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .1s linear;
+}
+.clip-dive { z-index: 899; background: var(--red); }
+.clip.on { opacity: 1; visibility: visible; }
+.clip video { display: block; width: 100%; height: 100%; object-fit: cover; }
+@media (prefers-reduced-motion: reduce) { .clip { display: none !important; } }
+@media (prefers-reduced-motion: reduce) { .wipe { display: none; } .ticker-in { animation: none; } }
+
+@media (max-width: 860px) {
+  .hud-cal { display: none; }
+  .foot-in { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .foot-brand { grid-column: 1 / -1; }
+}
+@media (max-width: 560px) {
+  :root { --hud: 58px; }
+  .hud { gap: 8px; }
+  .hud-nav a { padding: 8px 8px; font-size: 15px; }
+  .hud-nav a i { display: none; }
+  .b-t { display: none; }  /* 手机上只留红 P：四个导航项 + ♪ 才放得下 */
+  .b-mark { width: 32px; height: 32px; font-size: 22px; }
+}
+@media (max-width: 400px) {
+  .hud-nav a { padding: 7px 5px; font-size: 13px; letter-spacing: .02em; }
+}
+
+/* ---------- 怪盗光标（精灵图 48×48 × 30 帧） ---------- */
+@media (pointer: fine) { html.p5c, html.p5c * { cursor: none !important; } }
+#p5-cursor {
+  position: fixed; left: 0; top: 0; z-index: 9999; width: 48px; height: 48px; display: none; pointer-events: none;
+  background: url(../img/cursor/normal.png) 0 0 no-repeat; margin: -3px 0 0 -4px; will-change: transform;
+}
+#p5-cursor.link { background-image: url(../img/cursor/link.png); margin: -6px 0 0 -6px; }
+
+/* ---------- 音效开关 ---------- */
+.snd {
+  flex: none; width: 38px; height: 38px; display: grid; place-items: center; padding: 0; cursor: pointer;
+  background: var(--black); border: 2px solid var(--paper); transform: skewX(-10deg); font-size: 18px; line-height: 1;
+  transition: background-color .14s, color .14s;
+}
+.snd > span { transform: skewX(10deg); }
+.snd:hover { background: var(--paper); color: var(--black); }
+.snd[aria-pressed="false"] { opacity: .5; }
+.snd[aria-pressed="false"] > span { text-decoration: line-through; text-decoration-color: var(--red); text-decoration-thickness: 3px; }
+
+/* ---------- 开屏（怪盗入城）· boot.js 动态插入，每会话一次 ---------- */
+body.boot-lock { overflow: hidden; }
+#boot {
+  position: fixed; inset: 0; z-index: 1000; background: var(--black);
+  overflow: hidden; display: grid; place-items: center;
+}
+#boot .boot-dots {
+  position: absolute; inset: 0;
+  background: var(--dots) var(--red);      /* 红底 + 半调网点（--dots 自带 position/size） */
+  animation: bootSlide .9s cubic-bezier(.7, 0, .3, 1) both;
+}
+@keyframes bootSlide { from { transform: translateX(-100%) skewX(-8deg); } to { transform: none; } }
+#boot .boot-stripes {
+  position: absolute; inset: 0; opacity: .5;
+  background: repeating-linear-gradient(118deg, transparent 0 90px, rgba(0, 0, 0, .35) 90px 106px);
+}
+#boot .boot-aoa {
+  position: absolute; right: -3vw; bottom: -4vh; width: min(52vw, 700px);
+  filter: drop-shadow(-14px 12px 0 rgba(0, 0, 0, .45));
+  animation: bootAoa .8s cubic-bezier(.2, 1.1, .3, 1) .15s both;
+}
+@keyframes bootAoa {
+  from { transform: translateX(70px) skewX(-10deg); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+#boot .boot-logo {
+  position: absolute; left: 5vw; top: 6vh; width: clamp(90px, 12vw, 170px);
+  opacity: .95; animation: bootFadeIn .5s .4s both;
+}
+#boot .boot-inner { position: relative; text-align: center; padding: 0 5vw; transform: translateY(-4vh); }
+#boot .boot-kicker {
+  font-family: var(--f-hat); letter-spacing: .5em; font-size: clamp(11px, 1.4vw, 15px);
+  text-transform: uppercase; margin: 0 0 14px; color: var(--paper);
+  animation: bootFadeIn .4s .5s both;
+}
+#boot .boot-title { font-size: clamp(46px, 13vw, 170px); line-height: .9; margin: 0; }
+#boot .boot-sub {
+  margin-top: 22px; display: inline-flex; gap: 18px; align-items: center;
+  background: var(--black); border: 2px solid var(--paper); padding: 10px 20px;
+  font-family: var(--f-mono); letter-spacing: .28em; text-transform: uppercase;
+  font-size: 13px; animation: bootFadeIn .4s .8s both;
+}
+#boot .boot-sub .kbd { background: var(--paper); color: var(--black); padding: 2px 10px; }
+#boot .boot-bar {
+  margin: 26px auto 0; width: min(420px, 70vw); height: 16px;
+  background: var(--black); border: 3px solid var(--paper); position: relative; overflow: hidden;
+  animation: bootFadeIn .4s .7s both;
+}
+#boot .boot-bar > i {
+  position: absolute; inset: 0 100% 0 0; background: var(--paper);
+  animation: bootLoad 1s cubic-bezier(.5, 0, .2, 1) .35s forwards;
+}
+@keyframes bootLoad { to { inset: 0 0 0 0; } }
+#boot .boot-skip {
+  position: absolute; right: 26px; bottom: 24px; background: none; border: 0;
+  font-family: var(--f-hat); letter-spacing: .26em; text-transform: uppercase;
+  font-size: 12px; color: var(--paper); opacity: .8; cursor: pointer;
+  animation: bootBlink 1.1s steps(2) infinite;
+}
+#boot.out { animation: bootOut .5s cubic-bezier(.7, 0, .3, 1) forwards; }
+@keyframes bootOut { to { transform: translateY(-102%); } }
+@keyframes bootBlink { 50% { opacity: .25; } }
+@keyframes bootFadeIn { from { opacity: 0; } to { opacity: 1; } }
+/* 手机上 AOA 立绘别压住标题 */
+@media (max-width: 720px) {
+  #boot .boot-aoa { right: -18vw; bottom: -2vh; width: 78vw; opacity: .85; }
+  #boot .boot-logo { width: 96px; }
+  #boot .boot-inner { transform: none; }
+}

@@ -1,0 +1,125 @@
+/* =====================================================================
+   PHANTOM LOG · weather.css —— P5 天气预报（精灵图与排版来自 Persona5-Weather-Forecast）
+   精灵图一律按原始像素摆放，整块用 zoom 缩放：zoom 会连着布局盒子一起缩，
+   所以缩放后卡片之间不会互相压住（transform 做不到这点）。
+   坐标由原作渲染结果量出，改数字前先看清注释里的单位。
+   ===================================================================== */
+@font-face { font-family: 'P5Earwig'; src: url(../fonts/earwig-factory.ttf) format('truetype'); font-display: swap; }
+
+/* ---------- 页面骨架：城市背景 + 昼夜 ---------- */
+.wx { position: relative; min-height: 100svh; padding: calc(var(--hud) + 52px) 0 90px; }
+.wx-bg { position: fixed; inset: 0; z-index: -1; background: #06070b; }
+.wx-bg img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.wx-bg .night { opacity: 0; transition: opacity 1.8s linear; }
+.wx.is-night .wx-bg .night { opacity: 1; }
+.wx-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(0, 0, 0, .5), rgba(0, 0, 0, .34) 42%, rgba(0, 0, 0, .72)); }
+.wx.shake .wx-bg img { animation: wx-shake .5s linear; }
+@keyframes wx-shake {
+  0% { transform: translate(4px, 4px) rotate(2deg); } 10% { transform: translate(-3px, -3px) rotate(-2deg); }
+  24% { transform: translate(-3px, 1px) rotate(1deg); } 38% { transform: translate(3px, 3px); }
+  52% { transform: translate(2px, -2px) rotate(1deg); } 66% { transform: translate(-2px, 1px); }
+  80% { transform: translate(2px, 1px) rotate(-1deg); } 100% { transform: none; }
+}
+
+.wx-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 18px 40px; }
+.wx-town { min-width: 0; }
+.wx-city {
+  margin: 0; font: 400 clamp(42px, 7.6vw, 82px)/.92 'P5Earwig', var(--f-cjk); text-transform: lowercase;
+  color: var(--paper); transform: rotate(-8deg); transform-origin: left bottom; text-shadow: .06em .12em #000;
+}
+.wx-clock { margin: 6px 0 0 24px; transform: rotate(-8deg); font: 400 clamp(22px, 3vw, 34px)/1 'P5Earwig', var(--f-hat); letter-spacing: .04em; color: var(--paper); text-shadow: .05em .1em #000; }
+
+.wx-find { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.wx-find input {
+  min-width: 210px; flex: 1 1 210px; padding: 11px 14px; background: rgba(10, 10, 11, .78);
+  border: 2px solid var(--paper); font-size: 15px;
+}
+.wx-find input::placeholder { color: var(--dim); }
+.wx-find .btn { font-size: 16px; padding: 11px 18px; }
+
+.wx-msg { margin: 22px 0 0; font-size: 14px; color: var(--paper); text-shadow: 2px 2px 0 #000; }
+.wx-msg[hidden] { display: none; }
+.wx-msg.bad { color: var(--red); }
+.wx-src { margin: 54px 0 0; font-size: 12px; line-height: 1.8; color: rgba(244, 241, 234, .6); text-shadow: 1px 1px 0 #000; }
+
+/* =====================================================================
+   精灵图：日期盒（月 / 日 / 星期 / 天气卡）
+   .dbi 是 150×80 的定位盒，zoom 1.2 后 = 原作的 scale(1.2)；
+   子元素用未缩放的原始像素坐标，和原作完全一致。
+   .db 的 padding 把溢出画布以外的部分也算进布局，避免和右边卡片重叠。
+   ===================================================================== */
+.db { padding: 24px 80px 98px 81px; flex: none; }
+.dbi { position: relative; width: 150px; height: 80px; zoom: 1.2; }
+.dbi > * { position: absolute; background-repeat: no-repeat; }
+.dbi .top { z-index: 3; } .dbi .mid { z-index: 2; } .dbi .base { z-index: 1; }
+.sp-mo i, .sp-d i { position: absolute; inset: 0; background-repeat: no-repeat; }
+
+.sp-mo { left: -67px; top: 30px; width: 120px; height: 120px; transform: rotate(-20deg); }
+.sp-mo i { background-image: url(../img/weather/month-number-sprites.png); }
+.sp-d { width: 100px; height: 150px; transform: rotate(-10deg); }
+.sp-d i { background-image: url(../img/weather/numbers_spritesheet_3.png); }
+.sp-d.t { left: -7px; top: 0; }
+.sp-d.o { left: 55px; top: -20px; }
+.sp-wd { left: 3px; top: 88px; width: 191px; height: 74px; transform: rotate(-10deg); background-image: url(../img/weather/weekday_sprites.png); }
+.sp-card { left: 117px; top: -10px; width: 100px; height: 99px; background-image: url(../img/weather/weather-card-sprite.png); }
+.sp-wx { left: 131px; top: -2px; width: 75px; height: 72px; background-image: url(../img/weather/weather_spritesheet4.png); }
+
+/* =====================================================================
+   今天的区块：大号当前温度 + 最高/最低
+   ===================================================================== */
+.wx-today { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; margin: 34px 0 20px; }
+
+/* ---------- 当前温度：72×96 一格，格距量自原作（0/30/74/94/144/176） ---------- */
+.cur { position: relative; width: 333px; height: 121px; flex: none; }
+.cur-bg { position: absolute; inset: 0; background: url(../img/weather/current-temp-bg.png) no-repeat; }
+.cur .c { position: absolute; top: 12px; width: 72px; height: 96px; background: url(../img/weather/degreesBig2.png) no-repeat; }
+.cur .s { left: 24px; background-position: -832px 0; }     /* 负号 */
+.cur .t { left: 54px; }                                    /* 十位（JS 定位） */
+.cur .o { left: 98px; }                                    /* 个位（JS 定位） */
+.cur .dot { left: 118px; background-position: -768px 0; }  /* 小数点 */
+.cur .f { left: 168px; }                                   /* 十分位（JS 定位） */
+.cur .deg { left: 200px; background-position: -704px 0; }  /* ° */
+.cur:not(.neg) .s, .cur.one .t { background-image: none; } /* 正数不画负号；个位数不画前导 0 */
+.cur-col { display: grid; justify-items: center; gap: 6px; }
+
+/* ---------- 最高/最低：32×32 一格，格距 10/14/18/20，整组 -15° ---------- */
+.mmx { position: relative; width: 141px; height: 55px; flex: none; transform: rotate(-15deg); }
+.mm-bg { position: absolute; inset: 0; background: url(../img/weather/max-min-bg.png) no-repeat; }
+.mm { position: absolute; top: 12px; width: 32px; height: 32px; }
+.mm i { position: absolute; top: 0; left: 0; width: 32px; height: 32px; background-repeat: no-repeat; }
+.mm.hi i { background-image: url(../img/weather/degrees-small-red-2.png); }
+.mm.lo i { background-image: url(../img/weather/degrees-small-blue-2.png); }
+.mm.hi { left: 3px; } .mm.lo { left: 65px; }
+.mm .s { left: 0; } .mm .t { left: 10px; } .mm .o { left: 24px; }
+.mm .deg { left: 42px; background-position: -320px 0; }
+
+/* =====================================================================
+   未来四天
+   ===================================================================== */
+.wx-week { list-style: none; display: flex; flex-wrap: wrap; gap: 26px 30px; margin: 40px 0 0; padding: 0; }
+.wk { position: relative; zoom: .5; text-align: center; }
+.wk .mmx { margin: -8px auto 0; }
+.wk-cn {
+  display: block; margin-top: 10px; font: 400 26px/1.5 var(--f-cjk); letter-spacing: .04em;
+  color: var(--paper); text-shadow: 3px 3px 0 #000; white-space: nowrap;
+}
+/* 原作的四张卡片高低错落，-80 / -30 / -50 / -100 加不同缩放 */
+@media (min-width: 720px) {
+  .wk:nth-child(1) { zoom: .42; margin-top: -60px; }
+  .wk:nth-child(2) { zoom: .52; margin-top: -16px; }
+  .wk:nth-child(3) { zoom: .42; margin-top: -40px; }
+  .wk:nth-child(4) { zoom: .34; margin-top: -76px; }
+}
+/* 小屏：整块精灵图按比例缩，别让 340px 的日期盒撑破视口 */
+@media (max-width: 900px) { .wx-today { zoom: .8; } }
+@media (max-width: 620px) {
+  .wx-today { zoom: .62; }
+  .wx-week { gap: 18px; }
+  .wk, .wk:nth-child(1), .wk:nth-child(2), .wk:nth-child(3), .wk:nth-child(4) { zoom: .46; margin-top: 0; }
+  .wx-city { transform: rotate(-5deg); }
+  .wx-clock { margin-left: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wx-bg .night { transition: none; }
+  .wx.shake .wx-bg img { animation: none; }
+}

@@ -1,0 +1,7 @@
+# 版权音像素材（P5 游戏 OST / 官方影像）：不进公开仓库
+assets/music/*.mp3
+assets/clip/
+
+# 系统垃圾
+.DS_Store
+Thumbs.db
