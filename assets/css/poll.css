@@ -33,7 +33,7 @@
   overflow-x: hidden;
   padding: 16px 8px 8px;
 }
-.poll.is-closing { opacity: 0; translate: 0 14px; pointer-events: none; }
+.poll.is-closing { animation: none; opacity: 0; translate: 0 14px; pointer-events: none; }
 .poll-panel {
   position: relative;
   display: grid;

@@ -43,6 +43,19 @@
       first.close(); first.show();
       await wait(300);
       assert(a.querySelectorAll('.poll').length === 1, 'Reopen lost or leaked DOM');
+      first.close();
+      await wait(100);
+      const closing = a.querySelector('.poll');
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        assert(!closing, 'Reduced-motion close did not remove content immediately');
+      } else {
+        assert(closing && Number(getComputedStyle(closing).opacity) < 1,
+          'Filled entrance animation prevents the closing fade');
+      }
+      first.show();
+      await wait(300);
+      assert(a.querySelectorAll('.poll').length === 1, 'Reopen during fade lost or leaked DOM');
+      lines.push('PASS closing fade after entrance and reopening during fade');
       first.close(); first.destroy(); first.show();
       await wait(300);
       assert(!a.querySelector('.poll'), 'Destroyed instance resurrected');
