@@ -1,0 +1,68 @@
+/* =====================================================================
+   PHANTOM LOG · guestbook.css —— 留言板
+   沿用全站语言：斜切纸片、红色强调、mono 小标签。表单控件是全站唯一一处，
+   所以输入框的样式也放在这里（而不是污染 base.css）。
+   ===================================================================== */
+.gb { padding-top: calc(var(--hud) + 40px); padding-bottom: 90px; }
+.gb-lead { max-width: 44em; margin: -14px 0 30px; color: var(--dim); }
+
+/* ---------- 表单 ---------- */
+.gb-form { max-width: 780px; }
+.gb-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.gb-f { display: block; margin-bottom: 16px; }
+.gb-f > span {
+  display: flex; gap: 8px; align-items: baseline; margin-bottom: 7px;
+  font: 400 12px/1 var(--f-hat); letter-spacing: .18em; text-transform: uppercase; color: var(--paper);
+}
+.gb-f > span i { font: 400 11px/1 var(--f-cjk); font-style: normal; letter-spacing: 0; color: var(--dim); text-transform: none; }
+.gb-f input, .gb-f textarea {
+  width: 100%; padding: 11px 13px; background: var(--ink); color: var(--paper);
+  border: 2px solid var(--line); border-left: 5px solid var(--red);
+  font: 400 15px/1.5 var(--f-cjk); transform: skewX(-4deg);
+  transition: border-color .14s, background-color .14s;
+}
+.gb-f input:focus, .gb-f textarea:focus {
+  outline: none; border-color: var(--paper); border-left-color: var(--red); background: var(--ink-2);
+}
+.gb-f input::placeholder, .gb-f textarea::placeholder { color: var(--dim); }
+.gb-f textarea { resize: vertical; min-height: 116px; }
+.gb-act { display: flex; align-items: center; gap: 16px; margin-top: 4px; }
+.gb-count { font: 400 12px/1 var(--f-mono); color: var(--dim); }
+.gb-note { min-height: 1.5em; margin: 12px 0 0; font-size: 13px; color: var(--dim); }
+.gb-note.ok { color: var(--paper); }
+.gb-note.warn { color: var(--paper); }
+.gb-note.err { color: var(--red); }
+
+/* ---------- 列表 ---------- */
+.gb-list-h { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin: 46px 0 18px; }
+.gb-reload {
+  padding: 6px 12px; background: none; border: 2px solid var(--line); color: var(--dim);
+  font: 400 12px/1 var(--f-hat); letter-spacing: .16em; text-transform: uppercase;
+  cursor: pointer; transform: skewX(-8deg); transition: color .14s, border-color .14s;
+}
+.gb-reload:hover, .gb-reload:focus-visible { color: var(--paper); border-color: var(--paper); }
+.gb-l { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; max-width: 900px; }
+.gb-i {
+  position: relative; padding: 15px 20px 17px; background: var(--paper); color: var(--black);
+  border-left: 7px solid var(--red); box-shadow: 6px 6px 0 rgba(0, 0, 0, .5);
+  transform: skewX(-1.6deg);
+}
+.gb-i > * { transform: skewX(1.6deg); }
+.gb-i.owner { border-left-color: var(--black); background: var(--paper); }
+.gb-i.fresh { animation: gbIn .4s var(--ease) both; }
+@keyframes gbIn { from { opacity: 0; transform: skewX(-1.6deg) translateY(-8px); } }
+@media (prefers-reduced-motion: reduce) { .gb-i.fresh { animation: none; } }
+.gb-h { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.gb-n { font: 900 16px/1 var(--f-cjk); }
+.gb-tag { padding: 2px 7px; background: var(--red); color: var(--paper); font: 700 11px/1.4 var(--f-cjk); }
+.gb-t { margin-left: auto; font: 400 11px/1 var(--f-mono); color: #6b6862; }
+.gb-m { margin: 0; font-size: 15px; line-height: 1.65; word-break: break-word; }
+.gb-empty { padding: 26px; text-align: center; color: var(--dim); background: var(--ink); border: 2px dashed var(--line); }
+.gb-empty.err { color: var(--red); border-color: var(--red); }
+
+@media (max-width: 620px) {
+  .gb-row { grid-template-columns: minmax(0, 1fr); }
+  .gb-i { padding: 13px 15px 15px; }
+  .gb-t { width: 100%; margin: 4px 0 0; }
+  .gb-h { flex-wrap: wrap; }
+}

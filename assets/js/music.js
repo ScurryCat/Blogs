@@ -1,12 +1,11 @@
 /* =====================================================================
    PHANTOM LOG · music.js —— 手机音乐播放器的曲目清单
-   现在这三首是从你自己的《P5RP3R部分UI及转场集合.mp4》里剪的：
-   35s / 80s / 190s 起，各 26 秒，loudnorm 到 -16 LUFS，112 kbps mp3。
-   我没法替你试听，不合适的话换掉就好——把文件丢进 assets/music/，
-   再改下面的 title / artist / src 三行。
+   三首都是 Lyn 演唱的原曲，文件放在 assets/music/ 下（该目录被 .gitignore
+   排除：版权音频不进公开仓库，clone 下来是空的，播放器会落到「还没有曲子」空态）。
+   要换曲子：把文件丢进 assets/music/，改下面的 title / artist / src 三行。
    ===================================================================== */
 window.PL_MUSIC = [
-  { title: '合集片段 01', artist: '©ATLUS · 26s', src: 'assets/music/01.mp3' },
-  { title: '合集片段 02', artist: '©ATLUS · 26s', src: 'assets/music/02.mp3' },
-  { title: '合集片段 03', artist: '©ATLUS · 26s', src: 'assets/music/03.mp3' }
+  { title: 'Beneath the Mask', artist: 'Lyn · ©ATLUS', src: 'assets/music/beneath-the-mask.mp3' },
+  { title: 'Beneath the Mask -rain-', artist: 'Lyn · ©ATLUS', src: 'assets/music/beneath-the-mask-rain.mp3' },
+  { title: '星と僕らと', artist: 'Lyn · ©ATLUS', src: 'assets/music/hoshi-to-bokura-to.mp3' }
 ];

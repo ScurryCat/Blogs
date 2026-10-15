@@ -94,3 +94,45 @@
 }
 @media (max-width: 860px) { .coop-g { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 480px) { .coop-g { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- 05 GitHub 热力图 ----------
+   格子用 skewX(-10deg) 和全站一致；有贡献的四档不做成四种颜色，而是同一支
+   --red 的四档透明度（::after 上做 opacity，这样不影响斜切边框）。
+   列数由 JS 写进 --cols，格子用 minmax 自适应：桌面铺满，窄屏到 6px 后横向滚动。 */
+.hm { margin: 0; }
+.hm-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.hm-stat { display: flex; gap: clamp(16px, 3.4vw, 40px); margin: 0; flex-wrap: wrap; }
+.hm-stat dt { font: 400 11px/1 var(--f-hat); letter-spacing: .18em; text-transform: uppercase; color: var(--dim); }
+.hm-stat dd { margin: 7px 0 0; font-size: 14px; color: var(--paper); }
+.hm-stat dd b { font: 400 26px/1 var(--f-disp); color: var(--red); margin-right: 2px; }
+.hm-link { font: 400 15px/1 var(--f-disp); letter-spacing: .05em; color: var(--paper); text-decoration: none;
+  padding-bottom: 4px; border-bottom: 2px solid var(--red); transition: color .14s, border-color .14s; }
+.hm-link:hover, .hm-link:focus-visible { color: var(--red); }
+.hm-wrap { margin-top: 22px; overflow-x: auto; padding-bottom: 6px; }
+.hm-grid { display: grid; gap: 3px;
+  /* 上限 13px：格子再大，355 个空格子会糊成一整片灰底，像点阵不像热力图 */
+  grid-template-columns: 16px repeat(var(--cols, 53), minmax(6px, 13px));
+  grid-template-rows: 14px repeat(7, auto); align-items: center; }
+.hm-mon { grid-column: var(--c); grid-row: 1; font: 400 10px/1 var(--f-mono); letter-spacing: .04em; color: var(--dim); white-space: nowrap; }
+.hm-wd { grid-column: 1; grid-row: var(--r); font: 400 9px/1 var(--f-mono); color: var(--dim); }
+.hm-c { position: relative; display: block; aspect-ratio: 1; grid-column: var(--c, auto); grid-row: var(--r, auto);
+  background: rgba(244, 241, 234, .045); transform: skewX(-10deg); }
+.hm-c::after { content: ""; position: absolute; inset: 0; background: var(--red); opacity: var(--o, 0); }
+.hm-c[data-l="4"]::after { box-shadow: 0 0 10px rgba(229, 25, 28, .5); }
+.hm-c[data-d]:hover { outline: 1px solid var(--paper); outline-offset: 1px; }
+.hm-foot { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-top: 14px; }
+.hm-legend { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--dim); }
+.hm-legend .hm-c { width: 11px; }
+.hm-note { font: 400 12px/1.5 var(--f-mono); color: var(--dim); }
+.hm-swipe { display: none; font: 400 11px/1 var(--f-mono); letter-spacing: .1em; color: var(--red); }
+/* 悬浮方牌：黑底红边，和全站的纸片语言一致 */
+.hm-tip { position: absolute; z-index: 5; pointer-events: none; padding: 6px 10px; background: var(--black);
+  color: var(--paper); font: 400 12px/1 var(--f-mono); border-left: 3px solid var(--red);
+  transform: skewX(-10deg); white-space: nowrap; }
+.hm-tip b { color: var(--red); }
+@media (max-width: 620px) {
+  .hm-grid { grid-template-columns: 0 repeat(var(--cols, 53), minmax(6px, 1fr)); }
+  .hm-wd { display: none; }
+  .hm-swipe { display: inline; }   /* 窄屏网格会横向滚动，给个提示 */
+  .hm-stat dd b { font-size: 22px; }
+}

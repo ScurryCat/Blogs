@@ -21,6 +21,33 @@ window.PL_SITE = {
     { k: 'RSS', v: '订阅全部文章', url: 'index.html#archive' }
   ],
 
+  /* 右下角问卷（poll.js）。票数是本地装饰：base 是设定值，访客那一票只在他自己
+     浏览器里叠加 —— 和游戏里那个固定百分比一样是布景，不是真实统计。
+     要接真实统计就把 poll.js 里的 tally() 换成一次 fetch。 */
+  poll: {
+    title: '怪盗ch',
+    q: '你相信心灵怪盗吗？',
+    qHtml: '你相信<em>心灵怪盗</em>吗？',
+    options: { yes: 'YES', no: 'NO' },
+    main: 'yes',                                  // 大号百分比显示哪一项
+    base: { yes: 73, no: 927 },                   // 设定值，合起来正好 7.3%
+    by: '匿名',
+    commentHtml: '设网站的人根本<b>脑子有洞</b>',   // 用 <b> 标出要上红底的那截
+    comment: '设网站的人根本脑子有洞'
+  },
+
+  /* 留言板（guestbook.js + guestbook-store.js）。
+     store: 'local' = 留言只存在访客自己浏览器里（示例模式，换设备看不到）；
+            改成 'remote' 并填 endpoint / key 就切到 Supabase，页面代码不用动。 */
+  guestbook: {
+    store: 'local',
+    endpoint: '',            // 例：https://abcdefgh.supabase.co
+    key: '',                 // Supabase 的 anon public key（公开的，权限靠 RLS）
+    table: 'guestbook',
+    greeting: '这里没有算法，只有人。想说什么都行——技术、旅途、游戏，或者只是路过。',
+    maxName: 20, maxText: 500, cooldown: 30
+  },
+
   /* 分类 → 塔罗大阿卡纳（文章页小卡片 & 列表编号用） */
   arcana: {
     LOG: ['0', 'FOOL'], TECH: ['I', 'MAGICIAN'], LIFE: ['XVII', 'STAR'], TOOL: ['IX', 'HERMIT'],
@@ -34,7 +61,9 @@ window.PL_SITE = {
     '真': 'assets/img/portrait/makoto.png', '龙司': 'assets/img/portrait/ryuji.png',
     '杏': 'assets/img/portrait/ann.png', '祐介': 'assets/img/portrait/yusuke.png',
     '春': 'assets/img/portrait/haru.png', '芳泽霞': 'assets/img/portrait/kasumi.png',
-    '我': 'assets/img/portrait/joker.png', 'JOKER': 'assets/img/portrait/joker.png'
+    /* 「我」用画集 p5artbook-020 右页的正面线稿（本地抠底，见 tools/portrait-crop/），
+       和 p5-ui 那套彩色立绘不是同一画风，但黑白线稿压在这个黑底站上更干净 */
+    '我': 'assets/img/portrait/joker-artbook.png', 'JOKER': 'assets/img/portrait/joker-artbook.png'
   },
   me: ['我', 'JOKER'],
 

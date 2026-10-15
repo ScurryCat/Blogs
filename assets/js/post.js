@@ -63,6 +63,8 @@
     heads.forEach((h, k) => { if (h.getBoundingClientRect().top < innerHeight * .3) on = k; });
     links.forEach((a, k) => a.classList.toggle('on', k === on));
   }
-  addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+  const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+  addEventListener('scroll', onScroll, { passive: true });
+  window.PL.onLeave(() => removeEventListener('scroll', onScroll));
   update();
 })();

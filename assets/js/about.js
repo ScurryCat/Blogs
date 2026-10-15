@@ -58,10 +58,19 @@
   <ol class="tl-l">${A.timeline.map((t) => `<li class="tl-i"><span class="tl-y">${esc(t.y)}</span><div><h3>${esc(t.h)}</h3><p>${esc(t.p)}</p></div></li>`).join('')}</ol>
 </section>
 
+${window.PL_HEATMAP ? `<section class="shell gh" aria-labelledby="gh-h">
+  <header class="sec-h"><span class="no">04</span><h2 id="gh-h"><span class="en">Activity</span><span class="cn">活动</span></h2></header>
+  <div class="hm-host"></div>
+</section>` : ''}
+
 <section class="shell ct" aria-labelledby="ct-h">
-  <header class="sec-h"><span class="no">04</span><h2 id="ct-h"><span class="en">Send a Card</span><span class="cn">联络</span></h2></header>
+  <header class="sec-h"><span class="no">05</span><h2 id="ct-h"><span class="en">Send a Card</span><span class="cn">联络</span></h2></header>
   <div class="ct-box"><p>有想法、发现 Bug、想交换友链——都欢迎来信。回复不一定快，但一定会回。</p>
     <ul class="ct-l">${S.social.map((s) => `<li><a href="${esc(s.url)}"${/^https?:/.test(s.url) ? ' target="_blank" rel="noopener"' : ''}><small>${esc(s.k)}</small><b>${esc(s.v)}</b></a></li>`).join('')}</ul>
   </div>
 </section>`;
+
+  /* GitHub 热力图：数据在 heatmap-data.js（构建期抓好的），渲染在 heatmap.js。
+     数据缺失时 mount 会直接返回，页面其余部分不受影响。 */
+  if (window.PL.heatmap) window.PL.heatmap.mount(main.querySelector('.hm-host'));
 })();

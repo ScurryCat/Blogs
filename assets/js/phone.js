@@ -31,6 +31,13 @@
     + '<span class="sr-only">打开怪盗手机</span>';
   document.body.appendChild(tab);
 
+  /* 播放中时标签上亮一个小红点：访客听到声音，得能一眼找到来源与开关 */
+  function paintPlaying(on) {
+    tab.classList.toggle('playing', on);
+    const sr = tab.querySelector('.sr-only');
+    if (sr) sr.textContent = on ? '打开怪盗手机（音乐播放中）' : '打开怪盗手机';
+  }
+
   /* ---------- 整机 ---------- */
   const wrap = document.createElement('div');
   wrap.className = 'pw-wrap';
@@ -68,12 +75,16 @@
       </nav>
     </div>
     <button class="pw-close" type="button" data-close aria-label="收起手机">✕</button>
-    <audio preload="none"></audio>
   </div>`;
   document.body.appendChild(wrap);
 
-  const phone = wrap.querySelector('\.pw');
-  const audio = wrap.querySelector('audio');
+  /* 播放器元素挂在 body 上，而不是塞进手机里：手机默认 hidden，而音乐要在
+     「手机没打开」时也能自动播 —— 隐藏容器里的媒体请求会被浏览器掐掉。 */
+  const audio = document.createElement('audio');
+  audio.preload = 'none';
+  document.body.appendChild(audio);
+
+  const phone = wrap.querySelector('.pw');
   const box = wrap.querySelector('.pw-music');
   const elTitle = wrap.querySelector('.pw-title');
   const elArtist = wrap.querySelector('.pw-artist');
@@ -120,8 +131,8 @@
   }
   function syncVol() { audio.volume = vol; bar(volBar, vol); try { localStorage.setItem('pl-vol', String(vol)); } catch (e) { /* 忽略 */ } }
 
-  audio.addEventListener('play', () => { playBtn.textContent = '❚❚'; playBtn.setAttribute('aria-label', '暂停'); });
-  audio.addEventListener('pause', () => { playBtn.textContent = '▶'; playBtn.setAttribute('aria-label', '播放'); });
+  audio.addEventListener('play', () => { playBtn.textContent = '❚❚'; playBtn.setAttribute('aria-label', '暂停'); paintPlaying(true); });
+  audio.addEventListener('pause', () => { playBtn.textContent = '▶'; playBtn.setAttribute('aria-label', '播放'); paintPlaying(false); });
   audio.addEventListener('timeupdate', () => {
     const d = audio.duration || 0;
     bar(seekBar, d ? audio.currentTime / d : 0);
@@ -153,13 +164,49 @@
   }
   syncVol();
 
+  /* ---------- 开站自动播放 ----------
+     浏览器不给「没有用户手势」的页面出声，所以借两个时机：开场画面被点掉
+     （真实手势，boot.js 会广播 pl:booted），或页面上的第一次交互（开场被跳过时）。
+     用户主动暂停过就不再自动播 —— 这个选择记在 pl-music 里。 */
+  const remember = (v) => { try { localStorage.setItem('pl-music', v); } catch (e) { /* 忽略 */ } };
+
+  function startMusic() { audio.play().then(() => remember('on')).catch(() => {}); }
+  function stopMusic() { audio.pause(); remember('off'); }
+
+  let autoDone = false;
+  function autoplay() {
+    if (autoDone || !MUSIC.length || read('pl-music') === 'off') return;
+    autoDone = true;
+    if (!audio.src) track(idx, false);
+    const target = vol;
+    audio.volume = 0;
+    audio.play().then(() => {
+      /* 1.2 秒淡入：自动出声别吓人一跳 */
+      const t0 = performance.now();
+      const step = (now) => {
+        const k = Math.min(1, (now - t0) / 1200);
+        audio.volume = target * k;
+        if (k < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+      remember('on');
+    }).catch(() => { audio.volume = target; autoDone = false; });   // 被策略挡下：等下次手势再试
+  }
+  addEventListener('pl:booted', autoplay);
+  addEventListener('pointerdown', autoplay, { capture: true });
+  addEventListener('keydown', autoplay, { capture: true });
+  /* 也立刻就试一次：开场被跳过时（同会话第二次进入、或系统开了减弱动效），
+     pl:booted 早在 phone.js 挂上监听之前就广播完了；而浏览器若因「这位用户常来」
+     放行自动播放，这一次就能成 —— 被挡下则静默退回、等页面上第一次交互。 */
+  autoplay();
+
   wrap.addEventListener('click', (e) => {
     const act = e.target.closest('[data-act]') && e.target.closest('[data-act]').dataset.act;
-    if (act === 'play') { audio.paused ? audio.play().catch(() => {}) : audio.pause(); }
+    if (act === 'play') { audio.paused ? startMusic() : stopMusic(); }
     else if (act === 'prev') track(idx - 1, !audio.paused);
     else if (act === 'next') track(idx + 1, !audio.paused);
     const app = e.target.closest('[data-app]') && e.target.closest('[data-app]').dataset.app;
-    if (app === 'music') { audio.paused ? audio.play().catch(() => {}) : audio.pause(); }
+    if (app === 'music') { audio.paused ? startMusic() : stopMusic(); }
     if (app === 'sound') { const b = document.querySelector('#hud .snd'); if (b) b.click(); paintSound(); }
   });
   /* 进度 / 音量：点、拖、方向键都能改 */

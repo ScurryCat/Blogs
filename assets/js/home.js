@@ -92,9 +92,11 @@
     document.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', String(c === b)));
     draw();
   });
-  addEventListener('keydown', (e) => {
+  const onSlash = (e) => {
     if (e.key === '/' && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); q.focus(); }
-  });
+  };
+  addEventListener('keydown', onSlash);
+  window.PL.onLeave(() => removeEventListener('keydown', onSlash));
   draw();
 
   /* ---------- 暂停菜单：悬停 / 聚焦 / ↑↓ 选择 ---------- */
@@ -102,12 +104,14 @@
   const heroEl = document.querySelector('.hero');
   const pick = (el) => items.forEach((x) => x.classList.toggle('on', x === el));
   items.forEach((el) => { el.addEventListener('mouseenter', () => pick(el)); el.addEventListener('focus', () => pick(el)); });
-  addEventListener('keydown', (e) => {
+  const onArrows = (e) => {
     if (!/^(ArrowUp|ArrowDown)$/.test(e.key) || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
     if (heroEl.getBoundingClientRect().bottom < innerHeight * .5) return; // 菜单不在视野里就不劫持方向键
     e.preventDefault();
     const cur = items.findIndex((x) => x.classList.contains('on'));
     const next = items[(cur + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length];
     pick(next); next.focus({ preventScroll: true });
-  });
+  };
+  addEventListener('keydown', onArrows);
+  window.PL.onLeave(() => removeEventListener('keydown', onArrows));
 })();

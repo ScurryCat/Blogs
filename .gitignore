@@ -1,7 +1,15 @@
-# 版权音像素材（P5 游戏 OST / 官方影像）：不进公开仓库
-assets/music/*.mp3
+# 官方影像（P5 游戏过场）：不进公开仓库
 assets/clip/
+
+# 音频：按站点所有者要求入库（Beneath the Mask / -rain- / 星と僕らと）。
+# 这三首是 Lyn 演唱、©ATLUS 的商业发行曲，公开仓库等于公开分发，
+# 若要撤下：删掉 assets/music/*.mp3 并改写历史（filter-repo / BFG）。
+# assets/music/*.mp3
 
 # 系统垃圾
 .DS_Store
 Thumbs.db
+
+# Python 字节码缓存（tools/ 里的生成脚本）
+__pycache__/
+*.pyc

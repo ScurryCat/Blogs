@@ -116,7 +116,7 @@
   document.querySelector('.mp-list').addEventListener('mouseover', (e) => { const a = e.target.closest('a'); if (a) select(+a.dataset.id); });
 
   /* 方向键：在可前往的地点间按空间方向跳 */
-  addEventListener('keydown', (e) => {
+  const onKey = (e) => {
     const dir = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
     if (!dir || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
     e.preventDefault();
@@ -132,7 +132,10 @@
       if (score < bs) { bs = score; best = l; }
     }
     if (best) select(best.id, true);
-  });
+  };
+  addEventListener('keydown', onKey);
+  /* 光标抖动用 rAF 自续，换页时必须置空，否则会一直跑在已分离的 SVG 上 */
+  window.PL.onLeave(() => { removeEventListener('keydown', onKey); anim = null; });
 
   select(18); // 默认停在据点（四軒茶屋）
 })();

@@ -83,7 +83,7 @@
   let frame = 0;
   const icons = () => document.querySelectorAll('.sp-wx[data-c]');
   function drawIcons() { icons().forEach((el) => pos(el, -el.dataset.c * 75, -frame * 72)); }
-  if (!reduce) setInterval(() => { frame = (frame + 1) % 3; drawIcons(); }, 1000);
+  const iconTimer = reduce ? 0 : setInterval(() => { frame = (frame + 1) % 3; drawIcons(); }, 1000);
 
   /* 时钟 + 昼夜（按所选城市的当地时间） */
   let tz = undefined;
@@ -95,7 +95,7 @@
     $('#wx-time').textContent = `${get('hour').padStart(2, '0')}:${get('minute')}${get('dayPeriod').toLowerCase()}`;
     document.querySelector('.wx').classList.toggle('is-night', h24 >= 18 || h24 < 6);
   }
-  setInterval(clock, 1000 * 15);
+  const clockTimer = setInterval(clock, 1000 * 15);
 
   /* ---------- 数据 ---------- */
   const msg = (t, bad) => { const m = $('#wx-msg'); m.textContent = t; m.hidden = !t; m.classList.toggle('bad', !!bad); };
@@ -168,5 +168,6 @@
 
   clock();
   load(city, true);
-  setInterval(() => load(city, false), 30 * 60 * 1000);
+  const refreshTimer = setInterval(() => load(city, false), 30 * 60 * 1000);
+  window.PL.onLeave(() => { [iconTimer, clockTimer, refreshTimer].forEach(clearInterval); });
 })();

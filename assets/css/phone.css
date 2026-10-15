@@ -24,6 +24,14 @@
 .pw-tab .t { writing-mode: vertical-rl; font: 400 12px/1 var(--f-hat); letter-spacing: .24em; }
 .pw-tab:hover, .pw-tab:focus-visible { background: var(--red); transform: translate(-6px, -50%); }
 .pw-tab[aria-expanded="true"] { background: var(--red); transform: translate(-6px, -50%); }
+/* 播放中：标签上亮一个小红点（reduced-motion 下不闪） */
+.pw-tab.playing .g { position: relative; }
+.pw-tab.playing .g::after {
+  content: ""; position: absolute; top: -4px; right: -7px; width: 7px; height: 7px;
+  background: var(--red); border-radius: 50%; animation: pwDot 1.6s ease-in-out infinite;
+}
+@keyframes pwDot { 50% { opacity: .25; transform: scale(.7); } }
+@media (prefers-reduced-motion: reduce) { .pw-tab.playing .g::after { animation: none; } }
 
 /* ---------- 遮罩 + 舞台 ---------- */
 .pw-scrim { position: absolute; inset: 0; background: rgba(6, 6, 8, .74); }

@@ -8,11 +8,18 @@
   const S = window.PL_SITE || {};
   const PL = window.PL;
 
-  if (PL && PL.reduce) return;                       /* 减少动态：不播 */
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  /* 广播「开场结束」：音乐自动播放要借这个真实手势（浏览器不允许无手势出声）。
+     开场被跳过时（同会话第二次、或系统减弱动效）也要广播一次 —— 那时没有手势，
+     自动播放会失败并安静地留着，等页面上第一次交互再补上。 */
+  function fireBooted() {
+    try { dispatchEvent(new Event('pl:booted')); } catch (e) { /* 忽略 */ }
+  }
+
+  if (PL && PL.reduce) { fireBooted(); return; }        /* 减少动态：不播 */
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { fireBooted(); return; }
   let booted = null;
   try { booted = sessionStorage.getItem('pl-booted'); } catch (e) { /* 读不到就当没播过 */ }
-  if (booted) return;
+  if (booted) { fireBooted(); return; }
 
   const el = document.createElement('div');
   el.id = 'boot';
@@ -52,6 +59,8 @@
     } catch (e) { /* 忽略 */ }
     setTimeout(() => el.remove(), 560);
     removeEventListener('keydown', onKey, true);
+    /* 广播「已开场」：音乐自动播放借这个真实手势（浏览器不允许无手势出声） */
+    fireBooted();
   }
   function onKey(e) {
     if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') { e.preventDefault(); close(); }
