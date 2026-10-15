@@ -28,6 +28,62 @@ python3 -m http.server 8000
 
 必须用 HTTP 服务打开，直接双击 `index.html`（`file://`）会因为 fetch 跨域读不到文章数据。
 
+## 部署（nginx）
+
+这个站没有构建步骤，**`git pull` 就是部署** —— nginx 每次都从磁盘读文件，改完即时生效，不需要重启或 reload（reload 只用于配置变更）。
+
+最省事的接法是让 nginx 的 root 直接指向克隆目录：
+
+```nginx
+server {
+    listen 80;
+    server_name 你的域名;
+    root /path/to/Blogs;          # 直接指过去，不做任何拷贝
+    index index.html;
+    etag on;
+    add_header Cache-Control "no-cache";                       # HTML 回源校验
+    location ~* \.(js|css|png|webp|jpg|svg|woff2?|mp3)$ { expires 1h; }
+}
+```
+
+习惯同步到 `/var/www/html` 的话，别手工 `cp`，写成一条命令：
+
+```bash
+cd /path/to/Blogs && git pull && rsync -a --delete --exclude .git --exclude .gitignore ./ /var/www/html/
+```
+
+### 两个容易踩的坑
+
+**一、静态资源被缓存住。** 文件名没有哈希（零构建的代价），所以浏览器一旦按 `max-age` 缓存了 `index.html`，它会连着几天拿旧 HTML 去加载旧 JS，看起来就是「部署没生效」——而服务器上其实早就是新的。对这种站，正确做法是 **HTML 每次回源校验**（上面的 `Cache-Control: no-cache` + ETag，命中就是 304，不浪费流量），静态资源给个短 `expires` 即可，别用 `immutable`。
+
+**二、nginx 服务的不是你 pull 的那个目录。** 以前手工 `cp -r` 过一份的话，之后 pull 更新的是克隆目录、nginx 服务的是那份旧拷贝，两份从此各走各的。一分钟判清：
+
+```bash
+cd /path/to/Blogs
+sudo nginx -T | grep -nE "root|server_name|listen"                  # nginx 到底读哪
+curl -s -o /dev/null -w "pjax.js -> %{http_code}\n" http://127.0.0.1/assets/js/pjax.js   # 200 = 目录对
+diff <(curl -s http://127.0.0.1/index.html) index.html && echo "nginx 读的就是这个目录"
+```
+
+### 线上是哪个版本
+
+`version.json`（不入库）记录了当前 checkout 的 commit 与写入时间，用一条命令就能问：
+
+```bash
+curl -s https://你的域名/version.json
+# {"commit":"9e40...","short":"9e40ddc","branch":"main","time":"...","indexSha256":"741a176b88b51820"}
+```
+
+`indexSha256` 是 `index.html` 的指纹，和本地 `shasum -a 256 index.html | cut -c1-16` 对一下，就能确认服务器送出的 HTML 就是这份 checkout。
+
+在服务器上装一次钩子，之后每次 `git pull` 自动更新它：
+
+```bash
+sh tools/deploy/install-hook.sh
+```
+
+注意：`version.json` 会暴露 commit 号与部署时间。站点对公网开放且你在意这点的话，在 nginx 里 `location = /version.json { deny all; }` 或换个不显眼的名字。
+
 ## 站内跳转（pjax）
 
 站内链接由 `core.js` 统一接管，转场放完再交给 `pjax.js`：取回目标页 → 换掉 `#main` → `pushState`。这么做有两个直接好处：**BGM 不断**（`<audio>` 是同一个元素，整页重载会把它销毁）、**没有白闪**（转场真正盖住了换页过程）。
