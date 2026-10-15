@@ -27,7 +27,7 @@
     <div>
       <p class="kick">// Confidant file · ${esc(S.codeName)}</p>
       <h1 class="ab-t" id="ab-t">${esc(S.author.slice(0, -1))}<span>${esc(S.author.slice(-1))}</span></h1>
-      <p class="ab-code rn" aria-hidden="true">${rn('怪盗 · 前端 · 夜行性', 21)}</p>
+      <p class="ab-code rn" aria-hidden="true">${rn('信息工程 · ACM · 怪盗', 21)}</p>
       <p class="ab-lead">${esc(A.lead)}</p>
       ${A.intro.map((t) => `<p class="ab-p">${esc(t)}</p>`).join('')}
       <dl class="idcard"><dt>Role</dt><dd>${esc(S.role)}</dd><dt>Base</dt><dd>${esc(S.base)}</dd><dt>Since</dt><dd>${S.startYear}</dd></dl>
@@ -54,7 +54,7 @@
 </section>
 
 <section class="shell tl" aria-labelledby="tl-h">
-  <header class="sec-h"><span class="no">03</span><h2 id="tl-h"><span class="en">History</span><span class="cn">年表</span></h2></header>
+  <header class="sec-h"><span class="no">03</span><h2 id="tl-h"><span class="en">Milestones</span><span class="cn">足迹</span></h2></header>
   <ol class="tl-l">${A.timeline.map((t) => `<li class="tl-i"><span class="tl-y">${esc(t.y)}</span><div><h3>${esc(t.h)}</h3><p>${esc(t.p)}</p></div></li>`).join('')}</ol>
 </section>
 
