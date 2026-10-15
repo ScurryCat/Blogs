@@ -30,6 +30,11 @@
       first.show(); first.show(); mirror.show();
       assert(a.querySelectorAll('.poll').length === 1, 'Repeated show duplicated DOM');
       assert(a.querySelector('.poll-percent').textContent === '00.0%', 'Zero result is wrong');
+      const q = a.querySelector('.poll-q').getBoundingClientRect();
+      const frame = a.querySelector('.poll-bar').getBoundingClientRect();
+      assert(q.left < frame.right && q.right > frame.left && q.top < frame.bottom && q.bottom > frame.top,
+        'Q decoration does not overlap the result frame');
+      lines.push('PASS Q and result frame overlap');
       a.querySelector('.poll-choice').click();
       assert([...b.querySelectorAll('.poll-choice')].every(button => button.disabled), 'Same-ID mirror did not update');
       assert(b.querySelector('.poll-choice[aria-pressed="true"]').textContent.includes('YES'), 'Mirror selection is missing');

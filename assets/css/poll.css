@@ -73,6 +73,7 @@
   font: 900 32px/1 var(--poll-font);
   overflow-wrap: anywhere;
 }
+.poll--floating .poll-title { margin-right: 56px; }
 .poll-tile {
   position: relative;
   flex: none;
@@ -109,7 +110,7 @@
   align-items: center;
   gap: 10px;
   min-width: 0;
-  margin: 0 0 0 -3px;
+  margin: 0 0 0 -18px;
 }
 .poll-bar {
   position: relative;
@@ -187,7 +188,7 @@
 .poll-note { color: #b8b8b8; }
 .poll-close {
   position: absolute;
-  right: 8px;
+  right: 40px; /* Leave the site's persistent right-edge phone tab unobstructed. */
   top: 9px;
   display: grid;
   place-items: center;
