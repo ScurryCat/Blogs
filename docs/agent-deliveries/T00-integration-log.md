@@ -201,3 +201,23 @@ docker compose -f deploy/compose.dev.yaml --env-file deploy/.env up -d
 | 2026-10-16 | **T02（交付入库）** | T02 交付完成并入库 | 256 文件 / 18050 行（`ebaaa6a`），**确认未夹带 T01 与 T00 的文件**；前端 typecheck / lint / test(**162**) / build **全部退出码 0**；后端 171 通过；旧站 53 通过零回归。交付前所有权预审无越界。`tasks.json` 中 T02 → **`integrated_verified`** | `ebaaa6a` |
 | 2026-10-16 | **T02 修复闭环（第 2 次）** | 复验我第 26 轮报的两处问题 | **均已修复并行为验证**：直接 URL 打开后焦点从 `BODY` 变为 `BUTTON.pw-close`（**在对话框内**）、Escape **可以关闭**；点击路径焦点同样进入对话框。修复前仅点击路径的 Escape 有效 | 无（仅验证） |
 | 2026-10-16 | **基础集成完成** | T00 / T01 / T02 均为 `integrated_verified`，满足 T03–T09 的开始条件 | 可以派发功能包 | 见提交 |
+
+## 浏览器测试的时序约定（T02 实战发现，2026-10-16）
+
+**症状**：在 React 水合完成前点击元素，点到的是原生 `<a>`，于是发生**整页跳转** —— 测试可能"通过"（页面确实变了），但它验证的**不是客户端路由**，而是浏览器原生导航。对依赖「导航来源协议」的断言（如 T04 的 `metaverse-entry`）这意味着**什么都没验到**。
+
+**做法**（见 `apps/web/tools/browser-verification/verify.py`）：
+
+```python
+page.wait_for_function("() => typeof window.__PHANTOM_DEBUG__ === 'function'", timeout=15000)  # 等水合
+page.wait_for_function("() => window.__PHANTOM_DEBUG__().<字段> === '<期望值>'", timeout=15000)  # 等业务就绪
+page.click(...)                                                                                # 再交互
+```
+
+两条原则：**等能力信号而不是等时间**；**等业务状态就绪再交互**。固定 `wait_for_timeout` 在高负载下会假失败。已转给 T03 与 T04（两者都在写浏览器测试）。
+
+**同批已知坑**（此前已记录，此处汇总）：
+1. `#boot` 开屏拦截所有指针事件 —— 先按 Enter 并等 `#boot` detached；
+2. 浮层（问卷等）异步渲染 —— `wait_until="load"` 之后仍要等选择器出现；
+3. 开发期 `DEV_API_URL` **必须在 `next build` 时就有值**（rewrites 构建期固化）；
+4. 截图统一 `device_scale_factor=2`；截图存 `.dsh/screenshots/`，不入库。
