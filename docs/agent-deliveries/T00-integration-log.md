@@ -511,3 +511,7 @@ T06 另加：**不伪造奖项或数字**、**同一媒体不重复上传**（�
 **T10 待办**：恢复流程必须包含「恢复后撤销 / 清空全部会话」。当前只有单个 `revoke_session`，**没有「撤销全部」入口**；可用 `UPDATE sessions SET revoked_at = now() WHERE revoked_at IS NULL;`（或清空该表）。
 已固化为 `tools/acceptance/verify-restore-revokes-sessions.py` | 待 T10 |
 | 2026-10-16 | T00（两次测量陷阱，均当场修正） | 上述验证第一版得到「**未复活**」的结论 | **那是假通过**：登出时服务器下发 `Set-Cookie` 清除会话，我的 cookie jar 照做，于是恢复后的请求**根本没带旧 Cookie** —— 测的是「无 Cookie 请求」。修正为「登出前抓 Cookie 原文 + 恢复后用显式 `Cookie` 头 + 无 jar 的 opener 重放」后才看到真实结果。第二版又发现查库只取第一行会看到**误导性的 `revoked_at`**（登录流程会产生多行），改为列出全部行 | 已修正 |
+| 2026-10-16 | **新增 `revoke_sessions` 运维 CLI** | 上一轮发现「恢复备份让已撤销会话复活」后，把修复动作补成工具 | `python -m app.commands.revoke_sessions --all`（或 `--username <名字>`）。遵循既有 CLI 约定：**必须显式给出范围**（无默认值，退出码 2 拒绝）、只写 `revoked_at` 不删行（审计可追溯）、幂等、输出不含 token。
+**语义细节**：`--username` 只撤该站主自己的会话，**不动预登录会话**（`user_id` 为 NULL，不属于任何站主）—— 清那种会话要用 `--all`。
+验证：HTTP 端到端 7 项全过（关键项是**撤销后旧 Cookie 确实失效**）；单元测试 5 例；auth 目录 28 通过零回归；已集成域全量 **300 通过** | `8b24e96` |
+| 2026-10-16 | T00（测试脚手架连错四轮） | 上述 CLI 的单元测试我改了四轮才通过 | 依次是：① `t01_database_url` **只建空库**、建表在 `t01_schema_report`（须依赖 `t01_session`）；② 漏了必填的 `csrf_secret` 列；③ `token_hash` 有**唯一约束**而我每个测试用同一对固定值；④ 把 `--username` 的语义写错（它本就不该动预登录会话）。**四次都是测试写法而非被测对象** —— 与前几轮的测量错误同一类，说明「先怀疑自己的测法」这条纪律仍然必要 | 已修正 |
