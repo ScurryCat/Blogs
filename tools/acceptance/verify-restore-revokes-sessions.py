@@ -20,9 +20,30 @@
 """
 
 import os, shutil, subprocess, sys, time, json, urllib.request, urllib.error
+
+def _pick_port(preferred: int) -> int:
+    """优先用默认端口；被占用时自动换一个空闲端口。
+
+    为什么需要：多 agent 并行时固定端口会撞车 —— 脚本会整段失败并打印一堆 502/URLError，
+    而**原因看起来像被测对象坏了**（我因此误判过一次）。T10 的集成申请 §6.6 也提了这条。
+    显式指定仍然可用：设 `PL_ACCEPTANCE_PORT` 环境变量即可。
+    """
+    import socket
+
+    wanted = int(os.environ.get("PL_ACCEPTANCE_PORT", preferred))
+    with socket.socket() as probe:
+        try:
+            probe.bind(("127.0.0.1", wanted))
+            return wanted
+        except OSError:
+            pass
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        return int(probe.getsockname()[1])
+
 BASE = "postgresql+psycopg://pl@127.0.0.1:55432/"
 DB, DB2, PSQL = "pl_rs_a", "pl_rs_b", "/opt/homebrew/opt/postgresql@18/bin/psql"
-DUMP = "/tmp/pl_rs.sql"; PORT = 8126; API = f"http://127.0.0.1:{PORT}"
+DUMP = "/tmp/pl_rs.sql"; PORT = _pick_port(8126); API = f"http://127.0.0.1:{PORT}"
 SRV_LOG = f"/tmp/pl-acceptance-{PORT}.log"   # 服务输出写文件：启动失败时可直接看它
 API_DIR = "/Users/学习/blog/Blogs/apps/api"; ORIGIN = "http://127.0.0.1:3100"
 MEDIA = "/tmp/pl_rs_media"; shutil.rmtree(MEDIA, ignore_errors=True); os.makedirs(MEDIA)
@@ -46,6 +67,8 @@ sh(f"cd {API_DIR} && uv run python -m app.commands.bootstrap_admin --username ow
 
 import http.cookiejar
 jar = http.cookiejar.CookieJar()
+
+
 opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
 def req(method, path, data=None, headers=None, op=None, timeout=10):
     o = op or opener
