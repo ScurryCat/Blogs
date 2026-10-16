@@ -19,3 +19,20 @@ version.json
 
 # 临时设计讨论与预览，不作为站点资源发布
 .superpowers/
+
+# 本地环境变量文件：只提交 .env.example，绝不提交真实密钥
+.env
+.env.local
+deploy/.env
+apps/api/.env
+apps/web/.env
+
+# 前端构建产物与依赖（T00 引入 Next.js 后新增）
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Python 虚拟环境（uv 在 apps/api 下创建）
+.venv/

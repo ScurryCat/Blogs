@@ -1,0 +1,32 @@
+[project]
+name = "phantom-log-api"
+version = "0.0.0"
+description = "PHANTOM LOG 后端（FastAPI）。依赖与锁文件由 T00 拥有，其他任务提交依赖申请。"
+requires-python = ">=3.13"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.30",
+  "sqlalchemy>=2.0",
+  "alembic>=1.13",
+  "psycopg[binary]>=3.2",
+  "pydantic-settings>=2.4",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3",
+  "httpx>=0.27",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+pythonpath = ["."]
+filterwarnings = ["error::DeprecationWarning:app.*"]

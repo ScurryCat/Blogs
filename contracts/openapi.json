@@ -1,0 +1,35 @@
+{
+  "info": {
+    "title": "PHANTOM LOG API",
+    "version": "0.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/health/live": {
+      "get": {
+        "description": "只报告进程自身的存活状态（06 §1：liveness 仅判断进程是否响应）。\n\n不查数据库、不查媒体卷、不查 schema。**本文件刻意不提供 `/health/ready`**：\nreadiness 要验证 DB 可用、schema 版本兼容与媒体目录可用，属 T01 / T10 的实现，\n用永远返回 ok 的占位实现冒充就绪被交接计划明确禁止。\n\n响应字段名文档未规定，此处只给最小状态，且不泄漏连接串、目录、数据库名或堆栈。",
+        "operationId": "health_live_api_v1_health_live_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Health Live Api V1 Health Live Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "进程存活状态",
+        "tags": [
+          "meta"
+        ]
+      }
+    }
+  }
+}

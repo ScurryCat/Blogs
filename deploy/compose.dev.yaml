@@ -1,0 +1,133 @@
+# 开发期 Compose（T00 拥有，完成开发启动验证后把 deploy/ 整体交 T10）。
+#
+# 硬约束（T00 执行清单 / 06 §1）：
+#   - db 不公开监听：只连内部数据网络，不发布端口。
+#   - 无默认生产密码：POSTGRES_PASSWORD 与 SECRET_KEY 都必须由环境提供，缺失即拒绝启动。
+#   - 不覆盖现有服务：web / api 的宿主端口只绑 127.0.0.1，且与旧站 8000 预览不冲突。
+#   - 迁移是一次性任务，API 启动时**不**执行迁移（06 §2）。
+#
+# 本文件只声明开发环境。生产编排、TLS、备份由 T10 负责，此阶段不得宣称生产就绪。
+#
+# 用法：
+#   cp deploy/env.example deploy/.env   # 填好密码与密钥
+#   docker compose -f deploy/compose.dev.yaml --env-file deploy/.env config
+#   docker compose -f deploy/compose.dev.yaml --env-file deploy/.env up -d
+
+name: phantom-log-dev
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pl}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?必须显式提供数据库密码，开发环境也不留默认值}
+      POSTGRES_DB: ${POSTGRES_DB:-pl_dev}
+      TZ: UTC
+      PGTZ: UTC
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - data_net
+    # 刻意不写 ports：数据库不公开监听。
+    healthcheck:
+      # pg_isready 只证明能接受连接，不代表 schema 已迁移（06 §3）。
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  migrate:
+    build:
+      context: ..
+      dockerfile: deploy/dev.Dockerfile.api
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+    environment:
+      APP_ENV: dev
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-pl}:${POSTGRES_PASSWORD:?}@db:5432/${POSTGRES_DB:-pl_dev}
+      SECRET_KEY: ${SECRET_KEY:?migrate 也要求完整配置，避免两套配置来源}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - data_net
+
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/dev.Dockerfile.api
+    restart: unless-stopped
+    environment:
+      APP_ENV: dev
+      # 运行账号与迁移账号：生产应分开（06 §5）。开发期共用，但不使用超级用户之外的默认口令。
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-pl}:${POSTGRES_PASSWORD:?}@db:5432/${POSTGRES_DB:-pl_dev}
+      SECRET_KEY: ${SECRET_KEY:?}
+      # 开发期分端口才需要显式 CORS；带凭据请求不允许配成 "*"。
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://127.0.0.1:3100}
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        # 迁移成功后才启动 API；不是「容器起来了就算就绪」。
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:8100:8000"
+    volumes:
+      - media_data:/var/lib/phantom-log/media
+    networks:
+      - app_net
+      - data_net
+    healthcheck:
+      # 只检查 liveness。真正的 readiness（DB / schema / 媒体）留给 T01 实现。
+      test:
+        - CMD
+        - python
+        - -c
+        - |
+          import sys, urllib.request
+          try:
+              code = urllib.request.urlopen("http://127.0.0.1:8000/api/v1/health/live", timeout=3).status
+          except Exception:
+              sys.exit(1)
+          sys.exit(0 if code == 200 else 1)
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/dev.Dockerfile.web
+    restart: unless-stopped
+    environment:
+      # 仅服务端可见；不得放进 NEXT_PUBLIC_*，也不得写入浏览器构建物。
+      API_INTERNAL_URL: http://api:8000
+      NODE_ENV: production
+    depends_on:
+      api:
+        condition: service_started
+    ports:
+      - "127.0.0.1:3100:3000"
+    networks:
+      # 刻意不加入 data_net：web 不接触数据库网络。
+      - app_net
+    healthcheck:
+      # Web 的健康检查不依赖数据库（06 §1）。
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  pg_data:
+  media_data:
+
+networks:
+  app_net:
+  data_net:
+    # 数据库网络不对其他项目开放，也不直接面向公网。
+    internal: true
