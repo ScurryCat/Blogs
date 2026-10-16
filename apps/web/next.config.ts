@@ -34,11 +34,38 @@ const legacyRedirects = [
   },
 ];
 
+/**
+ * 开发期转发（**仅当环境变量存在时生效，生产不受影响**）。
+ *
+ * 为什么需要：浏览器按设计只访问同源相对地址 `/api/v1`（01 §2 / 06 §3），而音乐按
+ * 素材分层复用旧站静态路径 `/assets/music/`（见 features/legacy/music.ts）。在开发
+ * 环境里 Next 独占一个端口，这两条路径都会 404 —— 于是「登录成功路径」与「音乐能否
+ * 播放」在本地无法验证，只能靠组件测试代替，那不是浏览器证据。
+ *
+ * 生产环境由网关转发这两条路径（06 §1：只有网关对公网开放），因此这里的转发
+ * **不是生产配置**，只是在本地复刻网关的行为。不设这两个变量 → 不生成任何规则。
+ */
+const devApiUrl = process.env.DEV_API_URL?.replace(/\/$/, "");
+const devLegacyStaticUrl = process.env.DEV_LEGACY_STATIC_URL?.replace(/\/$/, "");
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   async redirects() {
     return legacyRedirects;
+  },
+  async rewrites() {
+    const rules: { source: string; destination: string }[] = [];
+    if (devApiUrl) {
+      rules.push({ source: "/api/v1/:path*", destination: `${devApiUrl}/api/v1/:path*` });
+    }
+    if (devLegacyStaticUrl) {
+      rules.push({
+        source: "/assets/music/:path*",
+        destination: `${devLegacyStaticUrl}/assets/music/:path*`,
+      });
+    }
+    return rules;
   },
 };
 

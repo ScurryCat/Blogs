@@ -145,3 +145,13 @@ T00 建议改为引用旧站同一路径 `/assets/music/<file>`，仓库保持�
 否则「音乐连续」这条必须保留项在新站失效。三首曲目已在仓库根 `assets/music/` 入库（`.gitignore` 有专门注释说明撤下方式）。
 | 2026-10-16 | T02（手机 20 次循环） | 真实 Chromium 独立复现验收矩阵「关闭手机、换 App、换路由，各重复 20 次 → 无重复音频、监听和残留遮罩」 | 开关手机 **20 次**后：`audio` 1→1、`audio[data-pl-music]` 1→1、`.pw-wrap` 1→1、`.crowd.on` 0→0、body 无残留锁定、页面错误 0。T02 自建工具亦覆盖此项（`tools/browser-verification/verify.py`），本轮为独立复现 | 无（仅验证） |
 | 2026-10-16 | T02（音乐连续性） | 用**元素身份标记**验证客户端路由下播放器是否被重建（比计数更强的证据） | 先给 `audio` 元素打 `dataset.plIdentity`，再点击站内链接导航 **25 次**：audio 数仍为 **1**，**身份标记存活**（播放器未被重建），`window.__docMarker` 仍在（同一 document，未整页重载），页面错误 0。对照实验：`page.goto()` 整页导航 20 次后 identity 丢失、但 audio 数仍为 1 —— 与 01 §4 记录的「迁移期整页跳转可能重载」的临时边界一致 | 无（仅验证） |
+| 2026-10-16 | T00（开发期同源转发） | 音乐改用旧站路径后，开发环境 Next 独占端口 → `/assets/music/` 与同源 `/api/v1` 都 404，导致「音乐可播」与「浏览器登录成功路径」无法本地验证 | `next.config.ts` 增加 **env 开关的两条 rewrite**（不设变量→不生成规则，生产不受影响）。隔离副本实测：音乐 **200 / 4447278B / audio/mpeg**（字节数与旧站一致）、`/api/v1/health/live` 与 `/posts` 同源返回 JSON | 见提交 |
+| 2026-10-16 | **T01 未验证项闭环** | 借上面的转发，在真实 Chromium 里验证 T01 交付单 §8 第 2 条「浏览器里的登录成功路径」 | `/admin/login` 发出同源 `/api/v1/auth/session`；填入 CLI 初始化的账号并提交 → 页面出现 **「已登录：pl-verify」** 与注销入口，**页面错误 0**；截图 `.dsh/screenshots/new-login-success.png`。T01 该项原因「预览无同源 /api/v1 代理」已消除 | 无（仅验证） |
+
+## 开发期代理的构建期约束（重要，2026-10-16 实测）
+
+`DEV_API_URL` / `DEV_LEGACY_STATIC_URL` **必须在 `next build` 时就有值**。Next 的 `rewrites()` 在构建期求值并写进路由清单，只在 `next start` 时设置**不会生效** —— 我第一次就是这样测出 404，带变量重建后才通过。已写进 `apps/web/.env.example`。
+
+生产不要设这两个变量：`/api/v1` 与 `/assets/music/` 由网关转发（06 §1 只有网关对公网开放）。
+
+**T10 待办**：网关需转发 `/assets/music/`（否则「音乐连续」在新站失效）与 `/api/v1`。
