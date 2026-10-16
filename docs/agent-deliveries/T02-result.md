@@ -4,10 +4,11 @@
 任务：T02 / 旧站迁移、持久外壳与手机宿主（前端）
 状态：implemented_waiting_integration
       —— 六个主页面、持久外壳、导航过场、手机宿主、问卷迁移都已实现并有真实测试；
-      真实浏览器验收（Playwright + 系统 chromium）41 项全过、21 张截图；
+      真实浏览器验收（Playwright + 系统 chromium）44 项全过、21 张截图；
       未完成 / 未验证项见 §5，必须集成方动作见 §6。
 基线：main @ 819c64d（开始时工作区干净；本轮未提交、未推送、未建分支）
-      开发中发现 T01 在 apps/api、apps/web/features/auth、app/admin/login 并行改动，未触碰。
+      开发中发现 T01（apps/api、features/auth、app/admin/login）、T03（features/ins、app/admin/moments）、
+      T04（features/metanav）在并行改动，均未触碰；交付时树里存在 T04 的构建错误（见 §5）。
 外部影响：只调用了本机 Open-Meteo（天气页，与旧站同源同接口）；未部署、未推送、未接付费服务。
 ```
 
@@ -87,11 +88,11 @@ apps/web/tools/browser-verification/verify.py
 ```text
 npm --prefix apps/web run typecheck   → exit 0（tsc 无输出）
 npm --prefix apps/web run lint        → exit 0（0 error / 0 warning）
-npm --prefix apps/web run test -- --run→ exit 0；16 files / 160 tests passed
+npm --prefix apps/web run test -- --run→ exit 0；16 files / 162 tests passed
                                         （其中本包 tests/ 11 files / 112 tests）
 npm --prefix apps/web run build       → exit 0；15 条路由（6 个主页面 + 8 篇 SSG + healthz）
 node --test tests/*.test.cjs          → exit 0；53 passed / 0 failed（旧站零回归）
-python3 apps/web/tools/browser-verification/verify.py → exit 0；41 checks passed / 0 failed
+python3 apps/web/tools/browser-verification/verify.py → exit 0；44 checks passed / 0 failed
 node apps/web/tools/legacy-migration/migrate.mjs      → exit 0（幂等，可重复运行）
 ```
 
@@ -125,6 +126,15 @@ Escape 关闭 + 焦点回到 .pw-tab + 移除 inert
 跨客户端路由：音乐元素是同一份实例、播放状态延续
 ```
 
+**客户端导航（音乐连续的前提）**：
+
+```text
+顶部导航 / → /about            same_doc=True
+地图地点图标 /map → /          same_doc=True
+地图地点列表 /map → /posts/…   same_doc=True
+手机站点链接入口 / → /about    same_doc=True
+```
+
 **截图（21 张，绝对路径）**：`/Users/学习/blog/.dsh/screenshots/`
 `t02-poll-desktop.png`、`t02-poll-390.png`、`t02-phone-desktop.png`、
 `t02-{home,map,post,about,guestbook,weather}-{desktop,390,320}.png`
@@ -132,13 +142,14 @@ Escape 关闭 + 焦点回到 .pw-tab + 移除 inert
 
 ### 4.2 开发中抓到并修掉的真实缺陷（都有回归测试或浏览器证据）
 
-1. **providers 没包住 children（严重）**：首版把 SiteRuntime 放在布局末尾，页头 / 正文 / 地图里的链接拿不到导航协调器，全部**整页跳转**——过场与「不重建音频」都不成立。真实浏览器量 `performance.timeOrigin` 才发现。已改为 `SiteRuntime` 包住服务端 children，现在导航是 `?_rsc=` 的客户端跳转。
-2. **问卷 `.poll-q` 的 `translate` 被构建吞掉**：Next 16（Turbopack / Lightning CSS）会把同一规则里的 `translate` 与 `transform` 合并并**丢掉 translate**（实测 `.x{translate:0 -36px;transform:rotate(-8deg)}` → `.x{transform:rotate(-8deg)}`）。迁移后 Q 比旧站低 20px、不再压住票数框。已在 `globals.css` 用等价 `transform` 按 621px 断点还原（≤620px 旧站自己用 `translate:-12px`，不能叠加）；扫过 10 个样式表只有这一处命中。T00 已独立复核并纳入给 T05/T06/T09 的检查方法。
-3. **Markdown 独立图片失配**：块级 figure 正则漏了 `\)`，导致 `![图](url "图注")` 退化成段落里的行内图片。快照测试抓到。
-4. **自动播放淡入的时钟混用**：`performance.now()` 与 rAF 时间戳不同源时首帧算出负进度，`audio.volume = 负数` 触发 `IndexSizeError`。改成以 rAF 时间戳为基准并把进度 / 音量夹紧到合法区间。
-5. **音乐取不到与「没有曲子」混为一谈**：原实现把 404 也显示成「还没有曲子」。现拆成 `empty` / `unavailable` 两种状态（`data-music-state`），文案指向真实原因；并改用旧站同一路径 `/assets/music/`（仓库只有一份音频）。
-6. **`crowd.state` 诊断缺口**：reduce 下调用方短路导致状态停在 `not-warmed`，与「压根没跑」无法区分。已把 reduce 判定收进 `warm()`、省流量由 `markSkipped` 登记，现在 reduce 下是 `state:"reduced-motion"`（浏览器实测）。
-7. **`host.openApp("home")` 是空操作**：`home` 不是应用 id，被注册表正确地拒绝，导致「回到桌面」按钮与 Escape 上一层失效。新增宿主内部 `goHome()`。
+1. **点击拦截挂在冒泡阶段 → 不少跳转退化成整页重载（严重，最后才抓到）**：`SiteLink` 原来用 React 的 `onClick`（冒泡到 body 才跑）。Next 16 在 document 上也有自己的点击处理，两者抢时序时会出现「RSC 请求已经发出、`window` 冒泡处 `defaultPrevented` 已是 true，文档却仍然整页重载」——表现为音乐被打断、过场收尾失效，而且**只在部分目标路径上复现**（`/`→`/about`、`/map`→`/posts/*` 重载；`/about`→`/map`、`/map`→`/weather` 正常），很难从单点现象看出规律。改成**捕获阶段**拦截（`onClickCapture` + `stopPropagation`）后四类入口全部是同文档导航，并已加进浏览器回归清单。
+2. **providers 没包住 children（严重）**：首版把 SiteRuntime 放在布局末尾，页头 / 正文 / 地图里的链接拿不到导航协调器，全部**整页跳转**——过场与「不重建音频」都不成立。真实浏览器量 `performance.timeOrigin` 才发现。已改为 `SiteRuntime` 包住服务端 children，现在导航是 `?_rsc=` 的客户端跳转。
+3. **问卷 `.poll-q` 的 `translate` 被构建吞掉**：Next 16（Turbopack / Lightning CSS）会把同一规则里的 `translate` 与 `transform` 合并并**丢掉 translate**（实测 `.x{translate:0 -36px;transform:rotate(-8deg)}` → `.x{transform:rotate(-8deg)}`）。迁移后 Q 比旧站低 20px、不再压住票数框。已在 `globals.css` 用等价 `transform` 按 621px 断点还原（≤620px 旧站自己用 `translate:-12px`，不能叠加）；扫过 10 个样式表只有这一处命中。T00 已独立复核并纳入给 T05/T06/T09 的检查方法。
+4. **Markdown 独立图片失配**：块级 figure 正则漏了 `\)`，导致 `![图](url "图注")` 退化成段落里的行内图片。快照测试抓到。
+5. **自动播放淡入的时钟混用**：`performance.now()` 与 rAF 时间戳不同源时首帧算出负进度，`audio.volume = 负数` 触发 `IndexSizeError`。改成以 rAF 时间戳为基准并把进度 / 音量夹紧到合法区间。
+6. **音乐取不到与「没有曲子」混为一谈**：原实现把 404 也显示成「还没有曲子」。现拆成 `empty` / `unavailable` 两种状态（`data-music-state`），文案指向真实原因；并改用旧站同一路径 `/assets/music/`（仓库只有一份音频）。
+7. **`crowd.state` 诊断缺口**：reduce 下调用方短路导致状态停在 `not-warmed`，与「压根没跑」无法区分。已把 reduce 判定收进 `warm()`、省流量由 `markSkipped` 登记，现在 reduce 下是 `state:"reduced-motion"`（浏览器实测）。
+8. **`host.openApp("home")` 是空操作**：`home` 不是应用 id，被注册表正确地拒绝，导致「回到桌面」按钮与 Escape 上一层失效。新增宿主内部 `goHome()`。
 
 ## 5. 未验证 / 未完成（不得当作通过）
 
@@ -151,11 +162,12 @@ Escape 关闭 + 焦点回到 .pw-tab + 移除 inert
 | **热力图（关于页第 04 区块）** | 数据是 `tools/github-heatmap/fetch.py` 的联网产物，本轮**不伪造数据**，该区块不渲染。 |
 | **旧站 `clip-dive`（进文章的潜入视频）** | `assets/clip/` 被 `.gitignore` 排除、本地不存在，新站进文章走 Joker 帷幕（旧站在缺素材时本来就退回帷幕），没有迁移视频分支。 |
 | **`next start` 之外的部署形态** | 未跑 Docker / 容器 / 反向代理（Docker daemon 未运行）。 |
+| **T04 的构建错误挡住再次构建** | 交付前最后一次 `next build` 失败于 `features/metanav/host.ts` 缺少 `"use client"`（T04 的文件，非本包）。因此浏览器套件最后一次全绿是在**该错误出现之前的产物**上跑的（44/0）；本包的 typecheck / lint / vitest 在含 T04 文件的当前树里仍然全绿（`tsc` 报的错全部落在 `features/metanav/`、`features/ins/`、`app/admin/moments/`）。 |
 | **320px 下手机面板的完整交互** | 只截了图与量了溢出（T00 独立验证零横向溢出）；没有在 320px 上逐项走完手机应用流程。 |
 
 ## 6. 集成申请（需要 T00 / T10 动作）
 
-1. **旧 URL 重定向（必须，属 `next.config.ts`，T00 所有）**：映射表已实现并测试（`features/legacy/routes.ts` 的 `legacyHrefToNext`），但**重定向本身还没生效**——`/post.html?p=…` 现在会 404。建议加：
+1. **旧 URL 重定向（属 `next.config.ts`，T00 所有；T00 已实现，本包复核）**：`features/legacy/routes.ts` 的 `legacyHrefToNext` 与 `next.config.ts` 的 `legacyRedirects` 一一对应，并有单测钉住映射表。集成时请确认这组规则随发布一起生效（缺了它 `/post.html?p=…` 会 404）。对应的规则形态：
 
    ```ts
    async redirects() {
@@ -170,7 +182,7 @@ Escape 关闭 + 焦点回到 .pw-tab + 移除 inert
    }
    ```
 
-   `index.html#posts` / `#archive` 的锚点保留：hash 不经过服务器，`LegacyHashLanding` 已在同页恢复滚动（T00 独立验证 `/#posts` 可滚动到位）。
+   `index.html#posts` / `#archive` 的锚点保留：hash 不经过服务器，`LegacyHashLanding` 已在同页恢复滚动（T00 独立验证 `/#posts` 可滚动到位）。**本轮未能再跑一次重定向的 curl 验证**：交付时 `.next` 没有生产构建（T04 的构建错误，见 §5）。
 2. **`/assets/music/` 转发（生产）**：新站沿用旧站路径 `/assets/music/<file>`（`features/legacy/music.ts` 的 `MUSIC_BASE`），仓库只有一份音频。开发期已由 T00 转发；**生产网关需要同样转发到仓库根的 `assets/music/`**，否则播放器会显示「音频取不到」。
 3. **手机内置应用登记**：T03–T09 的应用按 SHARED-CONTRACTS §4 交给 T00 写入 `registry.ts`，宿主无需改动（`tests/phone/phone-host.test.tsx` 用 `createPhoneRegistry` + 测试 manifest 证明了这条）。本包另外登记了 4 个 `site-link` 入口（`features/phone/legacy-apps.ts`，本包所有）。
 4. **浏览器验证依赖（不需要新增依赖）**：`tools/browser-verification/verify.py` 用系统 Python 的 playwright 1.60 + 已下载的 chromium，**没有**、也**不建议**往 `apps/web/package.json` 加 playwright（会引入浏览器下载）。若集成方希望它进 CI，请在 T10 决定运行方式。
@@ -190,6 +202,7 @@ Escape 关闭 + 焦点回到 .pw-tab + 移除 inert
 | 手机音乐卡片状态 | `data-music-state="empty\|unavailable\|ready"` |
 | 数据降级提示 | `degraded && apiEnabled` 时页面顶部 `.data-notice` 显示原因；正常状态不打扰 |
 | 迁移样式表 | `styles/legacy/*.css` 是旧站快照，**不要往里加新样式**；新样式进 `app/globals.css`；已知构建坑见 §4.2 第 2 条 |
+| 站内链接 | 一律用 `SiteLink`（内部 `onClickCapture`）或地图的 `SvgSiteLink`；**不要在页面里自己写 onClick 拦截** —— 冒泡阶段会与 Next 的全局点击处理抢时序，退化成整页重载（见 §4.2 第 1 条） |
 | 旧站资源路径 | 旧配置里的 `assets/…` 一律经 `features/legacy/assets.ts` 的 `asset()` 映射到 `/assets/legacy/…`（音频例外，见 §6.2） |
 
 ## 8. 遗留与需要的外部选择

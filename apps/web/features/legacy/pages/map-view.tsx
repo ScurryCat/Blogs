@@ -55,14 +55,16 @@ function SvgSiteLink({
   const navigation = useNavigation();
   // React 在运行时按父级命名空间创建 SVG <a>，但 JSX 的类型仍然按 HTML 锚点推导；
   // 这里沿用 HTML 锚点的事件类型，判定函数只读 getAttribute / hasAttribute，两者同形。
-  const onClick = (event: MouseEvent<HTMLAnchorElement>) => {
+  // 与 SiteLink 一样在捕获阶段拦截：见那里的说明（避免与 Next 的全局点击处理抢时机）。
+  const onClickCapture = (event: MouseEvent<HTMLAnchorElement>) => {
     const request = navigationRequestFromClick(event, event.currentTarget, href, source);
     if (!request) return;
     event.preventDefault();
+    event.stopPropagation();
     navigation.navigate(request);
   };
   return (
-    <a href={href} onClick={onClick} {...rest}>
+    <a href={href} onClickCapture={onClickCapture} {...rest}>
       {children}
     </a>
   );

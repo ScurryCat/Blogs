@@ -277,6 +277,7 @@ def map_transitions(browser, base: str) -> None:
         )
         page.wait_for_timeout(1500)
 
+    page.wait_for_selector(".mp-svg .loc.on", timeout=20000)
     click_and_report(".mp-svg .loc.on", "地图地点图标")
     click_and_report(".mp-card .btn.red", "右侧「出发」")
     click_and_report(".mp-list a", "下方地点列表")
@@ -300,8 +301,14 @@ def map_transitions(browser, base: str) -> None:
     context = browser.new_context(viewport=DESKTOP, reduced_motion="reduce")
     reduce_page = context.new_page()
     open_page(reduce_page, "/map", base)
+    # 先等运行时挂上（水合完成）再点，否则点到的是原生链接、会变成整页跳转。
+    reduce_page.wait_for_function("() => typeof window.__PHANTOM_DEBUG__ === 'function'", timeout=15000)
+    reduce_page.wait_for_function(
+        "() => window.__PHANTOM_DEBUG__().crowd.state === 'reduced-motion'", timeout=15000
+    )
+    check("减少动效下人群是「有意跳过」而不是加载失败", True, "crowd.state=reduced-motion")
     reduce_page.click(".mp-svg .loc.on")
-    reduce_page.wait_for_timeout(120)
+    reduce_page.wait_for_timeout(150)
     transition = reduce_page.evaluate("() => window.__PHANTOM_DEBUG__().transition")
     check(
         "prefers-reduced-motion 下不播人群 / 帷幕",
@@ -309,6 +316,35 @@ def map_transitions(browser, base: str) -> None:
         json.dumps(transition, ensure_ascii=False),
     )
     context.close()
+
+
+def client_navigation(browser, base: str) -> None:
+    """站内跳转必须是客户端导航（同文档），否则整页重载会重建音频、破坏「音乐连续」。
+
+    这一条是回归测试：曾经因为点击拦截挂在冒泡阶段、与 Next 的全局点击处理抢时机，
+    整页重载会与 RSC 请求同时发生（`window` 冒泡处 defaultPrevented 已是 true，页面仍重载）。
+    """
+    cases = [
+        ("顶部导航", "/", '.hud-nav a[data-k="about"]'),
+        ("地图地点图标", "/map", ".mp-svg .loc.on"),
+        ("地图地点列表", "/map", ".mp-list li:nth-child(3) a"),
+        ("手机站点链接入口", "/", ".pw-tab"),
+    ]
+    for label, start, selector in cases:
+        page = browser.new_page(viewport=DESKTOP, reduced_motion="no-preference")
+        open_page(page, start, base)
+        # 先等内容出现，再等运行时挂上（大页面首次编译 / 首帧较慢时给足时间）。
+        page.wait_for_selector(".hud-nav", timeout=20000)
+        page.wait_for_function("() => typeof window.__PHANTOM_DEBUG__ === 'function'", timeout=25000)
+        if selector == ".pw-tab":
+            page.click(".pw-tab")
+            page.wait_for_timeout(300)
+        origin = page.evaluate("() => performance.timeOrigin")
+        page.click(selector)
+        page.wait_for_timeout(2500)
+        same_document = page.evaluate("() => performance.timeOrigin") == origin
+        check(f"{label}：客户端导航（不整页重载）", same_document, page.url)
+        page.close()
 
 
 def phone_host(browser, base: str) -> None:
@@ -449,6 +485,7 @@ def main() -> int:
         poll_geometry(browser, args.base, args.legacy)
         poll_geometry_small(browser, args.base, args.legacy)
         map_transitions(browser, args.base)
+        client_navigation(browser, args.base)
         phone_host(browser, args.base)
         music_continuity(browser, args.base)
         responsive_shots(browser, args.base)

@@ -27,16 +27,23 @@ export interface SiteLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
 export function SiteLink({ href, source, onClick, children, ref, ...rest }: SiteLinkProps): ReactNode {
   const navigation = useNavigation();
 
-  const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
+  /**
+   * 刻意用**捕获阶段**：Next 16 会在 document 上挂自己的点击处理（同一节点上先注册的先跑），
+   * 如果等冒泡到 body 才 preventDefault，浏览器可能已经开始了默认的整页跳转
+   * —— 表现为「RSC 请求发出去了，但文档还是整页重载」（实测：window 冒泡处
+   * defaultPrevented 已经是 true，页面依旧重载）。在捕获阶段先拦住就不会有这个竞态。
+   */
+  const handleClickCapture = (event: MouseEvent<HTMLAnchorElement>) => {
     onClick?.(event);
     const request = navigationRequestFromClick(event, event.currentTarget, href, source);
     if (!request) return;
     event.preventDefault();
+    event.stopPropagation();
     navigation.navigate(request);
   };
 
   return (
-    <a ref={ref} href={href} onClick={handleClick} {...rest}>
+    <a ref={ref} href={href} onClickCapture={handleClickCapture} {...rest}>
       {children}
     </a>
   );
