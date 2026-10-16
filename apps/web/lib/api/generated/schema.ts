@@ -26,6 +26,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/moments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理列表（含草稿） */
+        get: operations["list_admin_moments_api_v1_admin_moments_get"];
+        put?: never;
+        /** 新建草稿 */
+        post: operations["create_moment_api_v1_admin_moments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/moments/{moment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 读取动态（草稿 / 预览） */
+        get: operations["read_admin_moment_api_v1_admin_moments__moment_id__get"];
+        put?: never;
+        post?: never;
+        /** 软删除动态 */
+        delete: operations["delete_moment_api_v1_admin_moments__moment_id__delete"];
+        options?: never;
+        head?: never;
+        /** 更新动态 */
+        patch: operations["update_moment_api_v1_admin_moments__moment_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/moments/{moment_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发布动态 */
+        post: operations["publish_moment_api_v1_admin_moments__moment_id__publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/moments/{moment_id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 撤回动态 */
+        post: operations["unpublish_moment_api_v1_admin_moments__moment_id__unpublish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/nav/palaces": {
         parameters: {
             query?: never;
@@ -212,6 +283,40 @@ export interface paths {
          * @description 站主可以读原图与已撤回对象；匿名只读有公开引用的 ready 变体。
          */
         get: operations["read_media_api_v1_media__media_id___variant__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/moments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 公开图文列表 */
+        get: operations["list_moments_api_v1_moments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/moments/{moment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 公开图文详情 */
+        get: operations["read_moment_api_v1_moments__moment_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -438,6 +543,149 @@ export interface components {
             url: string;
             /** Width */
             width: number;
+        };
+        /** MomentAdminListOut */
+        MomentAdminListOut: {
+            /** Items */
+            items: components["schemas"]["MomentAdminOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** MomentAdminOut */
+        MomentAdminOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Images */
+            images: components["schemas"]["MomentImageOut"][];
+            /** Images Admin */
+            images_admin: components["schemas"]["MomentImageAdminOut"][];
+            /** Published At */
+            published_at: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "published";
+            /** Tags */
+            tags: components["schemas"]["TagPublicOut"][];
+            /** Text */
+            text: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
+        };
+        /**
+         * MomentCreateIn
+         * @description 新建草稿。草稿可以暂时没有图片、替代文本也可以发布前补齐（03 §5）。
+         */
+        MomentCreateIn: {
+            /** Images */
+            images?: components["schemas"]["MomentImageIn"][];
+            /** Tags */
+            tags?: string[];
+            /**
+             * Text
+             * @default
+             */
+            text: string;
+        };
+        /**
+         * MomentImageAdminOut
+         * @description 可直接回填到 `MomentUpdateIn.images` 的形状（只有三个写入字段）。
+         */
+        MomentImageAdminOut: {
+            /** Alt */
+            alt: string;
+            /**
+             * Media Id
+             * Format: uuid
+             */
+            media_id: string;
+            /** Position */
+            position: number;
+        };
+        /**
+         * MomentImageIn
+         * @description 一张图的引用。`position` 必须从 0 开始连续且不重复。
+         */
+        MomentImageIn: {
+            /** Alt */
+            alt: string;
+            /**
+             * Media Id
+             * Format: uuid
+             */
+            media_id: string;
+            /** Position */
+            position: number;
+        };
+        /** MomentImageOut */
+        MomentImageOut: {
+            /** Alt */
+            alt: string;
+            /** Height */
+            height: number;
+            /**
+             * Media Id
+             * Format: uuid
+             */
+            media_id: string;
+            /** Position */
+            position: number;
+            /** Variants */
+            variants: components["schemas"]["MediaVariantOut"][];
+            /** Width */
+            width: number;
+        };
+        /**
+         * MomentListOut
+         * @description 列表统一结构（05 §6）：`{items, next_cursor}`。
+         */
+        MomentListOut: {
+            /** Items */
+            items: components["schemas"]["MomentOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** MomentOut */
+        MomentOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Images */
+            images: components["schemas"]["MomentImageOut"][];
+            /** Published At */
+            published_at: string | null;
+            /** Tags */
+            tags: components["schemas"]["TagPublicOut"][];
+            /** Text */
+            text: string;
+        };
+        /**
+         * MomentUpdateIn
+         * @description 更新。所有字段可选；传入 `images` 时**完整替换**有序关系（05 §7）。
+         */
+        MomentUpdateIn: {
+            /** Images */
+            images?: components["schemas"]["MomentImageIn"][] | null;
+            /** Tags */
+            tags?: string[] | null;
+            /** Text */
+            text?: string | null;
         };
         /**
          * PalaceActionIn
@@ -900,6 +1148,237 @@ export interface operations {
             };
         };
     };
+    list_admin_moments_api_v1_admin_moments_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MomentAdminListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_moment_api_v1_admin_moments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MomentCreateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MomentAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_admin_moment_api_v1_admin_moments__moment_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                moment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MomentAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_moment_api_v1_admin_moments__moment_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                moment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_moment_api_v1_admin_moments__moment_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                moment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MomentUpdateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MomentAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_moment_api_v1_admin_moments__moment_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                moment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MomentAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unpublish_moment_api_v1_admin_moments__moment_id__unpublish_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                moment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MomentAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     admin_list_palaces_api_v1_admin_nav_palaces_get: {
         parameters: {
             query?: {
@@ -1296,6 +1775,70 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_moments_api_v1_moments_get: {
+        parameters: {
+            query?: {
+                tag?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MomentListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_moment_api_v1_moments__moment_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                moment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MomentOut"];
                 };
             };
             /** @description Validation Error */

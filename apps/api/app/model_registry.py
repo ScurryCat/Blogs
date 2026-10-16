@@ -23,6 +23,7 @@ MODEL_MODULES: tuple[str, ...] = (
     "app.modules.tags.models",
     "app.modules.posts.models",
     "app.modules.nav.models",
+    "app.modules.moments.models",
 )
 
 _ModelT = TypeVar("_ModelT", bound=type)

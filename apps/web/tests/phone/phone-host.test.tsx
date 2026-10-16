@@ -189,10 +189,10 @@ describe("手机桌面", () => {
     const tiles = [...view.container.querySelectorAll(".pw-app")].map(
       (tile) => tile.getAttribute("data-app-id"),
     );
-    expect(tiles).toEqual(["palace", "metanav", "tokyo", "cast", "profile"]);
-    // 4 个 site-link 入口（T02 迁移的真实目的地）+ metanav（T04 交付、T00 登记的内置应用）。
+    expect(tiles).toEqual(["ins", "palace", "metanav", "tokyo", "cast", "profile"]);
+    // INS（T03）+ metanav（T04）两个内置应用 + 4 个 site-link 入口（T02 迁移的真实目的地）。
     // 断言具体清单而非数量：后续包登记时会被强制确认一次，而不是静默改变桌面。
-    expect(tiles).toHaveLength(5);
+    expect(tiles).toHaveLength(6);
     expect(view.container.querySelector(".pw-music")).not.toBeNull();
   });
 

@@ -8,6 +8,8 @@
  * 注册表来自仓库里的可信模块，**首版不从数据库下载 JavaScript**。
  */
 
+import { INS_MANIFEST } from "@/features/ins/phone-manifest";
+
 import type { PhoneAppManifest, PhoneAppModule } from "./types";
 
 /** id 必须是稳定的小写标识，不允许中文或随展示名变化。 */
@@ -25,6 +27,8 @@ export class PhoneRegistryError extends Error {}
  * 与一份 10 字段 manifest，由 T00 写入这里 —— 包不自己往宿主里塞条件分支。
  */
 export const PHONE_APPS: readonly PhoneAppManifest[] = Object.freeze([
+  // INS 由 T03 交付并自带 manifest（`features/ins/phone-manifest.tsx`），这里只做登记。
+  INS_MANIFEST,
   {
     id: "metanav",
     name: "导航",

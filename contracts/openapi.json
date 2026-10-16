@@ -208,6 +208,367 @@
         "title": "MediaVariantOut",
         "type": "object"
       },
+      "MomentAdminListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MomentAdminOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "MomentAdminListOut",
+        "type": "object"
+      },
+      "MomentAdminOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/MomentImageOut"
+            },
+            "title": "Images",
+            "type": "array"
+          },
+          "images_admin": {
+            "items": {
+              "$ref": "#/components/schemas/MomentImageAdminOut"
+            },
+            "title": "Images Admin",
+            "type": "array"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "$ref": "#/components/schemas/TagPublicOut"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "tags",
+          "published_at",
+          "images",
+          "status",
+          "version",
+          "created_at",
+          "updated_at",
+          "images_admin"
+        ],
+        "title": "MomentAdminOut",
+        "type": "object"
+      },
+      "MomentCreateIn": {
+        "description": "新建草稿。草稿可以暂时没有图片、替代文本也可以发布前补齐（03 §5）。",
+        "properties": {
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/MomentImageIn"
+            },
+            "maxItems": 9,
+            "title": "Images",
+            "type": "array"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "title": "Tags",
+            "type": "array"
+          },
+          "text": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "title": "MomentCreateIn",
+        "type": "object"
+      },
+      "MomentImageAdminOut": {
+        "description": "可直接回填到 `MomentUpdateIn.images` 的形状（只有三个写入字段）。",
+        "properties": {
+          "alt": {
+            "title": "Alt",
+            "type": "string"
+          },
+          "media_id": {
+            "format": "uuid",
+            "title": "Media Id",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "media_id",
+          "position",
+          "alt"
+        ],
+        "title": "MomentImageAdminOut",
+        "type": "object"
+      },
+      "MomentImageIn": {
+        "description": "一张图的引用。`position` 必须从 0 开始连续且不重复。",
+        "properties": {
+          "alt": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Alt",
+            "type": "string"
+          },
+          "media_id": {
+            "format": "uuid",
+            "title": "Media Id",
+            "type": "string"
+          },
+          "position": {
+            "maximum": 8.0,
+            "minimum": 0.0,
+            "title": "Position",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "media_id",
+          "position",
+          "alt"
+        ],
+        "title": "MomentImageIn",
+        "type": "object"
+      },
+      "MomentImageOut": {
+        "properties": {
+          "alt": {
+            "title": "Alt",
+            "type": "string"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "media_id": {
+            "format": "uuid",
+            "title": "Media Id",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/MediaVariantOut"
+            },
+            "title": "Variants",
+            "type": "array"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "media_id",
+          "position",
+          "alt",
+          "width",
+          "height",
+          "variants"
+        ],
+        "title": "MomentImageOut",
+        "type": "object"
+      },
+      "MomentListOut": {
+        "description": "列表统一结构（05 §6）：`{items, next_cursor}`。",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MomentOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "MomentListOut",
+        "type": "object"
+      },
+      "MomentOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/MomentImageOut"
+            },
+            "title": "Images",
+            "type": "array"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "tags": {
+            "items": {
+              "$ref": "#/components/schemas/TagPublicOut"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "tags",
+          "published_at",
+          "images"
+        ],
+        "title": "MomentOut",
+        "type": "object"
+      },
+      "MomentUpdateIn": {
+        "description": "更新。所有字段可选；传入 `images` 时**完整替换**有序关系（05 §7）。",
+        "properties": {
+          "images": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/MomentImageIn"
+                },
+                "maxItems": 9,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Images"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 8,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "title": "MomentUpdateIn",
+        "type": "object"
+      },
       "PalaceActionIn": {
         "additionalProperties": false,
         "description": "发布 / 撤回 / 删除的请求体：只需要 CSRF token（版本条件走 `If-Match`）。",
@@ -1335,6 +1696,396 @@
         ]
       }
     },
+    "/api/v1/admin/moments": {
+      "get": {
+        "operationId": "list_admin_moments_api_v1_admin_moments_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MomentAdminListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "管理列表（含草稿）",
+        "tags": [
+          "admin-moments"
+        ]
+      },
+      "post": {
+        "operationId": "create_moment_api_v1_admin_moments_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MomentCreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MomentAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "新建草稿",
+        "tags": [
+          "admin-moments"
+        ]
+      }
+    },
+    "/api/v1/admin/moments/{moment_id}": {
+      "delete": {
+        "operationId": "delete_moment_api_v1_admin_moments__moment_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "moment_id",
+            "required": true,
+            "schema": {
+              "title": "Moment Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "软删除动态",
+        "tags": [
+          "admin-moments"
+        ]
+      },
+      "get": {
+        "operationId": "read_admin_moment_api_v1_admin_moments__moment_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "moment_id",
+            "required": true,
+            "schema": {
+              "title": "Moment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MomentAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "读取动态（草稿 / 预览）",
+        "tags": [
+          "admin-moments"
+        ]
+      },
+      "patch": {
+        "operationId": "update_moment_api_v1_admin_moments__moment_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "moment_id",
+            "required": true,
+            "schema": {
+              "title": "Moment Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MomentUpdateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MomentAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "更新动态",
+        "tags": [
+          "admin-moments"
+        ]
+      }
+    },
+    "/api/v1/admin/moments/{moment_id}/publish": {
+      "post": {
+        "operationId": "publish_moment_api_v1_admin_moments__moment_id__publish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "moment_id",
+            "required": true,
+            "schema": {
+              "title": "Moment Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MomentAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "发布动态",
+        "tags": [
+          "admin-moments"
+        ]
+      }
+    },
+    "/api/v1/admin/moments/{moment_id}/unpublish": {
+      "post": {
+        "operationId": "unpublish_moment_api_v1_admin_moments__moment_id__unpublish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "moment_id",
+            "required": true,
+            "schema": {
+              "title": "Moment Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MomentAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "撤回动态",
+        "tags": [
+          "admin-moments"
+        ]
+      }
+    },
     "/api/v1/admin/nav/palaces": {
       "get": {
         "description": "含草稿与别名冲突提示。按站主手动维护的规模设计，不做批量优化。",
@@ -1970,6 +2721,127 @@
         "summary": "读取媒体变体",
         "tags": [
           "media"
+        ]
+      }
+    },
+    "/api/v1/moments": {
+      "get": {
+        "operationId": "list_moments_api_v1_moments_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "tag",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 80,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tag"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MomentListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "公开图文列表",
+        "tags": [
+          "moments"
+        ]
+      }
+    },
+    "/api/v1/moments/{moment_id}": {
+      "get": {
+        "operationId": "read_moment_api_v1_moments__moment_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "moment_id",
+            "required": true,
+            "schema": {
+              "title": "Moment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MomentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "公开图文详情",
+        "tags": [
+          "moments"
         ]
       }
     },

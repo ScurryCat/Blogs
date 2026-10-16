@@ -42,11 +42,13 @@ def register_content_domains() -> tuple[str, ...]:
     if _content_domains_registered:
         return ()
 
+    from app.modules.moments import wiring as moments_wiring
     from app.modules.posts import wiring as posts_wiring
 
     posts_wiring.register()
+    moments_wiring.register()
     _content_domains_registered = True
-    return ("app.modules.posts",)
+    return ("app.modules.posts", "app.modules.moments")
 
 
 def create_app(settings: Settings | None = None, *, module_routers=None) -> FastAPI:
