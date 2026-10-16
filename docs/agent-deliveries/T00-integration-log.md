@@ -86,11 +86,14 @@ T00 在骨架交付后持续承担集成负责人（[T00 任务卡](../superpowe
 记下来的理由：这类「以为是自己修的、其实是别人修的」结论如果不验证就写进交付单，会让后来者误判失效路径。
 | 2026-10-16 | T00（新增迁移守卫） | 加入 `tests/test_migration_sync.py`：模型声明必须与 `upgrade head` 后的库结构一致，且声明的表都真实存在 | 反证验证：临时给 `Tag` 注入一列 `drift_probe` → 测试失败并指出 `Detected added column 'tags.drift_probe'`；还原后通过（`diff` 确认逐字节还原，T01 文件未被污染）。先跑一次漂移检查确认 T01 冻结点之后**未改模型**（无漂移） | 见提交 |
 
-## 未决缺陷（2026-10-16）
+## 已闭环：撤销会话上传用例（2026-10-16）
 
-`apps/api/tests/media/test_upload_api.py::test_upload_rejects_unknown_owner_session` 期望 **401**，实际 **201**（上传成功并返回完整 media 记录）。
+`test_upload_rejects_unknown_owner_session` 曾期望 401 却得到 201。T01 已修，**断言保持 `status=401, code="UNAUTHORIZED"`，实现未改**。根因是测试自己取错了行：`.first()` 无排序，登录轮换后拿到的是已注销的预登录会话。新写法改为「注销所有未注销会话 + 断言 `rowcount == 1`」，顺带把「登录轮换后只剩一个有效会话」也变成断言，比原来更强。T00 已复核未出现 xfail/skip/放宽状态码的痕迹。
+
+原始记录（保留以供追溯）：
 
 - 实现侧已核查：`require_admin_write → require_admin → load_session`，`load_session` 的 SELECT 明确带 `revoked_at.is_(None)`，判断条件没有写漏。
 - 因此怀疑点在**会话可见性**：该用例用第 216 行的 session 代理覆盖 `get_session`，并在 `t01_session` 上 `commit()` 注销；若 `t01_session` 处于外层未提交事务中，另一个连接将看不到这次注销。
 - **对应验收矩阵「旧会话 / 注销后复用 → 被拒绝」。不得为了变绿而删除该用例或把断言放宽成 4xx**；三种可接受结局：改夹具、改实现、或确认是鉴权绕过并按缺陷修。
 - 已请 T01 按「用另一个连接验证 `revoked_at` 是否真的置位」的顺序排查。
+| 2026-10-16 | T01（CLI 独立验证） | 用真实 CLI 在临时库上跑两遍旧文导入 + 站主初始化 + 匿名读封面 | **幂等**：第二遍 0 新增 / 8 unchanged，库里仍 8 行；**日期未被改成今天**（保留 2026-01-20…10-13）；Markdown 原文完整（对话扩展 2 篇、表格 7 篇、`!!!` 7 篇）；封面 8 张全部 `ready` 且归属正确；`w320.webp` 匿名 200、`original.jpg` 匿名 404、不存在的变体 404、路径穿越 404；`bootstrap_admin` 二次执行拒绝覆盖。全程未改 T01 代码 | 见提交 |
