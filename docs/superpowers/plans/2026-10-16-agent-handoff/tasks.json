@@ -74,8 +74,8 @@
         "T01",
         "T02"
       ],
-      "status": "in_progress",
-      "note": "开始条件（T01+T02 已集成）满足，已派发；T00/T04 也已集成"
+      "status": "integrated_verified",
+      "note": "COOP 友链通讯录已交付并入库 4941880，接线完成 5c223e5：模型/路由/wiring 登记、单头迁移 c652ce04a8bf（2 表 + 2 索引，零 drop，头像外键 ON DELETE SET NULL）、契约 24→31、前端类型重生成、手机登记 COOP（order 依 07 §7 首屏顺序改为 40 而非建议的 30）、并接线两处入口（/about 第 02 区换成 CoopLinksSection、INS 资料区接 CoopEntry）。T00 入库前修掉一处缺陷：list_public_tags 返回 (规范值, 展示名) 与调用方解包顺序相反，导致 API 的 name/normalized 字段互换（表现为间歇性测试失败），修正后连跑 4 次稳定 84 通过。浏览器确认 /about 已无 RANK UP 与好感度进度条、改为真实友链并说明角色不在名单里。未验证：手机面板内完整流程（登记后需补一次）、reduce-motion 全流程、Safari/Firefox/真机、axe。"
     },
     {
       "id": "T08",
