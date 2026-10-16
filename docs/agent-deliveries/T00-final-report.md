@@ -64,6 +64,31 @@
 | T10 反代同源写 | **34 / 34** | `python3 tests/e2e/integration/verify-proxy-same-origin.py` |
 | 验收工具 ×5 | 全部通过 | `ls tools/acceptance/` |
 
+**每个模块的集成测试结果**（ACCEPTANCE §3 要求逐模块列出；下面每行都是独立跑该目录得到的，
+合跑整棵树同样是 **911 passed / 0 failed**）：
+
+| 来源 | 测试目录 | 通过 |
+| --- | --- | --- |
+| T00/T01 | `core` | 37 |
+| T01 | `auth` | 28 |
+| T01 | `media` | 33 |
+| T01 | `posts` | 18 |
+| T01 | `tags` | 6 |
+| T04 | `nav` | 59 |
+| T03 | `moments` | 65 |
+| T07 | `coop` | 84 |
+| T05 | `journal` | 48 |
+| T05 | `leisure` | 48 |
+| T08 | `messaging` | 160 |
+| T06 | `projects` | 78 |
+| T06 | `gallery` | 65 |
+| T09 | `skills` | 71 |
+| T09 | `exploration` | 52 |
+| T00 守卫 | 模块注册 / 契约漂移 / 迁移同步 / 隔离与配置 / 错误信封 | 9 / 4 / 2 / 35 / 9 |
+
+合计 **911**。前端：T02/T03/T04/T05/T06/T08/T09 的组件与视图测试共 **713 例 / 69 文件**；
+旧站 `node --test` **53 例**（零回归）。
+
 **验收矩阵**（ACCEPTANCE §2，15 行）：**13 行完整验证**、**1 行部分验证**、0 缺失。
 部分验证的那一行是「日记 private 或 draft 不泄漏」—— 标题/正文/图片/日历计数已验
 （`public_conditions()` 一处定义、四重条件，被公开端点与媒体公开引用共用），但
