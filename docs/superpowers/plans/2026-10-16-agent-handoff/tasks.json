@@ -35,7 +35,8 @@
         "T01",
         "T02"
       ],
-      "status": "not_started"
+      "status": "in_progress",
+      "note": "T00/T01/T02 已集成，开始条件满足，已派发"
     },
     {
       "id": "T04",
@@ -44,7 +45,8 @@
         "T01",
         "T02"
       ],
-      "status": "not_started"
+      "status": "in_progress",
+      "note": "T00/T01/T02 已集成，开始条件满足，已派发"
     },
     {
       "id": "T05",
