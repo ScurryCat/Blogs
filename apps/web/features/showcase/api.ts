@@ -13,6 +13,7 @@ import {
   projectListQuery,
   projectPath,
   type ProjectListQuery,
+  projectRelPath,
   PROJECTS_API,
 } from "./paths";
 import type {
@@ -38,7 +39,11 @@ export function fetchProjects(
 }
 
 export function fetchProject(slug: string, signal?: AbortSignal): Promise<ProjectDetail> {
-  return apiRequest<ProjectDetail>(projectPath(slug), { signal });
+  // 用**相对 API 路径**（`/projects/<slug>`），不是页面路径 `projectPath()`
+  // （`/showcase/projects/<slug>`）—— 后者会被 apiRequest 拼成
+  // `/api/v1/showcase/projects/<slug>` 并 404。实测抓到：手机里点开作品报
+  // 「这件作品不存在或还没有公开」，而列表本身是好的。
+  return apiRequest<ProjectDetail>(projectRelPath(slug), { signal });
 }
 
 // --- 管理读取 -------------------------------------------------------------

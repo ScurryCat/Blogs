@@ -16,6 +16,7 @@ import {
   projectPath,
   showcaseHref,
   PROJECTS_API,
+  projectRelPath,
 } from "./paths";
 import {
   linkKindLabel,
@@ -192,5 +193,26 @@ describe("管理端：链接行解析", () => {
 
   it("空输入不报错（链接是可选的）", () => {
     expect(parseLinkLines("")).toEqual({ links: [], errors: [] });
+  });
+});
+
+describe("作品详情用相对 API 路径（客户端取数）", () => {
+  // 回归：`fetchProject` 曾把**页面路径** `projectPath()`（/showcase/projects/<slug>）
+  // 传给 `apiRequest`，于是请求变成 `/api/v1/showcase/projects/<slug>` 并 404 ——
+  // 手机里点开作品会显示「这件作品不存在或还没有公开」，而作品列表本身是好的。
+  // 服务端渲染的详情页也正常（服务端自己拼完整地址），所以四个包的浏览器套件都没抓到。
+  it("相对 API 路径不含 /showcase 前缀", () => {
+    expect(projectRelPath("p5-blog")).toBe("/projects/p5-blog");
+    expect(projectRelPath("p5-blog")).not.toContain("/showcase");
+  });
+
+  it("页面路径与 API 路径是两个不同的东西", () => {
+    expect(projectPath("p5-blog")).toBe("/showcase/projects/p5-blog");
+    expect(projectRelPath("p5-blog")).not.toBe(projectPath("p5-blog"));
+  });
+
+  it("slug 需要转义，且不产生重复斜杠", () => {
+    expect(projectRelPath("a b/c")).toBe("/projects/a%20b%2Fc");
+    expect(projectRelPath("p5-blog")).not.toContain("//");
   });
 });
