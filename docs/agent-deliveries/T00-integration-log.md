@@ -496,3 +496,7 @@ T03 报告「浏览器经 Next rewrite 的同源 POST 不带 `Origin`，被 `ver
 两份派发均带上积累的既有约束：SiteLink 规则、`"use client"` 与「构建 ≠ 类型检查」、`noUncheckedIndexedAccess`、登记式临时库、只跑自己目录、按端口精确杀、手机登记清单、浏览器验证三个时序坑（含用 `performance.timeOrigin` 判整页重载）。
 T08 另加三条硬要求：**访客会话不复用 `sessions` 表**、**会话 A 不得读到会话 B**（要端到端证明）、**AI 适配层可替换 + 默认模拟**（不得采购/搜密钥/启用收费调用，AI 失败不得让剧情不可用）。
 T06 另加：**不伪造奖项或数字**、**同一媒体不重复上传**（复用 media ID）、作品只链接当前公开专题且不露出隐藏标题 | 见提交 |
+| 2026-10-16 | **T05/T07 接线全量彩排** | 交付前在内存中模拟接线，得出可逐项对照的预测值 | **模型**：9 个模型模块、**表总数 19**（当前 14 + 新增 5：`journal_entries` / `journal_entry_media` / `leisure_entries` / `friend_links` / `friend_link_tags`），无表名冲突。
+**迁移**：预演 **11 项**（5 建表 + 6 索引），全部为新增、零 drop。
+**契约**：**45 条路径**（当前 24 + 21）。新增明细：journal 3 公开 + 5 管理（含 `/visibility` 切换）、leisure 2 公开 + 4 管理、coop `/coop/links`、`/coop/links/{id}`、**`/coop/tags`** + 4 管理。
+→ **`/coop/tags` 印证了 T07 的标签决定**：友链标签通过**自己的端点**提供（供界面筛选），而不混进全局 `/api/v1/tags` —— 既满足「标签筛选」的功能要求，又不改变全局标签的语义 | 待交付 |
