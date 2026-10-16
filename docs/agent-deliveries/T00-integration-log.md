@@ -534,3 +534,7 @@ T06 另加：**不伪造奖项或数字**、**同一媒体不重复上传**（�
 **首页接线** `<LeblancView />`（位置按 07 §3 与 T05 §8.8）；`/apps/leblanc` 独立入口保留。
 **T05 如实记录的一条**：手记/放课后**未接进 nav 搜索**，所以「私密不进搜索」目前是因为没接、**不是过滤** —— 这类区分正是交付单该有的诚实度。
 T05 另报告一个**测试陷阱**：服务层 `Session.commit()` 会提交测试夹具的外部事务、rollback 撤不掉，它在 conftest 里加了提交后的显式 TRUNCATE | `65607e0` `a7d58c8` |
+| 2026-10-16 | **T10 交付前审查（备份/恢复/CI）** | 在 T10 交付前先审它的安全关键产物 | **备份/恢复脚本的安全设计到位**：`backup.py` 目标目录非空即拒绝（需显式 `--force`）、**不做任何 `DROP`、不碰卷**；`restore.py` **永不 DROP 数据库**、媒体目标非空即拒绝、有 **sha256 校验清单**、不执行 `down -v`、不做 downgrade。
+**我交接的那条被完整落实**：`restore.py` 在恢复后调用 `revoke_sessions --all`，并在注释里写明「否则备份里 `revoked_at = NULL` 的会话会复活」，**还引用了我的复现脚本** `tools/acceptance/verify-restore-revokes-sessions.py`；另提供 `--skip-revoke`（带后果警告）；`docs/operations/README.md` 也把这一步列为恢复流程必做。
+**CI 覆盖卡片全部要求**：API（真实 PostgreSQL 18 服务容器 + 全量 pytest）、Web（类型/lint/单测/生产构建）、**旧站零回归**（`node --test`）、**compose 配置校验**（prod 与 dev，且含「不给 env 时 compose 必须失败」的守卫）。`release.yml` 只构建与记录 digest，**推送默认关闭**（符合「CI 不自动推送生产部署」）。
+**诚实标注**：`ci.yml` 顶部写明「本次没有 GitHub 远端，本工作流**没有被真正运行过**」 | 待交付 |
