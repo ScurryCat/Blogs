@@ -298,3 +298,13 @@ page.click(...)                                                                 
 | 2026-10-16 | **T02 交付后修复入库** | 复核并入库 T02 的 4 个增量（`3320aaa`）| 修掉的是**只在部分路径复现**的整页重载：`/`→`/about`、`/map`→`/posts/*` 重载，`/about`→`/map`、`/map`→`/weather` 正常；后果是音乐被打断、过场收尾失效。改为 `onClickCapture` + `stopPropagation`（`SiteLink` 与 `SvgSiteLink` 两处），并新增 `client_navigation()` 回归检查覆盖四类入口。**入库前确认未夹带 T03/T04 的文件** | `3320aaa` |
 | 2026-10-16 | **T02（Escape 根因澄清）** | T02 说明我第 26 轮报的 Escape 失效根因 | **问卷浮层在手机之后才入弹层栈并压在手机上面**；点击打开的路径顺序恰好相反，所以 T02 自己的工具里那条检查是过的、**只有独立的外部测量才暴露出来**。另澄清：「焦点圈定」**不是刻意取舍，是漏了**，现已补上（焦点进 `.pw-close`、`.pw-tab` 随背景 inert、Tab 在对话框内首尾相接）。→ 印证我第 26 轮**把它报出来而不是假定为有意设计**是对的 | 无（已修） |
 | 2026-10-16 | T04（构建阻塞·已报） | `npm run build` 失败于 `features/metanav/host.ts:17` | **全仓库唯一构建阻塞点**：该文件用了 `useCallback/useEffect/useState` 但**没有 `"use client"`**，且同时被客户端组件（`palace-reading-loader.tsx`）与服务端组件路径（`palace-reading.tsx` ← 殿堂页）导入，于是在服务端图里也要求它是客户端模块。已给出「加 `"use client"`」与「把 hooks 拆到 `host-react.ts`」两种修法，**由 T04 按自身判断选择**；并明确要求它自己跑一次 `npm run build`（`typecheck` 过 ≠ 构建过） | 待 T04 修 |
+
+### T00 自我更正：不存在「tsc 接受而 SWC 拒绝」的证据（2026-10-16）
+
+我在给 T03 的预警里写过「实测过 `tsc` 接受、而 Turbopack 的 SWC 解析器拒绝同一份代码的情形」。**这句话没有证据支撑，已向 T03 更正。**
+
+实情：我用 `next/dist/build/swc` 的 `parse` 直接测了三种写法（裸 `/* */` 在三元真分支、文件头 `eslint-disable`、`// eslint-disable-next-line`），**三种全部通过**；`tsc --noEmit` 对整棵树也是退出码 0。因此那次构建失败**最可能是 T03 编辑过程中的中间态**（文件在我跑构建的瞬间尚未写完），**不是解析器差异**。
+
+**但「构建 ≠ 类型检查」这个结论仍然成立，且有一个确凿得多的例子**：`features/metanav/host.ts` 缺 `"use client"` 时 `tsc` 完全不报错（它只做类型检查、不理解 React 的 Server/Client 边界），而 `next build` 直接失败。这类「构建专属」错误是 `tsc` 结构上就看不见的 —— 所以四条命令（`typecheck` / `lint` / `test` / `build`）必须都跑。
+
+**教训**：把「我的推断」和「我实测到的事实」分开陈述。这次我把一个未经证实的因果当成实测结论说了出去，对方可能会照着去排查一个不存在的问题。
