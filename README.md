@@ -181,7 +181,7 @@ python3 tools/github-heatmap/fetch.py      # 默认抓 ScurryCat 最近一年
 
 - 图像来自 Atlus 官方配布的 P5R 虚拟背景、Steam 商店图与 P5X 官方 Fan Kit（官方许可个人网站使用）
 - 字体：撕纸英文字体为社区同人作品；中文标题/署名用[阿里妈妈数黑体](assets/fonts/AlimamaShuHeiTi-LICENSE.md)（Bold，永久免费商用，含完整 6993 字形）
-- 地图页出发时的**人群过场**（`assets/js/crowd.js` + `assets/img/crowd/*.png`）移植自社区 Vue 组件库 p5-ui（npm 包名 `p5-ui`）的 canvas 组件，12 帧路人图共 228 KB，跟着仓库走
+- 地图页出发时的**人群过场**（`assets/js/crowd.js` + `assets/img/crowd/original/`）使用 [The Spriters Resource 的 Persona 5 Crowd 原始提取纹理](https://www.spriters-resource.com/playstation_3/persona5/asset/92512/)，12 张透明 PNG 共约 458 KB。每张是不同路人，不是连续走路帧；原图字节未修改，来源文件名、SHA-256 和 alpha 裁绘边界见目录内 `provenance.json`。三层白灰人流的方向、速度与约 900ms 的导航节奏是本站重新编排，并非原作影像或 1:1 时间复刻。旧 p5-ui 图片保留在原目录中，当前转场不再使用
 - 对话框里「我」的立绘取自官方画集 `p5artbook-020` 右页的正面线稿，本地抠底成透明 PNG（`tools/portrait-crop/`），11 KB
 - 站内导航的**帷幕转场**（`assets/js/curtain.js` + `curtain-data.js`）是《过场joker拉下帷幕》的矢量复刻：逐帧追踪轮廓成顶点表，渲染时对相邻帧做顶点插值（形变），canvas + rAF 逐帧绘制。数据懒加载（40 KB，gzip 13 KB），生成脚本在 `tools/curtain/`
 - **音频在仓库里**：手机播放器的三首（`Beneath the Mask` / `Beneath the Mask -rain-` / `星と僕らと`）随仓库分发，合计 17 MB，是 **128 kbps 转码版**（原始 320 kbps 每首 10–16 MB，做背景音乐太重；要换回原质就替换文件，`music.js` 不用改）。这三首是 Lyn 演唱、©ATLUS 的商业发行曲，**公开仓库等于公开分发**；不想要就删掉 `assets/music/*.mp3`，播放器会自动落到「还没有曲子」空态。官方过场影像（`assets/clip/`）仍然不进仓库

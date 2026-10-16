@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <base href="../">
+  <title>Original P5 crowd transition checks</title>
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/chrome.css">
+  <style>
+    body { padding: 100px 24px 24px; max-width: 900px; margin: auto; }
+    .controls { position: fixed; top: 12px; left: 12px; right: 12px; z-index: 1000; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px; background: #171717; border: 1px solid #666; }
+    button { padding: 8px 12px; cursor: pointer; }
+    #results { white-space: pre-wrap; line-height: 1.7; }
+    #readiness { color: #ddd; }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <button id="play" type="button">播放 1 秒</button>
+    <button id="capture" type="button">3 秒后播放 5 秒</button>
+    <button id="stop" type="button">停止</button>
+    <button id="run" type="button">运行浏览器检查</button>
+    <span id="readiness" role="status">正在预热原始 PNG…</span>
+  </div>
+  <h1>原始 P5 Crowd 转场</h1>
+  <p>生产渲染器的独立预览。点“3 秒后播放 5 秒”后可观察并截图；播放期间可调整窗口检查比例，或随时停止。建议分别检查约 1280px 与 390px 宽度。</p>
+  <p>图像为原始提取纹理，三层方向、速度与时间节奏为本站重新编排。减少动态效果开启时，播放会跳过。</p>
+  <p><a href="map.html">进入地图验证导航</a></p>
+  <pre id="results" role="status">检查尚未运行。</pre>
+  <script src="assets/js/crowd.js"></script>
+  <script src="tests/crowd-browser.js"></script>
+</body>
+</html>

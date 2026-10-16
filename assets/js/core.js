@@ -115,7 +115,8 @@
   const NAV = [['index.html#posts', 'Posts', '文章', 'posts'], ['map.html', 'Map', '地图', 'map'],
     ['weather.html', 'Weather', '天气', 'weather'], ['guestbook.html', 'Guestbook', '留言', 'guestbook'],
     ['about.html', 'About', '关于', 'about']];
-  let chromed = false;
+  let chromed = false, currentPage = '';
+  let warmMapCrowd = () => {};
 
   function paintNav(page) {
     const hud = document.getElementById('hud');
@@ -127,7 +128,8 @@
   }
 
   function chrome(page) {
-    if (chromed) { paintNav(page); return; }
+    currentPage = page;
+    if (chromed) { paintNav(page); warmMapCrowd(); return; }
     chromed = true;
     const nav = NAV;
     document.body.insertAdjacentHTML('afterbegin', `<a class="skip" href="#main">跳到正文</a>
@@ -194,25 +196,23 @@
 
     /* ---------- 矢量帷幕：每页都引 curtain-data.js + curtain.js ----------
        纯矢量，一个字节都不下，所以**不加省流量门禁**（这一点和人群过场相反：
-       人群要下 228 KB，省流量时得跳过）。play() 恒真，除非图省事禁了动效。 */
+       人群要下载 PNG，省流量时得跳过）。play() 恒真，除非图省事禁了动效。 */
     const curtain = window.PL && window.PL.curtain;
     // 时长由数据自己说了算（curtain-data.js 的 total）：改动画不用回来改这里
     const CURTAIN_WAIT = curtain ? curtain.total : 1180;
     if (curtain) curtain.warm();   // 懒加载 32 KB 形状数据（gzip 11 KB），首屏不为它付钱
 
     /* ---------- 人群过场：只有 map.html 引了 crowd.js ----------
-       从地图出发的跳转播《人流转场》的人墙，它比视频转场更「本地」：
-       12 张 PNG 跟着仓库走，不依赖 assets/clip/ 里那些被 .gitignore 排除的影像。
-       门禁和视频转场一致：省流量模式 / 2g 不下这 228 KB（地图页自己的图已经 620 KB），
-       退回矢量帷幕。预热用 idle + 首次交互各一次，warm 幂等。 */
-    const crowd = window.PL && window.PL.crowd;
-    const CROWD_WAIT = 900; // 黑底淡入 .12s + 人墙走 .78s：够看清是谁在走，又不至于等
-    if (crowd && cheap) {
-      const warmCrowd = () => crowd.warm();
-      if (window.requestIdleCallback) requestIdleCallback(warmCrowd, { timeout: 2500 }); else setTimeout(warmCrowd, 1200);
-      addEventListener('pointerdown', warmCrowd, { once: true, capture: true });
-      addEventListener('keydown', warmCrowd, { once: true, capture: true });
-    }
+       原始透明 PNG 在站内分发。PJAX 进入地图时 crowd 才可能被加载，
+       因而每次预热和播放都读取当前组件，不保留首屏的引用。 */
+    warmMapCrowd = () => {
+      const crowd = window.PL && window.PL.crowd;
+      if (currentPage === 'map' && !reduce && cheap && crowd) crowd.warm();
+    };
+    warmMapCrowd();
+    if (window.requestIdleCallback) requestIdleCallback(warmMapCrowd, { timeout: 2500 }); else setTimeout(warmMapCrowd, 1200);
+    addEventListener('pointerdown', warmMapCrowd, { once: true, capture: true });
+    addEventListener('keydown', warmMapCrowd, { once: true, capture: true });
 
     /* 站内跳转的优先级：
        1) 地图页出发 → 人群过场（不按目的地分）
@@ -220,11 +220,40 @@
        3) 其余站内导航 → 矢量帷幕（永远就绪，所以实际上很少落到第 4 步）
        4) 兜底 → CSS 三色斜切 */
     const wipe = document.querySelector('.wipe');
-    /* 唯一的跳转出口：有 pjax 就不重载文档（BGM 因此不断），没有就老老实实跳。
-       转场已经把屏幕盖住了，所以换页过程用户看不见。 */
-    const go = (url) => {
-      if (window.PL.pjax) window.PL.pjax.go(url);
-      else location.href = url;
+    let navigating = false, waitTimer = 0, watchdog = 0, sequence = 0;
+    const clearTransitions = () => {
+      if (wipe) wipe.classList.remove('go');
+      for (const c of Object.values(CLIPS)) if (c.el) c.el.classList.remove('on');
+      const crowd = window.PL && window.PL.crowd;
+      if (crowd) crowd.stop();
+      if (curtain) curtain.stop();
+    };
+    const cancelNavigation = () => {
+      sequence++;
+      clearTimeout(waitTimer); clearTimeout(watchdog);
+      waitTimer = watchdog = 0; navigating = false;
+      if (window.PL.pjax && window.PL.pjax.cancel) window.PL.pjax.cancel();
+      clearTransitions();
+    };
+    /* guard 从点选开始保留到真正的 PJAX Promise 结束。地图慢请求最多等 15 秒，
+       再清理遮罩并用同一地址整页降级；普通成功路径仍由 PJAX 揭开且保留 BGM。 */
+    const schedule = (url, wait, fromMap) => {
+      const token = sequence;
+      waitTimer = setTimeout(() => {
+        waitTimer = 0;
+        const fallback = () => {
+          if (token !== sequence) return;
+          cancelNavigation(); location.href = url;
+        };
+        if (fromMap) watchdog = setTimeout(fallback, 15000);
+        try {
+          if (!window.PL.pjax) { fallback(); return; }
+          Promise.resolve(window.PL.pjax.go(url)).then(() => {
+            if (token !== sequence) return;
+            clearTimeout(watchdog); watchdog = 0; navigating = false;
+          }, fallback);
+        } catch (err) { fallback(); }
+      }, wait);
     };
     document.addEventListener('click', (e) => {
       const a = e.target.closest('a[href]');
@@ -234,45 +263,45 @@
       if (u.origin !== location.origin || !/(\.html|\/)$/.test(u.pathname)) return;
       if (u.pathname === location.pathname && u.search === location.search) return; // 同页锚点：交给浏览器平滑滚动
       e.preventDefault();
+      if (navigating) return;
+      navigating = true;
+      const fromMap = currentPage === 'map';
       /* 地图页的三种入口（地图上的地点、右侧卡片的「出发」、下方列表）都走这里，
          所以人群过场要放在按目的地分派之前 —— 地图上的地点其实都指向 post.html，
-         否则会被 dive 抢走。play() 返回 false 表示图没就绪，继续往下走。 */
-      if (page === 'map' && crowd && cheap && crowd.play()) {
-        setTimeout(() => { go(u.href); }, CROWD_WAIT);
+         否则会被 dive 抢走。素材不可用时直接退回帷幕 / CSS。 */
+      const crowd = window.PL && window.PL.crowd;
+      if (fromMap && crowd && cheap && crowd.play()) {
+        schedule(u.href, crowd.wait, true);
         return;
       }
-      const c = u.pathname.endsWith('post.html') ? CLIPS.dive : null;
+      const c = !fromMap && u.pathname.endsWith('post.html') ? CLIPS.dive : null;
       if (c && c.ok && c.el) {
         c.el.classList.add('on');
         try {
           c.v.currentTime = 0; c.v.playbackRate = c.rate;
           const p = c.v.play(); if (p && p.catch) p.catch(() => {});
         } catch (err) { /* 播放被拒：底衬自己顶着 */ }
-        setTimeout(() => { go(u.href); }, c.wait);
+        schedule(u.href, c.wait, false);
         return;
       }
       /* 其余站内导航走矢量帷幕。它不需要下载，所以省流量模式下也照用 —— 
          这里正好是原来那段 curtain.mp4 的位置。 */
       if (curtain && curtain.play()) {
-        setTimeout(() => { go(u.href); }, CURTAIN_WAIT);
+        schedule(u.href, CURTAIN_WAIT, fromMap);
         return;
       }
       wipe.classList.add('go');
-      setTimeout(() => { go(u.href); }, 440);
+      schedule(u.href, 440, fromMap);
     });
+    addEventListener('popstate', cancelNavigation);
     addEventListener('pageshow', (e) => {
       if (!e.persisted) return;
-      if (wipe) wipe.classList.remove('go');
-      for (const c of Object.values(CLIPS)) if (c.el) c.el.classList.remove('on');
-      /* 这两个都必须在 bfcache 恢复时停掉：动画被冻结，但 .on 留在 DOM 上，
-         从文章页按后退回来会看到整屏被转场层永久盖住 —— 而且没有任何出口。 */
-      if (crowd) crowd.stop();
-      if (curtain) curtain.stop();
+      cancelNavigation();
     });
 
     /* 转场自检：控制台跑 PL.transitionState()，就能看到为什么某次没播视频转场 */
     if (window.PL) window.PL.transitionState = () => ({
-      page, reduce, cheap,
+      page: currentPage, reduce, cheap, navigating,
       reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
       connection: conn ? { effectiveType: conn.effectiveType, saveData: !!conn.saveData } : null,
       clips: Object.entries(CLIPS).map(([k, c]) => ({
@@ -280,7 +309,7 @@
         readyState: c.v ? c.v.readyState : null,
         error: c.v && c.v.error ? c.v.error.code : null
       })),
-      crowd: crowd ? { loaded: crowd.ready(), wait: CROWD_WAIT } : null,
+      crowd: window.PL.crowd ? { loaded: window.PL.crowd.ready(), wait: window.PL.crowd.wait } : null,
       curtain: curtain ? { vector: true, ready: curtain.ready(), wait: CURTAIN_WAIT, total: curtain.total } : null,
       wipePresent: !!wipe
     });

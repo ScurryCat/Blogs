@@ -1,0 +1,237 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const source = fs.readFileSync(path.join(__dirname, '../assets/js/core.js'), 'utf8');
+
+function navigation({ reduce = false, connection } = {}) {
+  let now = 0, next = 1;
+  const timers = new Map(), globalEvents = {}, docEvents = {}, elements = [], navigated = [], idle = [];
+  const dom = tag => {
+    const classes = new Set(), events = {};
+    const el = { tag, dataset: {}, children: [], attributes: {}, className: '',
+      classList: { add: c => classes.add(c), remove: c => classes.delete(c),
+        contains: c => classes.has(c), toggle(c, on) { if (on) classes.add(c); else classes.delete(c); } },
+      setAttribute(k, v) { this.attributes[k] = v; }, removeAttribute(k) { delete this.attributes[k]; },
+      getAttribute(k) { return this.attributes[k] || null; }, hasAttribute(k) { return k in this.attributes; },
+      querySelectorAll() { return []; }, appendChild(el) { this.children.push(el); },
+      insertAdjacentHTML() {}, addEventListener(t, fn) { events[t] = fn; },
+      dispatch(t) { if (events[t]) events[t](); },
+      load() {}, play() { this.plays = (this.plays || 0) + 1; return Promise.resolve(); },
+      set innerHTML(value) { if (value.startsWith('<video')) this.firstElementChild = dom('video'); }
+    };
+    elements.push(el); return el;
+  };
+  const body = dom('body'), hud = dom('header'), wipe = dom('div');
+  const sandbox = { window: { PL_SITE: { name: 'P', nameB: 'L', ticker: [], social: [], arcana: {} } },
+    document: { body, createElement: dom, getElementById: id => id === 'hud' ? hud : null,
+      querySelector: selector => selector === '.wipe' ? wipe : null,
+      addEventListener: (type, fn) => { docEvents[type] = fn; } },
+    navigator: { connection }, matchMedia: () => ({ matches: reduce }),
+    URL, location: { href: 'http://site.test/index.html', origin: 'http://site.test', pathname: '/index.html', search: '' },
+    scrollY: 0,
+    setTimeout: (fn, ms) => { const id = next++; timers.set(id, { fn, at: now + ms }); return id; },
+    clearTimeout: id => timers.delete(id),
+    addEventListener: (type, fn) => { (globalEvents[type] ||= []).push(fn); },
+    requestIdleCallback: fn => idle.push(fn) };
+  sandbox.window.requestIdleCallback = sandbox.requestIdleCallback;
+  vm.runInNewContext(source, sandbox, { filename: 'core.js' });
+  const PL = sandbox.window.PL;
+  let settle;
+  PL.pjax = { go: href => { navigated.push(href); return new Promise(resolve => { settle = resolve; }); } };
+  const curtain = { total: 1180, warms: 0, plays: 0, stops: 0,
+    warm() { this.warms++; }, ready: () => true,
+    play() { this.plays++; return true; }, stop() { this.stops++; } };
+  PL.curtain = curtain;
+  return { PL, curtain, elements, navigated, timers, idle, wipe, location: sandbox.location,
+    crowd(available = true, wait = 937) {
+      return PL.crowd = { wait, warms: 0, plays: 0, stops: 0,
+        warm() { this.warms++; }, ready: () => available,
+        play() { this.plays++; return available; }, stop() { this.stops++; } };
+    },
+    page(page) {
+      sandbox.location.pathname = page === 'home' ? '/index.html' : '/' + page + '.html';
+      sandbox.location.href = sandbox.location.origin + sandbox.location.pathname;
+      PL.chrome(page);
+    },
+    event(type, value = {}) { (globalEvents[type] || []).forEach(fn => fn(value)); },
+    click(href = 'post.html?p=one', shape = 'card', overrides = {}) {
+      const anchor = dom(shape === 'icon' ? 'svg:a' : 'a'); anchor.attributes.href = href;
+      const child = dom(shape === 'icon' ? 'image' : shape === 'list' ? 'b' : 'span');
+      child.closest = selector => selector === 'a[href]' ? anchor : null;
+      // SVGAnimatedString deliberately has no usable href string.
+      if (shape === 'icon') anchor.href = { baseVal: href };
+      const event = { target: child, button: 0, defaultPrevented: false,
+        preventDefault() { this.defaultPrevented = true; }, ...overrides };
+      docEvents.click(event); return event;
+    },
+    tick(ms) {
+      const end = now + ms;
+      while (true) {
+        const due = [...timers].filter(([, t]) => t.at <= end).sort((a, b) => a[1].at - b[1].at)[0];
+        if (!due) break;
+        now = due[1].at; timers.delete(due[0]); due[1].fn();
+      }
+      now = end;
+    },
+    armDive() { idle.forEach(fn => fn()); elements.filter(el => el.tag === 'video').forEach(el => el.dispatch('loadeddata')); },
+    async finish() { if (settle) settle(true); await Promise.resolve(); await Promise.resolve(); }
+  };
+}
+
+test('home to PJAX map warms and dispatches the newly loaded crowd', () => {
+  const n = navigation(); n.page('home'); const crowd = n.crowd(); n.page('map');
+  n.event('pointerdown');
+  assert.ok(crowd.warms > 0, 'newly entered map must warm dynamically loaded art');
+  assert.equal(n.click().defaultPrevented, true); assert.equal(crowd.plays, 1);
+  assert.equal(n.curtain.plays, 0);
+  n.tick(crowd.wait); assert.equal(n.navigated.length, 1);
+});
+
+for (const shape of ['icon', 'card', 'list']) test('direct map ' + shape + ' uses renderer timing once through PJAX', async () => {
+  const n = navigation(); const crowd = n.crowd(); n.page('map');
+  n.click('post.html?p=' + shape, shape); n.click('about.html', shape);
+  assert.equal(crowd.plays, 1, 'navigation guard precedes repeated playback');
+  n.tick(crowd.wait - 1); assert.equal(n.navigated.length, 0);
+  n.tick(1); assert.deepEqual(n.navigated, ['http://site.test/post.html?p=' + shape]);
+  n.click('weather.html'); n.tick(2000); assert.equal(n.navigated.length, 1, 'guard lasts through pending PJAX');
+  await n.finish(); n.page('map'); n.click('about.html'); n.tick(crowd.wait);
+  assert.equal(n.navigated.length, 2, 'settled PJAX releases navigation guard');
+});
+
+test('map crowd failure bypasses a ready article dive and uses curtain, then CSS fallback', () => {
+  const n = navigation(); n.crowd(false); n.page('map'); n.armDive(); n.click();
+  assert.equal(n.curtain.plays, 1);
+  assert.ok(n.elements.filter(el => el.tag === 'video').every(el => !el.plays));
+  n.tick(1180); assert.equal(n.navigated.length, 1);
+  const css = navigation(); css.crowd(false); css.curtain.play = () => false; css.page('map'); css.armDive(); css.click();
+  assert.equal(css.wipe.classList.contains('go'), true);
+  css.tick(440); assert.equal(css.navigated.length, 1);
+});
+
+test('non-map article navigation keeps the existing dive priority', () => {
+  const n = navigation(); const crowd = n.crowd(); n.page('home'); n.armDive(); n.click();
+  assert.equal(crowd.plays, 0); assert.equal(n.curtain.plays, 0);
+  assert.equal(n.elements.filter(el => el.tag === 'video')[0].plays, 1);
+  n.tick(720); assert.equal(n.navigated.length, 1);
+});
+
+test('modified, external, prevented, and same-page links stay with the browser', () => {
+  const n = navigation(); const crowd = n.crowd(); n.page('map');
+  for (const overrides of [{ ctrlKey: true }, { metaKey: true }, { shiftKey: true }, { altKey: true }, { button: 1 }, { defaultPrevented: true }]) {
+    const e = n.click('about.html', 'card', overrides);
+    if (!overrides.defaultPrevented) assert.equal(e.defaultPrevented, false);
+  }
+  assert.equal(n.click('https://external.test/about.html').defaultPrevented, false);
+  assert.equal(n.click('map.html#list').defaultPrevented, false);
+  assert.equal(crowd.plays, 0); n.tick(2000); assert.equal(n.navigated.length, 0);
+});
+
+test('reduced motion uses direct native navigation without warm or transition delays', () => {
+  const n = navigation({ reduce: true }); const crowd = n.crowd(); n.page('map'); n.event('pointerdown'); n.armDive();
+  assert.equal(n.click().defaultPrevented, false);
+  assert.equal(crowd.warms, 0); assert.equal(crowd.plays, 0); assert.equal(n.curtain.plays, 0);
+  n.tick(2000); assert.equal(n.navigated.length, 0);
+});
+
+for (const connection of [{ saveData: true }, { effectiveType: '2g' }, { effectiveType: 'slow-2g' }]) {
+  test('constrained connection skips crowd loading and uses curtain: ' + JSON.stringify(connection), () => {
+    const n = navigation({ connection }); const crowd = n.crowd(); n.page('map'); n.event('pointerdown'); n.armDive(); n.click();
+    assert.equal(crowd.warms, 0); assert.equal(crowd.plays, 0); assert.equal(n.curtain.plays, 1);
+  });
+}
+
+for (const type of ['popstate', 'pageshow']) test(type + ' cancels the pending handoff and clears active crowd', () => {
+  const n = navigation(); const crowd = n.crowd(); n.page('map'); n.click();
+  n.event(type, { persisted: true }); n.tick(2000);
+  assert.equal(n.navigated.length, 0, 'a delayed click must not override history restoration');
+  assert.ok(crowd.stops > 0);
+  n.click('about.html'); n.tick(crowd.wait); assert.equal(n.navigated.length, 1);
+});
+
+test('a stalled map PJAX handoff has a finite full-page fallback and clears the crowd', () => {
+  const n = navigation(); const crowd = n.crowd(); n.page('map'); n.click('about.html');
+  n.tick(crowd.wait); assert.equal(n.navigated.length, 1);
+  n.tick(15000);
+  assert.equal(n.location.href, 'http://site.test/about.html');
+  assert.ok(crowd.stops > 0, 'a stalled request cannot leave the black overlay indefinitely');
+});
+
+test('successful PJAX and history cancellation both cancel the stalled-handoff fallback', async () => {
+  const n = navigation(); n.crowd(); n.page('map'); n.click('about.html'); n.tick(937);
+  await n.finish(); n.tick(15000); assert.equal(n.location.href, 'http://site.test/map.html');
+  n.page('map'); n.click('weather.html'); n.tick(937); n.event('popstate'); n.tick(15000);
+  assert.equal(n.location.href, 'http://site.test/map.html');
+});
+
+// Exercise the real router too: cancelling only the 900ms timer does not cancel a fetch already handed off.
+const pjaxSource = fs.readFileSync(path.join(__dirname, '../assets/js/pjax.js'), 'utf8');
+function router() {
+  const events = {}, requests = [], pushes = [], links = [], frames = [];
+  const main = { innerHTML: 'map', focus() {} }, location = { href: 'http://site.test/map.html', origin: 'http://site.test' };
+  let cleanups = 0, leavers = 0;
+  const PL = { crowd: { stop() { cleanups++; } }, runLeavers() { leavers++; } };
+  class ParserBoundary {
+    parseFromString(html) {
+      return { title: html, getElementById: id => id === 'main' ? { innerHTML: html } : null,
+        querySelector: () => null,
+        querySelectorAll: selector => selector.startsWith('link') && html.includes('styles') ? [{ href: 'http://site.test/deferred.css' }] : [] };
+    }
+  }
+  const sandbox = { window: { PL }, URL, AbortController, DOMParser: ParserBoundary, location, scrollY: 0,
+    history: { state: {}, replaceState(state) { this.state = state; }, pushState(state, _, href) { this.state = state; pushes.push(href); } },
+    document: { querySelectorAll: () => [], querySelector: () => null,
+      getElementById: () => main, createElement: tag => ({ tag }),
+      head: { appendChild: link => links.push(link) }, body: { appendChild() {} } },
+    fetch: (href, options) => new Promise((resolve, reject) => requests.push({ href, options, resolve, reject })),
+    scrollTo() {}, requestAnimationFrame: fn => frames.push(fn),
+    addEventListener: (type, fn) => { events[type] = fn; } };
+  vm.runInNewContext(pjaxSource, sandbox, { filename: 'pjax.js' });
+  const flush = async () => {
+    for (let i = 0; i < 12; i++) {
+      await Promise.resolve();
+      const pending = frames.splice(0); pending.forEach(fn => fn());
+    }
+  };
+  return { pjax: PL.pjax, requests, pushes, links, main, location,
+    async resolve(index, body) { requests[index].resolve({ ok: true, text: async () => body }); await flush(); },
+    async reject(index) { requests[index].reject(new Error('aborted old request')); await flush(); },
+    async back() { location.href = 'http://site.test/index.html'; events.popstate(); await flush(); },
+    async restore() { events.pageshow({ persisted: true }); await flush(); },
+    flush, cleanups: () => cleanups, leavers: () => leavers };
+}
+
+test('Back during a map fetch aborts it and ignores its late result without a push or hard fallback', async () => {
+  const r = router(); const old = r.pjax.go('about.html'); await r.back();
+  assert.equal(r.requests.length, 2, 'Back must start its own fetch even while the old navigation is busy');
+  assert.equal(r.requests[0].options.signal.aborted, true);
+  await r.resolve(1, 'home'); await r.resolve(0, 'obsolete about'); await old;
+  assert.equal(r.main.innerHTML, 'home'); assert.deepEqual(r.pushes, []);
+  assert.equal(r.location.href, 'http://site.test/index.html');
+});
+
+test('Back while old shared CSS loads prevents stale content swap and history push', async () => {
+  const r = router(); const old = r.pjax.go('about.html'); await r.resolve(0, 'obsolete styles');
+  assert.equal(r.links.length, 1); await r.back();
+  assert.equal(r.requests.length, 2, 'Back must supersede a request waiting on styles');
+  await r.resolve(1, 'home');
+  r.links[0].onload(); await r.flush(); await old;
+  assert.equal(r.main.innerHTML, 'home'); assert.deepEqual(r.pushes, []);
+  assert.equal(r.leavers(), 1, 'only the current request unloads the live page');
+});
+
+test('obsolete request rejection does not unlock or hard-navigate over the current Back request', async () => {
+  const r = router(); const old = r.pjax.go('about.html'); await r.back(); await r.reject(0); await old;
+  r.pjax.go('weather.html');
+  assert.equal(r.requests.length, 2, 'ordinary duplicate navigation remains guarded');
+  assert.equal(r.location.href, 'http://site.test/index.html');
+  await r.resolve(1, 'home'); assert.equal(r.main.innerHTML, 'home');
+});
+
+test('bfcache restoration cancels an active request and reveals the restored page', async () => {
+  const r = router(); const old = r.pjax.go('about.html'); await r.restore();
+  assert.ok(r.requests[0].options.signal?.aborted, 'restoration must abort the active fetch'); assert.ok(r.cleanups() > 0);
+  await r.resolve(0, 'obsolete about'); await old;
+  assert.equal(r.main.innerHTML, 'map'); assert.deepEqual(r.pushes, []);
+});
