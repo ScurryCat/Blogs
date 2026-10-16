@@ -433,3 +433,7 @@ T03 的 `moments/wiring.py` 明确写出集成动作，并做完了两半验证�
 
 **我的脚本两次失误**（都不是代码问题）：先手动 `posts_wiring.register()` 再 `create_app()` → 触发重复登记报错；`SECRET_KEY` 只写了 31 字符被校验拦下（说明长度校验有效）。
 | 2026-10-16 | **T03 集成准备** | 三个 agent 不可寻址但仍在写；改为以磁盘产物为准 | T03 全量复验**全绿**：moments **65 passed**、既有域 **176 passed**（零回归）、typecheck/lint/build **0**、前端 **304 passed**。集成动作已两半验证：wiring 登记后媒体引用与标签来源均变为 `('moments','posts')`；契约 18→**24 条**；二次 `create_app()` 安全（但底层 `register()` 不幂等，进程级守卫是唯一防线）| 待集成 |
+| 2026-10-16 | **T03 交付入库 + 接线完成** | 复核、入库（`4231996`，56 文件 / 10318 行）并完成接线（`6f494f5`）| ① `MODEL_MODULES` 追加 moments；② 路由登记；③ `register_content_domains()` 追加 `moments_wiring.register()` —— **不做这一步 = 匿名读动态图片一律 404**，实测贡献 `('moments','posts','tags:moments','tags:posts')` **与交付单期望值逐字一致**；④ 单头迁移 `cfd959a27f73`：**3 建表 + 4 索引、零 drop**，真实 PG 上核对到 `ck_moments_text_length`（2000 码点 CHECK）与 `moment_media` 位置唯一约束；⑤ 契约 **18 → 24 条** + 前端类型重生成；⑥ 手机登记 `INS_MANIFEST`（order 10，在 metanav 前）。
+**真实浏览器确认**：桌面 `['ins','palace','metanav','tokyo','cast','profile']`（6 项顺序正确），点开 INS 渲染真实内容。
+三处**冻结断言按设计拦下改动**并更新：`EXPECTED_TABLES`（+3 张）、两处桌面清单、`verify.py` | `4231996` `6f494f5` |
+| 2026-10-16 | **T03 §8.1 集成发现（待 T10 决策）** | 浏览器经 **Next rewrite** 的同源 POST **不带 `Origin`** | 真实浏览器实测：Chrome 不为此形态发送 `Origin`，而 `app/core/csrf.py` 的 `verify_origin` 按 05 §5「缺失 Origin 的状态变更请求一律拒绝」返回 **403** —— **会阻塞管理写操作**。属**集成层形态与设计假设不一致**（05 §5 假设浏览器直连同源 API），非 T03 缺陷。开发期用代理补 `Origin` 绕过。**生产形态需 T10 确认**：网关转发是否补 / 保留 `Origin`。已记入 T10 交接清单 | 待 T10 |

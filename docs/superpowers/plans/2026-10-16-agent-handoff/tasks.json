@@ -35,8 +35,8 @@
         "T01",
         "T02"
       ],
-      "status": "in_progress",
-      "note": "T00/T01/T02 已集成，开始条件满足，已派发"
+      "status": "integrated_verified",
+      "note": "INS 图文发布与阅读已交付并入库 4231996，接线完成 6f494f5：MODEL_MODULES 追加 moments、路由登记、register_content_domains 追加 moments_wiring（贡献实测与交付单期望值逐字一致）、单头迁移 cfd959a27f73（3 表 + 4 索引，零 drop，真实 PG 核对约束）、契约 18→24 条、前端类型重生成、手机登记 INS_MANIFEST。浏览器确认桌面 6 个磁贴顺序正确且 INS 能打开渲染真实内容。待决策：交付单 §8.1 的 Origin 缺失（浏览器经 Next rewrite 的同源 POST 不带 Origin，按 05 §5 被 verify_origin 拒为 403）——属集成层形态与设计假设不一致，开发期用代理补头绕过，生产形态（浏览器直连同源 API 或网关转发）需 T10 确认。"
     },
     {
       "id": "T04",
