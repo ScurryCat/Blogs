@@ -194,3 +194,5 @@ docker compose -f deploy/compose.dev.yaml --env-file deploy/.env up -d
 | 2026-10-16 | **T02 修复闭环** | 复核 T02 对我两条反馈的处置 | ① `migrate.mjs` 注释已重写：正确说明单份副本理由、引用 `.gitignore` 与 06 素材分层、指向 `MUSIC_BASE`；
 ② `crowd.state` 缺口按倾向方案 2 修复 —— reduce 判定收进 `warm()`（注释「单一判据」），调用方只留连接检测并调 `markSkipped("slow-connection")`。**行为复验**：普通偏好 `state='ready'`、减少动效 `state='reduced-motion'`（修复前为 `not-warmed`）|
 | 2026-10-16 | T02（拒绝与披露） | 验证 T02 未记录（而是修掉）我指出的问题：过时文档与不可达状态均已消除，**没有留下"已知但不修"的痕迹** | 同上 | 无（仅验证） |
+| 2026-10-16 | T02（手机直接 URL 路径） | 独立验证验收行「手机详情直接 URL、刷新、Back、展开 → 状态一致，关闭直接链接不会意外离站」 | **通过 3 项**：闭合直接链接后 URL `/?phone=home` → `/` 且 `history.length` 保持 2（**未发生 back 跳转**，符合 02 §history ⑤）；刷新前后 URL 与开启状态完全一致；Back 从 `/about?phone=home` 回到 `/about` 且未离站。
+**发现 1 项可复现差异**：**直接 URL 打开时 Escape 关不掉手机**（✕ 可关）。对照实验：直接 URL 打开后焦点为 `BODY`、Escape 无效；点击 `.pw-tab` 打开后 Escape 有效。T02 工具只覆盖了点击路径。另观察：两种路径下焦点都未进入对话框，与 02 §D4.7「焦点圈定」的表述有出入（可能是刻意取舍，已请 T02 判断） | 待 T02 判断 |
