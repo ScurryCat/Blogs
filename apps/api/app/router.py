@@ -9,11 +9,22 @@
 
 from __future__ import annotations
 
+import importlib
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, FastAPI
 
 API_V1_PREFIX = "/api/v1"
+
+# 生产模块 router 的显式清单（模块名 → 模块路径，模块内需有 `router` 属性）。
+# 按名称排序挂载，保证对外路径顺序可复现。新增模块由集成负责人写入这里。
+MODULE_ROUTER_TARGETS: tuple[tuple[str, str], ...] = (
+    ("auth", "app.modules.auth.router"),
+    ("health", "app.core.health"),
+    ("media", "app.modules.media.router"),
+    ("posts", "app.modules.posts.router"),
+    ("tags", "app.modules.tags.router"),
+)
 
 
 class DuplicateModuleError(RuntimeError):
@@ -44,6 +55,21 @@ def registered_module_routers() -> dict[str, APIRouter]:
 def reset_module_routers() -> None:
     """清空登记表。仅测试使用；生产进程只在启动时登记一次。"""
     _MODULE_ROUTERS.clear()
+
+
+def register_declared_modules() -> tuple[str, ...]:
+    """按 MODULE_ROUTER_TARGETS 导入并登记模块 router，返回本次新登记的名字。
+
+    重复调用安全（已登记的跳过），因此测试里反复建生产 app 不会因重复登记报错。
+    """
+    newly: list[str] = []
+    for name, module_path in MODULE_ROUTER_TARGETS:
+        if name in _MODULE_ROUTERS:
+            continue
+        module = importlib.import_module(module_path)
+        register_module_router(name, module.router)
+        newly.append(name)
+    return tuple(newly)
 
 
 def _health_router() -> APIRouter:
@@ -82,5 +108,11 @@ def build_api_router(module_routers: dict[str, APIRouter] | None = None) -> APIR
 
 
 def mount_api(app: FastAPI, module_routers: dict[str, APIRouter] | None = None) -> None:
-    """把聚合 router 挂到应用上。main.py 与模块测试 app 工厂共用这一条路径。"""
+    """把聚合 router 挂到应用上。main.py 与模块测试 app 工厂共用这一条路径。
+
+    `module_routers=None` 表示生产接线：先按清单登记真实模块，再挂载。
+    显式传入字典表示测试接线：只挂给定模块，不触碰生产登记表。
+    """
+    if module_routers is None:
+        register_declared_modules()
     app.include_router(build_api_router(module_routers))

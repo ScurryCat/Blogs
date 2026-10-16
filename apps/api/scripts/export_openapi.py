@@ -32,7 +32,9 @@ def build_schema() -> dict:
     from app.core.config import Settings
     from app.main import create_app
 
-    app = create_app(settings=Settings(), module_routers={})
+    # 不传 module_routers：走生产接线，契约必须覆盖真实挂载的全部模块。
+    # （早期版本传了 {}，会让契约只剩 /health/live —— 那是错的。）
+    app = create_app(settings=Settings())
     return app.openapi()
 
 

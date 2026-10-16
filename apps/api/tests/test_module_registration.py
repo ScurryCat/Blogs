@@ -82,12 +82,27 @@ def test_router_order_is_stable_across_builds() -> None:
     assert paths[1:] == sorted(paths[1:]), "模块路由按名称排序"
 
 
-def test_model_registry_is_explicit_and_has_no_tables_yet() -> None:
+# T01 冻结的 8 张表。新增内容域时必须同时更新 MODEL_MODULES 与这里 ——
+# 这是刻意的：让「有人悄悄加表却没登记」在测试里立刻暴露。
+EXPECTED_TABLES = (
+    "admin_users",
+    "audit_events",
+    "auth_rate_limits",
+    "media",
+    "post_tags",
+    "posts",
+    "sessions",
+    "tags",
+)
+
+
+def test_model_registry_matches_the_wired_module_list() -> None:
     loaded = model_registry.import_all_models()
     assert loaded == list(model_registry.MODEL_MODULES)
     assert isinstance(model_registry.MODEL_MODULES, tuple), "清单必须是显式元组，不能是扫描结果"
-    # 05 §1：按里程碑建表，不预建未来领域的数据结构。
-    assert model_registry.registered_tables() == ()
+    assert model_registry.registered_tables() == EXPECTED_TABLES, (
+        "已注册的表与冻结清单不一致；新增内容域请同时更新 MODEL_MODULES 与本断言"
+    )
 
 
 def test_missing_model_module_fails_loudly() -> None:

@@ -20,6 +20,33 @@ from app.router import mount_api
 
 APP_TITLE = "PHANTOM LOG API"
 
+# 内容域贡献是进程级注册表，登记一次即可。`create_app()` 在同一进程里可能被调用多次
+# （模块级 app、测试、导出脚本），而 `wiring.register()` 会对重复登记报错 —— 那是
+# 模块侧正确的防呆，所以调用方这里负责「只登记一次」。
+_content_domains_registered = False
+
+
+def register_content_domains() -> tuple[str, ...]:
+    """登记内容域对共享扩展点的贡献（媒体公开引用检查、公开标签来源）。
+
+    为什么必须显式登记：两个扩展点的默认行为都是「不贡献」—— 媒体对匿名 404，
+    标签列表为空。这是刻意的安全默认（SHARED-CONTRACTS §5：默认不生效，集成负责人
+    显式注册后才开放）。只注册媒体检查而漏掉标签来源，会让 `GET /api/v1/tags`
+    永远返回空数组 —— 安全但坏，所以两件事收在同一个 wiring 单点里。
+
+    幂等：同进程内只登记一次。测试若要验证「未登记 = 默认拒绝」，请用
+    `create_app(module_routers={...})` 走测试接线，或显式调用各域的 `unregister()`。
+    """
+    global _content_domains_registered
+    if _content_domains_registered:
+        return ()
+
+    from app.modules.posts import wiring as posts_wiring
+
+    posts_wiring.register()
+    _content_domains_registered = True
+    return ("app.modules.posts",)
+
 
 def create_app(settings: Settings | None = None, *, module_routers=None) -> FastAPI:
     """建应用。`module_routers` 仅供模块测试注入，生产走 `app/router.py` 的登记表。"""
@@ -28,6 +55,8 @@ def create_app(settings: Settings | None = None, *, module_routers=None) -> Fast
 
     pl_logging.configure_logging()
     model_registry.import_all_models()
+
+    production_wiring = module_routers is None
 
     app = FastAPI(
         title=APP_TITLE,
@@ -51,6 +80,11 @@ def create_app(settings: Settings | None = None, *, module_routers=None) -> Fast
             allow_methods=["*"],
             allow_headers=["*"],
         )
+
+    if production_wiring:
+        # 内容域的共享扩展点贡献只在生产接线下登记；测试用显式 module_routers，
+        # 由测试自己控制登记状态（未登记 = 默认拒绝 / 默认不贡献）。
+        register_content_domains()
 
     mount_api(app, module_routers)
     return app

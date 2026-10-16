@@ -65,11 +65,21 @@ def test_expected_host_mismatch_is_refused() -> None:
 def test_configured_test_database_is_reachable_and_migrated(migrated_engine) -> None:
     from sqlalchemy import text
 
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    # 期望版本从迁移脚本现算，不写死 revision 号 —— 写死会在每次新增迁移后变成
+    # 假告警（readiness 的 schema 检查出于同样理由不比较 revision）。
+    config = Config(str(API_DIR / "alembic.ini"))
+    config.set_main_option("script_location", str(API_DIR / "migrations"))
+    expected_head = ScriptDirectory.from_config(config).get_current_head()
+
     with migrated_engine.connect() as connection:
         assert connection.execute(text("select 1")).scalar_one() == 1
-        # 迁移链已经在夹具里跑过；这里确认 alembic 版本表存在且只有一个 head。
-        version = connection.execute(text("select version_num from alembic_version")).scalar_one()
-    assert version == "0001_baseline"
+        # 迁移链已经在夹具里跑过；这里确认库停在当前 head，且只有一行（无平行 head）。
+        revisions = connection.execute(text("select version_num from alembic_version")).scalars().all()
+    assert len(revisions) == 1, f"alembic_version 应只有一行，实际 {revisions}"
+    assert revisions[0] == expected_head
 
 
 @pytest.mark.database

@@ -14,9 +14,14 @@ from typing import Iterable, TypeVar
 
 from app.core.db import Base
 
-# 显式清单：顺序固定，便于复现。当前没有业务模块，T01 起按集成顺序追加。
-# 形如 "app.modules.posts.models"。
-MODEL_MODULES: tuple[str, ...] = ()
+# 显式清单：顺序固定，便于复现。按依赖顺序排列（auth 的站主/会话被其余域引用）。
+# T01 于 2026-10-16 声明模型冻结；新增模块需经集成负责人写入这里。
+MODEL_MODULES: tuple[str, ...] = (
+    "app.modules.auth.models",
+    "app.modules.media.models",
+    "app.modules.tags.models",
+    "app.modules.posts.models",
+)
 
 _ModelT = TypeVar("_ModelT", bound=type)
 

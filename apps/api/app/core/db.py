@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import re
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Iterator
 
@@ -98,8 +99,13 @@ def create_session_factory(engine: Engine) -> sessionmaker[Session]:
     return sessionmaker(bind=engine, autoflush=False, expire_on_commit=False, class_=Session)
 
 
+@contextmanager
 def session_scope(factory: sessionmaker[Session]) -> Iterator[Session]:
-    """事务边界：正常提交，异常回滚。供脚本与测试使用；请求内用 FastAPI 依赖。"""
+    """事务边界：正常提交，异常回滚。供脚本与测试使用；请求内用 FastAPI 依赖。
+
+    必须是上下文管理器：`with session_scope(factory) as session:`。
+    （T00 最初漏了 `@contextmanager`，导致两个 CLI 的 `with` 用法直接 TypeError。）
+    """
     session = factory()
     try:
         yield session
