@@ -84,3 +84,13 @@ T00 在骨架交付后持续承担集成负责人（[T00 任务卡](../superpowe
 - **成功响应**：由各路由自行声明；`PrivateCacheControlMiddleware` 只对 `/api/v1/admin/`、`/api/v1/auth/`、`/api/v1/media/` 下**漏加头**的成功响应兜底。
 
 记下来的理由：这类「以为是自己修的、其实是别人修的」结论如果不验证就写进交付单，会让后来者误判失效路径。
+| 2026-10-16 | T00（新增迁移守卫） | 加入 `tests/test_migration_sync.py`：模型声明必须与 `upgrade head` 后的库结构一致，且声明的表都真实存在 | 反证验证：临时给 `Tag` 注入一列 `drift_probe` → 测试失败并指出 `Detected added column 'tags.drift_probe'`；还原后通过（`diff` 确认逐字节还原，T01 文件未被污染）。先跑一次漂移检查确认 T01 冻结点之后**未改模型**（无漂移） | 见提交 |
+
+## 未决缺陷（2026-10-16）
+
+`apps/api/tests/media/test_upload_api.py::test_upload_rejects_unknown_owner_session` 期望 **401**，实际 **201**（上传成功并返回完整 media 记录）。
+
+- 实现侧已核查：`require_admin_write → require_admin → load_session`，`load_session` 的 SELECT 明确带 `revoked_at.is_(None)`，判断条件没有写漏。
+- 因此怀疑点在**会话可见性**：该用例用第 216 行的 session 代理覆盖 `get_session`，并在 `t01_session` 上 `commit()` 注销；若 `t01_session` 处于外层未提交事务中，另一个连接将看不到这次注销。
+- **对应验收矩阵「旧会话 / 注销后复用 → 被拒绝」。不得为了变绿而删除该用例或把断言放宽成 4xx**；三种可接受结局：改夹具、改实现、或确认是鉴权绕过并按缺陷修。
+- 已请 T01 按「用另一个连接验证 `revoked_at` 是否真的置位」的顺序排查。
