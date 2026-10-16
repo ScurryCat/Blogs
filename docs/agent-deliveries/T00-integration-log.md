@@ -466,3 +466,29 @@ T03 报告「浏览器经 Next rewrite 的同源 POST 不带 `Origin`，被 `ver
 | 2026-10-16 | **T05 时区审计** | 独立实测「日期按明确展示时区处理，**不因 UTC 转换错一天**」的跨午夜边界 | `display_today()` 用显式 `DISPLAY_TIMEZONE = Asia/Shanghai` 而非服务器本地时区；**五个边界全部正确**：
 `UTC 15:59:59` → 沪 23:59:59 → **仍为 16 日**；`UTC 16:00:00` → 沪次日 00:00 → **17 日**（这是最容易错的一格）；`UTC 23:30` → 17 日；**裸时间按 UTC 处理**（源码注明「裸时间正是错一天的来源」）→ 17 日；带沪时区的 00:30 → 17 日。**无 off-by-one**。
 集成待办：`DISPLAY_TIMEZONE_NAME` 目前是模块常量，T05 的注释指向交付单的集成申请要把它挪进 `Settings` —— 接线时处理 | 待交付 |
+
+## T05 + T07 集成就绪预检（2026-10-16，交付前）
+
+三个新域都自带 `wiring.py` 并写明集成方式。**登记预演**（全新进程、直接调用各 register）：
+
+| 时点 | 媒体公开引用 | 标签来源 |
+| --- | --- | --- |
+| 登记前 | （空，默认拒绝） | （空） |
+| 登记 posts + moments | `['moments','posts']` | `('moments','posts')` |
+| **再登记 journal + leisure + coop** | **`['coop','journal','leisure','moments','posts']`** | **`('moments','posts')`** |
+
+即：三个新域**都贡献媒体公开引用**（日记封面/正文图、娱乐封面、友链头像），而**只有 posts 与 moments 贡献公开标签来源**。
+
+**T07 关于标签的决定是刻意的**（`coop/models.py` 与 `coop/wiring.py` 都写明了理由）：友链标签存在自带的 `friend_link_tags` 表，**不进共享 `tags` 表** ——
+「把友链标签混进去会改变 `GET /api/v1/tags` 的含义，也会让撤回友链影响文章标签统计」。它还用 `verify_contributions()` 把这条决定变成**可执行断言**，防止后人「顺手」加一条全局注册而没有更新文档。
+
+**集成待办清单**（交付后按此执行）：
+1. `MODEL_MODULES` += journal / leisure / coop models
+2. `MODULE_ROUTER_TARGETS` += 三个 router
+3. `register_content_domains()` += 三个 `wiring.register()`
+4. 生成单头迁移（预演：5 张表 + 6 索引，零 drop）
+5. 契约重生成 + 前端类型（预计 24 → 30+ 条路径）
+6. 手机登记 journal / leisure / coop（三者都已建 `phone-app.tsx`，coop 另带 manifest）
+7. **删除** `coop/dev_app.py` 与 `coop/dev_tables.py`（T07 的本地验证入口）
+8. T05 的 `DISPLAY_TIMEZONE_NAME` 从模块常量挪进 `Settings`
+| 2026-10-16 | **T05/T07 集成就绪预检** | 交付前做 wiring 登记预演与集成交付清单 | 登记后媒体公开引用 = **`['coop','journal','leisure','moments','posts']`**、标签来源 = **`('moments','posts')`**；三个新域都贡献媒体引用，只有 posts/moments 贡献标签来源。**T07 不登记标签来源是刻意的**（友链标签走自带的 `friend_link_tags`，避免改变 `GET /tags` 含义、避免撤回友链影响文章标签统计），并用 `verify_contributions()` 做成可执行断言。已整理 8 条集成待办（含删除 `coop/dev_app.py`、时区挪进 Settings）| 待交付 |
