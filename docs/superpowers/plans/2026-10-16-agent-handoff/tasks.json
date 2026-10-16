@@ -64,8 +64,8 @@
       "depends_on": [
         "T04"
       ],
-      "status": "in_progress",
-      "note": "开始条件（T04 已集成）满足，已派发；与 T08 并行"
+      "status": "integrated_verified",
+      "note": "作品与记忆画廊已交付并入库 f529891，接线完成 962d24f：模型/路由/wiring 登记（两个独立开关）、单头迁移 f2ce708f46fe（4 表 + 11 索引口径、零 drop）、契约 55→70、前端类型重生成、INS 组合壳换成 InsAppWithGalleryAndMessages、手机并入相册页签（用权威确认版 useGalleryTab）、手机登记 SHOWCASE_MANIFEST。**改了两处原稿取值**：icon 由 fox.webp 改为 violet.webp（fox 已给放课后）、order 由 30 改为 60（07 §7 首屏顺序里没有殿堂，排在其后不打断设计顺序）。验证：后端 13 个域合计 729 通过、守卫 24 通过；前端 609 通过 / 57 文件。**未验证**：Docker；**仓库里没有任何真实照片素材**，画廊线上内容为空（浏览器验收用的是脚本临时上传、名字写明「验证用」的相册）；year/month 只有单年份覆盖。"
     },
     {
       "id": "T07",
@@ -93,7 +93,8 @@
         "T04",
         "T06"
       ],
-      "status": "not_started"
+      "status": "in_progress",
+      "note": "开始条件（T04 + T06 已集成）满足，已派发（最后一个功能包）。"
     },
     {
       "id": "T10",
