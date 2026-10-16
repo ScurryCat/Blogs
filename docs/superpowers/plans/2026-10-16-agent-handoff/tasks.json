@@ -102,8 +102,9 @@
         "T01",
         "T02"
       ],
-      "status": "not_started",
-      "release_requires": "all modules selected in this release are integrated and verified"
+      "status": "in_progress",
+      "release_requires": "all modules selected in this release are integrated and verified",
+      "note": "开始条件（T01+T02 已集成）满足，已派发；卡片允许「先准备部署，发布验收等待选定模块」。已交接 T00 查实的事项：恢复后会话复活与 revoke_sessions CLI、网关须转发 /assets/music/ 且保留 Origin/Host、数据源切换需重新构建、四个验收工具、以及全部已知未验证项。Docker daemon 未运行，容器项须如实记为未验证。"
     }
   ],
   "updated": "2026-10-16"

@@ -518,3 +518,9 @@ T06 另加：**不伪造奖项或数字**、**同一媒体不重复上传**（�
 | 2026-10-16 | **T06/T08 早期检查** | 两个新包开始产出后做模型与结构检查 | **T06**：`projects` / `gallery` 两个域已建齐（models/router/schemas/service/**wiring**/**public_refs**，与既有域同构）；模型导入无冲突，声明 **4 张表**（`projects`、`albums`、`album_media`、`project_media`）+ **7 个索引**，迁移预演 11 项。两处细节符合约定：**`ix_projects_palace_id`**（卡片要求「作品可有可空 palace 外键」）与两个**部分列表索引**（`ix_projects_public_listing` / `ix_albums_public_listing`，沿用 posts/palaces/moments/journal 的一致模式）。
 **T08**：`messaging` 域已分出 `ai/` 适配层子目录 + `characters.py` / `config.py` / `content.py` / `stories`，与它卡片的「可替换适配层」要求一致 | 待交付 |
 | 2026-10-16 | T00（过滤条件写窄） | 首次列 T06 的表时只看到 2 张 | 我用了单数形式过滤（`project`/`album`），漏掉复数表名 `projects` / `albums`。**这类「过滤条件本身写错导致漏看」与前几轮的测量错误同类**，改为列出全表后确认是 4 张 | 已修正 |
+| 2026-10-16 | **批次 4 派发：T10** | T10 卡片条件为「T01 + T02 已集成」**已满足**，且卡片明确「可先准备部署」 | 派发 T10（容器生产化、CI、备份恢复、跨模块验证、发布准备）。**交付前把 T00 已查实的事项全部交接**，避免它重新发现：
+① 恢复备份让已撤销会话复活 + 新增的 `revoke_sessions` CLI（含 `--username` 不动预登录会话的语义）；
+② 网关须转发 `/assets/music/`，且转发 `/api/v1` 时**保留 `Origin` 与 `Host`**；
+③ `PHANTOM_POSTS_SOURCE=api` 的切换与**重新构建是同一步**（否则运行时 500）；
+④ CI 可用的既有测试资源与**契约漂移守卫**；⑤ 四个验收工具；⑥ 全部已知未验证项。
+并明确告知：**Docker daemon 未运行**，容器项不得声称已验证，只做实 `compose config` 语法、静态审查、CI 工作流与**可在本机真实 PostgreSQL 上实测的备份/恢复脚本** | 见提交 |
