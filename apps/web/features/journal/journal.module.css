@@ -1,0 +1,485 @@
+/*
+ * 手记的组件样式（CSS Module）。
+ *
+ * 为什么不写进 `app/globals.css`：那是 T02 的全站样式表（所有权边界）。
+ * 本包独占 `features/journal/`，样式跟着组件走。
+ *
+ * 视觉语言沿用 07 §3 的「存档卡」：日期做数字层次、纸片标题、红黑斜切；
+ * 只复用旧站已有的 CSS 变量（`var(--ink-2)` 等）与类名（`.kick` / `.shell`），
+ * 不改全站美术方向，也不往 `styles/legacy/*.css` 里加新规则。
+ */
+
+.wrap {
+  display: block;
+}
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin: 0 0 18px;
+}
+
+.title {
+  margin: 4px 0 6px;
+  font-size: clamp(20px, 3vw, 30px);
+  letter-spacing: 0.04em;
+}
+
+.lead {
+  margin: 0;
+  max-width: 62ch;
+  line-height: 1.7;
+  color: var(--ink-2, #555);
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tab {
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.tab[aria-current="true"] {
+  background: #d40000;
+  border-color: #d40000;
+  color: #fff;
+}
+
+/* --- 存档卡列表 ----------------------------------------------------------- */
+
+.cards {
+  display: grid;
+  gap: 14px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.card {
+  display: grid;
+  grid-template-columns: 5.2em 1fr;
+  gap: 6px 14px;
+  align-items: start;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  background: rgba(255, 255, 255, 0.72);
+  padding: 14px 16px;
+}
+
+.cardDate {
+  grid-row: 1 / span 2;
+  display: grid;
+  gap: 2px;
+  align-content: start;
+  border-right: 2px solid #d40000;
+  padding-right: 10px;
+}
+
+/* 缩略图整行落在第二列（与主体对齐），不挤在日期下面。 */
+.thumbs {
+  grid-column: 2;
+}
+
+.cardDay {
+  font-size: 26px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.cardMonth {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  opacity: 0.75;
+}
+
+.cardWeekday {
+  font-size: 11px;
+  opacity: 0.65;
+}
+
+.cardBody {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.45;
+}
+
+.cardTitle a {
+  color: inherit;
+}
+
+.cardMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+}
+
+.chip {
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  padding: 1px 8px;
+}
+
+.moodChip {
+  border-color: #d40000;
+  color: #b00000;
+}
+
+.cardExcerpt {
+  margin: 2px 0 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink-2, #444);
+}
+
+.thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.thumb {
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* --- 日历 ----------------------------------------------------------------- */
+
+.calendarMonths {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+}
+
+.month {
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  background: rgba(255, 255, 255, 0.72);
+  padding: 12px 14px;
+}
+
+.monthTitle {
+  margin: 0 0 10px;
+  font-size: 15px;
+  letter-spacing: 0.1em;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.weekday {
+  font-size: 11px;
+  text-align: center;
+  opacity: 0.6;
+}
+
+.day {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+}
+
+.dayEmpty {
+  aspect-ratio: 1;
+}
+
+/* 只有真的有公开记录的日期才有标记；空白日期不做任何装饰（验收 2）。 */
+.dayHasEntry {
+  border-color: #d40000;
+  background: rgba(212, 0, 0, 0.1);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dayToday {
+  outline: 2px solid #111;
+  outline-offset: -2px;
+}
+
+.dayCount {
+  display: block;
+  font-size: 9px;
+  line-height: 1;
+  color: #b00000;
+}
+
+/* --- 正文 ----------------------------------------------------------------- */
+
+.reading {
+  display: grid;
+  gap: 14px;
+  max-width: 74ch;
+}
+
+.readingHead {
+  display: grid;
+  gap: 6px;
+  border-bottom: 2px solid #d40000;
+  padding-bottom: 10px;
+}
+
+.readingDate {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  color: #b00000;
+}
+
+.readingTitle {
+  margin: 0;
+  font-size: clamp(22px, 3.4vw, 34px);
+  line-height: 1.3;
+}
+
+.readingBody {
+  font-size: 16px;
+  line-height: 1.9;
+}
+
+.readingBody :global(h2),
+.readingBody :global(h3) {
+  margin: 22px 0 8px;
+}
+
+.gallery {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.figure {
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.figure img {
+  width: 100%;
+  height: auto;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.figure figcaption {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+/* --- 状态与提示 ----------------------------------------------------------- */
+
+.notice {
+  border-left: 3px solid #d40000;
+  background: rgba(212, 0, 0, 0.06);
+  padding: 10px 12px;
+  margin: 0 0 14px;
+  line-height: 1.6;
+}
+
+.noticeInfo {
+  border-left-color: #333;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.empty {
+  border: 1px dashed rgba(0, 0, 0, 0.3);
+  padding: 18px;
+  line-height: 1.7;
+}
+
+.button {
+  border: 1px solid #d40000;
+  background: #d40000;
+  color: #fff;
+  padding: 8px 16px;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.buttonGhost {
+  background: transparent;
+  color: inherit;
+  border-color: rgba(0, 0, 0, 0.4);
+}
+
+.buttonDanger {
+  background: transparent;
+  border-color: #a00;
+  color: #a00;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+/* --- 管理端 --------------------------------------------------------------- */
+
+.adminList {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.adminRow {
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.adminForm {
+  display: grid;
+  gap: 14px;
+  max-width: 720px;
+}
+
+.row2 {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+}
+
+.label {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+}
+
+.hint {
+  font-size: 12px;
+  opacity: 0.75;
+  line-height: 1.6;
+}
+
+.input,
+.textarea,
+.select {
+  font: inherit;
+  padding: 9px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.9);
+  color: inherit;
+  width: 100%;
+}
+
+.textarea {
+  min-height: 220px;
+  resize: vertical;
+  line-height: 1.7;
+}
+
+.input[aria-invalid="true"],
+.textarea[aria-invalid="true"] {
+  border-color: #a00;
+}
+
+.fieldError {
+  font-size: 12px;
+  color: #a00;
+}
+
+.statusChip {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  border: 1px solid currentColor;
+  padding: 1px 6px;
+}
+
+.statusPublished {
+  color: #0a6b32;
+}
+
+.statusDraft {
+  color: #a05a00;
+}
+
+.visibilityPublic {
+  color: #0a6b32;
+}
+
+.visibilityPrivate {
+  color: #444;
+}
+
+.sharedWarning {
+  border-left: 3px solid #a05a00;
+  background: rgba(160, 90, 0, 0.08);
+  padding: 8px 10px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.imageList {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.imageRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.2);
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.thumbSmall {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}

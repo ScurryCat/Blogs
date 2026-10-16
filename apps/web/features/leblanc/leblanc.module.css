@@ -1,0 +1,128 @@
+/*
+ * 勒布朗近况的组件样式（CSS Module，所有权 T05）。
+ *
+ * 布局要求（07 §3）：桌面两列、**小屏纵向单列**；普通中文链接始终可见，
+ * 装饰性热点只是辅助。红黑 / 斜切气质复用旧站变量与类名，不改全站美术方向。
+ */
+
+.wrap {
+  display: block;
+}
+
+.head {
+  margin: 0 0 18px;
+}
+
+.title {
+  margin: 4px 0 8px;
+  font-size: clamp(24px, 4vw, 38px);
+  letter-spacing: 0.05em;
+}
+
+.status {
+  margin: 0;
+  max-width: 60ch;
+  font-size: 16px;
+  line-height: 1.8;
+  border-left: 3px solid #d40000;
+  padding-left: 12px;
+}
+
+/* 桌面两列；≤620px 时自动退化成单列（07 §3「小屏纵向阅读」）。 */
+.grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  margin: 0 0 16px;
+}
+
+.card {
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  background: rgba(255, 255, 255, 0.72);
+  padding: 14px 16px;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-width: 0;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #b00000;
+}
+
+.entryTitle {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.45;
+}
+
+.meta {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  opacity: 0.8;
+}
+
+.excerpt {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink-2, #444);
+}
+
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin: 0;
+}
+
+.degraded {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  border-left: 3px solid #a05a00;
+  background: rgba(160, 90, 0, 0.08);
+  padding: 8px 10px;
+}
+
+.button {
+  border: 1px solid #d40000;
+  background: #d40000;
+  color: #fff;
+  padding: 7px 14px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.buttonGhost {
+  background: transparent;
+  color: inherit;
+  border-color: rgba(0, 0, 0, 0.4);
+}
+
+/* 普通链接行：始终存在的可读入口，不依赖点中小物件。 */
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  padding-top: 12px;
+}
+
+.links a {
+  font-size: 14px;
+}
+
+.footnote {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.7;
+  opacity: 0.7;
+}

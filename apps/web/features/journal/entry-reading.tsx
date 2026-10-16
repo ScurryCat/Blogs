@@ -1,0 +1,75 @@
+"use client";
+
+/**
+ * 手记正文页（独立页 `/apps/journal/<id>` 与手机详情共用）。
+ *
+ *  - 内容来自公开端点，因此草稿 / 私密记录在这里天然是 404（服务端过滤，不是前端隐藏）；
+ *  - `content_md` 用 T02 的 Markdown 视图渲染成 **React 节点树**（没有
+ *    `dangerouslySetInnerHTML`，不执行任意 HTML）；
+ *  - 图片走公开变体地址（`private, no-store`），原图从不出现在公开页面；
+ *  - 关联长文只显示**公开文章**（服务端已过滤），链接用 `SiteLink`（`top-nav`）。
+ */
+
+import type { ReactNode } from "react";
+
+import { parseContent } from "@/features/legacy/markdown";
+import { MarkdownView } from "@/features/legacy/markdown/view";
+import { SiteLink } from "@/features/runtime/navigation/site-link";
+
+import styles from "./journal.module.css";
+import { imageUrl, parseCalendarDate } from "./paths";
+import type { JournalEntryDetail } from "./types";
+
+export function EntryReading({ entry }: { entry: JournalEntryDetail }): ReactNode {
+  const parts = parseCalendarDate(entry.entry_date);
+  // Markdown → React 节点树（`parseContent` 是纯函数，与文章页共用同一套解析器）。
+  const parsed = parseContent(entry.content_md ?? "");
+
+  return (
+    <article className={styles.reading} data-journal-reading={entry.id}>
+      <header className={styles.readingHead}>
+        <p className={styles.readingDate}>{parts ? parts.label : entry.entry_date}</p>
+        <h1 className={styles.readingTitle}>{entry.title || "（无标题）"}</h1>
+        <ul className={styles.cardMeta}>
+          {entry.mood ? (
+            <li className={`${styles.chip} ${styles.moodChip}`}>心情：{entry.mood}</li>
+          ) : null}
+          {entry.location ? <li className={styles.chip}>地点：{entry.location}</li> : null}
+        </ul>
+      </header>
+
+      {entry.images.length ? (
+        <div className={styles.gallery}>
+          {entry.images.map((image) => {
+            const url = imageUrl(image);
+            if (!url) return null;
+            return (
+              <figure className={styles.figure} key={image.media_id}>
+                {/* eslint-disable-next-line @next/next/no-img-element -- 变体地址由 API 给出。 */}
+                <img src={url} alt={image.alt} width={image.width} height={image.height} />
+                {image.alt ? <figcaption>{image.alt}</figcaption> : null}
+              </figure>
+            );
+          })}
+        </div>
+      ) : null}
+
+      {entry.content_md ? (
+        <div className={styles.readingBody}>
+          <MarkdownView result={parsed} />
+        </div>
+      ) : (
+        <p className={styles.hint}>这一篇没有正文，只有上面的记录。</p>
+      )}
+
+      {entry.post ? (
+        <p className={styles.noticeInfo}>
+          详细内容在长文里：
+          <SiteLink href={`/posts/${encodeURIComponent(entry.post.slug)}`} source="top-nav">
+            {entry.post.title}
+          </SiteLink>
+        </p>
+      ) : null}
+    </article>
+  );
+}

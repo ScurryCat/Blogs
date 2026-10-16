@@ -1,0 +1,356 @@
+/*
+ * 放课后的组件样式（CSS Module）。所有权同 journal：样式跟组件走，不写进
+ * `app/globals.css`，也不往 `styles/legacy/*.css` 里加新规则。
+ */
+
+.wrap {
+  display: block;
+}
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin: 0 0 18px;
+}
+
+.title {
+  margin: 4px 0 6px;
+  font-size: clamp(20px, 3vw, 30px);
+  letter-spacing: 0.04em;
+}
+
+.lead {
+  margin: 0;
+  max-width: 62ch;
+  line-height: 1.7;
+  color: var(--ink-2, #555);
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tab {
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.tab[aria-current="true"] {
+  background: #d40000;
+  border-color: #d40000;
+  color: #fff;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+  margin: 0 0 16px;
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+}
+
+.label {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.select,
+.input,
+.textarea {
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.9);
+  color: inherit;
+  max-width: 100%;
+}
+
+.textarea {
+  min-height: 120px;
+  line-height: 1.7;
+  resize: vertical;
+  width: 100%;
+}
+
+.input[aria-invalid="true"],
+.textarea[aria-invalid="true"] {
+  border-color: #a00;
+}
+
+.fieldError {
+  font-size: 12px;
+  color: #a00;
+}
+
+.grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.card {
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  background: rgba(255, 255, 255, 0.72);
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.cover {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 220px;
+  object-fit: cover;
+  background: rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.14);
+}
+
+/*
+ * 没有封面时**不画一个占满半屏的空框**：一条细带足以表达「没有封面」，
+ * 内容才是卡片的主体（07 §3 要求记录可读，装饰不能盖过业务）。
+ */
+.coverEmpty {
+  width: 100%;
+  min-height: 40px;
+  display: grid;
+  place-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.14);
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.03) 0 8px,
+    rgba(0, 0, 0, 0.07) 8px 16px
+  );
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: #b00000;
+}
+
+.cardBody {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px 14px;
+  align-content: start;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.4;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
+
+.chip {
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  padding: 1px 8px;
+}
+
+.progressChip {
+  border-color: #d40000;
+  color: #b00000;
+}
+
+.rating {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.ratingNone {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.meter {
+  display: grid;
+  gap: 3px;
+}
+
+.meterBar {
+  height: 6px;
+  background: rgba(0, 0, 0, 0.12);
+  position: relative;
+  overflow: hidden;
+}
+
+.meterFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: #d40000;
+}
+
+.notes {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-2, #444);
+}
+
+.spoiler {
+  border-left: 3px solid #a05a00;
+  background: rgba(160, 90, 0, 0.08);
+  padding: 8px 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.spoilerBody {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.button {
+  border: 1px solid #d40000;
+  background: #d40000;
+  color: #fff;
+  padding: 7px 14px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.buttonGhost {
+  background: transparent;
+  color: inherit;
+  border-color: rgba(0, 0, 0, 0.4);
+}
+
+.buttonDanger {
+  background: transparent;
+  border-color: #a00;
+  color: #a00;
+}
+
+.linkButton {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.notice {
+  border-left: 3px solid #d40000;
+  background: rgba(212, 0, 0, 0.06);
+  padding: 10px 12px;
+  margin: 0 0 14px;
+  line-height: 1.6;
+}
+
+.noticeInfo {
+  border-left-color: #333;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.empty {
+  border: 1px dashed rgba(0, 0, 0, 0.3);
+  padding: 18px;
+  line-height: 1.7;
+}
+
+.hint {
+  font-size: 12px;
+  opacity: 0.75;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* --- 管理端 --------------------------------------------------------------- */
+
+.adminList {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.adminRow {
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.adminForm {
+  display: grid;
+  gap: 14px;
+  max-width: 720px;
+}
+
+.row2 {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.statusChip {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  border: 1px solid currentColor;
+  padding: 1px 6px;
+}
+
+.statusPublished {
+  color: #0a6b32;
+}
+
+.statusDraft {
+  color: #a05a00;
+}
+
+.checkboxRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+}
+
+.preview {
+  border: 1px dashed rgba(0, 0, 0, 0.35);
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.03);
+  display: grid;
+  gap: 8px;
+}
