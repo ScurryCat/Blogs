@@ -231,3 +231,6 @@ page.click(...)                                                                 
 **决策（待切换时执行，现在不做）**：若切换后仍要显示阅读时长，**在服务端计算并加入列表 DTO**（例如 `reading_minutes`），而不是让前端 N+1 逐篇取详情、也不要用摘要估算糊弄。理由是服务端本来就有 `content_md`，返回一个派生整数不会泄漏正文，且列表页保持单次请求。
 
 **为什么现在不打开**：默认 `baseline`（迁移基线数据）是有意的过渡状态；切换数据源要与「后端故障如实报错」的验证一起做（本轮已确认该要求目前不可验证）。切换动作本身属 T02/T10 的遗留项，不阻塞 T03/T04。
+| 2026-10-16 | T03（早期模型检查） | T03 刚落地 `moments/models.py` 时做迁移预演（不写文件） | 导入无错、**无表名冲突**；声明的表正是 05 规定的三张（`moments` / `moment_media` / `moment_tags`）；预演产出 7 项变更（3 建表 + 4 索引），含 `(published_at, id)` 公开列表索引。
+**一次自我纠正**：预演摘要未打印 WHERE 子句，我一度怀疑 `ix_moments_public_listing` 漏了部分条件；查源码确认它带了 `postgresql_where=sql_text("status = 'published' AND deleted_at IS NULL")`，与 posts 一致、符合 05 §100「按公开条件选择部分索引」——**疑虑不成立** | 待集成 |
+| 2026-10-16 | T00（仓库卫生） | 对 T02 那个 256 文件的大提交做卫生检查 | **0 个可疑条目**（无 `node_modules`/`.next`/`.venv`/`__pycache__`/`tsbuildinfo`）；文件类型全为正当资源（74 png、50 svg、45 tsx、28 ts、16 webp、14 jpg、11 css、6 json、4 md、3 ttf）；`.git` 24M、628 个跟踪文件、工作树 31M —— 对含 6.9MB 迁移素材与 15MB 音频的站点属健康 | 无（仅验证） |
