@@ -284,3 +284,9 @@ page.click(...)                                                                 
 ⑥ `IntegrityError` 被翻译成可读 **409 而非 500**（唯一约束的兜底）；
 ⑦ 草稿可无图（门槛只在发布时查）、撤回保留图片与标签关系。
 另注意到一处刻意的正确设计：管理回执**如实返回未 ready 的图片**（不静默过滤），以便表单显示「不能发布」，而非看起来少了一张图 | 待交付 |
+| 2026-10-16 | **T04（规格一致性审计）** | 独立审计足迹上限、LIKE 转义、搜索排序稳定性、宿主模块形状 | **逐条符合**：
+① **LIKE 转义** —— `_like_pattern` 把 `%` / `_` / `\` 全部转义且 `.like(..., escape="\\")`，符合 05 §6（否则用户输入会意外变成通配查询）；
+② **足迹上限 30、可清除** —— `FOOTPRINT_LIMIT = 30`（注明 04 §9），**读取与写入两侧都 `slice`**（防手改 localStorage 绕过）、同 slug 去重置顶、有 `clearFootprint()`；
+③ **搜索排序稳定** —— 游标元组 `(rank, published_at, id, kind)`，落实 05 §140「同分按 `published_at DESC, id DESC` 稳定排序，再加 kind 最终区分」；游标另带 q/kind/tag **过滤指纹**（与 moments 的标签指纹同一套路）；
+④ **宿主模块已就绪** —— `features/metanav/index.tsx` 已是 `PhoneAppModule` 形状（`export default MetanavApp` + `export const screens`），且头部注释按协议写明：只用 `PhoneViewProps`、不碰全局/DOM、`metaverse-entry` 只在明确进入时发、足迹走 `host.state`、卸载即取消读取。**我第 41 轮清单里的模块项它已自行满足**，只差 manifest 取值。
+另注意到：文档未规定处（别名/关系条数上限）它做了明确取舍并在注释里说明依据 | 待交付 |
