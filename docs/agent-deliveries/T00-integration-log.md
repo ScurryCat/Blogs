@@ -615,3 +615,9 @@ runner 段相应重写：COPY standalone/static/public，**CMD 改为 `node apps
 
 | 2026-10-16 | **T09 在途状态观察（不干预）** | 发现 `app/modules/{skills,exploration}` 从 13 个文件变成空目录 | 先怀疑又是外部删除（本会话 `.dsh/pgtest` 被误删过一次）。**证据指向 T09 自己在重构**：`app/modules` 与 `tests` 的 mtime 是**刚刚**（30 秒前），T09 正在写 `verify-t09.py`；且 `.pytest_cache` 里有 **123 条** skills/exploration 测试 nodeid —— 说明它确实做过完整实现。
 **处置**：T09 仍在运行，这是它的正常迭代节奏，**不干预**；改为继续做自己的审计工作 | 观察 |
+| 2026-10-16 | **T10 三套演练在当前树（29 张表）上重跑** | T10 的演练是在 **25 张表**时跑的（T06 接线前）；模式长大后再跑一次才能确认脚本仍成立 | **全部通过**：
+**① 备份恢复 `verify-backup-restore.py` → 34/34**：成对备份 → 校验清单 → 隔离恢复到全新库 → 逐表 `count(*)` 一致 → **恢复后撤销会话** → **故意改一字节必须被拒** → 目标守卫（像生产库名一律拒绝、非空库不加 `--force` 拒绝）→ **角色分离**（迁移账号能建表、运行账号不能；`grant-runtime.sql` 后只读可读）。耗时：备份 0.468s、恢复 0.788s。
+**② 健康演练 `verify-health-drills.py` → 11/11**：DB 掉线时 **liveness 200 / readiness 503**（不返回假 ready）；半截迁移 → 503；补跑到 head 后**恢复 200 且数据未删**。
+**③ 反代同源写 `verify-proxy-same-origin.py` → 34/34**：真实 Chromium 经代理走完整登录（并在页面上确认真出现了注销按钮，不是只信状态码）、**恶意 Origin 被拒 403**、音频 `Accept-Ranges` 与 Range → 206。
+**这独立确认了我在 T03 那次更正**：反向代理会保留 `Origin`/`Host`，「浏览器同源 POST 丢 Origin → 403」在网关形态下不存在 | 本轮 |
+| 2026-10-16 | **三个后端验收工具回归** | 距上次运行已过 T06 接线与配置改动 | `verify-ins-media-loop`、`verify-media-multiref`、`verify-restore-revokes-sessions` **全部通过**；第三个仍如实**复现**会话复活（`authenticated=True`，sessions 表两行、登录会话 `revoked=NULL`）—— 说明风险真实存在，而 T10 的 `restore.py` 已按流程处理它。临时库与进程均已清理 | 本轮 |
