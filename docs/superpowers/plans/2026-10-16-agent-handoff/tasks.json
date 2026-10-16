@@ -55,8 +55,8 @@
         "T01",
         "T02"
       ],
-      "status": "in_progress",
-      "note": "开始条件（T01+T02 已集成）满足，已派发；T00/T04 也已集成"
+      "status": "integrated_verified",
+      "note": "手记/追番游戏/勒布朗近况已交付并入库 65607e0，接线完成 a7d58c8：模型/路由/wiring 登记、单头迁移 a149458fb34e（3 表 + 4 显式索引，零 drop，21 个约束含跨字段完整性）、契约 31→45、前端类型重生成、手机登记 journal(20)/leisure(30)（用预留序位而非建议的 30/40；leisure 图标改 fox.webp）、首页接入 LeblancView。T05 交付单 §9 如实记录：手记/放课后**未接进 nav 搜索**，所以「私密不进搜索」是因为没接而非过滤。未验证：Docker、手机面板完整流程、T08/AI 路径、仅 Chromium。"
     },
     {
       "id": "T06",

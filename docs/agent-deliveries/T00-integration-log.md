@@ -529,3 +529,8 @@ T06 另加：**不伪造奖项或数字**、**同一媒体不重复上传**（�
 **两处入口接线（属别人文件，由我做）**：① `/about` 第 02 区把旧站快照的 **6 张 P5 角色示例卡**（带 `RANK UP` 与好感度进度条）换成 `<CoopLinksSection />` —— **这一步才真正满足验收第 3 条**；② INS 资料区接 `<CoopEntry />`。
 **浏览器确认**：`/about` 第 02 区变为「真实友链」，页面**不再出现 `RANK UP` 与「COOP 等级」**，角色名只出现在「不属于这份名单」的说明句中；手机桌面顺序 `['ins','palace','tokyo','cast','coop','profile','metanav']`。
 **order 决策**：T07 建议自取 30，但 07 §7 首屏顺序为 INS/手记/放课后/COOP/异世界导航，30 会让 COOP 排在导航之后、与设计相反。本次按设计**预留序位**（ins 10 / coop 40 / metanav 50，留出手记 20、放课后 30），并注明应用与 site-link 共用命名空间导致交错 | `4941880` `5c223e5` |
+| 2026-10-16 | **T05 交付入库 + 接线完成** | 复核、入库（`65607e0`，73 文件 / 13565 行）并接线（`a7d58c8`）| 单头迁移 `a149458fb34e`：**3 建表 + 4 显式索引、零 drop**，落库 **21 个约束**，含 `ck_journal_entries_visibility_valid` 与 leisure 的**跨字段完整性**（`anime_has_no_game_fields` / `game_has_no_anime_fields` / `progress_matches_kind` / `episodes_within_total`）—— 把「追番与游戏共用一张表」的设计在数据库层保护住。契约 **31 → 45 条**。
+**两处序位修正**：① T05 建议 journal/leisure 取 order 30/40，会与已登记的 coop(40) 冲突并把放课后排到 COOP 之后（与 07 §7 相反），改用我预留的 **20/30**；② **发现 coop manifest 的实际 order 仍是 30** —— 我上一轮只在注释里写了 40、没改实际值，导致它与 leisure(30) 打平后按 id 排序，已修正为 40。leisure 图标由 oracle.webp 改为 fox.webp，避免与 metanav 同图标。
+**首页接线** `<LeblancView />`（位置按 07 §3 与 T05 §8.8）；`/apps/leblanc` 独立入口保留。
+**T05 如实记录的一条**：手记/放课后**未接进 nav 搜索**，所以「私密不进搜索」目前是因为没接、**不是过滤** —— 这类区分正是交付单该有的诚实度。
+T05 另报告一个**测试陷阱**：服务层 `Session.commit()` 会提交测试夹具的外部事务、rollback 撤不掉，它在 conftest 里加了提交后的显式 TRUNCATE | `65607e0` `a7d58c8` |
