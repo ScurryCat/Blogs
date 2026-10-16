@@ -15,6 +15,7 @@ import type { ReactNode } from "react";
 import { HomeHero } from "@/features/legacy/pages/home-hero";
 import { HomePalaceIndex } from "@/features/legacy/pages/home-index";
 import { ArchiveSection, CallingCard, HomeTicker } from "@/features/legacy/pages/home-static";
+import { LeblancView } from "@/features/leblanc/leblanc-view";
 import { readPublishedPosts } from "@/lib/api/posts";
 
 export const metadata: Metadata = {
@@ -33,6 +34,13 @@ export default async function HomePage(): Promise<ReactNode> {
       <HomeHero />
       <HomeTicker />
       <CallingCard post={read.items[0]} />
+      {/*
+        勒布朗近况（T05 交付，T00 接线）。位置按 07 §3「先为现有首页增加勒布朗式的内容组织」
+        与 T05 交付单 §8.8 的建议：在 Hero/Ticker/CallingCard 之后、文章索引之前。
+        内部四块**各自读取、各自失败** —— 任一 API 故障不影响音乐与整页（验收第 5 条）。
+        独立入口 `/apps/leblanc` 保留：站主可直接分享「近况」页。
+      */}
+      <LeblancView />
       <HomePalaceIndex items={read.items} />
       <ArchiveSection items={read.items} />
     </>

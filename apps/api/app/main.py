@@ -43,14 +43,24 @@ def register_content_domains() -> tuple[str, ...]:
         return ()
 
     from app.modules.coop import wiring as coop_wiring
+    from app.modules.journal import wiring as journal_wiring
+    from app.modules.leisure import wiring as leisure_wiring
     from app.modules.moments import wiring as moments_wiring
     from app.modules.posts import wiring as posts_wiring
 
     posts_wiring.register()
     moments_wiring.register()
     coop_wiring.register()
+    journal_wiring.register()
+    leisure_wiring.register()
     _content_domains_registered = True
-    return ("app.modules.posts", "app.modules.moments", "app.modules.coop")
+    return (
+        "app.modules.posts",
+        "app.modules.moments",
+        "app.modules.coop",
+        "app.modules.journal",
+        "app.modules.leisure",
+    )
 
 
 def create_app(settings: Settings | None = None, *, module_routers=None) -> FastAPI:

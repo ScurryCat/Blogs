@@ -25,7 +25,7 @@ export class PhoneRegistryError extends Error {}
  *
  * **order 按 07 §7 的首屏顺序预留序位**（每档留 10，便于插入）：
  *
- *   ins(10) → 手记(20，T05 待登记) → 放课后(30，T05 待登记) → coop(40) → metanav(50)
+ *   ins(10) → 手记(20) → 放课后(30) → coop(40) → metanav(50)
  *
  * **注意**：应用与 4 个 site-link 入口（palace/tokyo/cast/profile，order 10/20/30/40）共用同一
  * 个 order 命名空间，因此实际桌面顺序是交错的：
@@ -40,6 +40,33 @@ export class PhoneRegistryError extends Error {}
 export const PHONE_APPS: readonly PhoneAppManifest[] = Object.freeze([
   // INS 由 T03 交付并自带 manifest（`features/ins/phone-manifest.tsx`），这里只做登记。
   INS_MANIFEST,
+  // 手记与放课后由 T05 交付。**order 用预留序位 20 / 30**（T05 建议的 30/40 会与 coop(40)
+  // 冲突、且把放课后排到 COOP 之后，与 07 §7 首屏顺序相反）。leisure 的图标改用 fox.webp，
+  // 避免与 metanav 共用同一张 oracle.webp。
+  {
+    id: "journal",
+    name: "手记",
+    subtitle: "日记与日历",
+    icon: "/assets/legacy/img/icon/morgana.webp",
+    order: 20,
+    kind: "embedded",
+    canonical_path: "/apps/journal",
+    loader: () => import("@/features/journal/phone-app"),
+    feature_flag: null,
+    state_version: 1,
+  },
+  {
+    id: "leisure",
+    name: "放课后",
+    subtitle: "追番与游戏",
+    icon: "/assets/legacy/img/icon/fox.webp",
+    order: 30,
+    kind: "embedded",
+    canonical_path: "/apps/leisure",
+    loader: () => import("@/features/leisure/phone-app"),
+    feature_flag: null,
+    state_version: 1,
+  },
   // COOP 由 T07 交付并自带 manifest。
   COOP_PHONE_MANIFEST,
   {

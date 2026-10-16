@@ -82,7 +82,7 @@ def test_router_order_is_stable_across_builds() -> None:
     assert paths[1:] == sorted(paths[1:]), "模块路由按名称排序"
 
 
-# T01 冻结的 8 张 + T04 导航 3 张 + T03 动态 3 张 + T07 友链 2 张。新增内容域时必须同时更新
+# T01 冻结的 8 张 + T04 导航 3 张 + T03 动态 3 张 + T07 友链 2 张 + T05 日常 3 张。新增内容域时必须同时更新
 # MODEL_MODULES 与这里 —— 这是刻意的：让「有人悄悄加表却没登记」在测试里立刻暴露。
 EXPECTED_TABLES = (
     "admin_users",
@@ -90,6 +90,9 @@ EXPECTED_TABLES = (
     "auth_rate_limits",
     "friend_link_tags",
     "friend_links",
+    "journal_entries",
+    "journal_entry_media",
+    "leisure_entries",
     "media",
     "moment_media",
     "moment_tags",

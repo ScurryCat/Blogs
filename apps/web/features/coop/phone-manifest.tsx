@@ -21,10 +21,10 @@ export const COOP_PHONE_MANIFEST: PhoneAppManifest = {
   name: "协助者",
   subtitle: "友链通讯录",
   icon: COOP_PHONE_ICON,
-  // 07 §7 的首屏顺序是 INS / 手记 / 放课后 / COOP / 异世界导航 / 音乐；
-  // metanav 目前是 20，因此这里取 30 表示「排在导航之后」。要严格照首屏顺序，
-  // 由 T00 统一给各应用的 order 重排一次（注册表归 T00）。
-  order: 30,
+  // 07 §7 的首屏顺序是 INS / 手记 / 放课后 / **COOP** / 异世界导航 / 音乐。
+  // T00 集成时按设计**统一预留序位**：ins(10) / 手记(20) / 放课后(30) / coop(40) / metanav(50)
+  // —— 本包最初建议的 30 会让 COOP 排在导航之后，与设计相反，故改为 40。
+  order: 40,
   kind: "embedded",
   canonical_path: "/apps/coop",
   loader: () => import("@/features/coop/phone-app"),

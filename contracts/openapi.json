@@ -1,6 +1,93 @@
 {
   "components": {
     "schemas": {
+      "AnimeProgressOut": {
+        "description": "追番进度。`total_episodes` / `completion_ratio` 为 null 表示总数未知。",
+        "properties": {
+          "airing": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Airing"
+          },
+          "completion_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completion Ratio"
+          },
+          "episodes_label": {
+            "title": "Episodes Label",
+            "type": "string"
+          },
+          "episodes_watched": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Episodes Watched"
+          },
+          "last_watched_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Watched On"
+          },
+          "season": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Season"
+          },
+          "total_episodes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Episodes"
+          }
+        },
+        "required": [
+          "season",
+          "episodes_watched",
+          "total_episodes",
+          "last_watched_on",
+          "airing",
+          "episodes_label",
+          "completion_ratio"
+        ],
+        "title": "AnimeProgressOut",
+        "type": "object"
+      },
       "Body_upload_media_api_v1_admin_media_post": {
         "properties": {
           "file": {
@@ -621,6 +708,74 @@
         "title": "FriendTagOut",
         "type": "object"
       },
+      "GameProgressOut": {
+        "properties": {
+          "all_achievements": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "All Achievements"
+          },
+          "completed_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed On"
+          },
+          "platform": {
+            "title": "Platform",
+            "type": "string"
+          },
+          "playtime_label": {
+            "title": "Playtime Label",
+            "type": "string"
+          },
+          "playtime_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playtime Minutes"
+          },
+          "started_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started On"
+          }
+        },
+        "required": [
+          "platform",
+          "started_on",
+          "completed_on",
+          "playtime_minutes",
+          "playtime_label",
+          "all_achievements"
+        ],
+        "title": "GameProgressOut",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -632,6 +787,1510 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "JournalAdminImageOut": {
+        "description": "管理端图片：给出可直接回填的引用 + 当前是否还有公开引用。\n\n`still_public` 说明「这张图即使本篇日记转私密，也可能因为别的公开引用\n（公开相册 / 公开动态）继续公开」。管理端必须如实提示，不能声称\n「撤回了日记，图就没了」（05 §11）。",
+        "properties": {
+          "alt": {
+            "title": "Alt",
+            "type": "string"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "media_id": {
+            "format": "uuid",
+            "title": "Media Id",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "still_public": {
+            "title": "Still Public",
+            "type": "boolean"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "media_id",
+          "position",
+          "alt",
+          "width",
+          "height",
+          "still_public"
+        ],
+        "title": "JournalAdminImageOut",
+        "type": "object"
+      },
+      "JournalAdminListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/JournalAdminOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "JournalAdminListOut",
+        "type": "object"
+      },
+      "JournalAdminOut": {
+        "properties": {
+          "content_md": {
+            "title": "Content Md",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "deleted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deleted At"
+          },
+          "entry_date": {
+            "format": "date",
+            "title": "Entry Date",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/JournalAdminImageOut"
+            },
+            "title": "Images",
+            "type": "array"
+          },
+          "location": {
+            "title": "Location",
+            "type": "string"
+          },
+          "mood": {
+            "title": "Mood",
+            "type": "string"
+          },
+          "post": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JournalPostRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "public": {
+            "title": "Public",
+            "type": "boolean"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "shared_media": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Shared Media",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "visibility": {
+            "enum": [
+              "private",
+              "public"
+            ],
+            "title": "Visibility",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "entry_date",
+          "title",
+          "content_md",
+          "mood",
+          "location",
+          "status",
+          "visibility",
+          "post",
+          "images",
+          "published_at",
+          "created_at",
+          "updated_at",
+          "deleted_at",
+          "version",
+          "public",
+          "shared_media"
+        ],
+        "title": "JournalAdminOut",
+        "type": "object"
+      },
+      "JournalCalendarMonthOut": {
+        "description": "一个月：只有**真的存在公开记录**的日期才有计数。\n\n空月份不出现在列表里，空日期不出现在 `days` 里 —— 不生成「欠写」提醒，\n也不会因为被隐藏的记录而出现一个没有内容的日期。",
+        "properties": {
+          "days": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Days",
+            "type": "object"
+          },
+          "month": {
+            "title": "Month",
+            "type": "string"
+          }
+        },
+        "required": [
+          "month",
+          "days"
+        ],
+        "title": "JournalCalendarMonthOut",
+        "type": "object"
+      },
+      "JournalCalendarOut": {
+        "description": "公开日历：与列表**同一份数据**，只聚合真正公开的记录。",
+        "properties": {
+          "months": {
+            "items": {
+              "$ref": "#/components/schemas/JournalCalendarMonthOut"
+            },
+            "title": "Months",
+            "type": "array"
+          },
+          "timezone": {
+            "title": "Timezone",
+            "type": "string"
+          },
+          "today": {
+            "format": "date",
+            "title": "Today",
+            "type": "string"
+          },
+          "total_entries": {
+            "title": "Total Entries",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "months",
+          "total_entries",
+          "timezone",
+          "today"
+        ],
+        "title": "JournalCalendarOut",
+        "type": "object"
+      },
+      "JournalCreateIn": {
+        "additionalProperties": false,
+        "description": "新建。**没有** `status` / `visibility` 字段：新建永远是 draft + private。\n\n这是刻意的：07 §3 要求「建议新增日记时默认为草稿且仅自己可见」。\n要公开必须先写下来，再显式发布并切为 public —— 两步都要站主主动做。",
+        "properties": {
+          "content_md": {
+            "default": "",
+            "maxLength": 20000,
+            "title": "Content Md",
+            "type": "string"
+          },
+          "csrf_token": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Csrf Token"
+          },
+          "entry_date": {
+            "format": "date",
+            "title": "Entry Date",
+            "type": "string"
+          },
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/JournalImageIn"
+            },
+            "maxItems": 9,
+            "title": "Images",
+            "type": "array"
+          },
+          "location": {
+            "default": "",
+            "maxLength": 80,
+            "title": "Location",
+            "type": "string"
+          },
+          "mood": {
+            "default": "",
+            "maxLength": 24,
+            "title": "Mood",
+            "type": "string"
+          },
+          "post_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Post Id"
+          },
+          "title": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "entry_date"
+        ],
+        "title": "JournalCreateIn",
+        "type": "object"
+      },
+      "JournalEntryDetailOut": {
+        "description": "正文页：`content_md` 是唯一正文来源（05 §3：不把渲染 HTML 当存档）。",
+        "properties": {
+          "content_md": {
+            "title": "Content Md",
+            "type": "string"
+          },
+          "entry_date": {
+            "format": "date",
+            "title": "Entry Date",
+            "type": "string"
+          },
+          "excerpt": {
+            "title": "Excerpt",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/JournalImageOut"
+            },
+            "title": "Images",
+            "type": "array"
+          },
+          "location": {
+            "title": "Location",
+            "type": "string"
+          },
+          "mood": {
+            "title": "Mood",
+            "type": "string"
+          },
+          "post": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JournalPostRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "entry_date",
+          "title",
+          "excerpt",
+          "mood",
+          "location",
+          "images",
+          "content_md",
+          "post"
+        ],
+        "title": "JournalEntryDetailOut",
+        "type": "object"
+      },
+      "JournalEntryListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/JournalEntrySummaryOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "JournalEntryListOut",
+        "type": "object"
+      },
+      "JournalEntrySummaryOut": {
+        "description": "存档卡式列表项（07 §3：日期、星期由前端按同一日期字符串算，不重复传输）。",
+        "properties": {
+          "entry_date": {
+            "format": "date",
+            "title": "Entry Date",
+            "type": "string"
+          },
+          "excerpt": {
+            "title": "Excerpt",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/JournalImageOut"
+            },
+            "title": "Images",
+            "type": "array"
+          },
+          "location": {
+            "title": "Location",
+            "type": "string"
+          },
+          "mood": {
+            "title": "Mood",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "entry_date",
+          "title",
+          "excerpt",
+          "mood",
+          "location",
+          "images"
+        ],
+        "title": "JournalEntrySummaryOut",
+        "type": "object"
+      },
+      "JournalImageIn": {
+        "properties": {
+          "alt": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Alt",
+            "type": "string"
+          },
+          "media_id": {
+            "format": "uuid",
+            "title": "Media Id",
+            "type": "string"
+          },
+          "position": {
+            "maximum": 8.0,
+            "minimum": 0.0,
+            "title": "Position",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "media_id",
+          "position",
+          "alt"
+        ],
+        "title": "JournalImageIn",
+        "type": "object"
+      },
+      "JournalImageOut": {
+        "description": "公开图片：只给读取需要的字段，不含 `storage_key` / 原始文件名。",
+        "properties": {
+          "alt": {
+            "title": "Alt",
+            "type": "string"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "media_id": {
+            "format": "uuid",
+            "title": "Media Id",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/MediaVariantOut"
+            },
+            "title": "Variants",
+            "type": "array"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "media_id",
+          "position",
+          "alt",
+          "width",
+          "height",
+          "variants"
+        ],
+        "title": "JournalImageOut",
+        "type": "object"
+      },
+      "JournalPostRefOut": {
+        "description": "可选的长文引用。`public` 由服务端按公开条件实时判定，管理端用来提示。",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "public": {
+            "title": "Public",
+            "type": "boolean"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "status",
+          "public"
+        ],
+        "title": "JournalPostRefOut",
+        "type": "object"
+      },
+      "JournalUpdateIn": {
+        "additionalProperties": false,
+        "description": "PATCH：只改出现过的字段；`images` 传入时**完整替换**有序关系。\n\n显式 `null` 与「没传」是两回事：要清空 `post_id` 请传 `null`（它是可空关系），\n其它字段传 `null` 一律 422。",
+        "properties": {
+          "content_md": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Md"
+          },
+          "csrf_token": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Csrf Token"
+          },
+          "entry_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entry Date"
+          },
+          "images": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/JournalImageIn"
+                },
+                "maxItems": 9,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Images"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "mood": {
+            "anyOf": [
+              {
+                "maxLength": 24,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mood"
+          },
+          "post_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Post Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "JournalUpdateIn",
+        "type": "object"
+      },
+      "JournalVisibilityIn": {
+        "additionalProperties": false,
+        "description": "可见性 / 发布动作的请求体。\n\n切为 `private` 用它与 PATCH 同样的一条路径，**立即对新请求生效**\n（验收 1）：公开条件写在 SQL 里，不依赖任何缓存失效或重建。",
+        "properties": {
+          "csrf_token": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Csrf Token"
+          }
+        },
+        "title": "JournalVisibilityIn",
+        "type": "object"
+      },
+      "LeisureActionIn": {
+        "additionalProperties": false,
+        "description": "发布 / 撤回的请求体（版本条件走 `If-Match`，与 nav / moments 一致）。",
+        "properties": {
+          "csrf_token": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Csrf Token"
+          }
+        },
+        "title": "LeisureActionIn",
+        "type": "object"
+      },
+      "LeisureAdminListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LeisureAdminOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "LeisureAdminListOut",
+        "type": "object"
+      },
+      "LeisureAdminOut": {
+        "properties": {
+          "anime": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AnimeProgressOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cover": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "deleted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deleted At"
+          },
+          "game": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GameProgressOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "anime",
+              "game"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "notes": {
+            "title": "Notes",
+            "type": "string"
+          },
+          "notes_have_spoilers": {
+            "title": "Notes Have Spoilers",
+            "type": "boolean"
+          },
+          "progress": {
+            "title": "Progress",
+            "type": "string"
+          },
+          "progress_label": {
+            "title": "Progress Label",
+            "type": "string"
+          },
+          "public": {
+            "title": "Public",
+            "type": "boolean"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "review": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "review_post_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Post Id"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "progress",
+          "progress_label",
+          "rating",
+          "notes",
+          "notes_have_spoilers",
+          "cover",
+          "anime",
+          "game",
+          "review",
+          "review_post_id",
+          "status",
+          "published_at",
+          "created_at",
+          "updated_at",
+          "deleted_at",
+          "version",
+          "public"
+        ],
+        "title": "LeisureAdminOut",
+        "type": "object"
+      },
+      "LeisureCreateIn": {
+        "additionalProperties": false,
+        "description": "新建。**总是草稿**：`status` 不在写入字段里，发布是独立动作。",
+        "properties": {
+          "airing": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Airing"
+          },
+          "all_achievements": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "All Achievements"
+          },
+          "completed_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed On"
+          },
+          "cover_media_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Media Id"
+          },
+          "csrf_token": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Csrf Token"
+          },
+          "episodes_watched": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Episodes Watched"
+          },
+          "kind": {
+            "enum": [
+              "anime",
+              "game"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "last_watched_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Watched On"
+          },
+          "notes": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Notes",
+            "type": "string"
+          },
+          "notes_have_spoilers": {
+            "default": false,
+            "title": "Notes Have Spoilers",
+            "type": "boolean"
+          },
+          "platform": {
+            "default": "",
+            "maxLength": 80,
+            "title": "Platform",
+            "type": "string"
+          },
+          "playtime_minutes": {
+            "anyOf": [
+              {
+                "maximum": 100000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playtime Minutes"
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "maximum": 10.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "review_post_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Post Id"
+          },
+          "season": {
+            "anyOf": [
+              {
+                "maxLength": 24,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Season"
+          },
+          "started_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started On"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "total_episodes": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Episodes"
+          }
+        },
+        "required": [
+          "kind",
+          "title"
+        ],
+        "title": "LeisureCreateIn",
+        "type": "object"
+      },
+      "LeisureEntryOut": {
+        "properties": {
+          "anime": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AnimeProgressOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cover": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover"
+          },
+          "game": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GameProgressOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "anime",
+              "game"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "notes": {
+            "title": "Notes",
+            "type": "string"
+          },
+          "notes_have_spoilers": {
+            "title": "Notes Have Spoilers",
+            "type": "boolean"
+          },
+          "progress": {
+            "title": "Progress",
+            "type": "string"
+          },
+          "progress_label": {
+            "title": "Progress Label",
+            "type": "string"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "review": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "progress",
+          "progress_label",
+          "rating",
+          "notes",
+          "notes_have_spoilers",
+          "cover",
+          "anime",
+          "game",
+          "review",
+          "updated_at"
+        ],
+        "title": "LeisureEntryOut",
+        "type": "object"
+      },
+      "LeisureListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LeisureEntryOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "LeisureListOut",
+        "type": "object"
+      },
+      "LeisureUpdateIn": {
+        "additionalProperties": false,
+        "description": "PATCH：只改出现过的字段。\n\n可空字段（`rating` / `season` / `total_episodes` / `episodes_watched` /\n`last_watched_on` / `airing` / `playtime_minutes` / `started_on` /\n`completed_on` / `all_achievements` / `cover_media_id` / `review_post_id`）\n传 `null` 就是**清空**（例如「把评分改回未评分」）。\n`title` / `notes` / `platform` / `notes_have_spoilers` 传 `null` 一律 422。",
+        "properties": {
+          "airing": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Airing"
+          },
+          "all_achievements": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "All Achievements"
+          },
+          "completed_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed On"
+          },
+          "cover_media_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Media Id"
+          },
+          "csrf_token": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Csrf Token"
+          },
+          "episodes_watched": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Episodes Watched"
+          },
+          "last_watched_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Watched On"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "notes_have_spoilers": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes Have Spoilers"
+          },
+          "platform": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Platform"
+          },
+          "playtime_minutes": {
+            "anyOf": [
+              {
+                "maximum": 100000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playtime Minutes"
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "maximum": 10.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "review_post_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Post Id"
+          },
+          "season": {
+            "anyOf": [
+              {
+                "maxLength": 24,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Season"
+          },
+          "started_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started On"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "total_episodes": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Episodes"
+          }
+        },
+        "title": "LeisureUpdateIn",
         "type": "object"
       },
       "LoginIn": {
@@ -2049,6 +3708,31 @@
         "title": "ResolveOut",
         "type": "object"
       },
+      "ReviewRefOut": {
+        "description": "可选长评引用（只给公开文章的对外字段）。",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title"
+        ],
+        "title": "ReviewRefOut",
+        "type": "object"
+      },
       "SearchItemOut": {
         "description": "搜索结果条目。`href` 由服务端生成，不使用任意第三方重定向地址。",
         "properties": {
@@ -2690,6 +4374,1034 @@
         "summary": "撤回友链",
         "tags": [
           "admin-friends"
+        ]
+      }
+    },
+    "/api/v1/admin/journal/entries": {
+      "get": {
+        "operationId": "admin_list_entries_api_v1_admin_journal_entries_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "draft",
+                    "published"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "visibility",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "private",
+                    "public"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Visibility"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalAdminListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "管理手记列表",
+        "tags": [
+          "admin-journal"
+        ]
+      },
+      "post": {
+        "description": "新建**总是** draft + private：公开必须先显式发布，再显式切为 public。",
+        "operationId": "admin_create_entry_api_v1_admin_journal_entries_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JournalCreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "新建手记（草稿 + 仅自己可见）",
+        "tags": [
+          "admin-journal"
+        ]
+      }
+    },
+    "/api/v1/admin/journal/entries/{entry_id}": {
+      "delete": {
+        "operationId": "admin_delete_entry_api_v1_admin_journal_entries__entry_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/JournalVisibilityIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "软删除手记",
+        "tags": [
+          "admin-journal"
+        ]
+      },
+      "get": {
+        "operationId": "admin_read_entry_api_v1_admin_journal_entries__entry_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "管理手记详情（预览）",
+        "tags": [
+          "admin-journal"
+        ]
+      },
+      "patch": {
+        "operationId": "admin_update_entry_api_v1_admin_journal_entries__entry_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JournalUpdateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "更新手记（图片完整替换）",
+        "tags": [
+          "admin-journal"
+        ]
+      }
+    },
+    "/api/v1/admin/journal/entries/{entry_id}/publish": {
+      "post": {
+        "operationId": "admin_publish_entry_api_v1_admin_journal_entries__entry_id__publish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/JournalVisibilityIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "发布手记",
+        "tags": [
+          "admin-journal"
+        ]
+      }
+    },
+    "/api/v1/admin/journal/entries/{entry_id}/unpublish": {
+      "post": {
+        "operationId": "admin_unpublish_entry_api_v1_admin_journal_entries__entry_id__unpublish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/JournalVisibilityIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "撤回手记",
+        "tags": [
+          "admin-journal"
+        ]
+      }
+    },
+    "/api/v1/admin/journal/entries/{entry_id}/visibility": {
+      "post": {
+        "description": "切换后公开端点**立即**遵守（验收 1）：没有缓存需要失效。",
+        "operationId": "admin_set_visibility_api_v1_admin_journal_entries__entry_id__visibility_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "visibility",
+            "required": true,
+            "schema": {
+              "enum": [
+                "private",
+                "public"
+              ],
+              "title": "Visibility",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/JournalVisibilityIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "切换可见性（public / private，立即生效）",
+        "tags": [
+          "admin-journal"
+        ]
+      }
+    },
+    "/api/v1/admin/leisure/entries": {
+      "get": {
+        "operationId": "admin_list_entries_api_v1_admin_leisure_entries_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(anime|game)$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "draft",
+                    "published"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeisureAdminListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "管理列表",
+        "tags": [
+          "admin-leisure"
+        ]
+      },
+      "post": {
+        "operationId": "admin_create_entry_api_v1_admin_leisure_entries_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeisureCreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeisureAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "新建（草稿）",
+        "tags": [
+          "admin-leisure"
+        ]
+      }
+    },
+    "/api/v1/admin/leisure/entries/{entry_id}": {
+      "delete": {
+        "operationId": "admin_delete_entry_api_v1_admin_leisure_entries__entry_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/LeisureActionIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "软删除",
+        "tags": [
+          "admin-leisure"
+        ]
+      },
+      "get": {
+        "operationId": "admin_read_entry_api_v1_admin_leisure_entries__entry_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeisureAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "管理详情（预览）",
+        "tags": [
+          "admin-leisure"
+        ]
+      },
+      "patch": {
+        "operationId": "admin_update_entry_api_v1_admin_leisure_entries__entry_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeisureUpdateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeisureAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "更新",
+        "tags": [
+          "admin-leisure"
+        ]
+      }
+    },
+    "/api/v1/admin/leisure/entries/{entry_id}/publish": {
+      "post": {
+        "operationId": "admin_publish_entry_api_v1_admin_leisure_entries__entry_id__publish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/LeisureActionIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeisureAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "发布",
+        "tags": [
+          "admin-leisure"
+        ]
+      }
+    },
+    "/api/v1/admin/leisure/entries/{entry_id}/unpublish": {
+      "post": {
+        "operationId": "admin_unpublish_entry_api_v1_admin_leisure_entries__entry_id__unpublish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/LeisureActionIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeisureAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "撤回",
+        "tags": [
+          "admin-leisure"
         ]
       }
     },
@@ -3856,6 +6568,357 @@
         "summary": "服务就绪状态（DB / schema / 媒体目录）",
         "tags": [
           "meta"
+        ]
+      }
+    },
+    "/api/v1/journal/calendar": {
+      "get": {
+        "description": "与列表**同一份数据**：空日期就是空日期，不显示被隐藏记录的数量。",
+        "operationId": "read_calendar_api_v1_journal_calendar_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "year",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 9999,
+                  "minimum": 1970,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Year"
+            }
+          },
+          {
+            "in": "query",
+            "name": "month",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 12,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalCalendarOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "公开日历（只含公开记录）",
+        "tags": [
+          "journal"
+        ]
+      }
+    },
+    "/api/v1/journal/entries": {
+      "get": {
+        "description": "按日期倒序的存档卡列表。只返回已发布且 public 的记录。",
+        "operationId": "list_entries_api_v1_journal_entries_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "year",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 9999,
+                  "minimum": 1970,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Year"
+            }
+          },
+          {
+            "in": "query",
+            "name": "month",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 12,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalEntryListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "公开手记列表",
+        "tags": [
+          "journal"
+        ]
+      }
+    },
+    "/api/v1/journal/entries/{entry_id}": {
+      "get": {
+        "operationId": "read_entry_api_v1_journal_entries__entry_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalEntryDetailOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "公开手记正文",
+        "tags": [
+          "journal"
+        ]
+      }
+    },
+    "/api/v1/leisure/entries": {
+      "get": {
+        "operationId": "list_entries_api_v1_leisure_entries_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(anime|game)$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "progress",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 16,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Progress"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeisureListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "公开追番 / 游戏列表",
+        "tags": [
+          "leisure"
+        ]
+      }
+    },
+    "/api/v1/leisure/entries/{entry_id}": {
+      "get": {
+        "operationId": "read_entry_api_v1_leisure_entries__entry_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeisureEntryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "公开条目详情",
+        "tags": [
+          "leisure"
         ]
       }
     },

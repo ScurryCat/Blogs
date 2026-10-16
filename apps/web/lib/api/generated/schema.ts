@@ -84,6 +84,171 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/journal/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理手记列表 */
+        get: operations["admin_list_entries_api_v1_admin_journal_entries_get"];
+        put?: never;
+        /**
+         * 新建手记（草稿 + 仅自己可见）
+         * @description 新建**总是** draft + private：公开必须先显式发布，再显式切为 public。
+         */
+        post: operations["admin_create_entry_api_v1_admin_journal_entries_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/journal/entries/{entry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理手记详情（预览） */
+        get: operations["admin_read_entry_api_v1_admin_journal_entries__entry_id__get"];
+        put?: never;
+        post?: never;
+        /** 软删除手记 */
+        delete: operations["admin_delete_entry_api_v1_admin_journal_entries__entry_id__delete"];
+        options?: never;
+        head?: never;
+        /** 更新手记（图片完整替换） */
+        patch: operations["admin_update_entry_api_v1_admin_journal_entries__entry_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/journal/entries/{entry_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发布手记 */
+        post: operations["admin_publish_entry_api_v1_admin_journal_entries__entry_id__publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/journal/entries/{entry_id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 撤回手记 */
+        post: operations["admin_unpublish_entry_api_v1_admin_journal_entries__entry_id__unpublish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/journal/entries/{entry_id}/visibility": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 切换可见性（public / private，立即生效）
+         * @description 切换后公开端点**立即**遵守（验收 1）：没有缓存需要失效。
+         */
+        post: operations["admin_set_visibility_api_v1_admin_journal_entries__entry_id__visibility_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/leisure/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理列表 */
+        get: operations["admin_list_entries_api_v1_admin_leisure_entries_get"];
+        put?: never;
+        /** 新建（草稿） */
+        post: operations["admin_create_entry_api_v1_admin_leisure_entries_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/leisure/entries/{entry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理详情（预览） */
+        get: operations["admin_read_entry_api_v1_admin_leisure_entries__entry_id__get"];
+        put?: never;
+        post?: never;
+        /** 软删除 */
+        delete: operations["admin_delete_entry_api_v1_admin_leisure_entries__entry_id__delete"];
+        options?: never;
+        head?: never;
+        /** 更新 */
+        patch: operations["admin_update_entry_api_v1_admin_leisure_entries__entry_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/leisure/entries/{entry_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发布 */
+        post: operations["admin_publish_entry_api_v1_admin_leisure_entries__entry_id__publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/leisure/entries/{entry_id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 撤回 */
+        post: operations["admin_unpublish_entry_api_v1_admin_leisure_entries__entry_id__unpublish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/media": {
         parameters: {
             query?: never;
@@ -411,6 +576,97 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/journal/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 公开日历（只含公开记录）
+         * @description 与列表**同一份数据**：空日期就是空日期，不显示被隐藏记录的数量。
+         */
+        get: operations["read_calendar_api_v1_journal_calendar_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/journal/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 公开手记列表
+         * @description 按日期倒序的存档卡列表。只返回已发布且 public 的记录。
+         */
+        get: operations["list_entries_api_v1_journal_entries_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/journal/entries/{entry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 公开手记正文 */
+        get: operations["read_entry_api_v1_journal_entries__entry_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/leisure/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 公开追番 / 游戏列表 */
+        get: operations["list_entries_api_v1_leisure_entries_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/leisure/entries/{entry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 公开条目详情 */
+        get: operations["read_entry_api_v1_leisure_entries__entry_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/media/{media_id}/{variant}": {
         parameters: {
             query?: never;
@@ -604,6 +860,26 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AnimeProgressOut
+         * @description 追番进度。`total_episodes` / `completion_ratio` 为 null 表示总数未知。
+         */
+        AnimeProgressOut: {
+            /** Airing */
+            airing: boolean | null;
+            /** Completion Ratio */
+            completion_ratio: number | null;
+            /** Episodes Label */
+            episodes_label: string;
+            /** Episodes Watched */
+            episodes_watched: number | null;
+            /** Last Watched On */
+            last_watched_on: string | null;
+            /** Season */
+            season: string | null;
+            /** Total Episodes */
+            total_episodes: number | null;
+        };
         /** Body_upload_media_api_v1_admin_media_post */
         Body_upload_media_api_v1_admin_media_post: {
             /** File */
@@ -789,10 +1065,553 @@ export interface components {
             /** Normalized */
             normalized: string;
         };
+        /** GameProgressOut */
+        GameProgressOut: {
+            /** All Achievements */
+            all_achievements: boolean | null;
+            /** Completed On */
+            completed_on: string | null;
+            /** Platform */
+            platform: string;
+            /** Playtime Label */
+            playtime_label: string;
+            /** Playtime Minutes */
+            playtime_minutes: number | null;
+            /** Started On */
+            started_on: string | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /**
+         * JournalAdminImageOut
+         * @description 管理端图片：给出可直接回填的引用 + 当前是否还有公开引用。
+         *
+         *     `still_public` 说明「这张图即使本篇日记转私密，也可能因为别的公开引用
+         *     （公开相册 / 公开动态）继续公开」。管理端必须如实提示，不能声称
+         *     「撤回了日记，图就没了」（05 §11）。
+         */
+        JournalAdminImageOut: {
+            /** Alt */
+            alt: string;
+            /** Height */
+            height: number;
+            /**
+             * Media Id
+             * Format: uuid
+             */
+            media_id: string;
+            /** Position */
+            position: number;
+            /** Still Public */
+            still_public: boolean;
+            /** Width */
+            width: number;
+        };
+        /** JournalAdminListOut */
+        JournalAdminListOut: {
+            /** Items */
+            items: components["schemas"]["JournalAdminOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** JournalAdminOut */
+        JournalAdminOut: {
+            /** Content Md */
+            content_md: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Deleted At */
+            deleted_at: string | null;
+            /**
+             * Entry Date
+             * Format: date
+             */
+            entry_date: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Images */
+            images: components["schemas"]["JournalAdminImageOut"][];
+            /** Location */
+            location: string;
+            /** Mood */
+            mood: string;
+            post: components["schemas"]["JournalPostRefOut"] | null;
+            /** Public */
+            public: boolean;
+            /** Published At */
+            published_at: string | null;
+            /** Shared Media */
+            shared_media: string[];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "published";
+            /** Title */
+            title: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
+            /**
+             * Visibility
+             * @enum {string}
+             */
+            visibility: "private" | "public";
+        };
+        /**
+         * JournalCalendarMonthOut
+         * @description 一个月：只有**真的存在公开记录**的日期才有计数。
+         *
+         *     空月份不出现在列表里，空日期不出现在 `days` 里 —— 不生成「欠写」提醒，
+         *     也不会因为被隐藏的记录而出现一个没有内容的日期。
+         */
+        JournalCalendarMonthOut: {
+            /** Days */
+            days: {
+                [key: string]: number;
+            };
+            /** Month */
+            month: string;
+        };
+        /**
+         * JournalCalendarOut
+         * @description 公开日历：与列表**同一份数据**，只聚合真正公开的记录。
+         */
+        JournalCalendarOut: {
+            /** Months */
+            months: components["schemas"]["JournalCalendarMonthOut"][];
+            /** Timezone */
+            timezone: string;
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+            /** Total Entries */
+            total_entries: number;
+        };
+        /**
+         * JournalCreateIn
+         * @description 新建。**没有** `status` / `visibility` 字段：新建永远是 draft + private。
+         *
+         *     这是刻意的：07 §3 要求「建议新增日记时默认为草稿且仅自己可见」。
+         *     要公开必须先写下来，再显式发布并切为 public —— 两步都要站主主动做。
+         */
+        JournalCreateIn: {
+            /**
+             * Content Md
+             * @default
+             */
+            content_md: string;
+            /** Csrf Token */
+            csrf_token?: string | null;
+            /**
+             * Entry Date
+             * Format: date
+             */
+            entry_date: string;
+            /** Images */
+            images?: components["schemas"]["JournalImageIn"][];
+            /**
+             * Location
+             * @default
+             */
+            location: string;
+            /**
+             * Mood
+             * @default
+             */
+            mood: string;
+            /** Post Id */
+            post_id?: string | null;
+            /**
+             * Title
+             * @default
+             */
+            title: string;
+        };
+        /**
+         * JournalEntryDetailOut
+         * @description 正文页：`content_md` 是唯一正文来源（05 §3：不把渲染 HTML 当存档）。
+         */
+        JournalEntryDetailOut: {
+            /** Content Md */
+            content_md: string;
+            /**
+             * Entry Date
+             * Format: date
+             */
+            entry_date: string;
+            /** Excerpt */
+            excerpt: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Images */
+            images: components["schemas"]["JournalImageOut"][];
+            /** Location */
+            location: string;
+            /** Mood */
+            mood: string;
+            post: components["schemas"]["JournalPostRefOut"] | null;
+            /** Title */
+            title: string;
+        };
+        /** JournalEntryListOut */
+        JournalEntryListOut: {
+            /** Items */
+            items: components["schemas"]["JournalEntrySummaryOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /**
+         * JournalEntrySummaryOut
+         * @description 存档卡式列表项（07 §3：日期、星期由前端按同一日期字符串算，不重复传输）。
+         */
+        JournalEntrySummaryOut: {
+            /**
+             * Entry Date
+             * Format: date
+             */
+            entry_date: string;
+            /** Excerpt */
+            excerpt: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Images */
+            images: components["schemas"]["JournalImageOut"][];
+            /** Location */
+            location: string;
+            /** Mood */
+            mood: string;
+            /** Title */
+            title: string;
+        };
+        /** JournalImageIn */
+        JournalImageIn: {
+            /** Alt */
+            alt: string;
+            /**
+             * Media Id
+             * Format: uuid
+             */
+            media_id: string;
+            /** Position */
+            position: number;
+        };
+        /**
+         * JournalImageOut
+         * @description 公开图片：只给读取需要的字段，不含 `storage_key` / 原始文件名。
+         */
+        JournalImageOut: {
+            /** Alt */
+            alt: string;
+            /** Height */
+            height: number;
+            /**
+             * Media Id
+             * Format: uuid
+             */
+            media_id: string;
+            /** Position */
+            position: number;
+            /** Variants */
+            variants: components["schemas"]["MediaVariantOut"][];
+            /** Width */
+            width: number;
+        };
+        /**
+         * JournalPostRefOut
+         * @description 可选的长文引用。`public` 由服务端按公开条件实时判定，管理端用来提示。
+         */
+        JournalPostRefOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Public */
+            public: boolean;
+            /** Slug */
+            slug: string;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+        };
+        /**
+         * JournalUpdateIn
+         * @description PATCH：只改出现过的字段；`images` 传入时**完整替换**有序关系。
+         *
+         *     显式 `null` 与「没传」是两回事：要清空 `post_id` 请传 `null`（它是可空关系），
+         *     其它字段传 `null` 一律 422。
+         */
+        JournalUpdateIn: {
+            /** Content Md */
+            content_md?: string | null;
+            /** Csrf Token */
+            csrf_token?: string | null;
+            /** Entry Date */
+            entry_date?: string | null;
+            /** Images */
+            images?: components["schemas"]["JournalImageIn"][] | null;
+            /** Location */
+            location?: string | null;
+            /** Mood */
+            mood?: string | null;
+            /** Post Id */
+            post_id?: string | null;
+            /** Title */
+            title?: string | null;
+        };
+        /**
+         * JournalVisibilityIn
+         * @description 可见性 / 发布动作的请求体。
+         *
+         *     切为 `private` 用它与 PATCH 同样的一条路径，**立即对新请求生效**
+         *     （验收 1）：公开条件写在 SQL 里，不依赖任何缓存失效或重建。
+         */
+        JournalVisibilityIn: {
+            /** Csrf Token */
+            csrf_token?: string | null;
+        };
+        /**
+         * LeisureActionIn
+         * @description 发布 / 撤回的请求体（版本条件走 `If-Match`，与 nav / moments 一致）。
+         */
+        LeisureActionIn: {
+            /** Csrf Token */
+            csrf_token?: string | null;
+        };
+        /** LeisureAdminListOut */
+        LeisureAdminListOut: {
+            /** Items */
+            items: components["schemas"]["LeisureAdminOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** LeisureAdminOut */
+        LeisureAdminOut: {
+            anime: components["schemas"]["AnimeProgressOut"] | null;
+            /** Cover */
+            cover: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Deleted At */
+            deleted_at: string | null;
+            game: components["schemas"]["GameProgressOut"] | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "anime" | "game";
+            /** Notes */
+            notes: string;
+            /** Notes Have Spoilers */
+            notes_have_spoilers: boolean;
+            /** Progress */
+            progress: string;
+            /** Progress Label */
+            progress_label: string;
+            /** Public */
+            public: boolean;
+            /** Published At */
+            published_at: string | null;
+            /** Rating */
+            rating: number | null;
+            review: components["schemas"]["ReviewRefOut"] | null;
+            /** Review Post Id */
+            review_post_id: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "published";
+            /** Title */
+            title: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
+        };
+        /**
+         * LeisureCreateIn
+         * @description 新建。**总是草稿**：`status` 不在写入字段里，发布是独立动作。
+         */
+        LeisureCreateIn: {
+            /** Airing */
+            airing?: boolean | null;
+            /** All Achievements */
+            all_achievements?: boolean | null;
+            /** Completed On */
+            completed_on?: string | null;
+            /** Cover Media Id */
+            cover_media_id?: string | null;
+            /** Csrf Token */
+            csrf_token?: string | null;
+            /** Episodes Watched */
+            episodes_watched?: number | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "anime" | "game";
+            /** Last Watched On */
+            last_watched_on?: string | null;
+            /**
+             * Notes
+             * @default
+             */
+            notes: string;
+            /**
+             * Notes Have Spoilers
+             * @default false
+             */
+            notes_have_spoilers: boolean;
+            /**
+             * Platform
+             * @default
+             */
+            platform: string;
+            /** Playtime Minutes */
+            playtime_minutes?: number | null;
+            /** Progress */
+            progress?: string | null;
+            /** Rating */
+            rating?: number | null;
+            /** Review Post Id */
+            review_post_id?: string | null;
+            /** Season */
+            season?: string | null;
+            /** Started On */
+            started_on?: string | null;
+            /** Title */
+            title: string;
+            /** Total Episodes */
+            total_episodes?: number | null;
+        };
+        /** LeisureEntryOut */
+        LeisureEntryOut: {
+            anime: components["schemas"]["AnimeProgressOut"] | null;
+            /** Cover */
+            cover: {
+                [key: string]: unknown;
+            } | null;
+            game: components["schemas"]["GameProgressOut"] | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "anime" | "game";
+            /** Notes */
+            notes: string;
+            /** Notes Have Spoilers */
+            notes_have_spoilers: boolean;
+            /** Progress */
+            progress: string;
+            /** Progress Label */
+            progress_label: string;
+            /** Rating */
+            rating: number | null;
+            review: components["schemas"]["ReviewRefOut"] | null;
+            /** Title */
+            title: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** LeisureListOut */
+        LeisureListOut: {
+            /** Items */
+            items: components["schemas"]["LeisureEntryOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /**
+         * LeisureUpdateIn
+         * @description PATCH：只改出现过的字段。
+         *
+         *     可空字段（`rating` / `season` / `total_episodes` / `episodes_watched` /
+         *     `last_watched_on` / `airing` / `playtime_minutes` / `started_on` /
+         *     `completed_on` / `all_achievements` / `cover_media_id` / `review_post_id`）
+         *     传 `null` 就是**清空**（例如「把评分改回未评分」）。
+         *     `title` / `notes` / `platform` / `notes_have_spoilers` 传 `null` 一律 422。
+         */
+        LeisureUpdateIn: {
+            /** Airing */
+            airing?: boolean | null;
+            /** All Achievements */
+            all_achievements?: boolean | null;
+            /** Completed On */
+            completed_on?: string | null;
+            /** Cover Media Id */
+            cover_media_id?: string | null;
+            /** Csrf Token */
+            csrf_token?: string | null;
+            /** Episodes Watched */
+            episodes_watched?: number | null;
+            /** Last Watched On */
+            last_watched_on?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /** Notes Have Spoilers */
+            notes_have_spoilers?: boolean | null;
+            /** Platform */
+            platform?: string | null;
+            /** Playtime Minutes */
+            playtime_minutes?: number | null;
+            /** Progress */
+            progress?: string | null;
+            /** Rating */
+            rating?: number | null;
+            /** Review Post Id */
+            review_post_id?: string | null;
+            /** Season */
+            season?: string | null;
+            /** Started On */
+            started_on?: string | null;
+            /** Title */
+            title?: string | null;
+            /** Total Episodes */
+            total_episodes?: number | null;
         };
         /** LoginIn */
         LoginIn: {
@@ -1346,6 +2165,21 @@ export interface components {
             status: "found" | "ambiguous" | "not_found";
         };
         /**
+         * ReviewRefOut
+         * @description 可选长评引用（只给公开文章的对外字段）。
+         */
+        ReviewRefOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Slug */
+            slug: string;
+            /** Title */
+            title: string;
+        };
+        /**
          * SearchItemOut
          * @description 搜索结果条目。`href` 由服务端生成，不使用任意第三方重定向地址。
          */
@@ -1664,6 +2498,533 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FriendLinkAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_list_entries_api_v1_admin_journal_entries_get: {
+        parameters: {
+            query?: {
+                status?: ("draft" | "published") | null;
+                visibility?: ("private" | "public") | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalAdminListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_create_entry_api_v1_admin_journal_entries_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JournalCreateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_read_entry_api_v1_admin_journal_entries__entry_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_delete_entry_api_v1_admin_journal_entries__entry_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["JournalVisibilityIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_update_entry_api_v1_admin_journal_entries__entry_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JournalUpdateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_publish_entry_api_v1_admin_journal_entries__entry_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["JournalVisibilityIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_unpublish_entry_api_v1_admin_journal_entries__entry_id__unpublish_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["JournalVisibilityIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_set_visibility_api_v1_admin_journal_entries__entry_id__visibility_post: {
+        parameters: {
+            query: {
+                visibility: "private" | "public";
+            };
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["JournalVisibilityIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_list_entries_api_v1_admin_leisure_entries_get: {
+        parameters: {
+            query?: {
+                kind?: string | null;
+                status?: ("draft" | "published") | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeisureAdminListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_create_entry_api_v1_admin_leisure_entries_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeisureCreateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeisureAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_read_entry_api_v1_admin_leisure_entries__entry_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeisureAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_delete_entry_api_v1_admin_leisure_entries__entry_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["LeisureActionIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_update_entry_api_v1_admin_leisure_entries__entry_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeisureUpdateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeisureAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_publish_entry_api_v1_admin_leisure_entries__entry_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["LeisureActionIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeisureAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_unpublish_entry_api_v1_admin_leisure_entries__entry_id__unpublish_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["LeisureActionIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeisureAdminOut"];
                 };
             };
             /** @description Validation Error */
@@ -2399,6 +3760,168 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    read_calendar_api_v1_journal_calendar_get: {
+        parameters: {
+            query?: {
+                year?: number | null;
+                month?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalCalendarOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_entries_api_v1_journal_entries_get: {
+        parameters: {
+            query?: {
+                year?: number | null;
+                month?: number | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalEntryListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_entry_api_v1_journal_entries__entry_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalEntryDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_entries_api_v1_leisure_entries_get: {
+        parameters: {
+            query?: {
+                kind?: string | null;
+                progress?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeisureListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_entry_api_v1_leisure_entries__entry_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeisureEntryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };
