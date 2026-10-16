@@ -11,6 +11,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
+import { SiteLink } from "@/features/runtime/navigation/site-link";
 import { CoopLinksSection } from "@/features/coop/coop-links-section";
 import { site } from "@/features/legacy/config";
 import { rn } from "@/features/legacy/text/ransom";
@@ -165,6 +166,23 @@ export default function AboutPage(): ReactNode {
         违反验收第 3 条与「不产生好感度排名」。本段与 COOP 独立页读同一份数据。
       */}
       <CoopLinksSection />
+
+      {/*
+        天鹅绒房间入口（T09 交付，T00 接线）。
+        07 §7 明确说它「从档案 / 异世界导航的**特殊入口**进入，不要求每个场景都占一个 App」，
+        因此这里是一个段落内的入口，而不是手机桌面上的第 7 个图标。
+      */}
+      <section className="shell" aria-labelledby="vl-h">
+        <h2 id="vl-h">天鹅绒房间</h2>
+        <p>
+          技能全书按「范围说明 + 掌握证据」记录我实际会什么，关联到具体作品；
+          也有「合体」式的两技能交集筛选。没有等级数字 —— 表里根本没有等级列。
+        </p>
+        <p>
+          <SiteLink href="/velvet" source="phone-link">进入技能全书</SiteLink>
+        </p>
+      </section>
+
 
       <section className="shell tl" aria-labelledby="tl-h">
         <header className="sec-h">

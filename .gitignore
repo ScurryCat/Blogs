@@ -36,3 +36,7 @@ next-env.d.ts
 
 # Python 虚拟环境（uv 在 apps/api 下创建）
 .venv/
+
+# 本地媒体根（开发期由 MEDIA_ROOT 指向这里；T09 建议，T00 采纳）。
+# 内容是本机上传的验证素材，不该进仓库。
+apps/api/var/

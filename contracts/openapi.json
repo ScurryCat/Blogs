@@ -954,6 +954,65 @@
         "title": "ConversationSummaryOut",
         "type": "object"
       },
+      "EvidenceLinkIn": {
+        "additionalProperties": false,
+        "description": "一条结果 / 验证链接。只接受 http / https。",
+        "properties": {
+          "kind": {
+            "default": "proof",
+            "enum": [
+              "repo",
+              "demo",
+              "docs",
+              "proof",
+              "other"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "url": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "url"
+        ],
+        "title": "EvidenceLinkIn",
+        "type": "object"
+      },
+      "EvidenceLinkOut": {
+        "properties": {
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "label",
+          "url"
+        ],
+        "title": "EvidenceLinkOut",
+        "type": "object"
+      },
       "FriendLinkActionIn": {
         "additionalProperties": false,
         "description": "发布 / 撤回 / 删除的无实体请求体：只承载 CSRF token。",
@@ -5865,6 +5924,753 @@
         "title": "ProjectUpdateIn",
         "type": "object"
       },
+      "RecordAdminListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RecordAdminOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "RecordAdminListOut",
+        "type": "object"
+      },
+      "RecordAdminOut": {
+        "properties": {
+          "attempts": {
+            "title": "Attempts",
+            "type": "string"
+          },
+          "background": {
+            "title": "Background",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "evidence_links": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceLinkOut"
+            },
+            "title": "Evidence Links",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "outcome": {
+            "title": "Outcome",
+            "type": "string"
+          },
+          "posts": {
+            "items": {
+              "$ref": "#/components/schemas/RelatedPostRelationOut"
+            },
+            "title": "Posts",
+            "type": "array"
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/RelatedProjectRelationOut"
+            },
+            "title": "Projects",
+            "type": "array"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "work_status": {
+            "title": "Work Status",
+            "type": "string"
+          },
+          "work_status_label": {
+            "title": "Work Status Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "background",
+          "attempts",
+          "outcome",
+          "evidence_links",
+          "work_status",
+          "work_status_label",
+          "resolved_at",
+          "status",
+          "published_at",
+          "created_at",
+          "updated_at",
+          "version",
+          "posts",
+          "projects"
+        ],
+        "title": "RecordAdminOut",
+        "type": "object"
+      },
+      "RecordCreateIn": {
+        "additionalProperties": false,
+        "properties": {
+          "attempts": {
+            "default": "",
+            "maxLength": 8000,
+            "title": "Attempts",
+            "type": "string"
+          },
+          "background": {
+            "default": "",
+            "maxLength": 8000,
+            "title": "Background",
+            "type": "string"
+          },
+          "evidence_links": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceLinkIn"
+            },
+            "maxItems": 8,
+            "title": "Evidence Links",
+            "type": "array"
+          },
+          "outcome": {
+            "default": "",
+            "maxLength": 8000,
+            "title": "Outcome",
+            "type": "string"
+          },
+          "posts": {
+            "items": {
+              "$ref": "#/components/schemas/RelatedPostRelationIn"
+            },
+            "maxItems": 50,
+            "title": "Posts",
+            "type": "array"
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/RelatedProjectRelationIn"
+            },
+            "maxItems": 50,
+            "title": "Projects",
+            "type": "array"
+          },
+          "slug": {
+            "maxLength": 200,
+            "minLength": 1,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "title": "Slug",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "work_status": {
+            "default": "pending",
+            "enum": [
+              "pending",
+              "investigating",
+              "resolved",
+              "archived"
+            ],
+            "title": "Work Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "title"
+        ],
+        "title": "RecordCreateIn",
+        "type": "object"
+      },
+      "RecordDetailOut": {
+        "properties": {
+          "attempts": {
+            "title": "Attempts",
+            "type": "string"
+          },
+          "background": {
+            "title": "Background",
+            "type": "string"
+          },
+          "evidence_links": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceLinkOut"
+            },
+            "title": "Evidence Links",
+            "type": "array"
+          },
+          "excerpt": {
+            "title": "Excerpt",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "outcome": {
+            "title": "Outcome",
+            "type": "string"
+          },
+          "post_count": {
+            "title": "Post Count",
+            "type": "integer"
+          },
+          "posts": {
+            "items": {
+              "$ref": "#/components/schemas/RelatedPostOut"
+            },
+            "title": "Posts",
+            "type": "array"
+          },
+          "project_count": {
+            "title": "Project Count",
+            "type": "integer"
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/RelatedProjectOut"
+            },
+            "title": "Projects",
+            "type": "array"
+          },
+          "published_at": {
+            "format": "date-time",
+            "title": "Published At",
+            "type": "string"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "work_status": {
+            "title": "Work Status",
+            "type": "string"
+          },
+          "work_status_label": {
+            "title": "Work Status Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "excerpt",
+          "work_status",
+          "work_status_label",
+          "resolved_at",
+          "published_at",
+          "post_count",
+          "project_count",
+          "background",
+          "attempts",
+          "outcome",
+          "evidence_links",
+          "posts",
+          "projects"
+        ],
+        "title": "RecordDetailOut",
+        "type": "object"
+      },
+      "RecordListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RecordSummaryOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "RecordListOut",
+        "type": "object"
+      },
+      "RecordStatsOut": {
+        "description": "公开工作状态统计。\n\n只统计**当前公开**的记录，因此它与列表里能看到的条数完全一致 ——\n不把草稿算进来制造一个「其实还有 N 条隐藏记录」的暗示（验收 3）。",
+        "properties": {
+          "by_work_status": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "By Work Status",
+            "type": "object"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "by_work_status"
+        ],
+        "title": "RecordStatsOut",
+        "type": "object"
+      },
+      "RecordSummaryOut": {
+        "properties": {
+          "excerpt": {
+            "title": "Excerpt",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "post_count": {
+            "title": "Post Count",
+            "type": "integer"
+          },
+          "project_count": {
+            "title": "Project Count",
+            "type": "integer"
+          },
+          "published_at": {
+            "format": "date-time",
+            "title": "Published At",
+            "type": "string"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "work_status": {
+            "title": "Work Status",
+            "type": "string"
+          },
+          "work_status_label": {
+            "title": "Work Status Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "excerpt",
+          "work_status",
+          "work_status_label",
+          "resolved_at",
+          "published_at",
+          "post_count",
+          "project_count"
+        ],
+        "title": "RecordSummaryOut",
+        "type": "object"
+      },
+      "RecordUpdateIn": {
+        "additionalProperties": false,
+        "description": "PATCH：只改出现过的字段。`slug` 不可改（公开 URL 稳定优先）。",
+        "properties": {
+          "attempts": {
+            "anyOf": [
+              {
+                "maxLength": 8000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attempts"
+          },
+          "background": {
+            "anyOf": [
+              {
+                "maxLength": 8000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Background"
+          },
+          "evidence_links": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/EvidenceLinkIn"
+                },
+                "maxItems": 8,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Links"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "maxLength": 8000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "posts": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/RelatedPostRelationIn"
+                },
+                "maxItems": 50,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Posts"
+          },
+          "projects": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/RelatedProjectRelationIn"
+                },
+                "maxItems": 50,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projects"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "work_status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "pending",
+                  "investigating",
+                  "resolved",
+                  "archived"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Work Status"
+          }
+        },
+        "title": "RecordUpdateIn",
+        "type": "object"
+      },
+      "RelatedPostOut": {
+        "description": "关联的**当前公开**文章。撤回文章后这条引用整条消失（不泄漏隐藏标题）。",
+        "properties": {
+          "href": {
+            "title": "Href",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "href"
+        ],
+        "title": "RelatedPostOut",
+        "type": "object"
+      },
+      "RelatedPostRelationIn": {
+        "additionalProperties": false,
+        "properties": {
+          "position": {
+            "maximum": 49.0,
+            "minimum": 0.0,
+            "title": "Position",
+            "type": "integer"
+          },
+          "post_id": {
+            "format": "uuid",
+            "title": "Post Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "post_id",
+          "position"
+        ],
+        "title": "RelatedPostRelationIn",
+        "type": "object"
+      },
+      "RelatedPostRelationOut": {
+        "properties": {
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "post_id": {
+            "format": "uuid",
+            "title": "Post Id",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "post_id",
+          "slug",
+          "title",
+          "status",
+          "position"
+        ],
+        "title": "RelatedPostRelationOut",
+        "type": "object"
+      },
+      "RelatedProjectOut": {
+        "description": "关联的**当前公开**作品。撤回作品后这条引用整条消失。",
+        "properties": {
+          "href": {
+            "title": "Href",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "summary",
+          "href"
+        ],
+        "title": "RelatedProjectOut",
+        "type": "object"
+      },
+      "RelatedProjectRelationIn": {
+        "additionalProperties": false,
+        "properties": {
+          "position": {
+            "maximum": 49.0,
+            "minimum": 0.0,
+            "title": "Position",
+            "type": "integer"
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "project_id",
+          "position"
+        ],
+        "title": "RelatedProjectRelationIn",
+        "type": "object"
+      },
+      "RelatedProjectRelationOut": {
+        "properties": {
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "project_id",
+          "slug",
+          "title",
+          "status",
+          "position"
+        ],
+        "title": "RelatedProjectRelationOut",
+        "type": "object"
+      },
       "ResolveIn": {
         "description": "认知定位的三字段。无副作用：只读取与匹配（05 §5）。",
         "properties": {
@@ -6121,6 +6927,676 @@
           "username"
         ],
         "title": "SessionUserOut",
+        "type": "object"
+      },
+      "SkillAdminListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SkillAdminOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "SkillAdminListOut",
+        "type": "object"
+      },
+      "SkillAdminOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "domain": {
+            "title": "Domain",
+            "type": "string"
+          },
+          "domain_label": {
+            "title": "Domain Label",
+            "type": "string"
+          },
+          "evidence": {
+            "title": "Evidence",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/SkillLinkOut"
+            },
+            "title": "Links",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/SkillProjectRelationOut"
+            },
+            "title": "Projects",
+            "type": "array"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "domain",
+          "domain_label",
+          "scope",
+          "evidence",
+          "links",
+          "position",
+          "status",
+          "published_at",
+          "created_at",
+          "updated_at",
+          "version",
+          "projects"
+        ],
+        "title": "SkillAdminOut",
+        "type": "object"
+      },
+      "SkillComboOut": {
+        "description": "「合体」筛选结果（07 §6）。\n\n两个技能与交集作品一起返回，调用方不需要再发第二次请求去补技能信息。\n空交集是完全正常的结果：`items` 为空、`note` 明确说明还没有对应作品，\n**不会**用 AI 生成一个概念顶替（任务卡执行清单）。",
+        "properties": {
+          "a": {
+            "$ref": "#/components/schemas/SkillSummaryOut"
+          },
+          "b": {
+            "$ref": "#/components/schemas/SkillSummaryOut"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SkillProjectRefOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "a",
+          "b",
+          "items",
+          "note"
+        ],
+        "title": "SkillComboOut",
+        "type": "object"
+      },
+      "SkillCreateIn": {
+        "additionalProperties": false,
+        "properties": {
+          "domain": {
+            "default": "other",
+            "enum": [
+              "algorithm",
+              "frontend",
+              "backend",
+              "data",
+              "signal",
+              "systems",
+              "tooling",
+              "other"
+            ],
+            "title": "Domain",
+            "type": "string"
+          },
+          "evidence": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Evidence",
+            "type": "string"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/SkillLinkIn"
+            },
+            "maxItems": 8,
+            "title": "Links",
+            "type": "array"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "position": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Position",
+            "type": "integer"
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/SkillProjectRelationIn"
+            },
+            "maxItems": 100,
+            "title": "Projects",
+            "type": "array"
+          },
+          "scope": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Scope",
+            "type": "string"
+          },
+          "slug": {
+            "maxLength": 120,
+            "minLength": 1,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "title": "Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "name"
+        ],
+        "title": "SkillCreateIn",
+        "type": "object"
+      },
+      "SkillDetailOut": {
+        "properties": {
+          "domain": {
+            "title": "Domain",
+            "type": "string"
+          },
+          "domain_label": {
+            "title": "Domain Label",
+            "type": "string"
+          },
+          "evidence": {
+            "title": "Evidence",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/SkillLinkOut"
+            },
+            "title": "Links",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "project_count": {
+            "title": "Project Count",
+            "type": "integer"
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/SkillProjectRefOut"
+            },
+            "title": "Projects",
+            "type": "array"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "tech_overlap": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tech Overlap",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "domain",
+          "domain_label",
+          "scope",
+          "evidence",
+          "position",
+          "links",
+          "project_count",
+          "projects",
+          "tech_overlap"
+        ],
+        "title": "SkillDetailOut",
+        "type": "object"
+      },
+      "SkillLinkIn": {
+        "additionalProperties": false,
+        "description": "一条站外证据链接。只接受 http / https（见 `links.normalize_link_url`）。",
+        "properties": {
+          "kind": {
+            "default": "other",
+            "enum": [
+              "repo",
+              "demo",
+              "docs",
+              "proof",
+              "other"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "url": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "url"
+        ],
+        "title": "SkillLinkIn",
+        "type": "object"
+      },
+      "SkillLinkOut": {
+        "properties": {
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "label",
+          "url"
+        ],
+        "title": "SkillLinkOut",
+        "type": "object"
+      },
+      "SkillListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SkillSummaryOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "SkillListOut",
+        "type": "object"
+      },
+      "SkillProjectRefOut": {
+        "description": "技能关联到的一件**当前公开**作品（只给跳转必需的最小字段）。\n\n这里刻意不给 `tech_stack` / `role` 等正文：技能全书要展示的是「有哪些真实证据」，\n作品的完整说明仍只有一份，在 `/showcase/projects/<slug>` 与 `/projects/<slug>`（05 §6）。",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "maintenance": {
+            "title": "Maintenance",
+            "type": "string"
+          },
+          "maintenance_label": {
+            "title": "Maintenance Label",
+            "type": "string"
+          },
+          "published_at": {
+            "format": "date-time",
+            "title": "Published At",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "summary",
+          "maintenance",
+          "maintenance_label",
+          "published_at"
+        ],
+        "title": "SkillProjectRefOut",
+        "type": "object"
+      },
+      "SkillProjectRelationIn": {
+        "additionalProperties": false,
+        "description": "技能 → 作品关系的一条。`project_id` 必须是**已有**作品（复用，不复制履历）。",
+        "properties": {
+          "position": {
+            "maximum": 99.0,
+            "minimum": 0.0,
+            "title": "Position",
+            "type": "integer"
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "project_id",
+          "position"
+        ],
+        "title": "SkillProjectRelationIn",
+        "type": "object"
+      },
+      "SkillProjectRelationOut": {
+        "description": "管理回执里的一条关系：附带作品标题与状态，让表单能显示「关联了一件草稿」。",
+        "properties": {
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "project_id",
+          "slug",
+          "title",
+          "status",
+          "position"
+        ],
+        "title": "SkillProjectRelationOut",
+        "type": "object"
+      },
+      "SkillSummaryOut": {
+        "properties": {
+          "domain": {
+            "title": "Domain",
+            "type": "string"
+          },
+          "domain_label": {
+            "title": "Domain Label",
+            "type": "string"
+          },
+          "evidence": {
+            "title": "Evidence",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/SkillLinkOut"
+            },
+            "title": "Links",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "project_count": {
+            "title": "Project Count",
+            "type": "integer"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "domain",
+          "domain_label",
+          "scope",
+          "evidence",
+          "position",
+          "links",
+          "project_count"
+        ],
+        "title": "SkillSummaryOut",
+        "type": "object"
+      },
+      "SkillUpdateIn": {
+        "additionalProperties": false,
+        "description": "PATCH：只改出现过的字段。`slug` 不可改（公开 URL 稳定优先，与 nav / projects 一致）。",
+        "properties": {
+          "domain": {
+            "anyOf": [
+              {
+                "enum": [
+                  "algorithm",
+                  "frontend",
+                  "backend",
+                  "data",
+                  "signal",
+                  "systems",
+                  "tooling",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain"
+          },
+          "evidence": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence"
+          },
+          "links": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SkillLinkIn"
+                },
+                "maxItems": 8,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Links"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          },
+          "projects": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SkillProjectRelationIn"
+                },
+                "maxItems": 100,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projects"
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope"
+          }
+        },
+        "title": "SkillUpdateIn",
         "type": "object"
       },
       "StatusOut": {
@@ -6804,6 +8280,412 @@
         "summary": "撤回相册",
         "tags": [
           "admin-albums"
+        ]
+      }
+    },
+    "/api/v1/admin/exploration/records": {
+      "get": {
+        "operationId": "list_admin_records_api_v1_admin_exploration_records_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "work_status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Work Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordAdminListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "管理列表（含草稿）",
+        "tags": [
+          "admin-exploration"
+        ]
+      },
+      "post": {
+        "operationId": "create_record_api_v1_admin_exploration_records_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordCreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "新建草稿",
+        "tags": [
+          "admin-exploration"
+        ]
+      }
+    },
+    "/api/v1/admin/exploration/records/{record_id}": {
+      "delete": {
+        "operationId": "delete_record_api_v1_admin_exploration_records__record_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "title": "Record Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "软删除问题记录",
+        "tags": [
+          "admin-exploration"
+        ]
+      },
+      "get": {
+        "operationId": "read_admin_record_api_v1_admin_exploration_records__record_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "读取问题记录（草稿 / 预览）",
+        "tags": [
+          "admin-exploration"
+        ]
+      },
+      "patch": {
+        "operationId": "update_record_api_v1_admin_exploration_records__record_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "title": "Record Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordUpdateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "更新问题记录",
+        "tags": [
+          "admin-exploration"
+        ]
+      }
+    },
+    "/api/v1/admin/exploration/records/{record_id}/publish": {
+      "post": {
+        "operationId": "publish_record_api_v1_admin_exploration_records__record_id__publish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "title": "Record Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "发布问题记录",
+        "tags": [
+          "admin-exploration"
+        ]
+      }
+    },
+    "/api/v1/admin/exploration/records/{record_id}/unpublish": {
+      "post": {
+        "operationId": "unpublish_record_api_v1_admin_exploration_records__record_id__unpublish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "title": "Record Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "撤回问题记录",
+        "tags": [
+          "admin-exploration"
         ]
       }
     },
@@ -9547,6 +11429,412 @@
         ]
       }
     },
+    "/api/v1/admin/skills": {
+      "get": {
+        "operationId": "list_admin_skills_api_v1_admin_skills_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "domain",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Domain"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillAdminListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "管理列表（含草稿）",
+        "tags": [
+          "admin-skills"
+        ]
+      },
+      "post": {
+        "operationId": "create_skill_api_v1_admin_skills_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkillCreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "新建草稿",
+        "tags": [
+          "admin-skills"
+        ]
+      }
+    },
+    "/api/v1/admin/skills/{skill_id}": {
+      "delete": {
+        "operationId": "delete_skill_api_v1_admin_skills__skill_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "skill_id",
+            "required": true,
+            "schema": {
+              "title": "Skill Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "软删除技能",
+        "tags": [
+          "admin-skills"
+        ]
+      },
+      "get": {
+        "operationId": "read_admin_skill_api_v1_admin_skills__skill_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "skill_id",
+            "required": true,
+            "schema": {
+              "title": "Skill Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "读取技能（草稿 / 预览）",
+        "tags": [
+          "admin-skills"
+        ]
+      },
+      "patch": {
+        "operationId": "update_skill_api_v1_admin_skills__skill_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "skill_id",
+            "required": true,
+            "schema": {
+              "title": "Skill Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkillUpdateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "更新技能",
+        "tags": [
+          "admin-skills"
+        ]
+      }
+    },
+    "/api/v1/admin/skills/{skill_id}/publish": {
+      "post": {
+        "operationId": "publish_skill_api_v1_admin_skills__skill_id__publish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "skill_id",
+            "required": true,
+            "schema": {
+              "title": "Skill Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "发布技能",
+        "tags": [
+          "admin-skills"
+        ]
+      }
+    },
+    "/api/v1/admin/skills/{skill_id}/unpublish": {
+      "post": {
+        "operationId": "unpublish_skill_api_v1_admin_skills__skill_id__unpublish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "skill_id",
+            "required": true,
+            "schema": {
+              "title": "Skill Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "撤回技能",
+        "tags": [
+          "admin-skills"
+        ]
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "operationId": "login_api_v1_auth_login_post",
@@ -9793,6 +12081,149 @@
         "summary": "友链标签",
         "tags": [
           "coop"
+        ]
+      }
+    },
+    "/api/v1/exploration/records": {
+      "get": {
+        "operationId": "list_records_api_v1_exploration_records_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "work_status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 16,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Work Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "公开问题记录列表",
+        "tags": [
+          "exploration"
+        ]
+      }
+    },
+    "/api/v1/exploration/records/stats": {
+      "get": {
+        "description": "只统计**当前公开**的记录：与列表里能看到的条数完全一致。\n\n草稿不参与统计，因此读者不会从「待探索 3 / 已解决 1」里推断出\n「站主还藏了几条没发布的问题」（验收 3）。",
+        "operationId": "read_stats_api_v1_exploration_records_stats_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordStatsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "公开工作状态统计",
+        "tags": [
+          "exploration"
+        ]
+      }
+    },
+    "/api/v1/exploration/records/{slug}": {
+      "get": {
+        "operationId": "read_record_api_v1_exploration_records__slug__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordDetailOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "公开问题记录详情",
+        "tags": [
+          "exploration"
         ]
       }
     },
@@ -11602,6 +14033,234 @@
         "summary": "公开作品详情",
         "tags": [
           "projects"
+        ]
+      }
+    },
+    "/api/v1/skills": {
+      "get": {
+        "operationId": "list_skills_api_v1_skills_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "domain",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 16,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Domain"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "技能全书列表",
+        "tags": [
+          "skills"
+        ]
+      }
+    },
+    "/api/v1/skills/combo": {
+      "get": {
+        "description": "「合体」筛选（07 §6）。\n\n三种业务结果是**分开**的，不混成一种：\n\n  1. 技能 A 或 B 不存在 / 未发布 → 404（对外统一「技能不存在或未公开」）；\n  2. A 与 B 是同一个技能 → 422（明确报错，不把全部作品冒充合体结果）；\n  3. 两个技能都公开但**没有交集** → 200，`items` 为空 + `note` 说明，\n     不用 AI 编造一件新作品（任务卡执行清单）。",
+        "operationId": "read_combo_api_v1_skills_combo_get",
+        "parameters": [
+          {
+            "description": "技能 A 的 slug",
+            "in": "query",
+            "name": "a",
+            "required": true,
+            "schema": {
+              "description": "技能 A 的 slug",
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "A",
+              "type": "string"
+            }
+          },
+          {
+            "description": "技能 B 的 slug",
+            "in": "query",
+            "name": "b",
+            "required": true,
+            "schema": {
+              "description": "技能 B 的 slug",
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "B",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillComboOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "「合体」：两个技能的交集作品",
+        "tags": [
+          "skills"
+        ]
+      }
+    },
+    "/api/v1/skills/projects/{slug}": {
+      "get": {
+        "description": "作品详情「使用的技能」的数据入口（验收 2 的同一关系来源）。\n\n作品本身不公开（草稿 / 撤回 / 已删除 / 不存在）时返回 404 ——\n绝不能靠这个端点反查一件还没发布的作品的技能。",
+        "operationId": "read_skills_for_project_api_v1_skills_projects__slug__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SkillSummaryOut"
+                  },
+                  "title": "Response Read Skills For Project Api V1 Skills Projects  Slug  Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "某件公开作品使用的公开技能",
+        "tags": [
+          "skills"
+        ]
+      }
+    },
+    "/api/v1/skills/{slug}": {
+      "get": {
+        "operationId": "read_skill_api_v1_skills__slug__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillDetailOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "技能详情",
+        "tags": [
+          "skills"
         ]
       }
     },

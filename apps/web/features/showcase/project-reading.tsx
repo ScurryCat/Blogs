@@ -14,6 +14,7 @@ import type { ReactNode } from "react";
 
 import { GuideEntry } from "./project-card";
 import { SiteLink } from "@/features/runtime/navigation/site-link";
+import { ProjectSkills } from "@/features/velvet/project-skills";
 
 import {
   PROJECT_IMAGE_KIND_LABELS,
@@ -137,6 +138,16 @@ export function ProjectReading({ project }: ProjectReadingProps): ReactNode {
           </div>
         </section>
       ) : null}
+
+      {/*
+        「使用的技能」（T09 交付，T00 接线）—— 验收第 2 条的关键：
+        技能全书与作品详情**读同一关系来源**（`project_skills` 一张表），因此两处不会互相矛盾。
+        本组件自己处理三种状态（读到 / 空 / 服务不可用），失败时**不影响作品本身**。
+      */}
+      <section className="pls-section" data-section="skills">
+        <h2 className="pls-section-title">使用的技能</h2>
+        <ProjectSkills projectSlug={project.slug} />
+      </section>
 
       <p className="pls-card-meta">
         想看更多作品？<SiteLink href="/showcase" source="phone-link">回到我的殿堂</SiteLink>。

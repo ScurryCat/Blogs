@@ -31,6 +31,8 @@ MODULE_ROUTER_TARGETS: tuple[tuple[str, str], ...] = (
     ("posts", "app.modules.posts.router"),
     ("projects", "app.modules.projects.router"),
     ("gallery", "app.modules.gallery.router"),
+    ("skills", "app.modules.skills.router"),
+    ("exploration", "app.modules.exploration.router"),
     ("tags", "app.modules.tags.router"),
 )
 

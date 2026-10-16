@@ -98,6 +98,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/exploration/records": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理列表（含草稿） */
+        get: operations["list_admin_records_api_v1_admin_exploration_records_get"];
+        put?: never;
+        /** 新建草稿 */
+        post: operations["create_record_api_v1_admin_exploration_records_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/exploration/records/{record_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 读取问题记录（草稿 / 预览） */
+        get: operations["read_admin_record_api_v1_admin_exploration_records__record_id__get"];
+        put?: never;
+        post?: never;
+        /** 软删除问题记录 */
+        delete: operations["delete_record_api_v1_admin_exploration_records__record_id__delete"];
+        options?: never;
+        head?: never;
+        /** 更新问题记录 */
+        patch: operations["update_record_api_v1_admin_exploration_records__record_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/exploration/records/{record_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发布问题记录 */
+        post: operations["publish_record_api_v1_admin_exploration_records__record_id__publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/exploration/records/{record_id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 撤回问题记录 */
+        post: operations["unpublish_record_api_v1_admin_exploration_records__record_id__unpublish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/friends": {
         parameters: {
             query?: never;
@@ -609,6 +680,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/skills": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理列表（含草稿） */
+        get: operations["list_admin_skills_api_v1_admin_skills_get"];
+        put?: never;
+        /** 新建草稿 */
+        post: operations["create_skill_api_v1_admin_skills_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/skills/{skill_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 读取技能（草稿 / 预览） */
+        get: operations["read_admin_skill_api_v1_admin_skills__skill_id__get"];
+        put?: never;
+        post?: never;
+        /** 软删除技能 */
+        delete: operations["delete_skill_api_v1_admin_skills__skill_id__delete"];
+        options?: never;
+        head?: never;
+        /** 更新技能 */
+        patch: operations["update_skill_api_v1_admin_skills__skill_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/skills/{skill_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发布技能 */
+        post: operations["publish_skill_api_v1_admin_skills__skill_id__publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/skills/{skill_id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 撤回技能 */
+        post: operations["unpublish_skill_api_v1_admin_skills__skill_id__unpublish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -712,6 +854,63 @@ export interface paths {
          * @description 只返回已发布友链用到的标签；不返回数量，也不按热度排序。
          */
         get: operations["list_tags_api_v1_coop_tags_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exploration/records": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 公开问题记录列表 */
+        get: operations["list_records_api_v1_exploration_records_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exploration/records/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 公开工作状态统计
+         * @description 只统计**当前公开**的记录：与列表里能看到的条数完全一致。
+         *
+         *     草稿不参与统计，因此读者不会从「待探索 3 / 已解决 1」里推断出
+         *     「站主还藏了几条没发布的问题」（验收 3）。
+         */
+        get: operations["read_stats_api_v1_exploration_records_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exploration/records/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 公开问题记录详情 */
+        get: operations["read_record_api_v1_exploration_records__slug__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1317,6 +1516,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/skills": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 技能全书列表 */
+        get: operations["list_skills_api_v1_skills_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/skills/combo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 「合体」：两个技能的交集作品
+         * @description 「合体」筛选（07 §6）。
+         *
+         *     三种业务结果是**分开**的，不混成一种：
+         *
+         *       1. 技能 A 或 B 不存在 / 未发布 → 404（对外统一「技能不存在或未公开」）；
+         *       2. A 与 B 是同一个技能 → 422（明确报错，不把全部作品冒充合体结果）；
+         *       3. 两个技能都公开但**没有交集** → 200，`items` 为空 + `note` 说明，
+         *          不用 AI 编造一件新作品（任务卡执行清单）。
+         */
+        get: operations["read_combo_api_v1_skills_combo_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/skills/projects/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 某件公开作品使用的公开技能
+         * @description 作品详情「使用的技能」的数据入口（验收 2 的同一关系来源）。
+         *
+         *     作品本身不公开（草稿 / 撤回 / 已删除 / 不存在）时返回 404 ——
+         *     绝不能靠这个端点反查一件还没发布的作品的技能。
+         */
+        get: operations["read_skills_for_project_api_v1_skills_projects__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/skills/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 技能详情 */
+        get: operations["read_skill_api_v1_skills__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tags": {
         parameters: {
             query?: never;
@@ -1690,6 +1973,31 @@ export interface components {
             preview: string;
             /** Status */
             status: string;
+        };
+        /**
+         * EvidenceLinkIn
+         * @description 一条结果 / 验证链接。只接受 http / https。
+         */
+        EvidenceLinkIn: {
+            /**
+             * Kind
+             * @default proof
+             * @enum {string}
+             */
+            kind: "repo" | "demo" | "docs" | "proof" | "other";
+            /** Label */
+            label: string;
+            /** Url */
+            url: string;
+        };
+        /** EvidenceLinkOut */
+        EvidenceLinkOut: {
+            /** Kind */
+            kind: string;
+            /** Label */
+            label: string;
+            /** Url */
+            url: string;
         };
         /**
          * FriendLinkActionIn
@@ -3459,6 +3767,295 @@ export interface components {
             /** Tradeoffs */
             tradeoffs?: string | null;
         };
+        /** RecordAdminListOut */
+        RecordAdminListOut: {
+            /** Items */
+            items: components["schemas"]["RecordAdminOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** RecordAdminOut */
+        RecordAdminOut: {
+            /** Attempts */
+            attempts: string;
+            /** Background */
+            background: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Evidence Links */
+            evidence_links: components["schemas"]["EvidenceLinkOut"][];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Outcome */
+            outcome: string;
+            /** Posts */
+            posts: components["schemas"]["RelatedPostRelationOut"][];
+            /** Projects */
+            projects: components["schemas"]["RelatedProjectRelationOut"][];
+            /** Published At */
+            published_at: string | null;
+            /** Resolved At */
+            resolved_at: string | null;
+            /** Slug */
+            slug: string;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
+            /** Work Status */
+            work_status: string;
+            /** Work Status Label */
+            work_status_label: string;
+        };
+        /** RecordCreateIn */
+        RecordCreateIn: {
+            /**
+             * Attempts
+             * @default
+             */
+            attempts: string;
+            /**
+             * Background
+             * @default
+             */
+            background: string;
+            /** Evidence Links */
+            evidence_links?: components["schemas"]["EvidenceLinkIn"][];
+            /**
+             * Outcome
+             * @default
+             */
+            outcome: string;
+            /** Posts */
+            posts?: components["schemas"]["RelatedPostRelationIn"][];
+            /** Projects */
+            projects?: components["schemas"]["RelatedProjectRelationIn"][];
+            /** Slug */
+            slug: string;
+            /** Title */
+            title: string;
+            /**
+             * Work Status
+             * @default pending
+             * @enum {string}
+             */
+            work_status: "pending" | "investigating" | "resolved" | "archived";
+        };
+        /** RecordDetailOut */
+        RecordDetailOut: {
+            /** Attempts */
+            attempts: string;
+            /** Background */
+            background: string;
+            /** Evidence Links */
+            evidence_links: components["schemas"]["EvidenceLinkOut"][];
+            /** Excerpt */
+            excerpt: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Outcome */
+            outcome: string;
+            /** Post Count */
+            post_count: number;
+            /** Posts */
+            posts: components["schemas"]["RelatedPostOut"][];
+            /** Project Count */
+            project_count: number;
+            /** Projects */
+            projects: components["schemas"]["RelatedProjectOut"][];
+            /**
+             * Published At
+             * Format: date-time
+             */
+            published_at: string;
+            /** Resolved At */
+            resolved_at: string | null;
+            /** Slug */
+            slug: string;
+            /** Title */
+            title: string;
+            /** Work Status */
+            work_status: string;
+            /** Work Status Label */
+            work_status_label: string;
+        };
+        /** RecordListOut */
+        RecordListOut: {
+            /** Items */
+            items: components["schemas"]["RecordSummaryOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /**
+         * RecordStatsOut
+         * @description 公开工作状态统计。
+         *
+         *     只统计**当前公开**的记录，因此它与列表里能看到的条数完全一致 ——
+         *     不把草稿算进来制造一个「其实还有 N 条隐藏记录」的暗示（验收 3）。
+         */
+        RecordStatsOut: {
+            /** By Work Status */
+            by_work_status: {
+                [key: string]: number;
+            };
+            /** Total */
+            total: number;
+        };
+        /** RecordSummaryOut */
+        RecordSummaryOut: {
+            /** Excerpt */
+            excerpt: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Post Count */
+            post_count: number;
+            /** Project Count */
+            project_count: number;
+            /**
+             * Published At
+             * Format: date-time
+             */
+            published_at: string;
+            /** Resolved At */
+            resolved_at: string | null;
+            /** Slug */
+            slug: string;
+            /** Title */
+            title: string;
+            /** Work Status */
+            work_status: string;
+            /** Work Status Label */
+            work_status_label: string;
+        };
+        /**
+         * RecordUpdateIn
+         * @description PATCH：只改出现过的字段。`slug` 不可改（公开 URL 稳定优先）。
+         */
+        RecordUpdateIn: {
+            /** Attempts */
+            attempts?: string | null;
+            /** Background */
+            background?: string | null;
+            /** Evidence Links */
+            evidence_links?: components["schemas"]["EvidenceLinkIn"][] | null;
+            /** Outcome */
+            outcome?: string | null;
+            /** Posts */
+            posts?: components["schemas"]["RelatedPostRelationIn"][] | null;
+            /** Projects */
+            projects?: components["schemas"]["RelatedProjectRelationIn"][] | null;
+            /** Title */
+            title?: string | null;
+            /** Work Status */
+            work_status?: ("pending" | "investigating" | "resolved" | "archived") | null;
+        };
+        /**
+         * RelatedPostOut
+         * @description 关联的**当前公开**文章。撤回文章后这条引用整条消失（不泄漏隐藏标题）。
+         */
+        RelatedPostOut: {
+            /** Href */
+            href: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Slug */
+            slug: string;
+            /** Title */
+            title: string;
+        };
+        /** RelatedPostRelationIn */
+        RelatedPostRelationIn: {
+            /** Position */
+            position: number;
+            /**
+             * Post Id
+             * Format: uuid
+             */
+            post_id: string;
+        };
+        /** RelatedPostRelationOut */
+        RelatedPostRelationOut: {
+            /** Position */
+            position: number;
+            /**
+             * Post Id
+             * Format: uuid
+             */
+            post_id: string;
+            /** Slug */
+            slug: string;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+        };
+        /**
+         * RelatedProjectOut
+         * @description 关联的**当前公开**作品。撤回作品后这条引用整条消失。
+         */
+        RelatedProjectOut: {
+            /** Href */
+            href: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Slug */
+            slug: string;
+            /** Summary */
+            summary: string;
+            /** Title */
+            title: string;
+        };
+        /** RelatedProjectRelationIn */
+        RelatedProjectRelationIn: {
+            /** Position */
+            position: number;
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+        };
+        /** RelatedProjectRelationOut */
+        RelatedProjectRelationOut: {
+            /** Position */
+            position: number;
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Slug */
+            slug: string;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+        };
         /**
          * ResolveIn
          * @description 认知定位的三字段。无副作用：只读取与匹配（05 §5）。
@@ -3568,6 +4165,272 @@ export interface components {
             id: string;
             /** Username */
             username: string;
+        };
+        /** SkillAdminListOut */
+        SkillAdminListOut: {
+            /** Items */
+            items: components["schemas"]["SkillAdminOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** SkillAdminOut */
+        SkillAdminOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Domain */
+            domain: string;
+            /** Domain Label */
+            domain_label: string;
+            /** Evidence */
+            evidence: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Links */
+            links: components["schemas"]["SkillLinkOut"][];
+            /** Name */
+            name: string;
+            /** Position */
+            position: number;
+            /** Projects */
+            projects: components["schemas"]["SkillProjectRelationOut"][];
+            /** Published At */
+            published_at: string | null;
+            /** Scope */
+            scope: string;
+            /** Slug */
+            slug: string;
+            /** Status */
+            status: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
+        };
+        /**
+         * SkillComboOut
+         * @description 「合体」筛选结果（07 §6）。
+         *
+         *     两个技能与交集作品一起返回，调用方不需要再发第二次请求去补技能信息。
+         *     空交集是完全正常的结果：`items` 为空、`note` 明确说明还没有对应作品，
+         *     **不会**用 AI 生成一个概念顶替（任务卡执行清单）。
+         */
+        SkillComboOut: {
+            a: components["schemas"]["SkillSummaryOut"];
+            b: components["schemas"]["SkillSummaryOut"];
+            /** Items */
+            items: components["schemas"]["SkillProjectRefOut"][];
+            /** Note */
+            note: string;
+        };
+        /** SkillCreateIn */
+        SkillCreateIn: {
+            /**
+             * Domain
+             * @default other
+             * @enum {string}
+             */
+            domain: "algorithm" | "frontend" | "backend" | "data" | "signal" | "systems" | "tooling" | "other";
+            /**
+             * Evidence
+             * @default
+             */
+            evidence: string;
+            /** Links */
+            links?: components["schemas"]["SkillLinkIn"][];
+            /** Name */
+            name: string;
+            /**
+             * Position
+             * @default 0
+             */
+            position: number;
+            /** Projects */
+            projects?: components["schemas"]["SkillProjectRelationIn"][];
+            /**
+             * Scope
+             * @default
+             */
+            scope: string;
+            /** Slug */
+            slug: string;
+        };
+        /** SkillDetailOut */
+        SkillDetailOut: {
+            /** Domain */
+            domain: string;
+            /** Domain Label */
+            domain_label: string;
+            /** Evidence */
+            evidence: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Links */
+            links: components["schemas"]["SkillLinkOut"][];
+            /** Name */
+            name: string;
+            /** Position */
+            position: number;
+            /** Project Count */
+            project_count: number;
+            /** Projects */
+            projects: components["schemas"]["SkillProjectRefOut"][];
+            /** Scope */
+            scope: string;
+            /** Slug */
+            slug: string;
+            /** Tech Overlap */
+            tech_overlap: string[];
+        };
+        /**
+         * SkillLinkIn
+         * @description 一条站外证据链接。只接受 http / https（见 `links.normalize_link_url`）。
+         */
+        SkillLinkIn: {
+            /**
+             * Kind
+             * @default other
+             * @enum {string}
+             */
+            kind: "repo" | "demo" | "docs" | "proof" | "other";
+            /** Label */
+            label: string;
+            /** Url */
+            url: string;
+        };
+        /** SkillLinkOut */
+        SkillLinkOut: {
+            /** Kind */
+            kind: string;
+            /** Label */
+            label: string;
+            /** Url */
+            url: string;
+        };
+        /** SkillListOut */
+        SkillListOut: {
+            /** Items */
+            items: components["schemas"]["SkillSummaryOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /**
+         * SkillProjectRefOut
+         * @description 技能关联到的一件**当前公开**作品（只给跳转必需的最小字段）。
+         *
+         *     这里刻意不给 `tech_stack` / `role` 等正文：技能全书要展示的是「有哪些真实证据」，
+         *     作品的完整说明仍只有一份，在 `/showcase/projects/<slug>` 与 `/projects/<slug>`（05 §6）。
+         */
+        SkillProjectRefOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Maintenance */
+            maintenance: string;
+            /** Maintenance Label */
+            maintenance_label: string;
+            /**
+             * Published At
+             * Format: date-time
+             */
+            published_at: string;
+            /** Slug */
+            slug: string;
+            /** Summary */
+            summary: string;
+            /** Title */
+            title: string;
+        };
+        /**
+         * SkillProjectRelationIn
+         * @description 技能 → 作品关系的一条。`project_id` 必须是**已有**作品（复用，不复制履历）。
+         */
+        SkillProjectRelationIn: {
+            /** Position */
+            position: number;
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+        };
+        /**
+         * SkillProjectRelationOut
+         * @description 管理回执里的一条关系：附带作品标题与状态，让表单能显示「关联了一件草稿」。
+         */
+        SkillProjectRelationOut: {
+            /** Position */
+            position: number;
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Slug */
+            slug: string;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+        };
+        /** SkillSummaryOut */
+        SkillSummaryOut: {
+            /** Domain */
+            domain: string;
+            /** Domain Label */
+            domain_label: string;
+            /** Evidence */
+            evidence: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Links */
+            links: components["schemas"]["SkillLinkOut"][];
+            /** Name */
+            name: string;
+            /** Position */
+            position: number;
+            /** Project Count */
+            project_count: number;
+            /** Scope */
+            scope: string;
+            /** Slug */
+            slug: string;
+        };
+        /**
+         * SkillUpdateIn
+         * @description PATCH：只改出现过的字段。`slug` 不可改（公开 URL 稳定优先，与 nav / projects 一致）。
+         */
+        SkillUpdateIn: {
+            /** Domain */
+            domain?: ("algorithm" | "frontend" | "backend" | "data" | "signal" | "systems" | "tooling" | "other") | null;
+            /** Evidence */
+            evidence?: string | null;
+            /** Links */
+            links?: components["schemas"]["SkillLinkIn"][] | null;
+            /** Name */
+            name?: string | null;
+            /** Position */
+            position?: number | null;
+            /** Projects */
+            projects?: components["schemas"]["SkillProjectRelationIn"][] | null;
+            /** Scope */
+            scope?: string | null;
         };
         /**
          * StatusOut
@@ -3929,6 +4792,238 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AlbumAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_admin_records_api_v1_admin_exploration_records_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                work_status?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecordAdminListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_record_api_v1_admin_exploration_records_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordCreateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecordAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_admin_record_api_v1_admin_exploration_records__record_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecordAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_record_api_v1_admin_exploration_records__record_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_record_api_v1_admin_exploration_records__record_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordUpdateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecordAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_record_api_v1_admin_exploration_records__record_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecordAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unpublish_record_api_v1_admin_exploration_records__record_id__unpublish_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecordAdminOut"];
                 };
             };
             /** @description Validation Error */
@@ -5470,6 +6565,238 @@ export interface operations {
             };
         };
     };
+    list_admin_skills_api_v1_admin_skills_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                domain?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillAdminListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_skill_api_v1_admin_skills_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SkillCreateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_admin_skill_api_v1_admin_skills__skill_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                skill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_skill_api_v1_admin_skills__skill_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                skill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_skill_api_v1_admin_skills__skill_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                skill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SkillUpdateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_skill_api_v1_admin_skills__skill_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                skill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unpublish_skill_api_v1_admin_skills__skill_id__unpublish_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                skill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     login_api_v1_auth_login_post: {
         parameters: {
             query?: never;
@@ -5634,6 +6961,90 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FriendTagListOut"];
+                };
+            };
+        };
+    };
+    list_records_api_v1_exploration_records_get: {
+        parameters: {
+            query?: {
+                work_status?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecordListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_stats_api_v1_exploration_records_stats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecordStatsOut"];
+                };
+            };
+        };
+    };
+    read_record_api_v1_exploration_records__slug__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecordDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -6627,6 +8038,135 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProjectDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_skills_api_v1_skills_get: {
+        parameters: {
+            query?: {
+                domain?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_combo_api_v1_skills_combo_get: {
+        parameters: {
+            query: {
+                /** @description 技能 A 的 slug */
+                a: string;
+                /** @description 技能 B 的 slug */
+                b: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillComboOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_skills_for_project_api_v1_skills_projects__slug__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillSummaryOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_skill_api_v1_skills__slug__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillDetailOut"];
                 };
             };
             /** @description Validation Error */

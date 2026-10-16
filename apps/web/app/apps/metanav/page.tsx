@@ -10,6 +10,7 @@ import type { Metadata } from "next";
 import { Suspense, type ReactNode } from "react";
 
 import { MetanavStandalone } from "@/features/metanav/standalone";
+import { SiteLink } from "@/features/runtime/navigation/site-link";
 
 export const metadata: Metadata = {
   title: "异世界导航",
@@ -33,6 +34,20 @@ export default function MetanavPage(): ReactNode {
       >
         <MetanavStandalone />
       </Suspense>
+
+      {/*
+        印象空间入口（T09 交付，T00 接线）。
+        07 §7 把印象空间描述为「导航内部的一层」，因此这里是导航页里的入口，
+        而不是手机桌面上的独立图标（不登记 manifest）。
+      */}
+      <p className="pls-card-meta">
+        遇到过的坑与查到的答案在
+        {" "}
+        <SiteLink href="/apps/metanav/mementos" source="phone-link">
+          印象空间问题记录
+        </SiteLink>
+        。
+      </p>
     </section>
   );
 }

@@ -1,0 +1,341 @@
+/*
+ * 印象空间 · 问题记录样式（T09 独占，`apps/web/features/exploration/exploration.css`）。
+ *
+ * 为什么是普通 CSS：与 T06 同样的理由 —— 独立页是服务端组件（副作用导入），
+ * 且浏览器验收脚本要按**稳定类名**断言问题卡、工作状态徽标与移动端布局。
+ * 所有类名带 `pme-` 前缀，避免与全站红黑类名冲突。
+ *
+ * 视觉语言（07 §6「印象空间」）：
+ *   - 印象空间与天鹅绒房间**分开**：这里用暗紫 / 品红的冷调，和技能页的蓝黑冷光不同，
+ *     让读者一眼能分清「能力档案」与「问题日志」；
+ *   - 工作状态用文字徽标而不是进度条：待探索 / 调查中 / 已解决 / 暂搁置 是**状态**，
+ *     不是完成度（07 §6 没有等级与百分比）；
+ *   - 关联内容被撤回后引用**整条消失**，界面上不留「（已隐藏）」占位 ——
+ *     那本身就是泄漏。
+ */
+
+.pme-wrap {
+  --m-plum: #b47ce8;
+  --m-plum-deep: #2a1140;
+  --m-plum-line: rgb(180 124 232 / 0.28);
+  --m-dim: #9d94a8;
+  display: block;
+}
+
+.pme-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin: 0 0 20px;
+  padding: 0 0 16px;
+  /* 与 T06 的展示页同一条「页头分隔线」的语言（本站既有观感，不是新美术方向）。 */
+  border-bottom: 1px solid var(--m-plum-line);
+}
+
+.pme-kicker {
+  margin: 0;
+  font: 400 13px/1.2 var(--f-hat, sans-serif);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--m-plum);
+}
+
+.pme-title {
+  margin: 6px 0 8px;
+  font-size: clamp(22px, 3.4vw, 34px);
+  line-height: 1.12;
+  letter-spacing: 0.04em;
+}
+
+.pme-lead {
+  margin: 0;
+  max-width: 66ch;
+  line-height: 1.75;
+  color: var(--m-dim);
+}
+
+.pme-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.pme-stat {
+  padding: 6px 12px;
+  border: 1px solid var(--m-plum-line);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+}
+
+.pme-stat b {
+  color: var(--m-plum);
+  margin-left: 6px;
+}
+
+.pme-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 18px;
+}
+
+.pme-chip {
+  border: 1px solid var(--m-plum-line);
+  background: transparent;
+  color: inherit;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.pme-chip:hover,
+.pme-chip:focus-visible {
+  border-color: var(--m-plum);
+  color: var(--m-plum);
+}
+
+.pme-chip[aria-current="true"] {
+  background: var(--m-plum);
+  border-color: var(--m-plum);
+  color: #16071f;
+}
+
+.pme-list {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pme-card {
+  display: block;
+  padding: 16px 18px 18px;
+  background: rgb(20 10 30 / 0.72);
+  border: 1px solid var(--m-plum-line);
+  border-left: 5px solid var(--m-plum);
+  color: inherit;
+  text-decoration: none;
+}
+
+.pme-card:hover,
+.pme-card:focus-visible {
+  border-color: var(--m-plum);
+}
+
+.pme-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.pme-card-title {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: 0.03em;
+}
+
+.pme-badge {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  padding: 2px 9px;
+  border: 1px solid var(--m-plum-line);
+  color: var(--m-plum);
+  white-space: nowrap;
+}
+
+.pme-badge[data-work-status="resolved"] {
+  border-color: #6fd3a0;
+  color: #6fd3a0;
+}
+
+.pme-badge[data-work-status="archived"] {
+  border-color: var(--m-dim);
+  color: var(--m-dim);
+}
+
+.pme-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0 0;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--m-dim);
+}
+
+.pme-excerpt {
+  margin: 10px 0 0;
+  color: var(--m-dim);
+  line-height: 1.7;
+}
+
+.pme-empty {
+  margin: 0;
+  padding: 16px 18px;
+  border: 1px dashed var(--m-plum-line);
+  color: var(--m-dim);
+  line-height: 1.7;
+}
+
+.pme-alert {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-left: 4px solid var(--red);
+  background: rgb(26 6 8 / 0.7);
+  line-height: 1.7;
+}
+
+.pme-panel {
+  margin: 0 0 22px;
+  padding: 20px 22px 24px;
+  background: linear-gradient(180deg, rgb(42 17 64 / 0.85), rgb(10 5 16 / 0.92));
+  border: 1px solid var(--m-plum-line);
+}
+
+.pme-panel > * + * {
+  margin-top: 14px;
+}
+
+.pme-section-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  color: var(--m-plum);
+}
+
+.pme-body {
+  margin: 0;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.pme-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pme-links a {
+  border: 1px solid var(--m-plum-line);
+  padding: 4px 10px;
+  font-size: 13px;
+  color: var(--m-plum);
+}
+
+.pme-links a:hover,
+.pme-links a:focus-visible {
+  border-color: var(--m-plum);
+}
+
+.pme-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 18px 0 0;
+}
+
+.pme-button {
+  border: 1px solid var(--m-plum);
+  background: transparent;
+  color: var(--m-plum);
+  padding: 8px 16px;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.pme-button:hover,
+.pme-button:focus-visible {
+  background: var(--m-plum);
+  color: #16071f;
+}
+
+.pme-button-ghost {
+  border-color: var(--m-plum-line);
+  color: inherit;
+}
+
+.pme-button-ghost:hover,
+.pme-button-ghost:focus-visible {
+  border-color: var(--m-plum);
+  background: transparent;
+  color: var(--m-plum);
+}
+
+.pme-hint {
+  margin: 12px 0 0;
+  color: var(--m-dim);
+  line-height: 1.7;
+}
+
+.pme-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.pme-table th,
+.pme-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--m-plum-line);
+  text-align: left;
+}
+
+.pme-table th {
+  color: var(--m-plum);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pme-card,
+  .pme-chip,
+  .pme-button,
+  .pme-links a {
+    transition: border-color 160ms ease, color 160ms ease, background-color 160ms ease;
+  }
+}
+
+@media (max-width: 420px) {
+  .pme-panel {
+    padding: 16px 14px 18px;
+  }
+}
+
+/* ---------- 管理表单（与公开视图共用同一套输入控件样式） ---------- */
+
+.pme-field {
+  display: block;
+  margin: 0 0 14px;
+}
+
+.pme-input {
+  width: 100%;
+  padding: 9px 10px;
+  background: rgb(10 5 16 / 0.9);
+  color: var(--paper);
+  border: 1px solid var(--m-plum-line);
+  font: inherit;
+}
+
+textarea.pme-input {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.pme-input:disabled {
+  opacity: 0.6;
+}
