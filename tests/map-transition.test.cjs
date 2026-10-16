@@ -301,6 +301,6 @@ test('site entrypoints consistently version the changed shared resources for PJA
     for (const resource of ['assets/css/chrome.css', 'assets/js/core.js', 'assets/js/pjax.js']) {
       assert.ok(html.includes(resource + '?v=map-travel-1'), page + ' must version ' + resource);
     }
-    if (page === 'map') assert.ok(html.includes('assets/js/crowd.js?v=map-travel-1'));
+    if (page === 'map') assert.ok(html.includes('assets/js/crowd.js?v=map-travel-2'));
   }
 });

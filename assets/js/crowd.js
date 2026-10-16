@@ -23,9 +23,9 @@
     ['crowd003_000.pac_3_risultato.png', 88, 402, 333, 621]
   ];
   const LAYERS = [
-    { alpha: .30, height: .58, width: .18, phoneHeight: .40, phoneWidth: .28, baseline: .72, phoneBaseline: .58, speed: 62, direction: 1, count: 8, phoneCount: 4, phase: .08 },
-    { alpha: .60, height: .82, width: .26, phoneHeight: .58, phoneWidth: .38, baseline: .90, phoneBaseline: .83, speed: 145, direction: -1, count: 7, phoneCount: 4, phase: .39 },
-    { alpha: 1, height: 1.06, width: .36, phoneHeight: .78, phoneWidth: .48, baseline: 1.10, phoneBaseline: 1.04, speed: 310, direction: 1, count: 6, phoneCount: 3, phase: .67 }
+    { alpha: .30, height: .58, width: .18, phoneHeight: .40, phoneWidth: .28, baseline: .72, speed: 62, direction: 1, count: 8, phoneCount: 4, phase: .08 },
+    { alpha: .60, height: .82, width: .26, phoneHeight: .58, phoneWidth: .38, baseline: .90, speed: 145, direction: -1, count: 7, phoneCount: 4, phase: .39 },
+    { alpha: 1, height: 1.06, width: .36, phoneHeight: .78, phoneWidth: .48, baseline: 1.10, speed: 310, direction: 1, count: 6, phoneCount: 3, phase: .67 }
   ];
   const maxRatio = Math.max(...SPRITES.map(s => s[3] / s[4]));
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -73,18 +73,18 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const phone = w < 720;
     lanes = LAYERS.map((layer, depth) => {
-      const height = Math.min(h * (phone ? layer.phoneHeight : layer.height),
-        w * (phone ? layer.phoneWidth : layer.width) / maxRatio);
-      const margin = height * maxRatio + 24;
+      const height = phone ? h * layer.phoneHeight : Math.min(h * layer.height, w * layer.width / maxRatio);
+      const margin = (phone ? w * layer.phoneWidth : height * maxRatio) + 24;
       const span = w + margin * 2;
       const count = phone ? layer.phoneCount : layer.count;
-      return { ...layer, height, margin, span, baseline: h * (phone ? layer.phoneBaseline : layer.baseline),
+      return { ...layer, height, margin, span, baseline: h * (phone ? 1.04 : layer.baseline),
         speed: layer.speed * Math.max(.65, w / 1280),
-        people: Array.from({ length: count }, (_, i) => ({
-          index: (depth * 4 + i) % SPRITES.length,
-          phase: ((i / count) + layer.phase) % 1,
-          bob: i * 1.7 + depth
-        })) };
+        people: Array.from({ length: count }, (_, i) => {
+          const index = (depth * 4 + i) % SPRITES.length;
+          // 窄屏逐人限宽，瘦长人物不再被最宽纹理一起压矮；三层都在底边裁切。
+          const personHeight = phone ? Math.min(height, w * layer.phoneWidth * SPRITES[index][4] / SPRITES[index][3]) : height;
+          return { index, height: personHeight, phase: ((i / count) + layer.phase) % 1, bob: i * 1.7 + depth };
+        }) };
     });
   }
 
@@ -98,13 +98,13 @@
       ctx.globalAlpha = lane.alpha;
       for (const person of lane.people) {
         const [, sx, sy, sw, sh] = SPRITES[person.index];
-        const width = lane.height * sw / sh;
+        const width = person.height * sw / sh;
         const x = wrap(person.phase * lane.span + lane.direction * lane.speed * elapsed, lane.span) - lane.margin;
-        const y = lane.baseline - lane.height + Math.sin(elapsed * 2.4 + person.bob) * 3;
+        const y = lane.baseline - person.height + Math.sin(elapsed * 2.4 + person.bob) * 3;
         // 右行层有意镜像，左行层沿用原纹理；不随帧或随机数切换人物。
         ctx.save(); ctx.translate(x + (lane.direction > 0 ? width : 0), y);
         if (lane.direction > 0) ctx.scale(-1, 1);
-        ctx.drawImage(images[person.index].image, sx, sy, sw, sh, 0, 0, width, lane.height);
+        ctx.drawImage(images[person.index].image, sx, sy, sw, sh, 0, 0, width, person.height);
         ctx.restore();
       }
     }

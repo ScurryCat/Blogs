@@ -185,3 +185,16 @@ test('resize caps DPR, rebuilds finite coordinates, and reduces phone counts and
     assert.ok(d.x > -1500 && d.x < 1500, 'long waits wrap within the lane span');
   }
 });
+
+test('phone depth layers share the bottom crop instead of floating on separate floors', async () => {
+  const r = renderer({ width: 390, height: 844 }); await r.load(); r.api.play();
+  const people = r.frame(0);
+  assert.equal(new Set(people.map(person => person.alpha)).size, 3);
+  for (const person of people) {
+    assert.ok(person.y < 844, 'each person remains visible above the viewport bottom');
+    assert.ok(person.y + person.height >= 844 && person.y + person.height <= 844 * 1.05,
+      'all phone figures crop at the same viewport bottom');
+    assert.ok(person.width < 390 * .6);
+    assert.ok(Math.abs(person.width / person.height - person.crop[2] / person.crop[3]) < 1e-10);
+  }
+});
