@@ -315,9 +315,9 @@ html.ov-lock body {
 }
 
 /* ---------- 2. 「掏出手机」的开合动画 ----------
-   参照原作里掏出手机的动作设计，四段构成：
+   参照原作里掏出手机的动作设计，三段构成：
      ① 从**右下角**（手的位置）带着较大倾角甩进来；② 越过静止位一点点（过冲 + 反向转正）；
-     ③ 回落落定；④ 落定瞬间手机轮廓**红光冲击**一下。
+     ③ 回落落定。
    轴的选点在右下（`transform-origin: 74% 88%`），这样它看起来是「被手从下方带上来」，
    而不是「在原地放大」——后者没有掏出来的感觉。
    数值：进入 440ms、退出一律更快（200ms）；退场方向与进场一致（缩回右下）。 */
@@ -338,20 +338,6 @@ html.ov-lock body {
     transform: none;
   }
 }
-/* 落定时的红光冲击：只对手机**轮廓**生效（drop-shadow 跟不透明像素走），
-   所以不会在透明区域糊出一个红方块。 */
-@keyframes pw-hit {
-  0%,
-  58% {
-    filter: none;
-  }
-  70% {
-    filter: drop-shadow(0 0 26px var(--red)) brightness(1.32);
-  }
-  100% {
-    filter: drop-shadow(0 14px 28px rgb(0 0 0 / 0.55));
-  }
-}
 .pw {
   transform-origin: 74% 88%;
   opacity: 0;
@@ -364,8 +350,11 @@ html.ov-lock body {
 .pw-wrap.on .pw {
   animation: pw-draw 0.44s cubic-bezier(0.2, 0.9, 0.22, 1) both;
 }
-.pw-wrap.on .pw-frame {
-  animation: pw-hit 0.5s ease-out both;
+/* 手机轮廓的落地投影：**静态**，不做动画。
+   原先落定时有一瞬间的红色 drop-shadow「冲击光效」，已按要求去掉 ——
+   顺带少一层 filter 动画，长帧时更稳。 */
+.pw-frame {
+  filter: drop-shadow(0 14px 28px rgb(0 0 0 / 0.55));
 }
 
 /* ---------- 3. 应用磁贴：入场错峰 ----------
@@ -506,7 +495,6 @@ html.ov-lock body {
   /* 「掏出手机」与红光冲击一并关掉；此时靠旧站的
      `.pw-wrap.on .pw { opacity: 1; transform: none }` 直接显示最终态 ✓ */
   .pw-wrap.on .pw,
-  .pw-wrap.on .pw-frame,
   .pw-wrap.on .pw-app,
   .pw--app .pw-appview {
     animation: none;
