@@ -2,10 +2,19 @@
 
 ```text
 任务：T03 / INS 图文发布与阅读
-状态：implemented_waiting_integration —— 代码、模型、路由与测试全部落地并真实跑通；
+状态：**integrated_verified** —— 代码、模型、路由与测试全部落地并真实跑通；
       「站主发布 → 另一浏览器读取」的完整闭环**已在真实浏览器 + 真实 PostgreSQL 上走通**
-      （27/27 项浏览器检查通过，含撤回后图片不可读）。
-      模型 / 路由前缀 / wiring 三项集成动作**尚未应用**（属 T00），因此还不能标记 integrated。
+      （27/27 项浏览器检查通过，含撤回后图片不可读），而且**是在 T00 接线后的原样生产 app 上**
+      跑通的（不是脚手架拼出来的 app）。
+
+      集成状态（本轮复核时 T00 已完成）：
+        - `MODEL_MODULES` 含 `app.modules.moments.models`；
+        - `MODULE_ROUTER_TARGETS` 含 `("moments", "app.modules.moments.router")`；
+        - `app/main.py` 调 `moments_wiring.register()`（媒体引用 + 公开标签来源）；
+        - 迁移 `apps/api/migrations/versions/20261016_1955_cfd959a27f73_t03_moments.py` 已生成，
+          在空库上 `alembic upgrade head` 后 `created_by_fallback == []`（表完全由真实迁移建出）；
+        - `contracts/openapi.json` 与 `lib/api/generated/schema.ts` 已含 moments（各 24 处）；
+        - `features/phone/registry.ts` 已登记 `INS_MANIFEST`。
 基线：main @ ba4fc35（开始时工作区只有 apps/web/tools/browser-verification/verify.py 的
       他人改动，未触碰）
       本轮 T03 未提交任何内容；未推送、未建分支 / worktree、未启动子 agent
@@ -139,9 +148,11 @@ apps/web/tests/helpers/browser.ts
 
 | 命令 | 退出码 | 结果 |
 | --- | --- | --- |
-| `uv run --project apps/api pytest apps/api/tests/moments` | 0 | **65 passed** |
+| `uv run --project apps/api pytest apps/api/tests/moments` | 0 | **65 passed**（T00 的迁移已应用，`created_by_fallback == []`） |
+| `uv run --project apps/api pytest apps/api/tests/{core,auth,media,posts,tags}` | 0 | **117 passed**（T01 回归，T03 没有破坏既有能力） |
 | `npm --prefix apps/web run typecheck` | 0 | tsc 无输出 |
-| `npm --prefix apps/web run lint` | 0 | 0 error / 0 warning |
+| `npm --prefix apps/web run lint` | 0 | 0 error / 0 warning（**本轮验收当时**；见下方「并发说明」） |
+| `npx eslint features/ins app/apps/ins app/admin/moments` | 0 | T03 自己文件的**作用域内** lint：0 error / 0 warning |
 | `npm --prefix apps/web run test -- --run` | 0 | **32 files / 304 passed**（其中 `features/ins` 9 files / 91 例） |
 | `npm --prefix apps/web run build` | 0 | 20 条路由，含 `ƒ /apps/ins`、`ƒ /apps/ins/[id]`、`○ /apps/ins/collections`、`○ /admin/moments`、`ƒ /admin/moments/[id]` |
 | `node --test tests/*.test.cjs` | 0 | **53 passed / 0 failed**（旧站零回归） |
@@ -150,6 +161,15 @@ apps/web/tests/helpers/browser.ts
 前置：`export TEST_DATABASE_URL="postgresql+psycopg://pl@127.0.0.1:55432/pl_test"`。
 **只跑自己的目录**（`apps/api/tests/moments`）：全量套件由 T00 在无人并发时串行运行
 （并发共用库名会让各包的临时库互相 drop，见 T00 的说明）。
+本轮实测到一次该现象：一次并跑里 T01 的目录出现 2 个失败，串行重跑即 117 passed ——
+错误内容是 `database "pl_test_t01" does not exist`，属于并发，不是代码缺陷。
+
+**前端也有同类的共享面**：`npm run lint` / `npm run test -- --run` 会扫全树。
+交付时（T03 完成的那一刻）两条都是 0 退出码；稍后 T05 / T07 的新文件引入了
+`react-hooks/set-state-in-effect` 等 lint error，因此**现在**整树 lint 不为 0 ——
+那些 error 都在 `features/coop/` 与 `features/journal/`，与 T03 无关。
+T03 的结论以作用域内 lint（`npx eslint features/ins app/apps/ins app/admin/moments`，exit 0）
+与当时的整树结果为准。整树 379 passed / 40 files 也是这个口径。
 
 ### 5.1 真实 PostgreSQL（不是 SQLite，也不写共享库）
 
@@ -261,21 +281,22 @@ T03 不改它们，因此在接线前 `uvicorn app.main:app` 里没有 `/api/v1/
 
 ## 6. 集成申请（按优先级）
 
-### A. 必须（不做就等于没接线）
+### A. 【已完成 ✓】必须（不做就等于没接线）
 
-1. **模型注册**：`MODEL_MODULES` 追加 `app.modules.moments.models`（顺序在 tags 之后）。
-2. **路由登记**：`MODULE_ROUTER_TARGETS` 追加 `("moments", "app.modules.moments.router")`
-   （前缀 `/moments` 与 `/admin/moments`，与现有模块不冲突）。
-3. **wiring 登记**：`app/main.py` 的 `register_content_domains()` 里调用
-   `from app.modules.moments import wiring as moments_wiring; moments_wiring.register()`。
+1. **模型注册** ✓ `MODEL_MODULES` 含 `app.modules.moments.models`。
+2. **路由登记** ✓ `MODULE_ROUTER_TARGETS` 含 `("moments", "app.modules.moments.router")`。
+3. **wiring 登记** ✓ `app/main.py` 的 `register_content_domains()` 调用
+   `moments_wiring.register()`；`registered_contributions()` 现在是
+   `('moments', 'posts', 'tags:moments', 'tags:posts')`。
    **不登记 = 匿名读动态图片一律 404**（默认拒绝是刻意的安全默认值）。
-   `registered_contributions()` 的期望值是 `('moments', 'posts', 'tags:moments', 'tags:posts')`。
-4. **迁移**：由 T00 生成单一 head（三张表 + 上述约束与索引）。T03 **没有**写迁移文件、
+4. **迁移** ✓ 单一 head `cfd959a27f73`；§5.1 的交叉证据显示三张表与全部约束 / 部分索引
+   都由真实迁移建出（`created_by_fallback == []`）。T03 本身仍**没有**写迁移文件、
    没有执行迁移、没有改 `model_registry.py`。
 
 ### B. 前端接线
 
-5. **手机应用登记**（`features/phone/registry.ts` 归 T00）。清单取值如下，可原样登记：
+5. **【已完成 ✓】手机应用登记**（`features/phone/registry.ts` 归 T00）：已登记
+   `INS_MANIFEST`。清单取值如下，供复核：
 
 ```ts
 import { INS_MANIFEST } from "@/features/ins/phone-manifest";
@@ -361,10 +382,13 @@ export const PHONE_APPS: readonly PhoneAppManifest[] = Object.freeze([INS_MANIFE
 6. **`.next` 是共享构建产物**：本次联调为了 `DEV_API_URL` 重建过它（现已用同一变量重启
    `next start`，3100 在跑）。做最终集成回归前请用**你自己的 `DEV_API_URL`** 重新
    `npm run build`（或清掉 `DEV_API_URL`），否则 `/api/v1` 会被转发到已停止的 8100。
+   见 §8 第 9 条。
 7. **联调脚手架未入库**：`.dsh/t03-smoke/` 在 `.dsh/` 下（工作区临时目录），
-   不属于仓库内容；其中的 `sitecustomize.py` / `prepare.py` / `reset.py` /
-   `browser-verify.py` 记录了完整复现步骤。要不要把它整理成仓库内的
-   `tools/browser-verification/ins-*.py`（像 T02 那样）由 T00 决定。
+   不属于仓库内容；其中的 `prepare.py` / `reset.py` / `browser-verify.py` 记录了完整复现步骤。
+   `sitecustomize.py` 现在**只剩一件事**：给缺失的 `Origin` 头打补丁（见第 1 条），
+   早先「注入 router / models / wiring」的那段已随 T00 接线**删除** ——
+   也就是说 §5.2 的 27 项检查跑在**原样的生产 app** 上，唯一的外力就是那个头。
+   要不要把它整理成仓库内的 `tools/browser-verification/ins-*.py`（像 T02 那样）由 T00 决定。
 8. **`PHANTOM_POSTS_SOURCE=api` 需要重新构建**（见 §5.2 补充证据）：打开 API 数据源后
    `/posts/[slug]` 必须变成 Dynamic，否则运行时 500。这是 T02 的所有权范围，T03 只报告。
 9. **当前工作区的 3100 状态**：为了本次联调，`.next` 是用 `DEV_API_URL=http://127.0.0.1:8100`

@@ -52,3 +52,26 @@ export function stubMediaPlayback() {
   });
   return { play, pause, load };
 }
+
+/**
+ * jsdom 没有实现 `window.scrollTo`：调用它会打印 "Not implemented" 并静默失败。
+ * 测试滚动恢复时需要**记录调用**，因此这里装一个可断言的替身（返回恢复函数）。
+ */
+export function stubScrollTo(): { calls: Array<{ top: number }>; restore: () => void } {
+  const calls: Array<{ top: number }> = [];
+  const original = window.scrollTo;
+  Object.defineProperty(window, "scrollTo", {
+    configurable: true,
+    writable: true,
+    value: (options?: ScrollToOptions | number) => {
+      if (typeof options === "object" && options !== null) calls.push({ top: Number(options.top ?? 0) });
+      else calls.push({ top: Number(options ?? 0) });
+    },
+  });
+  return {
+    calls,
+    restore: () => {
+      Object.defineProperty(window, "scrollTo", { configurable: true, writable: true, value: original });
+    },
+  };
+}
