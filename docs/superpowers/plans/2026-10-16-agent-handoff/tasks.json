@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-16",
+  "timezone": "Asia/Shanghai",
+  "kind": "development_handoff_not_execution",
+  "tasks": [
+    {"id":"T00","file":"tasks/T00-foundation.md","depends_on":[],"status":"not_started"},
+    {"id":"T01","file":"tasks/T01-api-core.md","depends_on":["T00"],"status":"not_started"},
+    {"id":"T02","file":"tasks/T02-web-runtime.md","depends_on":["T00"],"status":"not_started"},
+    {"id":"T03","file":"tasks/T03-ins.md","depends_on":["T01","T02"],"status":"not_started"},
+    {"id":"T04","file":"tasks/T04-metanav.md","depends_on":["T01","T02"],"status":"not_started"},
+    {"id":"T05","file":"tasks/T05-daily-life.md","depends_on":["T01","T02"],"status":"not_started"},
+    {"id":"T06","file":"tasks/T06-showcase.md","depends_on":["T04"],"status":"not_started"},
+    {"id":"T07","file":"tasks/T07-coop.md","depends_on":["T01","T02"],"status":"not_started"},
+    {"id":"T08","file":"tasks/T08-messaging.md","depends_on":["T03"],"status":"not_started"},
+    {"id":"T09","file":"tasks/T09-growth.md","depends_on":["T04","T06"],"status":"not_started"},
+    {"id":"T10","file":"tasks/T10-release.md","depends_on":["T01","T02"],"status":"not_started","release_requires":"all modules selected in this release are integrated and verified"}
+  ]
+}
