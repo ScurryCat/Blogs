@@ -437,3 +437,22 @@ T03 的 `moments/wiring.py` 明确写出集成动作，并做完了两半验证�
 **真实浏览器确认**：桌面 `['ins','palace','metanav','tokyo','cast','profile']`（6 项顺序正确），点开 INS 渲染真实内容。
 三处**冻结断言按设计拦下改动**并更新：`EXPECTED_TABLES`（+3 张）、两处桌面清单、`verify.py` | `4231996` `6f494f5` |
 | 2026-10-16 | **T03 §8.1 集成发现（待 T10 决策）** | 浏览器经 **Next rewrite** 的同源 POST **不带 `Origin`** | 真实浏览器实测：Chrome 不为此形态发送 `Origin`，而 `app/core/csrf.py` 的 `verify_origin` 按 05 §5「缺失 Origin 的状态变更请求一律拒绝」返回 **403** —— **会阻塞管理写操作**。属**集成层形态与设计假设不一致**（05 §5 假设浏览器直连同源 API），非 T03 缺陷。开发期用代理补 `Origin` 绕过。**生产形态需 T10 确认**：网关转发是否补 / 保留 `Origin`。已记入 T10 交接清单 | 待 T10 |
+
+### T00 更正：T03 §8.1 的「Origin 缺失」**不复现**（2026-10-16）
+
+T03 报告「浏览器经 Next rewrite 的同源 POST 不带 `Origin`，被 `verify_origin` 按 05 §5 拒为 403」，我记为待 T10 决策。**我实测后确认该诊断不成立**，现更正：
+
+**三步证据**（真实 uvicorn + 真实 PostgreSQL + 真实 Chromium）：
+
+| 步骤 | 结果 | 说明 |
+| --- | --- | --- |
+| API 直连**不带** `Origin` | `缺少 Origin，拒绝状态变更请求` | 基线：两种失败信息可区分 |
+| API 直连**带** `Origin: ...:3100` | `CSRF 校验失败` | 基线：来源校验已通过 |
+| **经 Next rewrite（3100）带 `Origin`** | `CSRF 校验失败` | **Next 转发了 `Origin`** |
+| **真实浏览器**同源 POST（经 rewrite） | `CSRF 校验失败` | **浏览器确实发了 `Origin`** |
+| 真实浏览器 `session → 带 token 登录` | **`authenticated: true`** | 管理写链路**完全可用** |
+
+**结论**：T03 看到的 403 是**它自己列出的第 2 个缺陷**（写操作没带 CSRF token，共享客户端缺 `headers` 选项），而那个它**已经修了**（token 走请求体）；「缺少 Origin」是对同一个 403 的误判。**无需 T10 为 Origin 采取动作**。
+
+**保留给 T10 的一条**（仍然合理）：网关转发 `/api/v1` 时**必须保留 `Origin` 与 `Host`**，否则 `verify_origin` 的同源比对会失败 —— 这是「转发要保头」的常规要求，不是本次的缺口。
+| 2026-10-16 | **T00 更正：Origin 问题不复现** | 独立实测 T03 §8.1 的诊断 | **五步证据**证明 `Origin` 确实被浏览器发出、也被 Next rewrite 转发：API 直连不带 Origin 报「缺少 Origin」、带 Origin 报「CSRF 校验失败」；经 rewrite 与真实浏览器同样报「CSRF 校验失败」；真实浏览器 `session → 带 token 登录` 返回 **authenticated: true**。→ T03 看到的 403 是它**自己已修**的「写操作没带 CSRF token」，不是 Origin 缺失。**降级为「无需 T10 动作」**，仅保留「网关转发须保留 Origin/Host」的常规要求 | 已更正 |
