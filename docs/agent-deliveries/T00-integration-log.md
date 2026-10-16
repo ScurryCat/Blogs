@@ -186,3 +186,8 @@ docker compose -f deploy/compose.dev.yaml --env-file deploy/.env up -d
 | 2026-10-16 | T02（诊断字段缺口） | 独立复核 T02 新增的 `crowd.state` 诊断：reduce 下实测为 `not-warmed` 而非 `reduced-motion` | 排除了构建陈旧（产物含 `reduced-motion`、`.next` 晚于源码）与实现遗漏（`crowd.ts:135` 分支正确）后定位到**调用方**：`transition-layer.tsx:130` 的 `if (prefersReducedMotion() \|\| !isCheapConnection()) return;` 先短路，`warm()` 从未被调用。后果：reduce 下的 `not-warmed` 与「调用方压根没跑」同值，**诊断字段在它要解决的那个问题上仍分不清**。已给出三种修法并给出倾向，交 T02 判断；不影响用户可见行为，不阻塞交付 | 待 T02 判断 |
 | 2026-10-16 | T02（交付前预审） | 交付前做所有权预审 + 迁移工具写入目标审计 | **无越界**：T00 拥有的全部文件（`main/router/model_registry`、`migrations/`、两个锁文件、`tsconfig`、`next.config.ts`、`eslint.config.mjs`、`vitest.config.mts`、`features/phone/registry.ts`、`lib/api/generated/`、`contracts/`、`deploy/`、`.gitignore`）零改动；已跟踪文件的唯二修改（`app/layout.tsx`、`app/page.tsx`）均属 T02。迁移工具 `tools/legacy-migration/migrate.mjs` 的写入目标**没有任何引用 `repoRoot`**，全部落在 `apps/web` 内，旧站确为只读 | 无（仅验证） |
 | 2026-10-16 | T02（文档漂移） | 发现 `migrate.mjs:15-18` 的注释仍描述旧的音乐方案（指向 `/assets/legacy/music/`、「与全新 clone 一致」），与已改成的 `/assets/music/` + 双状态不符 | 已报 T02。风险点：T05/T06/T09 会迁移更多素材、**很可能复用这个工具**，错误说明会被传播 | 待 T02 修 |
+| 2026-10-16 | T02（导航来源→效果映射） | 独立验证验收矩阵第一行「地图图标/出发/列表用人群，顶部导航用 Joker，**不能按当前页面猜测**」| 真实 Chromium 高频采样 `window.__PHANTOM_DEBUG__().transition`：
+① 地图页点「出发 ▸」→ **crowd=True / joker=False**；
+② **在 /map 页**点顶部导航 → **joker=True / crowd=False**（决定性：按来源而非当前页面）；
+③ 从 /about 点顶部导航里的「地图」链接（目的地是 /map）→ 仍是 **joker**（目的地也不决定效果）。
+代码侧交叉确认：`map-view.tsx` 的三个入口（图标 277 / 出发 343 / 列表 356）均为 `source="map-travel"` | 无（仅验证） |
