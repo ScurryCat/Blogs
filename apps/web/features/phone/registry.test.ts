@@ -38,7 +38,7 @@ describe("手机应用注册表", () => {
     expect(registry.find(TEST_APP_ID)).toBeUndefined();
 
     // 断言具体清单：新增/移除登记时集成负责人会被强制确认一次，而不是静默改变桌面。
-    expect(registry.manifests().map((manifest) => manifest.id)).toEqual(["ins", "metanav"]);
+    expect(registry.manifests().map((manifest) => manifest.id)).toEqual(["ins", "coop", "metanav"]);
   });
 
   it("每个登记应用的图标都指向仓库里真实存在的资源", () => {

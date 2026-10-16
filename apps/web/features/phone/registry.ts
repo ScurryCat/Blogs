@@ -8,6 +8,7 @@
  * 注册表来自仓库里的可信模块，**首版不从数据库下载 JavaScript**。
  */
 
+import { COOP_PHONE_MANIFEST } from "@/features/coop/phone-manifest";
 import { INS_MANIFEST } from "@/features/ins/phone-manifest";
 
 import type { PhoneAppManifest, PhoneAppModule } from "./types";
@@ -21,7 +22,17 @@ export class PhoneRegistryError extends Error {}
  * 正式桌面应用清单。
  *
  * 未接入的能力**不显示坏按钮**（SHARED-CONTRACTS §4），所以这里只放已交付并接线完成的应用。
- * INS 由 T03 交付（待登记）、日常应用由 T05、COOP 由 T07。
+ *
+ * **order 按 07 §7 的首屏顺序预留序位**（每档留 10，便于插入）：
+ *
+ *   ins(10) → 手记(20，T05 待登记) → 放课后(30，T05 待登记) → coop(40) → metanav(50)
+ *
+ * **注意**：应用与 4 个 site-link 入口（palace/tokyo/cast/profile，order 10/20/30/40）共用同一
+ * 个 order 命名空间，因此实际桌面顺序是交错的：
+ * `ins, palace, tokyo, cast, coop, profile, metanav`。应用**之间**的相对顺序符合设计。
+ *
+ * 也就是说 COOP 在导航**之前**。T07 建议给自己取 30，但那会排在 metanav(20) 之后、
+ * 与设计顺序相反；这里改为按设计预留，T05 的两个应用登记时直接用 20 / 30 即可，不必重排。
  *
  * 登记规则：各包提供 `features/<pkg>/phone-app.tsx`（`default` + `screens` + 可选 `dispose`）
  * 与一份 10 字段 manifest，由 T00 写入这里 —— 包不自己往宿主里塞条件分支。
@@ -29,13 +40,16 @@ export class PhoneRegistryError extends Error {}
 export const PHONE_APPS: readonly PhoneAppManifest[] = Object.freeze([
   // INS 由 T03 交付并自带 manifest（`features/ins/phone-manifest.tsx`），这里只做登记。
   INS_MANIFEST,
+  // COOP 由 T07 交付并自带 manifest。
+  COOP_PHONE_MANIFEST,
   {
     id: "metanav",
     name: "导航",
     subtitle: "异世界导航",
     // 仓库内已有的迁移图标资源（T02 的 public/assets/legacy/img/icon/），不新增素材。
     icon: "/assets/legacy/img/icon/oracle.webp",
-    order: 20,
+    // 50 = 排在 COOP 之后（07 §7 的首屏顺序）。
+    order: 50,
     kind: "embedded",
     canonical_path: "/apps/metanav",
     loader: () => import("@/features/metanav/phone-app"),

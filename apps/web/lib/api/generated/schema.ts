@@ -4,6 +4,86 @@
  */
 
 export interface paths {
+    "/api/v1/admin/friends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 管理友链列表
+         * @description 含草稿与已删除（`deleted_at` 非空即为已删除，便于管理端区分）。
+         */
+        get: operations["admin_list_links_api_v1_admin_friends_get"];
+        put?: never;
+        /**
+         * 新建友链（草稿）
+         * @description 新建总是草稿；地址在这里就被限制为 http(s)（非法 scheme → 422）。
+         */
+        post: operations["admin_create_link_api_v1_admin_friends_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/friends/{link_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理友链详情 */
+        get: operations["admin_read_link_api_v1_admin_friends__link_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * 软删除友链
+         * @description 软删除该友链；**不删除媒体对象**，也不影响同一张图在其他公开内容里的引用。
+         */
+        delete: operations["admin_delete_link_api_v1_admin_friends__link_id__delete"];
+        options?: never;
+        head?: never;
+        /** 更新友链（tags 完整替换） */
+        patch: operations["admin_update_link_api_v1_admin_friends__link_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/friends/{link_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发布友链 */
+        post: operations["admin_publish_link_api_v1_admin_friends__link_id__publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/friends/{link_id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 撤回友链 */
+        post: operations["admin_unpublish_link_api_v1_admin_friends__link_id__unpublish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/media": {
         parameters: {
             query?: never;
@@ -220,6 +300,66 @@ export interface paths {
         };
         /** 读取会话状态与 CSRF token */
         get: operations["read_session_api_v1_auth_session_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/coop/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 友链列表
+         * @description 按站主手动排序返回已发布友链；`tag` 为精确（规范化后）筛选。
+         */
+        get: operations["list_links_api_v1_coop_links_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/coop/links/{link_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 友链详情
+         * @description 草稿、已删除与不存在**完全同形**（统一 404），不泄漏「这条存在但没发布」。
+         */
+        get: operations["read_link_api_v1_coop_links__link_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/coop/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 友链标签
+         * @description 只返回已发布友链用到的标签；不返回数量，也不按热度排序。
+         */
+        get: operations["list_tags_api_v1_coop_tags_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -468,6 +608,186 @@ export interface components {
         Body_upload_media_api_v1_admin_media_post: {
             /** File */
             file: string;
+        };
+        /**
+         * FriendLinkActionIn
+         * @description 发布 / 撤回 / 删除的无实体请求体：只承载 CSRF token。
+         */
+        FriendLinkActionIn: {
+            /** Csrf Token */
+            csrf_token?: string | null;
+        };
+        /** FriendLinkAdminListOut */
+        FriendLinkAdminListOut: {
+            /** Items */
+            items: components["schemas"]["FriendLinkAdminOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** FriendLinkAdminOut */
+        FriendLinkAdminOut: {
+            /** Arcana */
+            arcana: string | null;
+            avatar: components["schemas"]["MediaPublicOut"] | null;
+            /** Avatar Media Id */
+            avatar_media_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Deleted At */
+            deleted_at: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Position */
+            position: number;
+            /** Published At */
+            published_at: string | null;
+            /** Status */
+            status: string;
+            /** Story */
+            story: string | null;
+            /** Summary */
+            summary: string;
+            /** Tags */
+            tags: components["schemas"]["FriendTagOut"][];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Url */
+            url: string;
+            /** Version */
+            version: number;
+        };
+        /** FriendLinkCreateIn */
+        FriendLinkCreateIn: {
+            /** Arcana */
+            arcana?: string | null;
+            /** Avatar Media Id */
+            avatar_media_id?: string | null;
+            /** Csrf Token */
+            csrf_token?: string | null;
+            /** Name */
+            name: string;
+            /**
+             * Position
+             * @default 0
+             */
+            position: number;
+            /** Story */
+            story?: string | null;
+            /**
+             * Summary
+             * @default
+             */
+            summary: string;
+            /** Tags */
+            tags?: string[];
+            /** Url */
+            url: string;
+        };
+        /** FriendLinkDetailOut */
+        FriendLinkDetailOut: {
+            /** Arcana */
+            arcana: string | null;
+            avatar: components["schemas"]["MediaPublicOut"] | null;
+            /** Has Story */
+            has_story: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Story */
+            story: string | null;
+            /** Summary */
+            summary: string;
+            /** Tags */
+            tags: string[];
+            /** Url */
+            url: string;
+        };
+        /** FriendLinkListOut */
+        FriendLinkListOut: {
+            /** Items */
+            items: components["schemas"]["FriendLinkSummaryOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** FriendLinkSummaryOut */
+        FriendLinkSummaryOut: {
+            /** Arcana */
+            arcana: string | null;
+            avatar: components["schemas"]["MediaPublicOut"] | null;
+            /** Has Story */
+            has_story: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Summary */
+            summary: string;
+            /** Tags */
+            tags: string[];
+            /** Url */
+            url: string;
+        };
+        /**
+         * FriendLinkUpdateIn
+         * @description PATCH：只更新**出现过的**字段（`model_fields_set`）；`tags` 传入时完整替换。
+         *
+         *     `status` / `slug` / 版本都不在可改字段里：发布与撤回是独立动作，版本只能靠 If-Match 推进。
+         */
+        FriendLinkUpdateIn: {
+            /** Arcana */
+            arcana?: string | null;
+            /** Avatar Media Id */
+            avatar_media_id?: string | null;
+            /** Csrf Token */
+            csrf_token?: string | null;
+            /** Name */
+            name?: string | null;
+            /** Position */
+            position?: number | null;
+            /** Story */
+            story?: string | null;
+            /** Summary */
+            summary?: string | null;
+            /** Tags */
+            tags?: string[] | null;
+            /** Url */
+            url?: string | null;
+        };
+        /**
+         * FriendTagListOut
+         * @description 公开标签清单（只来自已发布友链），供筛选器使用；不带任何计数或排名。
+         */
+        FriendTagListOut: {
+            /** Items */
+            items: components["schemas"]["FriendTagOut"][];
+        };
+        /**
+         * FriendTagOut
+         * @description 标签的公开形态：只有展示名与规范值（筛选用）。
+         */
+        FriendTagOut: {
+            /** Name */
+            name: string;
+            /** Normalized */
+            normalized: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1115,6 +1435,248 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    admin_list_links_api_v1_admin_friends_get: {
+        parameters: {
+            query?: {
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FriendLinkAdminListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_create_link_api_v1_admin_friends_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FriendLinkCreateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FriendLinkAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_read_link_api_v1_admin_friends__link_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FriendLinkAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_delete_link_api_v1_admin_friends__link_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["FriendLinkActionIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_update_link_api_v1_admin_friends__link_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FriendLinkUpdateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FriendLinkAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_publish_link_api_v1_admin_friends__link_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["FriendLinkActionIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FriendLinkAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_unpublish_link_api_v1_admin_friends__link_id__unpublish_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["FriendLinkActionIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FriendLinkAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     upload_media_api_v1_admin_media_post: {
         parameters: {
             query?: never;
@@ -1701,6 +2263,90 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SessionStatusOut"];
+                };
+            };
+        };
+    };
+    list_links_api_v1_coop_links_get: {
+        parameters: {
+            query?: {
+                tag?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FriendLinkListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_link_api_v1_coop_links__link_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FriendLinkDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_tags_api_v1_coop_tags_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FriendTagListOut"];
                 };
             };
         };

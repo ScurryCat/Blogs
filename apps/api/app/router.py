@@ -20,6 +20,7 @@ API_V1_PREFIX = "/api/v1"
 # 按名称排序挂载，保证对外路径顺序可复现。新增模块由集成负责人写入这里。
 MODULE_ROUTER_TARGETS: tuple[tuple[str, str], ...] = (
     ("auth", "app.modules.auth.router"),
+    ("coop", "app.modules.coop.router"),
     ("health", "app.core.health"),
     ("media", "app.modules.media.router"),
     ("moments", "app.modules.moments.router"),

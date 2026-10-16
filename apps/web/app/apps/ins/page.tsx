@@ -17,6 +17,7 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 
 import { ApiClientError, ApiTransportError } from "@/lib/api/client";
+import { CoopEntry } from "@/features/coop/coop-entry";
 import { InsApp } from "@/features/ins/ins-app";
 import { fetchMomentsOnServer, fetchTagsOnServer } from "@/features/ins/server-api";
 import { INS_SUBTITLE, INS_TITLE } from "@/features/ins/composition";
@@ -77,6 +78,8 @@ export default async function InsFeedPage({ searchParams }: PageProps): Promise<
         initialFeed={initialFeed}
         initialCursor={initialCursor}
         feedError={feedError}
+        // T07 的头像区 COOP 入口（与 /about 第 02 区、COOP 独立页读同一份数据）。
+        profile={{ coop: <CoopEntry /> }}
       />
     </Suspense>
   );

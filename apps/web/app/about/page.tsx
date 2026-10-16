@@ -11,13 +11,13 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
+import { CoopLinksSection } from "@/features/coop/coop-links-section";
 import { site } from "@/features/legacy/config";
 import { rn } from "@/features/legacy/text/ransom";
 
 const A = site.about;
 
 /** COOP 卡片的固定倾角序列（旧站同一组值）。 */
-const TILT = [-2, 1.5, -1, 2, -1.5, 1];
 
 function pips(count: number, max: number): ReactNode {
   return (
@@ -158,41 +158,13 @@ export default function AboutPage(): ReactNode {
         </div>
       </section>
 
-      <section className="shell coop" aria-labelledby="co-h">
-        <header className="sec-h">
-          <span className="no">02</span>
-          <h2 id="co-h">
-            <span className="en">Confidants</span>
-            <span className="cn">友链</span>
-          </h2>
-          <p className="aside">
-            RANK UP <b>↑</b>
-          </p>
-        </header>
-        <ul className="coop-g">
-          {A.coop.map((coop, index) => (
-            <li className="co" key={coop.name}>
-              <a
-                href={coop.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ "--r": `${TILT[index % TILT.length] ?? 0}deg` } as React.CSSProperties}
-              >
-                <span className="co-top">
-                  <b>{coop.arcana[0]}</b>
-                  <span>{coop.arcana[1]}</span>
-                </span>
-                {/* eslint-disable-next-line @next/next/no-img-element -- 旧站图标资源。 */}
-                <img src={coop.icon} alt="" loading="lazy" />
-                <h3>{coop.name}</h3>
-                <p>{coop.note}</p>
-                {pips(coop.rank, 10)}
-                <span className="sr-only">COOP 等级 {coop.rank} / 10</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {/*
+        第 02 区「友链」改为渲染**真实友链**（`friend_links` 里存在的记录）。
+        旧的 6 张卡是 P5 角色**示例数据**（地址全指向 github.com、带 RANK 进度条），
+        T07 的交付单已确认它们一条都没被导入 —— 继续渲染会把虚构角色描述成真实朋友，
+        违反验收第 3 条与「不产生好感度排名」。本段与 COOP 独立页读同一份数据。
+      */}
+      <CoopLinksSection />
 
       <section className="shell tl" aria-labelledby="tl-h">
         <header className="sec-h">
