@@ -13,6 +13,8 @@
 import type { ReactNode } from "react";
 
 import { GuideEntry } from "./project-card";
+import { SiteLink } from "@/features/runtime/navigation/site-link";
+
 import {
   PROJECT_IMAGE_KIND_LABELS,
   linkKindLabel,
@@ -137,7 +139,7 @@ export function ProjectReading({ project }: ProjectReadingProps): ReactNode {
       ) : null}
 
       <p className="pls-card-meta">
-        想看更多作品？<a href="/showcase">回到我的殿堂</a>。
+        想看更多作品？<SiteLink href="/showcase" source="phone-link">回到我的殿堂</SiteLink>。
       </p>
     </article>
   );

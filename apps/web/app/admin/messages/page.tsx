@@ -16,6 +16,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { ApiClientError, apiRequest } from "@/lib/api/client";
+import { SiteLink } from "@/features/runtime/navigation/site-link";
 import { ADMIN_OVERVIEW_PATH } from "@/features/messaging/paths";
 import "@/features/messaging/messaging.css";
 
@@ -118,9 +119,9 @@ export default function AdminMessagesPage(): ReactNode {
         <h1>角色消息 · 运行状态</h1>
         <p>这个页面需要站主登录。请先到登录页登录，再回来。</p>
         <p>
-          <a className="msg-card" href="/admin/login">
+          <SiteLink className="msg-card" href="/admin/login" source="phone-link">
             去登录
-          </a>
+          </SiteLink>
         </p>
       </div>
       </div>
