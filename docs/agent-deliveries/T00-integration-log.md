@@ -257,3 +257,5 @@ page.click(...)                                                                 
 **已做的加固**：白名单从常量改为可扩展登记（`register_temp_database`），消除「每个新包都要编辑同一文件」的写-写争用。库名本身仍是固定的，因为 T01 有 3 处断言直接比较库名（`test_import_legacy` / `test_health_readiness` / `test_bootstrap_admin`），改成随机后缀会牵连这些已入库的用例。
 
 **给 T05–T09 的提示**：在自己的测试支撑文件里调用 `register_temp_database("pl_test_tXX")` 登记，不要编辑 `tests/core/t01_db.py` 的白名单常量。
+| 2026-10-16 | T03/T04（分目录验证） | 并发干扰排除后，分别跑两个包自己的目录 | **T03 `tests/moments` → 64 passed**；**T04 `tests/nav` → 59 passed**，均 0 失败。确证先前的 21 failed / 63 errors 与后续的 44 errors **纯粹是并发全量运行互相删库**，不是两个包的缺陷。同时也证明我上一轮的白名单重构**没有破坏任何测试** | 无（仅验证） |
+| 2026-10-16 | T03（采纳登记机制） | T03 改为 `T03_DATABASE_NAME = register_temp_database("pl_test_t03")`，并把自己的库名从 T01 文件的内置白名单里移除 | 争用点已消除：新包不再需要编辑 `tests/core/t01_db.py`。另注意到有人在 `_ensure_tables` 补了一条好洞察 —— `Base.metadata` 是**进程级共享**的注册表，拿它断言「迁移覆盖度」会把其他域的表也算成漏建 | 已生效 |
