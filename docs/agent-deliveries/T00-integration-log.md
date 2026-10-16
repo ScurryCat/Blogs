@@ -72,3 +72,15 @@ T00 在骨架交付后持续承担集成负责人（[T00 任务卡](../superpowe
 2. **锁文件与共享配置**：任何包都不得自行改 `pyproject.toml` / `uv.lock` / `package.json` / `package-lock.json` / `tsconfig.json` / `next.config.ts`。需要就申请，由我一次性应用。
 3. **单一 head**：模块不写 `migrations/`。一旦出现平行 head，`alembic heads` 会返回多个，交接计划明令禁止。
 4. **迁移不由模块自证**：模块测试里的 `Base.metadata.create_all` 是临时手段，只证明 service 逻辑；真实迁移链的验证在 T00 这里。
+| 2026-10-16 | T00（补接线遗漏） | T01 的 `install_private_cache_control` 写着「供 create_app 调用」但一直没装 | 已在 `create_app()` 装上。隔离验证：私有前缀下**忘了加头的端点在 200 时会被补上 `private, no-store`**，非私有前缀不受影响（T03+ 新增管理路由时这是兜底） | 见提交 |
+
+## 一次自我纠正（2026-10-16）
+
+排查「公开读 404 缺 `Cache-Control`」时，我先判断是我的中间件缺失所致，并据此外推出「中间件覆盖了异常响应」。**A/B 验证推翻了这个结论**：把中间件换成空操作后，404 仍然带 `no-store`。
+
+真正的原因是 T01 在 `app/core/errors.py:135` 给所有错误响应默认加了 `Cache-Control: no-store`。两件事的真实分工是：
+
+- **错误响应**（401 / 404 / 409 / 422 …）：由 `errors.py` 统一带 `no-store`，与中间件无关；
+- **成功响应**：由各路由自行声明；`PrivateCacheControlMiddleware` 只对 `/api/v1/admin/`、`/api/v1/auth/`、`/api/v1/media/` 下**漏加头**的成功响应兜底。
+
+记下来的理由：这类「以为是自己修的、其实是别人修的」结论如果不验证就写进交付单，会让后来者误判失效路径。

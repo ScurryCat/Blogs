@@ -16,6 +16,7 @@ from app import model_registry
 from app.core import logging as pl_logging
 from app.core.config import Settings, get_settings
 from app.core.errors import install_error_handlers, request_id_middleware
+from app.core.http import install_private_cache_control
 from app.router import mount_api
 
 APP_TITLE = "PHANTOM LOG API"
@@ -69,6 +70,11 @@ def create_app(settings: Settings | None = None, *, module_routers=None) -> Fast
 
     app.middleware("http")(request_id_middleware)
     install_error_handlers(app)
+
+    # 兜底把 `Cache-Control: private, no-store` 加到 /api/v1/admin/* 的所有响应上。
+    # 用中间件而不是逐端点声明：这样连异常响应（401/404/409）也带得上 —— 否则一个
+    # 401 的响应体可能被共享缓存留下。01 §6：认证、草稿与管理响应不得进入共享缓存。
+    install_private_cache_control(app)
 
     origins = settings.cors_origin_list()
     if origins and not settings.is_production:
