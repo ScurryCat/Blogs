@@ -415,3 +415,21 @@ page.click(...)                                                                 
 | 2026-10-16 | **T05+T07 早期模型检查** | 三个新域（journal / leisure / coop）刚落地 models 时做导入与迁移预演（不写文件）| **8 个模块按依赖顺序导入成功、无表名冲突、表总数 16**；新声明 5 张表：`journal_entries`、`journal_entry_media`、`leisure_entries`、`friend_links`、`friend_link_tags`。
 **预演 11 项变更**（5 建表 + 6 索引），**全部为新增、零 drop**；索引覆盖公开列表/日历/日期/关联媒体等查询面。
 **约定继承良好**：三个域的公开列表索引**都用了部分索引**（journal 与 leisure 用 `postgresql_where=sql_text(...)`，coop 抽成共享常量 `_PUBLIC_LISTING_WHERE`），与 posts / palaces / moments 的既定模式一致 | 待交付 |
+
+## 会话状态观察：三个 agent 从注册表消失但仍在写（2026-10-16）
+
+`list_agents` 只剩 lead，T03/T05/T07 均查不到，给 T03 发消息报 `active teammate not found`。但**文件仍在被修改**（近 2 分钟 8 个、近 10 分钟 33 个），说明它们**仍在运行、只是不可寻址** —— 我无法再向它们发送协调消息（包括「请收尾交付」）。
+
+**处置**：不再依赖消息协调，改为**以磁盘产物为准**推进；持续用文件 mtime 判断各包是否仍在写。若某包静默且代码全绿，则按「已交付但缺交付单」处理并如实记录。
+
+## T03 集成准备（已完成，接线本身随时可做）
+
+T03 的 `moments/wiring.py` 明确写出集成动作，并做完了两半验证：
+
+- **wiring**：`moments_wiring.register()` 贡献**两项** —— `media/public_refs` 与 `tags/service`。登记后媒体公开引用 `['moments','posts']`、标签来源 `('moments','posts')`；登记前为空（**默认拒绝**生效）。
+- **契约**：加 moments router 后 **18 → 24 条路径**（新增 6 条：`/moments`、`/moments/{id}`、`/admin/moments` 及 publish/unpublish）。
+- **幂等性**：同一进程内连续两次 `create_app()` 安全（路由一致 18 条、登记未被清空），**进程级守卫是唯一防线** —— 底层 `wiring.register()` **本身不幂等**（重复调用抛 `DuplicateCheckerError`）。
+- **一处设计确认**：`create_app(module_routers=…)` 的**测试路径不触发内容域登记**（我最初用它做彩排，只见 posts 引用，正是这个原因）—— 与「None = 生产接线、显式 dict = 测试接线」的既定设计一致。
+
+**我的脚本两次失误**（都不是代码问题）：先手动 `posts_wiring.register()` 再 `create_app()` → 触发重复登记报错；`SECRET_KEY` 只写了 31 字符被校验拦下（说明长度校验有效）。
+| 2026-10-16 | **T03 集成准备** | 三个 agent 不可寻址但仍在写；改为以磁盘产物为准 | T03 全量复验**全绿**：moments **65 passed**、既有域 **176 passed**（零回归）、typecheck/lint/build **0**、前端 **304 passed**。集成动作已两半验证：wiring 登记后媒体引用与标签来源均变为 `('moments','posts')`；契约 18→**24 条**；二次 `create_app()` 安全（但底层 `register()` 不幂等，进程级守卫是唯一防线）| 待集成 |
