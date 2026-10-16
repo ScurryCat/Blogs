@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import type { NextConfig } from "next";
 
 /**
@@ -49,6 +51,17 @@ const devApiUrl = process.env.DEV_API_URL?.replace(/\/$/, "");
 const devLegacyStaticUrl = process.env.DEV_LEGACY_STATIC_URL?.replace(/\/$/, "");
 
 const nextConfig: NextConfig = {
+  /**
+   * 生产镜像用 standalone 输出（06 §2 要求；T10 的集成申请 §6.1）。
+   *
+   * `next start` 仍然可用（standalone 只是**额外**产出 `.next/standalone`），所以本地
+   * 开发与 T02 的浏览器套件不受影响；生产镜像改用 `node server.js`，镜像更小。
+   *
+   * `outputFileTracingRoot` 锁定到仓库根：这是 monorepo，不锁定的话 standalone 的目录
+   * 结构会随「锁文件在哪一层」漂移，runner 阶段的 COPY 路径就会失配。
+   */
+  output: "standalone",
+  outputFileTracingRoot: path.join(__dirname, "../../"),
   reactStrictMode: true,
   poweredByHeader: false,
   async redirects() {

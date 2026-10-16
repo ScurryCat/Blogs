@@ -1,0 +1,72 @@
+# PHANTOM LOG Web —— 生产镜像（T10）。
+#
+# 依据：06 §2「Next.js」/ T10 任务卡「生产化 web standalone 和 API 镜像」。
+#
+# 硬约束：
+#   - 多阶段构建；生产只装 production 依赖，不挂载源码目录、不启动 dev server。
+#   - `public` 与 `.next/static` 显式包含（06 §2 记录过 standalone 不带这两个目录的坑；
+#     本镜像显式复制两者，因此两种输出形态都不会缺静态资源）。
+#   - 非 root 运行（uid 10002）。
+#   - 构建层没有任何密钥：`API_INTERNAL_URL` 只是内部地址，不是凭据；密码与内部地址
+#     都不放进 NEXT_PUBLIC_*（01 §2）。
+#   - 生产**不传** DEV_API_URL：`/api/v1` 由网关转发（06 §1 只有网关对公网开放），
+#     Next 的 rewrites() 在构建期求值，传了等于把开发期转发固化进生产镜像。
+#
+# standalone（06 §2）已由 T00 在 `apps/web/next.config.ts` 启用（`output: "standalone"` +
+# `outputFileTracingRoot` 锁到仓库根），runner 见下方。启用后镜像不再需要 `next start`。
+
+# --- 音频来源：只有音频的那份上下文（`music` → 仓库 assets/music/） ---
+FROM scratch AS music
+COPY . /music/
+
+FROM node:26-slim AS builder
+
+WORKDIR /srv/web
+
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# 先复制依赖描述以利用层缓存；`npm ci` 严格按锁文件安装。
+COPY apps/web/package.json apps/web/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+
+COPY apps/web/ ./
+
+# 旧站静态音频沿用原路径。本机仓库里音频在根 `assets/music/`，不在 `apps/web/` 下，
+# 所以这一步不会覆盖任何已有的 `public/assets/music/`。
+COPY --from=music /music/ ./public/assets/music/
+
+# 构建期不需要任何密钥。不传 DEV_API_URL。
+RUN npm run build
+
+FROM node:26-slim AS runner
+
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=3000 \
+    HOSTNAME=0.0.0.0
+
+WORKDIR /srv/web
+
+RUN useradd --system --uid 10002 --create-home --home-dir /home/phantom phantom
+
+# standalone 形态**自带**运行所需的最小 node_modules，因此这里**不再** `npm ci`：
+# 少一层依赖安装、少一份重复的 node_modules，也没有 package-lock 需要在 runner 阶段解析。
+# （T10 原稿在 runner 阶段装生产依赖，那是 `next start` 形态需要的；改用 server.js 后不需要。）
+
+# ⚠️ 路径带 `apps/web/` 前缀：`next.config.ts` 的 `outputFileTracingRoot` 锁定在**仓库根**，
+# 所以 standalone 目录镜像了 monorepo 结构（实测产出 `.next/standalone/apps/web/server.js`）。
+# 这两处必须同时改：追踪根与 COPY 路径不一致时，镜像能构建成功但启动即失败。
+COPY --from=builder --chown=phantom:phantom /srv/web/.next/standalone ./
+# standalone **不含** `.next/static` 与 `public`（06 §2 记录过这个坑），必须显式带上。
+COPY --from=builder --chown=phantom:phantom /srv/web/.next/static ./apps/web/.next/static
+COPY --from=builder --chown=phantom:phantom /srv/web/public ./apps/web/public
+
+ENV HOME=/home/phantom
+
+USER phantom
+
+EXPOSE 3000
+
+# 用 standalone 的 server.js（06 §2 要求）；PORT / HOSTNAME 由上面的 ENV 提供。
+CMD ["node", "apps/web/server.js"]
+
