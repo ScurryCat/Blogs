@@ -16,8 +16,8 @@
       "depends_on": [
         "T00"
       ],
-      "status": "in_progress",
-      "note": "T00 依赖已满足，已派发"
+      "status": "integrated_verified",
+      "note": "模型/路由/迁移/契约/前端类型已由 T00 接线并验证（单一迁移 f415083eb5d4，空库与上一版库双向升级通过，契约 10 条路径）。源码与测试已入库 c21a147。后端 171 passed、旧站 53 passed 零回归；T00 独立复核跨站/CSRF 4/4 拒绝、DB 不可达时 live 200 / ready 503 / 公开读 503。遗留：lib/api/client.ts 的 headers 选项与 dev /api/v1 rewrite 待 T02 交付后处理；orphan 清理窗口、限流表定期清理、网关 X-Forwarded-For 覆写属 T10。"
     },
     {
       "id": "T02",

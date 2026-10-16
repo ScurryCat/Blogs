@@ -100,3 +100,22 @@ T00 在骨架交付后持续承担集成负责人（[T00 任务卡](../superpowe
 | 2026-10-16 | T01/T02（在途检查） | 三套命令逐条跑：API 测试、前端 typecheck/test/lint | API **165 通过**；前端 typecheck **退出码 0**（T01 已修好 mock 类型错误）、**78 测试全过**；但 `npm run lint` **红**：`app/admin/login/page.tsx:68` 触发 `react-hooks/set-state-in-effect`（effect 内同步 setState → 多一次渲染），同文件 75 行有失效的 eslint-disable。已报给 T01 并给出「初始态已是 loading，挂载时跳过置位」的修法 | 待 T01 修 |
 | 2026-10-16 | T01（安全边界实证） | HTTP 层验证跨站写入与 CSRF（验收矩阵「跨站登录/发布请求 → 被拒绝」） | 4/4 拒绝：同源但缺 CSRF → **403**；跨站 Origin + 带 CSRF → **403**；无 Origin → **403**；跨站改密码未登录 → **403** | 见提交 |
 | 2026-10-16 | T01（韧性实证） | 把 DATABASE_URL 指向无服务端口，验证「DB 不可用」的对外行为 | `/health/live` **200**（liveness 不受 DB 影响，正是拆分的意义）；`/health/ready` **503** `database: unavailable`；`/posts` 与 `/tags` 均 **503 `SERVICE_UNAVAILABLE`** —— **没有伪装成 200 空列表或 404**；响应中不含连接串、端口或 psycopg 字样 | 见提交 |
+| 2026-10-16 | **T01（交付入库）** | T01 交付完成（`implemented_waiting_integration`），执行入库与状态更新 | 71 个文件 / 8383 行入库（`c21a147`），**确认未夹带 T02 的任何文件**；后端 **171 passed 退出码 0**（连跑两次）；共享库 `pl_test` **零污染**（posts/media/admin_users/tags 均为 0），T01 自建临时库已 drop。`tasks.json` 中 T01 → **`integrated_verified`**，遗留项写明 | `c21a147` |
+
+## T01 遗留项交接（2026-10-16）
+
+由 T01 交付单 §7/§8/§9 摘出，按归属落到具体人：
+
+**待 T02 交付后由 T00 处理**
+- [ ] `apps/web/lib/api/client.ts` 的 `ApiRequestOptions` 增加 `headers?: Record<string, string>`，让写操作可带 `X-CSRF-Token`（服务端 body 与 header 两种都已支持，属「更方便」而非必须）
+- [ ] 决定 dev / preview 是否需要 `/api/v1` rewrite：不加则浏览器里登录页只能看到失败态（T01 §5.4 已如实记录为未验证项）
+- [ ] T02 需在管理外壳提供「已登录 / 未登录」入口（未登录跳 `/admin/login`）；**T01 不做路由保护，隐藏按钮不是安全边界**（01 §3）
+
+**属 T10（部署与跨模块验收）**
+- [ ] `list_orphan_objects` 的保留期与执行者（目前只报告，无定时任务）
+- [ ] `auth_rate_limits` 的定期清理兜底（现为机会式清理）
+- [ ] 生产前确认网关**确实覆写** `X-Forwarded-For`，否则登录限流会被绕过或误伤
+- [ ] Docker/Compose 内的真实启动、HTTPS 下的 `__Host-` Cookie、真实反代下的 `TRUST_PROXY_HEADERS`、上传并发压测
+
+**给后续模块的约束**
+- [ ] T08 的访客会话**不要复用 `sessions` 表**（05 §11 明确要求站主会话与访客会话分离）
