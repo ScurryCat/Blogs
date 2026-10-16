@@ -30,8 +30,25 @@
       first.show(); first.show(); mirror.show();
       assert(a.querySelectorAll('.poll').length === 1, 'Repeated show duplicated DOM');
       assert(a.querySelector('.poll-percent').textContent === '00.0%', 'Zero result is wrong');
+      const panel = a.querySelector('.poll-panel');
+      const backdrop = getComputedStyle(panel, '::before').backgroundColor;
+      const alpha = backdrop.startsWith('rgba') ? Number(backdrop.match(/[\d.]+/g)[3]) : 1;
+      assert(alpha >= .75 && alpha < 1, 'Poll backdrop should be slightly transparent, not opaque');
+      assert(panel.getBoundingClientRect().height <= 240, 'Short poll has excessive vertical background space');
+      lines.push('PASS translucent backdrop and compact short-question layout');
       const q = a.querySelector('.poll-q').getBoundingClientRect();
       const frame = a.querySelector('.poll-bar').getBoundingClientRect();
+      assert(frame.height >= (innerWidth <= 390 ? 30 : 40), 'Support-rate frame is too thin for the supplied reference');
+      assert(q.bottom <= frame.bottom - (innerWidth <= 390 ? 6 : 12),
+        'Q should rise above the frame instead of covering its fill');
+      const questionRect = a.querySelector('.poll-question').getBoundingClientRect();
+      const edgeAtQuestion = frame.top + frame.height * .35 * (1 - (questionRect.left - frame.left) / frame.width);
+      const questionGap = edgeAtQuestion - questionRect.bottom;
+      assert(questionGap >= 0 && questionGap <= 12, 'Question should sit close above the frame without overlapping its edge');
+      assert(a.querySelector('.poll-whole')?.textContent === '00' && a.querySelector('.poll-fraction')?.textContent === '.0',
+        'Integer and decimal digits need independently sized real text');
+      assert(a.querySelector('.poll-result-label')?.textContent === 'YES', 'Result label is missing from the frame corner');
+      lines.push('PASS reference frame, result label and split percentage digits');
       assert(q.left < frame.right && q.right > frame.left && q.top < frame.bottom && q.bottom > frame.top,
         'Q decoration does not overlap the result frame');
       lines.push('PASS Q and result frame overlap');

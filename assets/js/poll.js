@@ -81,7 +81,9 @@
       if (!root || destroyed) return;
       const state = store.get(config), tally = store.tally(config);
       const percent = model.formatPercent(tally.pct[config.main]);
-      refs.number.textContent = percent.slice(0, -1);
+      const [integer, decimal] = percent.slice(0, -1).split('.');
+      refs.whole.textContent = integer;
+      refs.fraction.textContent = '.' + decimal;
       refs.bar.style.setProperty('--poll-fill', tally.pct[config.main] + '%');
       refs.result.setAttribute('aria-label', `${config.options.find(option => option.value === config.main).label}：${percent}。本地展示，非全站统计`);
       refs.choices.forEach((button, index) => {
@@ -124,10 +126,13 @@
       result.setAttribute('role', 'img');
       const bar = element('div', 'poll-bar');
       bar.setAttribute('aria-hidden', 'true');
-      bar.append(element('i', 'poll-fill'));
+      bar.append(element('i', 'poll-fill'), element('span', 'poll-result-label',
+        config.options.find(option => option.value === config.main).label));
       const percent = element('b', 'poll-percent');
       percent.setAttribute('aria-hidden', 'true');
       const number = element('span', 'poll-number'), sign = element('span', 'poll-sign', '%');
+      const whole = element('span', 'poll-whole'), fraction = element('span', 'poll-fraction');
+      number.append(whole, fraction);
       percent.append(number, sign);
       result.append(bar, percent);
       const actions = element('div', 'poll-actions');
@@ -159,7 +164,7 @@
         button.type = 'button'; button.setAttribute('aria-label', '关闭问卷');
         root.append(button);
       }
-      refs = { result, bar, number, choices, status };
+      refs = { result, bar, whole, fraction, choices, status };
       root.addEventListener('click', onClick);
     }
     function show() {
