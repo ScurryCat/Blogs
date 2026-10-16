@@ -9,13 +9,20 @@ FROM node:26-slim AS builder
 
 WORKDIR /srv/web
 
+# 开发期同源转发：浏览器按设计只访问同源 `/api/v1`（01 §2），而容器里的 web 与 api 是
+# 两个服务。Next 的 rewrites() 在**构建期**求值并写进路由清单，所以必须在这里注入
+# （只在运行时设置无效 —— 已实测确认）。
+#
+# 生产**不要**传这个参数：生产的 /api/v1 由网关转发（06 §1 只有网关对公网开放）。
+ARG DEV_API_URL=""
+ENV DEV_API_URL=${DEV_API_URL}
+
 COPY apps/web/package.json apps/web/package-lock.json ./
 # npm ci 使用锁文件，保证与其他 checkout 一致。
 RUN npm ci --no-audit --no-fund
 
 COPY apps/web/ ./
-# 构建期不需要 API 地址：浏览器只访问同源 /api/v1（01 §2），
-# 因此这里不注入 API_INTERNAL_URL，也不会有密钥进入构建层。
+# 构建期仍然不需要密钥：内部地址是服务端转发用的，不是凭据。
 RUN npm run build
 
 FROM node:26-slim AS runner

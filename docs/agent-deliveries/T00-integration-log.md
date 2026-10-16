@@ -166,3 +166,18 @@ T00 建议改为引用旧站同一路径 `/assets/music/<file>`，仓库保持�
 **这不一定是问题** —— 减少动效时跳过 700KB 人群素材的预加载，看上是**正确的省流行为**，与旧站「减少动态效果跳过播放」一致。但要向 T02 确认是有意为之，而不是「素材没加载成功」的副作用；若是前者，建议在调试信息里把状态区分开（例如 `crowd.skipped_reason = "reduced-motion"`），否则以后排查会分不清「跳过了」和「加载失败」。
 
 **一次失败的测量（记录以免重犯）**：我原本想用「带非零 transition/animation 时长的元素数」衡量动效是否被抑制，结果该计数在 `reduce` 下从 89 变成 400 —— 400 正是我的取样上限，说明指标饱和、**不可用**。该结论作废，动效抑制应由行为验证（导航仍可达、人群画布不播放）而非元素计数得出。
+| 2026-10-16 | T00（compose 开发环境一致性） | 容器里 web 与 api 是两个服务，浏览器要的同源 `/api/v1` 没有任何转发 → 容器环境下登录必然失败；而 Next 的 rewrites 在**构建期**固化，运行时设变量无效 | `dev.Dockerfile.web` 增加 `ARG DEV_API_URL`（默认空），`compose.dev.yaml` 传 `http://api:8000`。`docker compose config` 验证：arg 已传入、db 仍不公开监听、**不给 env 仍拒绝启动**（退出码 1） | 见提交 |
+
+## 未验证：容器内镜像构建（2026-10-16 起）
+
+`deploy/dev.Dockerfile.web` 新增了 `ARG DEV_API_URL` 并在 `npm run build` 前注入 —— 这是为了让容器环境里浏览器也能走同源 `/api/v1`（Next 的 rewrites 在构建期固化，运行时设置无效）。
+
+已验证的只有**配置层**：`docker compose config` 能把 arg 正确渲染进 `web.build.args`。
+**镜像构建与容器启动仍未验证** —— 本机 Docker daemon 未运行。有人启动 Docker Desktop 后请执行：
+
+```
+docker compose -f deploy/compose.dev.yaml --env-file deploy/.env build web
+docker compose -f deploy/compose.dev.yaml --env-file deploy/.env up -d
+```
+
+在此之前不得声称容器内可运行（T00 交付单 §9 已列同一项）。

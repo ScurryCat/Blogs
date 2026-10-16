@@ -106,6 +106,11 @@ services:
     build:
       context: ..
       dockerfile: deploy/dev.Dockerfile.web
+      args:
+        # 让容器内的浏览器路径也走同源 /api/v1：Next 的 rewrites() 在构建期固化，
+        # 因此这必须作为 build arg 传进去，运行时再设无效。
+        # 生产不传 —— 生产由网关转发（06 §1）。
+        DEV_API_URL: http://api:8000
     restart: unless-stopped
     environment:
       # 仅服务端可见；不得放进 NEXT_PUBLIC_*，也不得写入浏览器构建物。
