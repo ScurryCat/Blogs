@@ -25,8 +25,8 @@
       "depends_on": [
         "T00"
       ],
-      "status": "in_progress",
-      "note": "T00 依赖已满足，已派发"
+      "status": "integrated_verified",
+      "note": "旧站迁移、持久外壳与手机宿主已交付并入库 ebaaa6a。T00 独立复核：手机 ×20 与客户端导航 ×25 后 audio/音乐/容器均 1→1 且播放器未被重建；音乐实测可解码播放；导航效果按来源而非当前页面；320px 七页零横向溢出、正文 16px；/healthz 在后端停止时仍 200；问卷几何与旧站 0.0px 偏差。T00 发现的两处问题（直接 URL 打开时 Escape 失效、焦点未进入对话框）已由 T02 修复并复验通过。未验证：T01 公开 API 的端到端渲染（页面走迁移基线，PHANTOM_POSTS_SOURCE 默认关闭）、生产网关对 /assets/music/ 的转发（T10）、真机与音频真实出声、Docker 内启动。"
     },
     {
       "id": "T03",
