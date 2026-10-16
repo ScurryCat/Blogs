@@ -1,0 +1,377 @@
+/*
+ * COOP 自己的样式（规则 6：新样式进本包的 CSS Module，不往迁移样式表里加）。
+ *
+ * 视觉方向沿用站点的红黑 / 斜切语言，但不依赖任何旧站的类名，
+ * 也不引入外部素材：头像缺失时用站名首字兜底。
+ * 320 / 390px 下网格回落成单列，卡片不横向溢出。
+ */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 8px 0 24px;
+}
+
+.wrapCompact {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kicker {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent, #d81f2a);
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(22px, 4vw, 30px);
+  letter-spacing: 0.02em;
+}
+
+.lead {
+  margin: 0;
+  max-width: 62ch;
+  line-height: 1.7;
+  opacity: 0.86;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: transparent;
+  color: inherit;
+  padding: 4px 12px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+}
+
+.chip:hover,
+.chip:focus-visible {
+  border-color: var(--accent, #d81f2a);
+}
+
+.chipOn {
+  background: var(--accent, #d81f2a);
+  border-color: var(--accent, #d81f2a);
+  color: #fff;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.28);
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cardTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.name {
+  margin: 0;
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+
+.arcana {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.72;
+  border-left: 2px solid var(--accent, #d81f2a);
+  padding-left: 6px;
+}
+
+.avatar {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatarInline {
+  width: 28px;
+  height: 28px;
+}
+
+.monogram {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.avatarInline .monogram {
+  font-size: 14px;
+}
+
+.summary {
+  margin: 0;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.cardTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cardTag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  opacity: 0.9;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.external,
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 13px;
+  padding: 5px 12px;
+  border: 1px solid var(--accent, #d81f2a);
+  color: inherit;
+  background: transparent;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.external:hover,
+.external:focus-visible,
+.toggle:hover,
+.toggle:focus-visible {
+  background: var(--accent, #d81f2a);
+  color: #fff;
+}
+
+.toggle[disabled] {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.externalHint {
+  font-size: 11px;
+  opacity: 0.75;
+  border-left: 1px solid currentColor;
+  padding-left: 6px;
+}
+
+.unsafe {
+  font-size: 12px;
+  border: 1px dashed rgba(255, 120, 120, 0.7);
+  padding: 4px 10px;
+}
+
+.story {
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  padding-top: 8px;
+  line-height: 1.7;
+}
+
+.story p {
+  margin: 0;
+}
+
+.state,
+.stateError,
+.empty,
+.more,
+.apply {
+  margin: 0;
+  line-height: 1.7;
+}
+
+.state {
+  opacity: 0.8;
+}
+
+.stateError {
+  border-left: 3px solid var(--accent, #d81f2a);
+  padding-left: 10px;
+}
+
+.empty {
+  border: 1px dashed rgba(255, 255, 255, 0.24);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.apply {
+  font-size: 13px;
+  opacity: 0.86;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.apply a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.more {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* --- 关于页 / INS 里的嵌入形态 --------------------------------------------- */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.sectionNo {
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  opacity: 0.7;
+}
+
+.sectionHead h2 {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 20px;
+}
+
+.sectionEn {
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+.sectionAside {
+  margin: 0 0 0 auto;
+  font-size: 13px;
+}
+
+.sectionAside a {
+  color: inherit;
+}
+
+.sectionNote {
+  margin: 0;
+  max-width: 68ch;
+  font-size: 13px;
+  line-height: 1.7;
+  opacity: 0.8;
+}
+
+/* --- INS 资料区入口 -------------------------------------------------------- */
+
+.entry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.entryLink {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.entryNames {
+  opacity: 0.8;
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sectionAside {
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip,
+  .external,
+  .toggle {
+    transition: none;
+  }
+}
