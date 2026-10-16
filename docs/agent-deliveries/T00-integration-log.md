@@ -515,3 +515,6 @@ T06 另加：**不伪造奖项或数字**、**同一媒体不重复上传**（�
 **语义细节**：`--username` 只撤该站主自己的会话，**不动预登录会话**（`user_id` 为 NULL，不属于任何站主）—— 清那种会话要用 `--all`。
 验证：HTTP 端到端 7 项全过（关键项是**撤销后旧 Cookie 确实失效**）；单元测试 5 例；auth 目录 28 通过零回归；已集成域全量 **300 通过** | `8b24e96` |
 | 2026-10-16 | T00（测试脚手架连错四轮） | 上述 CLI 的单元测试我改了四轮才通过 | 依次是：① `t01_database_url` **只建空库**、建表在 `t01_schema_report`（须依赖 `t01_session`）；② 漏了必填的 `csrf_secret` 列；③ `token_hash` 有**唯一约束**而我每个测试用同一对固定值；④ 把 `--username` 的语义写错（它本就不该动预登录会话）。**四次都是测试写法而非被测对象** —— 与前几轮的测量错误同一类，说明「先怀疑自己的测法」这条纪律仍然必要 | 已修正 |
+| 2026-10-16 | **T06/T08 早期检查** | 两个新包开始产出后做模型与结构检查 | **T06**：`projects` / `gallery` 两个域已建齐（models/router/schemas/service/**wiring**/**public_refs**，与既有域同构）；模型导入无冲突，声明 **4 张表**（`projects`、`albums`、`album_media`、`project_media`）+ **7 个索引**，迁移预演 11 项。两处细节符合约定：**`ix_projects_palace_id`**（卡片要求「作品可有可空 palace 外键」）与两个**部分列表索引**（`ix_projects_public_listing` / `ix_albums_public_listing`，沿用 posts/palaces/moments/journal 的一致模式）。
+**T08**：`messaging` 域已分出 `ai/` 适配层子目录 + `characters.py` / `config.py` / `content.py` / `stories`，与它卡片的「可替换适配层」要求一致 | 待交付 |
+| 2026-10-16 | T00（过滤条件写窄） | 首次列 T06 的表时只看到 2 张 | 我用了单数形式过滤（`project`/`album`），漏掉复数表名 `projects` / `albums`。**这类「过滤条件本身写错导致漏看」与前几轮的测量错误同类**，改为列出全表后确认是 4 张 | 已修正 |
