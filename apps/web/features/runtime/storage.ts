@@ -14,6 +14,15 @@ export interface StorageLike {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
   removeItem(key: string): void;
+  /**
+   * 与 `Storage` 同形的枚举能力（可选）。
+   *
+   * `clear()` 需要它才能清掉**上一次会话/上一个页面**写入的键：那些键不在本实例的
+   * `written` 集合里，但确实属于同一个命名空间。真实 `localStorage` 天然满足；
+   * 自定义实现（如 `createMemoryStorage`）按需提供。
+   */
+  readonly length?: number;
+  key?(index: number): string | null;
 }
 
 export interface WriteResult {
@@ -87,6 +96,12 @@ export class LocalStateService {
     return { persisted: false };
   }
 
+  /**
+   * 清除某个命名空间的本机状态。
+   *
+   * `namespace` 是手机应用 id 或 `site`；只清该命名空间的键（含**旧版本号**的键，
+   * 因为前缀到 `:v` 之前就分开了——`pl-app:<ns>:` 覆盖 `v1`/`v2`）。
+   */
   clear(namespace: string): void {
     const prefix = `pl-app:${namespace}:`;
     for (const key of [...this.memory.keys()]) {
@@ -94,16 +109,39 @@ export class LocalStateService {
     }
     try {
       if (this.storage) {
-        for (const key of [...this.written]) {
-          if (key.startsWith(prefix)) {
-            this.storage.removeItem(key);
-            this.written.delete(key);
-          }
+        for (const key of this.collectKeys(prefix)) {
+          this.storage.removeItem(key);
+          this.written.delete(key);
         }
       }
     } catch {
       // 忽略：内存已清空。
     }
+  }
+
+  /**
+   * 待清除的键 = 本实例写过的 ∪ **存储里已有的同前缀键**。
+   *
+   * 只遍历 `written` 是错的：换页后 `LocalStateService` 是新实例、`written` 为空，
+   * 而内存本来也是空的 —— 于是「清除本机状态」在真实浏览器里**静默失效**，用户点完
+   * 数据还在（T04 的浏览器验收就是这么抓到的）。
+   *
+   * 前缀已经按命名空间限定，所以扫真实存储既安全又必要（不会碰到别的应用或 `site`）。
+   * **先收集再删除**：边遍历 `key(i)` 边删会让下标错位、漏掉一半键。
+   */
+  private collectKeys(prefix: string): string[] {
+    const doomed = new Set<string>();
+    for (const key of this.written) {
+      if (key.startsWith(prefix)) doomed.add(key);
+    }
+    const store = this.storage;
+    if (store && typeof store.length === "number" && typeof store.key === "function") {
+      for (let index = 0; index < store.length; index += 1) {
+        const key = store.key(index);
+        if (key && key.startsWith(prefix)) doomed.add(key);
+      }
+    }
+    return [...doomed];
   }
 
   private scopedKey(namespace: string, key: string): string {
@@ -165,5 +203,10 @@ export function createMemoryStorage(): StorageLike {
     removeItem: (key) => {
       map.delete(key);
     },
+    // 与真实 Storage 一样支持枚举：`clear()` 靠它清掉上一个实例写入的键。
+    get length() {
+      return map.size;
+    },
+    key: (index) => [...map.keys()][index] ?? null,
   };
 }
