@@ -45,8 +45,8 @@
         "T01",
         "T02"
       ],
-      "status": "in_progress",
-      "note": "T00/T01/T02 已集成，开始条件满足，已派发"
+      "status": "integrated_verified",
+      "note": "异世界导航与专题殿堂已交付并入库 2245704，接线完成 b78d8ad：MODEL_MODULES 追加 nav、MODULE_ROUTER_TARGETS 登记 nav 并删除 dev_app.py、单头迁移 2b4578a96db1（3 表 + 2 显式索引，无 drop，已在真实 PG 上 upgrade 并核对约束）、契约 10→18 条路径、前端类型重生成、手机登记 metanav（图标经核对真实存在）。真实浏览器确认手机桌面出现 metanav 且能打开。未验证：Docker 内启动、搜索 SQL 的 lower(normalize) 与别名 casefold 在 ß/ﬀ 上的已知差异、限流为进程内计数、published_at 时区约定。"
     },
     {
       "id": "T05",
