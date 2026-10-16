@@ -608,3 +608,10 @@ runner 段相应重写：COPY standalone/static/public，**CMD 改为 `node apps
 **结果**：**79 次 200、2 次 401（预期）、零非预期失败** —— 两轮修复后客户端路径已干净。
 先写过**静态版**（正则解析 `paths.ts` 的常量与函数），但这个代码库把路径同时放在常量、对象字面量里的函数与模板嵌套中，正则不可靠（大量误报「无法解析」）；**运行时审计更可靠也更接近真实**，故改用它。
 已固化为 `tools/acceptance/verify-client-paths.py` | `988a867` |
+| 2026-10-16 | **站内链接审计（`SiteLink` 规则）** | 连续修了两个客户端取数缺陷后，检查是否还有同类「规则偏离」 | 规则（T02 §7）是「站内链接一律用 `SiteLink`」。全仓扫描后**只剩 2 处真裸 `<a href="/内部">`**（第三处是注释里的示例文字），已改：`features/showcase/project-reading.tsx`（回到我的殿堂）、`app/admin/messages/page.tsx`（登录卡片）。
+**实测澄清一条容易误判的事**：裸 `<a>` **不会**整页重载 —— Next 16 自己会全局拦截同源锚点点击（v13 起的行为）；我用 `performance.timeOrigin` 验证过（未变化）。所以它不是「音乐被打断」那类严重问题。
+**真正的差别是过场**：导航协调器靠 `SiteLink` 的点击事件拿到 `source` 再调 `adapter.push()`；普通 `<a>`/`<Link>` 绕过它 → 页面切换**没有过场**。属视觉不一致，非破坏性。
+**已知偏离（记录不改）**：还有 **19 个文件**用 `next/link` 的 `<Link>` 而非 `SiteLink`，集中在 `features/ins/*`、`features/metanav/admin/*`、`app/admin/*`；后果相同。不在这轮大范围改动已验收模块，留给最终发布评审决定 | `3529ed0` |
+
+| 2026-10-16 | **T09 在途状态观察（不干预）** | 发现 `app/modules/{skills,exploration}` 从 13 个文件变成空目录 | 先怀疑又是外部删除（本会话 `.dsh/pgtest` 被误删过一次）。**证据指向 T09 自己在重构**：`app/modules` 与 `tests` 的 mtime 是**刚刚**（30 秒前），T09 正在写 `verify-t09.py`；且 `.pytest_cache` 里有 **123 条** skills/exploration 测试 nodeid —— 说明它确实做过完整实现。
+**处置**：T09 仍在运行，这是它的正常迭代节奏，**不干预**；改为继续做自己的审计工作 | 观察 |
