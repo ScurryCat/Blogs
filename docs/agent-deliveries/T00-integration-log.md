@@ -119,3 +119,19 @@ T00 在骨架交付后持续承担集成负责人（[T00 任务卡](../superpowe
 
 **给后续模块的约束**
 - [ ] T08 的访客会话**不要复用 `sessions` 表**（05 §11 明确要求站主会话与访客会话分离）
+| 2026-10-16 | T00（旧 URL 兼容） | 契约把「旧 URL 兼容配置」归 T00；实测新栈上所有旧地址原本都是 **404** | 在 `apps/web/next.config.ts` 加入 6 条重定向（`/index.html`→`/`、about/map/weather/guestbook、`/post.html?p=<slug>`→`/posts/<slug>`）。手工构建 + 隔离副本实测：五个静态入口 308 正确；有效 slug 跟随重定向 **200**、无效 slug 跟随重定向 **404**（不掩盖错误）、`/post.html` 无 `p` **404** | 见提交 |
+| 2026-10-16 | T00（新栈运行时冒烟） | 用 T02 正在跑的生产服务（3100）做只读冒烟，补上「只验过 build、没验过 runtime」的缺口 | 8 个页面全部 200（`/` 70KB、`/about`、`/map`、`/weather`、`/guestbook`、`/admin/login`、`/healthz` 187B、`/posts/<slug>` 40KB）；非法 slug **404**；**文章正文服务端渲染**（原始 HTML 即含标题与正文，不依赖 JS，符合 01 §4） | 无（仅验证） |
+
+## 待办：旧 URL 重定向的运行时复验（2026-10-16 起）
+
+`apps/web/next.config.ts` 的 6 条重定向已在**隔离副本**里做过完整运行时验证（手工构建 + `next start` + curl），结论见上表。之所以用隔离副本：T02 当时正在重建 `.next`，并发构建会互相破坏。
+
+**待 T02 交付后**，在正式 apps/web 上重启一次服务复验下列三条即可（预期与隔离副本一致）：
+
+```
+/post.html?p=phantom-blog-launch  → 308 → /posts/phantom-blog-launch → 200
+/post.html?p=does-not-exist       → 308 → /posts/does-not-exist      → 404（不掩盖错误）
+/post.html（无 p）                 → 404
+```
+
+一个已知的外观问题（**不是缺陷**）：Next 会把未匹配的源查询串附加到目标，因此跳转后是 `/posts/<slug>?p=<slug>`。试过 `destination: "/posts/:slug?"` 想去掉，**Next 16 不支持这种写法**（实测无效），故保留简洁写法。多余参数对页面无影响；若将来要 canonical 绝对干净，需要改用 `middleware.ts` 自行构造 Location —— 代价是给每个请求加一层，判断为不值得。
