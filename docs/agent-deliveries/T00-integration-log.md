@@ -35,6 +35,7 @@ T00 在骨架交付后持续承担集成负责人（[T00 任务卡](../superpowe
 | 2026-10-16 | T02（在途预警） | 只读跑 `tsc --noEmit` 发现 3 个错误（会让 `npm run build` 必红） | `audio-service.tsx:124-125` 泛型收窄成字面量 `"on"`，掩盖了「用户上次关掉音乐」这条分支；`transition-layer.tsx:115` `onReady` prop 类型是 getter 但传了对象。已精确报给 T02，未改其文件 | 待处理 |
 | 2026-10-16 | T01（迁移预演） | 在**不写任何迁移文件**的前提下，用 `compare_metadata` 预演 autogenerate | 4 个 models 模块导入无错、无表名冲突；注册 8 张表，与 05 §3 中 T01 范围内的表**逐一吻合**；T03/T04 的 6 张表（moments / palaces 系）**未被预建**（符合 05 §1）；预演产出 15 项变更（8 add_table + 7 add_index），含 05 要求的 `(published_at, id)` 公开列表索引 | 待 T01 声明模型定稿 |
 | 2026-10-16 | T01（挂载预演） | 用**真实 router** 做挂载预演（`module_routers` 注入，不碰生产总路由） | `tags`（prefix `/tags`）与 `health`（prefix `/health`）可导入可挂载；**`auth` 与 `media` 导入失败** —— `csrf_token_for` 定义在 `auth/service.py` 却有三处从 `app.core.csrf` 导入，`media` 被传递导入连累。已精确报给 T01 并给出两种修法 | 待 T01 修复 |
+| 2026-10-16 | T01（接线形态端到端） | 在**临时库**上按接线形态跑真实 HTTP：5 个 router 全挂载，`create_app()` 正常服务 | 9 项全对：`health/live` 200；`health/ready` 未迁移→**503 `not_migrated`**、迁移后→**200 `ready`**（证明了它不是恒真桩）；`posts` 200 且形状为 `{items:[],next_cursor:null}`；`posts/<坏 slug>` 真 404；**匿名读未关联媒体 → 404（默认拒绝在完整 HTTP 栈上成立）**；`POST /admin/media` 未登录 → 401；`POST /auth/login` 缺字段 → 422 契约错误。临时库与临时媒体目录已清理 | 待集成 |
 
 ## 待办队列
 
