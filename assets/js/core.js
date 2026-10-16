@@ -248,8 +248,9 @@
         if (fromMap) watchdog = setTimeout(fallback, 15000);
         try {
           if (!window.PL.pjax) { fallback(); return; }
-          Promise.resolve(window.PL.pjax.go(url)).then(() => {
+          Promise.resolve(window.PL.pjax.go(url)).then((accepted) => {
             if (token !== sequence) return;
+            if (accepted === false) clearTransitions(); // PJAX 忙于历史请求，未接受这次点选
             clearTimeout(watchdog); watchdog = 0; navigating = false;
           }, fallback);
         } catch (err) { fallback(); }

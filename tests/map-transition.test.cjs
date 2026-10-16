@@ -36,7 +36,8 @@ function navigation({ reduce = false, connection } = {}) {
     addEventListener: (type, fn) => { (globalEvents[type] ||= []).push(fn); },
     requestIdleCallback: fn => idle.push(fn) };
   sandbox.window.requestIdleCallback = sandbox.requestIdleCallback;
-  vm.runInNewContext(source, sandbox, { filename: 'core.js' });
+  const context = vm.createContext(sandbox);
+  vm.runInContext(source, context, { filename: 'core.js' });
   const PL = sandbox.window.PL;
   let settle;
   PL.pjax = { go: href => { navigated.push(href); return new Promise(resolve => { settle = resolve; }); } };
@@ -44,11 +45,11 @@ function navigation({ reduce = false, connection } = {}) {
     warm() { this.warms++; }, ready: () => true,
     play() { this.plays++; return true; }, stop() { this.stops++; } };
   PL.curtain = curtain;
-  return { PL, curtain, elements, navigated, timers, idle, wipe, location: sandbox.location,
+  return { PL, curtain, elements, navigated, timers, idle, wipe, sandbox, context, location: sandbox.location,
     crowd(available = true, wait = 937) {
       return PL.crowd = { wait, warms: 0, plays: 0, stops: 0,
         warm() { this.warms++; }, ready: () => available,
-        play() { this.plays++; return available; }, stop() { this.stops++; } };
+        play() { this.plays++; this.active = available; return available; }, stop() { this.stops++; this.active = false; } };
     },
     page(page) {
       sandbox.location.pathname = page === 'home' ? '/index.html' : '/' + page + '.html';
@@ -295,11 +296,38 @@ test('page-script execution only trusts same-origin URLs', async () => {
   await current; assert.equal(r.location.href, 'http://site.test/about.html');
 });
 
+test('real core and router clean a crowd handoff ignored during a stalled Back request', async () => {
+  const n = navigation(); const crowd = n.crowd(); n.page('map');
+  const requests = [];
+  n.sandbox.document.querySelectorAll = () => [];
+  n.sandbox.AbortController = AbortController;
+  n.sandbox.fetch = (href, options) => new Promise((resolve, reject) => requests.push({ href, options, resolve, reject }));
+  n.sandbox.history = { state: {}, replaceState() {}, pushState() {} };
+  vm.runInContext(pjaxSource, n.context, { filename: 'pjax.js' });
+  n.location.href = 'http://site.test/index.html'; n.location.pathname = '/index.html';
+  n.event('popstate');
+  assert.equal(requests.length, 1); assert.equal(requests[0].href, 'http://site.test/index.html');
+  n.click('about.html'); assert.equal(crowd.active, true);
+  n.tick(crowd.wait); await Promise.resolve(); await Promise.resolve();
+  n.tick(15001);
+  assert.equal(crowd.active, false, 'an ignored handoff must clean the crowd even when Back never resolves');
+  assert.equal(n.PL.transitionState().navigating, false);
+  assert.equal(n.timers.size, 0);
+  assert.equal(requests.length, 1, 'the in-flight history request remains the only document fetch');
+  assert.equal(n.location.href, 'http://site.test/index.html');
+});
+
+test('document fetches bypass stale cached HTML for clicks and history navigation', async () => {
+  const r = router(); r.pjax.go('about.html');
+  assert.equal(r.requests[0].options.cache, 'no-store');
+  await r.back(); assert.equal(r.requests[1].options.cache, 'no-store');
+});
+
 test('site entrypoints consistently version the changed shared resources for PJAX deduplication', () => {
   for (const page of ['index', 'about', 'post', 'map', 'weather', 'guestbook', 'poll-demo']) {
     const html = fs.readFileSync(path.join(__dirname, '..', page + '.html'), 'utf8');
-    for (const resource of ['assets/css/chrome.css', 'assets/js/core.js', 'assets/js/pjax.js']) {
-      assert.ok(html.includes(resource + '?v=map-travel-1'), page + ' must version ' + resource);
+    for (const [resource, version] of [['assets/css/chrome.css', '1'], ['assets/js/core.js', '2'], ['assets/js/pjax.js', '2']]) {
+      assert.ok(html.includes(resource + '?v=map-travel-' + version), page + ' must version ' + resource);
     }
     if (page === 'map') assert.ok(html.includes('assets/js/crowd.js?v=map-travel-2'));
   }

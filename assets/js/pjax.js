@@ -151,7 +151,7 @@
     const url = new URL(href, location.href);
     if (url.origin !== location.origin) { location.href = href; return false; }
     if (o.push === false) cancel();             // 历史导航覆盖尚未完成的点选导航
-    if (busy) return true;                       // 连点两次：后一次忽略
+    if (busy) return false;                      // 未接受的点选交还 core 清理它刚开的转场
     busy = true;
     const token = ++generation;
     controller = typeof AbortController === 'function' ? new AbortController() : null;
@@ -161,7 +161,7 @@
         try { history.replaceState(Object.assign({}, history.state, { y: Math.round(scrollY) }), '', location.href); }
         catch (e) { /* 忽略 */ }
       }
-      const r = await fetch(url.href, { credentials: 'same-origin', signal: controller ? controller.signal : undefined });
+      const r = await fetch(url.href, { credentials: 'same-origin', cache: 'no-store', signal: controller ? controller.signal : undefined });
       if (token !== generation) return false;
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const html = await r.text();
