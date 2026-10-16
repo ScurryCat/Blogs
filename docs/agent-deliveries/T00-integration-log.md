@@ -559,3 +559,17 @@ T05 另报告一个**测试陷阱**：服务层 `Session.commit()` 会提交测�
 **它独立复现了我在 T03 的更正**：生产网关直转 API 时 `Origin`/`Host` 都保留，T03 §8 的 403 在生产形态下**不存在**，因此**不需要**改 `verify_origin` —— 与我此前 5 步实测的结论一致。
 **未验证（如实）**：容器构建 / `compose up` / 容器内 readiness 与非 root（Docker daemon 不可用，跑通前 `deploy/` 不得宣称可用）；真实域名 TLS 与 `__Host-` Cookie；T02 的 48 项浏览器套件未重跑；真机触控软键盘、Safari/Firefox、音频出声、磁盘塞满演练、GH Actions 实际执行。
 **T10 请求我批准两处最小集成修复**：① `next.config.ts` 加 `output:"standalone"` + `outputFileTracingRoot`（06 §2 要求）；② `app/core/` 支持 `DATABASE_URL_FILE`（目前 DB 口令进容器环境变量，`docker inspect` 可见，它已如实披露）。待处理 | 待交付 |
+| 2026-10-16 | **采纳 T10 申请 §6.1：启用 standalone** | Next.js standalone 是 06 §2 的明确要求 | `next.config.ts` 加 `output: "standalone"` + `outputFileTracingRoot` 锁到**仓库根**（monorepo 不锁会让 standalone 目录结构随锁文件位置漂移、runner 的 COPY 路径失配）。`next start` 仍可用，本地开发与 T02 套件不受影响。
+runner 段相应重写：COPY standalone/static/public，**CMD 改为 `node apps/web/server.js`**（路径带 `apps/web/` 前缀），并移除 runner 阶段的 `npm ci`（standalone 自带最小 node_modules）。
+**我改出的一个严重问题（自查抓到）**：改完出现**两个 CMD**（新的 server.js 与旧的 `next start`），Docker 只认最后一个 —— 那样镜像会走 `next start`，而对应的依赖安装与完整 `.next` COPY 已被我删掉，**能构建但跑不起来**。已删旧 CMD。
+**验证（无 Docker 下尽量做实）**：按 Dockerfile 的 COPY 逐条复刻 runner 布局到临时目录，真实运行 `node apps/web/server.js`：`/` `/about` `/apps/ins` → 200；`public` 资源 → 200；`.next/static` chunk → 200。**文件布局与入口已验证**，容器本身仍未验证 | `d457e88` |
+
+| 2026-10-16 | **采纳 T10 申请 §6.6：验收脚本动态端口** | 固定端口在并行时会撞车 | **这也是我自己踩过的坑**：上一轮某脚本在 8124 整段失败、打印一堆 502/URLError，看起来像被测对象坏了，实际是端口被遗留进程占用。三个脚本统一改为「默认端口被占用时自动换空闲端口」，可用 `PL_ACCEPTANCE_PORT` 显式指定。**实测**：占用 8124 后实跑 → 自动换端口并全部通过（退出码 0）| `fc37afd` |
+
+| 2026-10-16 | **采纳 T10 申请 §6.2：DATABASE_URL_FILE** | 此前 DB 口令以插值进容器环境变量、`docker inspect` 可见 | `Settings` 加 `database_url_file` + `model_validator`：**文件优先**、**去掉结尾换行**（Docker secrets 常带换行，直接拼进连接串会得到末尾带 `\n` 的 URL，报错很难指向真正原因）、**文件缺失或为空立刻失败**（静默回退会连到另一个库）、文件内容过同一套 PostgreSQL 校验。
+实现上的次序问题：`database_url` 原为必填，那样只给 FILE 时会在读到文件之前先报「缺少字段」；改为默认空串并把「都没给」交给校验器，同时让既有的 `_require_postgres` 放行空串。净效果不变。5 个新用例 + 既有 30 例共 **35 通过**，core/auth/守卫零回归 | `02af498` |
+
+| 2026-10-16 | **T06 交付入库** | 最后一个功能包 | 入库 `f529891`（81 文件 / 17344 行）。后端 **143 passed**（既有目录 122 零回归、连跑 3 次一致）；前端 **609 passed / 57 文件**；build 0；旧站 53 零回归；真实浏览器 **47/47**（3 次一致）；seed 幂等。
+**第一件作品是真实的**：p5-blog —— 真实仓库地址、真实技术栈、可复现成果（旧站 53 项测试 + 新站迁移链），效果图用仓库已有的旧站封面素材经 T01 真实媒体服务上传；**没有奖项/星数/用户数/下载量**（projects 表根本没有这些列）。
+**T06 自述开发中修掉 10 个真实缺陷**，典型：`serverApiRequest` 自带 `/api/v1` 导致请求变成 `/api/v1/api/v1/...`（详情 404）；相册筛选链接漏 `scope`（筛选看似没生效）。
+**未验证（如实）**：Docker；手机面板与 `/apps/ins` 相册页签（待我接线）；**仓库里没有任何真实照片素材** —— 画廊线上内容为空，浏览器验收用的是脚本临时上传、名字写明「验证用」的相册；`year/month` 只有单年份覆盖 | `f529891` |
