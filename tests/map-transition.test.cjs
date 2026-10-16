@@ -167,37 +167,54 @@ test('successful PJAX and history cancellation both cancel the stalled-handoff f
 
 // Exercise the real router too: cancelling only the 900ms timer does not cancel a fetch already handed off.
 const pjaxSource = fs.readFileSync(path.join(__dirname, '../assets/js/pjax.js'), 'utf8');
-function router() {
-  const events = {}, requests = [], pushes = [], links = [], frames = [];
-  const main = { innerHTML: 'map', focus() {} }, location = { href: 'http://site.test/map.html', origin: 'http://site.test' };
+function router({ blockInline = false } = {}) {
+  const events = {}, requests = [], pushes = [], links = [], frames = [], scripts = [];
+  const main = { innerHTML: 'map', focus() {} }, location = { href: 'http://site.test/map.html', origin: 'http://site.test', search: '' };
   let cleanups = 0, leavers = 0;
-  const PL = { crowd: { stop() { cleanups++; } }, runLeavers() { leavers++; } };
+  const PL = { crowd: { stop() { cleanups++; } }, runLeavers() { leavers++; }, posts: [],
+    chrome() {}, rn: value => value };
   class ParserBoundary {
     parseFromString(html) {
       return { title: html, getElementById: id => id === 'main' ? { innerHTML: html } : null,
         querySelector: () => null,
-        querySelectorAll: selector => selector.startsWith('link') && html.includes('styles') ? [{ href: 'http://site.test/deferred.css' }] : [] };
+        querySelectorAll: selector => {
+          if (selector.startsWith('link') && html.includes('styles')) return [{ href: 'http://site.test/deferred.css' }];
+          if (selector.startsWith('script') && html.includes('post-page')) return [{ src: 'http://site.test/assets/js/post.js', hasAttribute: k => k === 'data-page', nonce: 'page-nonce' }];
+          if (selector.startsWith('script') && html.includes('external-page')) return [{ src: 'https://external.test/page.js', hasAttribute: k => k === 'data-page' }];
+          return [];
+        } };
     }
   }
-  const sandbox = { window: { PL }, URL, AbortController, DOMParser: ParserBoundary, location, scrollY: 0,
-    history: { state: {}, replaceState(state) { this.state = state; }, pushState(state, _, href) { this.state = state; pushes.push(href); } },
+  const sandbox = { window: { PL }, URL, URLSearchParams, AbortController, DOMParser: ParserBoundary, location, scrollY: 0,
+    history: { state: {}, replaceState(state) { this.state = state; }, pushState(state, _, href) {
+      this.state = state; pushes.push(href); location.href = href; location.search = new URL(href).search;
+    } },
     document: { querySelectorAll: () => [], querySelector: () => null,
-      getElementById: () => main, createElement: tag => ({ tag }),
-      head: { appendChild: link => links.push(link) }, body: { appendChild() {} } },
+      getElementById: () => main, createElement: tag => ({ tag, dataset: {}, remove() {} }),
+      head: { appendChild: link => links.push(link) }, body: { appendChild(script) {
+        scripts.push(script);
+        if (!script.src && !blockInline) {
+          sandbox.document.currentScript = script;
+          vm.runInContext(script.textContent, context, { filename: 'inline page script' });
+          sandbox.document.currentScript = null;
+        }
+      } } },
     fetch: (href, options) => new Promise((resolve, reject) => requests.push({ href, options, resolve, reject })),
     scrollTo() {}, requestAnimationFrame: fn => frames.push(fn),
     addEventListener: (type, fn) => { events[type] = fn; } };
-  vm.runInNewContext(pjaxSource, sandbox, { filename: 'pjax.js' });
+  const context = vm.createContext(sandbox);
+  vm.runInContext(pjaxSource, context, { filename: 'pjax.js' });
   const flush = async () => {
     for (let i = 0; i < 12; i++) {
       await Promise.resolve();
       const pending = frames.splice(0); pending.forEach(fn => fn());
     }
   };
-  return { pjax: PL.pjax, requests, pushes, links, main, location,
+  return { pjax: PL.pjax, requests, pushes, links, scripts, main, location, document: sandbox.document,
     async resolve(index, body) { requests[index].resolve({ ok: true, text: async () => body }); await flush(); },
     async reject(index) { requests[index].reject(new Error('aborted old request')); await flush(); },
-    async back() { location.href = 'http://site.test/index.html'; events.popstate(); await flush(); },
+    async back(href = 'http://site.test/index.html') { location.href = href; location.search = new URL(href).search; events.popstate(); await flush(); },
+    async external(script, code) { vm.runInContext(code, context, { filename: 'post.js' }); script.onload(); await flush(); },
     async restore() { events.pageshow({ persisted: true }); await flush(); },
     flush, cleanups: () => cleanups, leavers: () => leavers };
 }
@@ -234,4 +251,56 @@ test('bfcache restoration cancels an active request and reveals the restored pag
   assert.ok(r.requests[0].options.signal?.aborted, 'restoration must abort the active fetch'); assert.ok(r.cleanups() > 0);
   await r.resolve(0, 'obsolete about'); await old;
   assert.equal(r.main.innerHTML, 'map'); assert.deepEqual(r.pushes, []);
+});
+
+const postSource = fs.readFileSync(path.join(__dirname, '../assets/js/post.js'), 'utf8');
+test('late real post.js cannot execute over a map restored by Back', async () => {
+  const r = router(); const old = r.pjax.go('post.html?p=missing'); await r.resolve(0, 'post-page');
+  const external = r.scripts.find(script => script.src?.endsWith('/post.js'));
+  const downloaded = r.requests.findIndex(request => request.href.endsWith('/post.js'));
+  assert.ok(external || downloaded >= 0, 'the actual page script must be pending');
+  await r.back('http://site.test/map.html');
+  await r.resolve(r.requests.length - 1, 'restored-map');
+  if (external) await r.external(external, postSource);
+  else await r.resolve(downloaded, postSource); // Ignore abort at the fetch boundary to prove the execution guard too.
+  await old;
+  assert.equal(r.main.innerHTML, 'restored-map', 'stale real post.js must not replace restored map with Target not found');
+  assert.equal(r.document.title, 'restored-map');
+  assert.equal(r.location.href, 'http://site.test/map.html');
+});
+
+test('the current real post.js still executes, propagating its CSP nonce', async () => {
+  const r = router(); const current = r.pjax.go('post.html?p=missing'); await r.resolve(0, 'post-page');
+  const external = r.scripts.find(script => script.src?.endsWith('/post.js'));
+  if (external) await r.external(external, postSource);
+  else await r.resolve(1, postSource);
+  await current;
+  assert.match(r.main.innerHTML, /Target not found/);
+  assert.equal(r.document.title, '目标不存在 · PHANTOM LOG');
+  assert.equal(r.scripts.at(-1).nonce, 'page-nonce');
+});
+
+test('CSP-blocked inline execution safely falls back to a full navigation', async () => {
+  const r = router({ blockInline: true }); const current = r.pjax.go('post.html?p=missing'); await r.resolve(0, 'post-page');
+  assert.equal(r.requests.length, 2, 'page scripts must be downloaded before guarded execution');
+  await r.resolve(1, postSource); await current;
+  assert.equal(r.location.href, 'http://site.test/post.html?p=missing');
+  assert.ok(r.cleanups() > 0, 'CSP failure reveals before fallback');
+});
+
+test('page-script execution only trusts same-origin URLs', async () => {
+  const r = router(); const current = r.pjax.go('about.html'); await r.resolve(0, 'external-page');
+  assert.equal(r.requests.length, 1, 'foreign page script is not downloaded');
+  assert.equal(r.scripts.length, 0, 'foreign page script is not executed');
+  await current; assert.equal(r.location.href, 'http://site.test/about.html');
+});
+
+test('site entrypoints consistently version the changed shared resources for PJAX deduplication', () => {
+  for (const page of ['index', 'about', 'post', 'map', 'weather', 'guestbook', 'poll-demo']) {
+    const html = fs.readFileSync(path.join(__dirname, '..', page + '.html'), 'utf8');
+    for (const resource of ['assets/css/chrome.css', 'assets/js/core.js', 'assets/js/pjax.js']) {
+      assert.ok(html.includes(resource + '?v=map-travel-1'), page + ' must version ' + resource);
+    }
+    if (page === 'map') assert.ok(html.includes('assets/js/crowd.js?v=map-travel-1'));
+  }
 });

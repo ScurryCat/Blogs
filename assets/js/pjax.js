@@ -46,6 +46,32 @@
     });
   }
 
+  /* 页脚本先作为文本下载，再在当前代次同步执行。直接插入外链 <script> 后，
+     即使删掉标签或在 onload 检查 token，也可能已经执行并写坏后退恢复的 #main。 */
+  async function loadPageScript(script, token, signal) {
+    const url = new URL(script.src, location.href);
+    if (url.origin !== location.origin) throw new Error('foreign page script');
+    const response = await fetch(url.href, { credentials: 'same-origin', signal });
+    if (token !== generation) return null;
+    if (!response.ok || (response.url && new URL(response.url).origin !== location.origin)) throw new Error('page script ' + url.href);
+    const code = await response.text();
+    if (token !== generation) return null;
+    return { code, url: url.href, nonce: script.nonce };
+  }
+
+  function executePageScript(script, token) {
+    if (token !== generation) return;
+    const el = document.createElement('script');
+    const trusted = document.querySelector('script[nonce]');
+    if (script.nonce || (trusted && trusted.nonce)) el.nonce = script.nonce || trusted.nonce;
+    // 标记只用于确认 CSP 允许了同步执行；受策略限制时由 go() 整页降级，不绕过 CSP。
+    el.textContent = 'document.currentScript.dataset.pjaxExecuted = "true";\n' + script.code + '\n//# sourceURL=' + script.url;
+    try {
+      document.body.appendChild(el);
+      if (el.dataset.pjaxExecuted !== 'true') throw new Error('page script blocked by CSP');
+    } finally { el.remove(); }
+  }
+
   /* ---------- 揭开：把转场层收掉，露出新内容 ---------- */
   function unveil() {
     document.querySelectorAll('.clip.on').forEach((el) => {
@@ -70,7 +96,7 @@
   }
 
   /* ---------- 换页 ---------- */
-  async function swap(doc, url, push, token) {
+  async function swap(doc, url, push, token, signal) {
     const PL = window.PL || {};
     const nextMain = doc.getElementById('main');
     if (!nextMain) throw new Error('no #main');
@@ -82,10 +108,13 @@
     const pageScripts = [];
     doc.querySelectorAll('link[rel=stylesheet][href]').forEach((l) => jobs.push(loadCss(l.href)));
     doc.querySelectorAll('script[src]').forEach((s) => {
-      if (s.hasAttribute('data-page')) pageScripts.push(s.src);
+      if (s.hasAttribute('data-page')) pageScripts.push(s);
       else jobs.push(loadScript(s.src));
     });
-    await Promise.all(jobs);
+    const [scripts] = await Promise.all([
+      Promise.all(pageScripts.map(s => loadPageScript(s, token, signal))),
+      Promise.all(jobs)
+    ]);
     if (token !== generation) return;
 
     /* 2) 卸载上一页登记的全局监听/计时器，然后才真正换内容与地址 */
@@ -99,7 +128,7 @@
     if (push) history.pushState({ pjax: true }, '', url.href);
 
     /* 3) 页脚本在新 #main 上重跑 —— 它们负责把这一页的内容画进去 */
-    await Promise.all(pageScripts.map((src) => inject(src, false)));
+    for (const script of scripts) executePageScript(script, token);
     if (token !== generation) return;
 
     /* 4) 内容就位后再滚动 / 移交焦点，最后揭开转场层。
@@ -138,7 +167,7 @@
       const html = await r.text();
       if (token !== generation) return false;
       const doc = new DOMParser().parseFromString(html, 'text/html');
-      await swap(doc, url, o.push !== false, token);
+      await swap(doc, url, o.push !== false, token, controller ? controller.signal : undefined);
       if (token !== generation) return false;
       busy = false; controller = null;
       return true;
