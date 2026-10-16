@@ -1,0 +1,9 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Markdown 扩展：快照 > \`!!!\` 提示框：多行合并成一个 note 1`] = `"<aside class="note" role="note"><strong>一句话总结</strong>：主题可以夸张，结构必须老实。 第二行也会接上。</aside>"`;
+
+exports[`Markdown 扩展：快照 > 把「> **名字**：台词」渲染成 P5 对话框（说话人必须在配置里） 1`] = `"<div class="talk"><div class="say"><img class="face" src="/assets/legacy/img/portrait/mona.png" alt="" loading="lazy"/><div class="say-b"><span class="say-n"><span class="sr-only">摩尔加纳</span><span class="rnp" aria-hidden="true"><span style="--d:-3.9deg">摩</span><span class="on" style="--d:6.9deg">尔</span><span style="--d:2.7deg">加</span><span class="on" style="--d:7.2deg">纳</span></span></span><p>喂，你这不叫改造，这叫偷。</p></div></div><div class="say me"><img class="face" src="/assets/legacy/img/portrait/joker-artbook.png" alt="" loading="lazy"/><div class="say-b"><span class="say-n"><span class="sr-only">我</span><span class="rnp" aria-hidden="true"><span style="--d:-1.9deg">我</span></span></span><p>我只是把它翻译成 CSS。</p></div></div></div>"`;
+
+exports[`Markdown 扩展：快照 > 标题编号、表格、代码块、独立图片与列表的结构 1`] = `"<h2 id="s-1"><span class="n">01</span>第一节</h2><p>段落里有 <strong>粗体</strong>、<em>斜体</em>、<code>代码</code> 与 <a href="https://example.com" target="_blank" rel="noopener noreferrer">链接</a>。</p><div class="tbl"><table><thead><tr><th scope="col">变量</th><th scope="col">值</th></tr></thead><tbody><tr><td><code>--red</code></td><td>#e60012</td></tr></tbody></table></div><div class="code"><span class="lang">css</span><pre><code>.p5-btn { transform: skewX(-10deg); }</code></pre></div><figure><img src="assets/img/cover/launch.jpg" alt="说明" loading="lazy"/><figcaption>图注</figcaption></figure><ul><li>一</li><li>二</li></ul><ol><li>甲</li><li>乙</li></ol><hr/><h3 id="s-2">小节</h3>"`;
+
+exports[`Markdown 扩展：快照 > 说话人未登记时退回普通引用块，不当成对话框 1`] = `"<blockquote><p>陌生人：我不在配置里。</p></blockquote>"`;

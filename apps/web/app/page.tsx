@@ -1,19 +1,40 @@
 /**
- * 首页占位。
+ * 首页 `/`（旧站 `index.html` + `assets/js/home.js`）。
  *
- * ⚠️ 所有权：**T02**（SHARED-CONTRACTS §2）。T00 只提供能让工程编译与构建通过的最小页面。
- * 旧站 `index.html` + `assets/js/home.js` 仍是当前正式首页，本轮**没有**改动它
- * （06 §10：本次不变更正在运行的服务器，保留 8000 静态预览作对照）。
+ * 内容在服务端渲染（文章列表、归档、预告信），交互部分（暂停菜单、搜索筛选）是客户端组件。
+ * `#latest` / `#posts` / `#archive` 三个锚点保留，旧链接 `index.html#posts` 因此仍有落点。
+ *
+ * 数据来源：`readPublishedPosts()` —— 默认是迁移基线（8 篇文章，slug 与正文原样）；
+ * 配置 `API_INTERNAL_URL` 并设置 `PHANTOM_POSTS_SOURCE=api` 后改为读 FastAPI。
+ * **API 打开后读取失败不会伪装成「没有文章」**：页面顶部明确提示数据未更新。
  */
 
-export default function HomePage() {
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
+
+import { HomeHero } from "@/features/legacy/pages/home-hero";
+import { HomePalaceIndex } from "@/features/legacy/pages/home-index";
+import { ArchiveSection, CallingCard, HomeTicker } from "@/features/legacy/pages/home-static";
+import { readPublishedPosts } from "@/lib/api/posts";
+
+export const metadata: Metadata = {
+  title: "PHANTOM LOG · 怪盗手记",
+};
+
+export default async function HomePage(): Promise<ReactNode> {
+  const read = await readPublishedPosts();
   return (
-    <main>
-      <h1>PHANTOM LOG</h1>
-      <p>
-        工程骨架已建立，业务页面尚未迁移。当前正式站点仍由仓库根目录的静态站提供，
-        旧站预览（端口 8000）未受影响。
-      </p>
-    </main>
+    <>
+      {read.apiEnabled && read.degraded ? (
+        <p className="data-notice" role="status">
+          数据未更新：{read.detail}
+        </p>
+      ) : null}
+      <HomeHero />
+      <HomeTicker />
+      <CallingCard post={read.items[0]} />
+      <HomePalaceIndex items={read.items} />
+      <ArchiveSection items={read.items} />
+    </>
   );
 }

@@ -1,0 +1,196 @@
+/* 迁移自旧站 assets/css/phone.css（T02）。原文件 sha256=1dcd58c33c3858d42ce2e0cf14a1521efaaa4ec28bc33679f19d4947ba1e9811，
+   仅把 0 处 url(../img|fonts|sfx/…) 改写为 /assets/legacy/…（静态根），其余逐字节一致。
+   旧站仍是正式站点，本文件不反向影响它；改动请同步更新 apps/web/styles/legacy/PROVENANCE.md。 */
+/* =====================================================================
+   PHANTOM LOG · phone.css —— 贴在页面右边的怪盗手机挂件
+   1) 边上的小图标（.pw-tab）→ 点开整机
+   2) 整机 .pw 按 880×715 的自然坐标写尺寸（素材就是这么大），显示时用 zoom 缩
+      —— 和 weather.css 同一套做法：zoom 会连着布局盒子一起缩
+      注意：选择器只能写 .pw。写成 \.pw 的话，转义出来的点会被当成**标签名**的一部分
+      （HTML 里不存在 <.pw> 这种标签），整条规则静默失效 —— zoom 那一档踩过这个坑
+   2b) 621px 以上才走 zoom；620px 以下换成文件底部那套原生布局（外壳图下岗）
+   3) 屏幕里的 HTML 用 matrix3d 贴进 PNG 那块红屏。四角是从图里量出来的：
+      (266,3) (819,74) (700,714) (191,711)，再内缩 1.5% 免得压到白边。
+      改素材就得重新解一次这个矩阵（见 README 里的说明）
+      这套矩阵同样只在宽屏生效，窄屏由 matrix3d 改回流式
+   ===================================================================== */
+
+/* ---------- 边上的小图标 ---------- */
+.pw-tab {
+  position: fixed; right: 0; top: 50%; z-index: 700; transform: translate(0, -50%);
+  display: grid; justify-items: center; gap: 7px; padding: 13px 9px 15px;
+  background: var(--black); color: var(--paper); border: 2px solid var(--paper); border-right: 0;
+  clip-path: polygon(14% 0, 100% 5%, 100% 95%, 14% 100%, 0 86%, 0 14%);
+  cursor: pointer; transition: transform .18s var(--ease), background-color .15s, color .15s;
+}
+.pw-tab .g { font: 400 20px/1 var(--f-hat); }
+.pw-tab .t { writing-mode: vertical-rl; font: 400 12px/1 var(--f-hat); letter-spacing: .24em; }
+.pw-tab:hover, .pw-tab:focus-visible { background: var(--red); transform: translate(-6px, -50%); }
+.pw-tab[aria-expanded="true"] { background: var(--red); transform: translate(-6px, -50%); }
+/* 播放中：标签上亮一个小红点（reduced-motion 下不闪） */
+.pw-tab.playing .g { position: relative; }
+.pw-tab.playing .g::after {
+  content: ""; position: absolute; top: -4px; right: -7px; width: 7px; height: 7px;
+  background: var(--red); border-radius: 50%; animation: pwDot 1.6s ease-in-out infinite;
+}
+@keyframes pwDot { 50% { opacity: .25; transform: scale(.7); } }
+@media (prefers-reduced-motion: reduce) { .pw-tab.playing .g::after { animation: none; } }
+
+/* ---------- 遮罩 + 舞台 ---------- */
+.pw-scrim { position: absolute; inset: 0; background: rgba(6, 6, 8, .74); }
+.pw-wrap { position: fixed; inset: 0; z-index: 880; display: grid; place-items: center; padding: 18px; }
+.pw-wrap[hidden], .pw[hidden] { display: none; }
+
+/* ---------- 整机 ---------- */
+.pw {
+  --z: .56; position: relative; width: 880px; height: 715px; zoom: var(--z);
+  opacity: 0; transform: scale(.45) rotate(-7deg);
+  transition: opacity .14s linear, transform .24s var(--ease);
+}
+.pw-wrap.on .pw { opacity: 1; transform: none; }
+/* max-width: none —— base.css 里有全局 img{max-width:100%}，窄屏时会把这张 880×715
+   的外壳图横向压扁，而里面的内容层还按 880 坐标系贴，图和内容就彻底错开了 */
+.pw-frame { display: block; width: 880px; height: 715px; max-width: none; }
+.pw-close {
+  position: absolute; left: 206px; top: 22px; width: 68px; height: 68px; z-index: 3;
+  display: grid; place-items: center; padding: 0; cursor: pointer;
+  background: var(--black); color: var(--paper); border: 4px solid var(--paper);
+  font: 400 30px/1 var(--f-hat); clip-path: polygon(8% 0, 100% 6%, 92% 100%, 0 92%);
+  transition: background-color .14s, color .14s, transform .14s;
+}
+.pw-close:hover, .pw-close:focus-visible { background: var(--paper); color: var(--red); transform: scale(1.06); }
+
+/* ---------- 红屏里的内容：先按 549×641 排版，再用矩阵贴进四边形 ---------- */
+.pw-screen {
+  position: absolute; left: 0; top: 0; width: 549px; height: 641px; overflow: hidden;
+  transform-origin: 0 0;
+  transform: matrix3d(1.1490, 0.1425, 0, 0.000193, -0.0813, 1.2104, 0, 0.000173, 0, 0, 1, 0, 269.4, 8.6, 0, 1);
+  display: flex; flex-direction: column; gap: 16px; padding: 30px 30px 34px;
+  color: var(--paper); font-family: var(--f-mono);
+}
+
+/* 状态栏 */
+.pw-status { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font: 500 22px/1 var(--f-mono); letter-spacing: .04em; }
+.pw-status .pw-clk { font: 400 34px/1 var(--f-hat); letter-spacing: .06em; }
+.pw-status .pw-date { font-size: 19px; letter-spacing: .12em; opacity: .9; }
+.pw-status .pw-sig { font-size: 18px; letter-spacing: .1em; opacity: .85; }
+
+/* 音乐播放器 */
+.pw-music { display: grid; gap: 9px; padding: 15px 18px 17px; background: rgba(10, 10, 11, .82); border-left: 8px solid var(--paper); }
+.pw-kick { margin: 0; font: 400 14px/1 var(--f-hat); letter-spacing: .3em; color: var(--red); }
+.pw-title { margin: 0; font: 400 34px/1.1 var(--f-hat); letter-spacing: .02em; color: var(--paper); }
+.pw-artist { margin: 0; font-size: 15px; letter-spacing: .1em; color: rgba(244, 241, 234, .72); }
+/* 滑杆：自绘（点击/拖动/方向键都能改，aria 齐全） */
+.pw-bar { position: relative; height: 13px; background: rgba(244, 241, 234, .26); cursor: pointer; transform: skewX(-12deg); }
+.pw-bar > i { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--red); }
+.pw-bar.vol > i { background: var(--paper); }
+.pw-bar .knob { position: absolute; top: -5px; left: 0; width: 6px; height: 24px; background: var(--paper); }
+.pw-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 15px; letter-spacing: .06em; }
+.pw-time { flex: none; }
+.pw-ctl { display: flex; align-items: center; gap: 11px; margin-top: 4px; }
+.pw-btn {
+  /* 宽屏也要能被鼠标稳稳点到：整机 zoom 之后剩不到 30px 就太难按了，
+     这里按 zoom .5 后仍有 ≈33×28 反推自然尺寸（WCAG AA 的 24×24 红线） */
+  display: grid; place-items: center; width: 66px; height: 56px; padding: 0; cursor: pointer;
+  background: var(--paper); color: var(--black); border: 0; font: 400 20px/1 var(--f-hat);
+  clip-path: polygon(6% 0, 100% 8%, 94% 100%, 0 92%); transition: background-color .14s, color .14s, transform .14s;
+}
+.pw-btn.play { width: 86px; height: 62px; font-size: 25px; background: var(--red); color: var(--paper); }
+.pw-btn:hover, .pw-btn:focus-visible { background: var(--black); color: var(--paper); }
+.pw-btn:active { transform: scale(.94); }
+.pw-btn[disabled] { opacity: .4; cursor: default; }
+.pw-lab { margin-left: auto; font: 400 15px/1 var(--f-hat); letter-spacing: .24em; opacity: .8; }
+
+/* 应用九宫格 */
+.pw-apps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: auto; }
+.pw-app {
+  display: grid; justify-items: center; gap: 6px; padding: 13px 6px 12px; cursor: pointer;
+  background: var(--black); color: var(--paper); border: 0; text-align: center;
+  clip-path: polygon(7% 0, 100% 5%, 93% 100%, 0 94%);
+  transition: background-color .14s, color .14s, transform .14s var(--ease);
+}
+.pw-app .g { font: 400 34px/1 var(--f-hat); color: var(--red); transition: color .14s; }
+.pw-app .c { font: 900 17px/1 var(--f-cjk); letter-spacing: .04em; }
+.pw-app .e { font: 400 11px/1 var(--f-hat); letter-spacing: .16em; opacity: .7; }
+.pw-app:hover, .pw-app:focus-visible { background: var(--paper); color: var(--black); transform: translateY(-3px); }
+.pw-app:hover .g, .pw-app:focus-visible .g { color: var(--red); }
+.pw-app[aria-pressed="false"] .g { opacity: .45; }
+
+/* 没曲子时的提示（注意别用裸 .empty：home.css 里那个是全局的） */
+.pw-music.pw-empty .pw-title { color: rgba(244, 241, 234, .7); }
+.pw-music.pw-empty .pw-ctl, .pw-music.pw-empty .pw-bar { opacity: .35; pointer-events: none; }
+
+.pw-open { overflow: hidden; }
+/* 缩放档位（621px 以上）：--z*880 要塞得进 (视口 − 内边距)。
+   整机等比缩，字也跟着缩，但桌面起点够大，缩到 .46 仍可读 */
+@media (max-width: 900px) { .pw { --z: .5; } }
+
+/* =====================================================================
+   620px 以下：不再整机缩
+   zoom 是把字和点按面一起缩小的，落到 .42 档「时间/曲名」只剩 14px，
+   .pw-artist 5.4px、应用格的中文 6.1px、英文标签 4px —— 根本读不了；
+   滑杆 13px 高缩完只剩 5px 热区，手指拖不动；按钮 21×18 也远低于 44px 红线。
+   所以这里让外壳 PNG 和那个 matrix3d 一起下岗，屏幕自己当面板：
+   红底网点 + 白描边 + 黑环投影（P5 那套重建起来不难，也不必依赖那张图），
+   内容进正常流，字号是真字号，触控目标按 44px 给足。
+   ===================================================================== */
+@media (max-width: 620px) {
+  .pw-wrap { padding: 8px; }
+
+  .pw {
+    --z: 1; zoom: 1;
+    width: min(100%, 520px); height: 100%; align-self: stretch;
+    display: flex; flex-direction: column;
+  }
+  .pw-frame { display: none; }
+
+  /* 取消了 matrix3d，顺带把文字从变换层的位图渲染里救出来（小屏原本是糊的） */
+  .pw-screen {
+    position: relative; inset: auto;
+    width: auto; height: auto; flex: 1 1 auto; min-height: 0;
+    transform: none;
+    /* 高度不够时内部滚，横向照旧裁（滑杆 skewX 会溢出一点） */
+    overflow: hidden auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+    gap: 14px; padding: 18px 16px 20px;
+    background-color: var(--red);
+    background-image: radial-gradient(rgba(0, 0, 0, .5) 1.5px, transparent 1.6px);
+    background-size: 8px 8px;
+    border: 2px solid var(--paper);
+    box-shadow: 0 0 0 4px var(--black), 12px 12px 0 rgba(0, 0, 0, .5);
+  }
+
+  /* 关闭键从 880 坐标系里的 (206,22) 挪到面板右上，52×52 够拇指按 */
+  .pw-close { left: auto; right: 12px; top: 12px; width: 52px; height: 52px; font-size: 24px; border-width: 3px; }
+
+  /* 字号回到真实值（括弧里是原来 .42 档被 zoom 缩完的等效大小） */
+  .pw-status { font-size: 15px; padding-right: 56px; }   /* 让开右上角的关闭键 */
+  .pw-status .pw-clk { font-size: 30px; }               /* 原 14.3px */
+  .pw-status .pw-date { font-size: 15px; }
+  .pw-status .pw-sig { font-size: 14px; }
+  .pw-kick { font-size: 12px; letter-spacing: .26em; }  /* 原 5.9px */
+  .pw-title { font-size: 22px; }                        /* 原 14.3px */
+  .pw-artist { font-size: 14px; line-height: 1.45; }    /* 原 6.3px */
+  .pw-row { font-size: 14px; }
+  .pw-lab { font-size: 13px; }
+
+  /* 触控目标：按 44px 红线给足 */
+  .pw-music { gap: 11px; padding: 14px 15px 16px; }
+  .pw-bar {
+    height: 6px;                                        /* 视觉还是根细杆 */
+    touch-action: none;                                 /* 别让拖滑杆变成滚页面 */
+  }
+  .pw-bar::before { content: ""; position: absolute; inset: -20px 0; }  /* 热区撑到 46px */
+  .pw-btn { width: 56px; height: 56px; font-size: 19px; }               /* 原 25×21 */
+  .pw-btn.play { width: 72px; height: 60px; font-size: 24px; }          /* 原 34×24 */
+  .pw-apps { gap: 12px; }
+  .pw-app { min-height: 86px; gap: 5px; padding: 14px 6px 12px; }       /* 原 42px 高 */
+  .pw-app .g { font-size: 30px; }
+  .pw-app .c { font-size: 15px; }                       /* 原 7.1px */
+  .pw-app .e { font-size: 10px; }                       /* 原 4.6px */
+
+  /* 边上那个竖条小图标：手机上把点击面加大 */
+  .pw-tab { padding: 12px 8px 14px; }
+  .pw-tab .t { font-size: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) { .pw { transition: none; } }

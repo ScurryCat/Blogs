@@ -1,0 +1,71 @@
+/* 迁移自旧站 assets/css/map.css（T02）。原文件 sha256=c621c6b7ce7a48aef1b927e8399dd6bd58e7e6450739e748734eaa87f80c2220，
+   仅把 0 处 url(../img|fonts|sfx/…) 改写为 /assets/legacy/…（静态根），其余逐字节一致。
+   旧站仍是正式站点，本文件不反向影响它；改动请同步更新 apps/web/styles/legacy/PROVENANCE.md。 */
+/* =====================================================================
+   PHANTOM LOG · map.css   东京地图导航
+   ===================================================================== */
+.mp { padding-top: calc(var(--hud) + 40px); }
+.mp-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 30px; margin-bottom: 24px; }
+.mp-t { margin: 8px 0 0; font: 400 clamp(60px, 9vw, 128px)/.86 var(--f-disp); text-transform: uppercase; transform: skewX(-8deg); transform-origin: left bottom; }
+.mp-t span { color: var(--red); }
+.mp-hint { margin: 0; font: 400 12px var(--f-hat); letter-spacing: .24em; color: var(--dim); }
+.mp-hint kbd { font: inherit; padding: 1px 6px; border: 1px solid var(--dim); margin: 0 2px; }
+@media (hover: none) { .mp-hint { display: none; } }
+
+.mp-g { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 28px; align-items: start; }
+.mp-board { position: relative; background: #be0f0f; border: 3px solid #000; box-shadow: 12px 12px 0 #000; overflow: hidden; }
+.mp-svg { display: block; width: 100%; height: auto; }
+.mp-svg text { pointer-events: none; text-anchor: middle; }
+.mp-svg .kj { font: 900 20px var(--f-cjk); fill: var(--paper); }
+.mp-svg .en { font: 400 13px var(--f-hat); letter-spacing: .06em; fill: var(--black); }
+.mp-svg .city { transform-box: view-box; transition: transform .25s var(--ease); }
+.mp-svg .tag-on { opacity: 0; }
+.loc { cursor: pointer; outline: none; }
+.loc.off { cursor: default; }
+.loc.off .city { filter: grayscale(.85) brightness(.7); }
+.loc.off .tag { opacity: .55; }
+.loc.on .tag-n { opacity: 0; }
+.loc.on .tag-on { opacity: 1; }
+.loc.on .kj, .loc.on .en { fill: #09fffb; mix-blend-mode: difference; }
+.loc.on .city { animation: breathe .5s var(--ease); }
+.loc:focus-visible .tag { outline: none; }
+.loc:focus-visible .tag-on { filter: drop-shadow(0 0 0 #fff) drop-shadow(3px 3px 0 #fff); }
+.cur-r { fill: #de0716; }
+.cur-b { fill: #09fffb; mix-blend-mode: darken; }
+@keyframes breathe { 50% { transform: scale(.9); } }
+
+/* 档案卡 */
+.mp-card {
+  position: sticky; top: calc(var(--hud) + 20px); display: grid; gap: 10px; padding: 18px 20px 22px;
+  background: var(--paper); color: var(--black); transform: rotate(1.5deg); box-shadow: 10px 10px 0 var(--red);
+}
+.mp-c-k { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 0; padding-bottom: 8px; border-bottom: 3px solid var(--black); }
+.mp-c-k b { font: 900 26px/1.1 var(--f-cjk); }
+.mp-c-k span { font: 400 12px var(--f-hat); letter-spacing: .14em; color: var(--red); text-align: right; }
+.mp-card img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: #be0f0f; border: 3px solid var(--black); }
+.mp-card img.ill { object-fit: contain; padding: 10px; }
+.mp-card h2 { margin: 0; font: 900 20px/1.4 var(--f-cjk); }
+.mp-c-n { margin: 0 0 6px; font-size: 14px; line-height: 1.7; color: #4a4744; }
+.mp-card .btn { justify-self: start; }
+
+/* 地点列表（小屏 / 键盘 / 读屏的备用入口） */
+.mp-list { list-style: none; margin: 34px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.mp-list a { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--ink); border-left: 5px solid var(--red); transition: background-color .14s, color .14s; }
+.mp-list b { flex: none; font: 900 15px var(--f-cjk); color: var(--red); transition: color .14s; }
+.mp-list span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.mp-list a:hover, .mp-list a:focus-visible { background: var(--paper); color: var(--black); }
+
+@media (max-width: 1000px) {
+  .mp-g { grid-template-columns: minmax(0, 1fr); }
+  .mp-card { position: static; transform: none; grid-template-columns: 140px minmax(0, 1fr); align-items: start; }
+  .mp-card > :not(img) { grid-column: 2; }
+  .mp-card img { grid-row: 1 / 6; aspect-ratio: 1; }
+}
+@media (max-width: 560px) {
+  .mp-board { margin-inline: calc(var(--pad) * -1); border-inline: 0; box-shadow: none; overflow-x: auto; }
+  .mp-svg { width: 900px; max-width: none; }
+  .mp-card { grid-template-columns: minmax(0, 1fr); }
+  .mp-card > :not(img) { grid-column: auto; }
+  .mp-card img { grid-row: auto; aspect-ratio: 16 / 10; }
+}
+@media (prefers-reduced-motion: reduce) { .loc.on .city { animation: none; } }

@@ -1,0 +1,272 @@
+/* =====================================================================
+   PHANTOM LOG · globals.css（T02 新增）
+   ---------------------------------------------------------------------
+   这里**只放旧站样式表里没有的东西**：新宿主（React）引入的容器、
+   手机直立应用面板、轻提示、弹层滚动锁，以及迁移期需要的少量修正。
+
+   旧站 `assets/css/*.css` 的迁移副本在 `styles/legacy/`，由 `app/layout.tsx`
+   按旧站顺序引入；那些文件是「旧站快照」，不要往里面加新样式
+   （见 styles/legacy/PROVENANCE.md）。
+   ===================================================================== */
+
+/* ---------- 迁移修正：问卷 Q 的位移 ----------
+   旧站 poll.css 的 `.poll-q` 同时写了 `translate: 0 -20px` 与 `transform: rotate(-8deg)`。
+   Next 16（Turbopack / Lightning CSS）在压缩时会把同一规则里的 `translate` 与 `transform`
+   合并，并且**丢掉 translate**（实测：`.x{translate:0 -36px;transform:rotate(-8deg)}`
+   → `.x{transform:rotate(-8deg)}`）。结果是迁移后的 Q 比旧站低 20px、不再压住票数框左上缘
+   —— 真实浏览器逐项比对时抓到过（见 T02-result.md）。
+   这里用等价的 transform 还原旧站的几何；放在 globals.css 是为了让 legacy 快照保持原样。 */
+@media (min-width: 621px) {
+  .poll-q {
+    transform: translateY(-20px) rotate(-8deg);
+  }
+}
+/* 620px 以下旧站自己用 `translate: 0 -12px`（那条规则里没有 transform，不会被压掉）。
+   这里只把 transform 还原成纯旋转，避免和 translate 叠加成 -32px。 */
+@media (max-width: 620px) {
+  .poll-q {
+    transform: rotate(-8deg);
+  }
+}
+
+/* ---------- 弹层滚动锁（OverlayManager） ----------
+   旧站用 body.pw-open / body.boot-lock 分别锁；新站统一成一个类，
+   由弹层栈的深度决定，最后一层退出时自动恢复。 */
+html.ov-lock,
+html.ov-lock body {
+  overflow: hidden;
+}
+
+/* ---------- 轻提示 ---------- */
+.toasts {
+  position: fixed;
+  left: max(14px, env(safe-area-inset-left));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  z-index: 950;
+  display: grid;
+  gap: 8px;
+  max-width: min(88vw, 420px);
+  pointer-events: none;
+}
+.toast {
+  margin: 0;
+  padding: 10px 14px;
+  background: rgb(3 3 3 / 0.88);
+  color: var(--paper);
+  border-left: 6px solid var(--red);
+  font: 500 14px/1.45 var(--f-cjk, sans-serif);
+  box-shadow: 6px 6px 0 rgb(0 0 0 / 0.45);
+}
+.toast--error {
+  border-left-color: var(--paper);
+  background: rgb(159 12 18 / 0.92);
+}
+
+/* ---------- 手机：直立应用面板（02 §2 / §9） ----------
+   桌面保留既有外壳气质；进入内容应用后，屏幕变成**不做透视缩放的直立面板**：
+   同原点同尺寸，只把 matrix3d 与红屏底换成正常排版的阅读面，
+   正文因此不会被透视或整体缩放（320 / 390px 由 phone.css 的 620px 分支接管）。 */
+@media (min-width: 621px) {
+  .pw--app .pw-screen {
+    transform: none;
+    left: 272px;
+    top: 14px;
+    width: 540px;
+    height: 630px;
+    gap: 12px;
+    padding: 22px 22px 24px;
+    background-color: var(--black);
+    background-image: none;
+    border: 2px solid var(--paper);
+    box-shadow: 0 0 0 3px var(--black), 10px 10px 0 rgb(0 0 0 / 0.45);
+    overflow: hidden auto;
+    overscroll-behavior: contain;
+  }
+}
+
+.pw-appview {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+  gap: 12px;
+}
+.pw-appbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--line);
+}
+.pw-back {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  background: var(--black);
+  color: var(--paper);
+  border: 2px solid var(--paper);
+  font: 400 20px/1 var(--f-hat);
+  clip-path: polygon(10% 0, 100% 8%, 90% 100%, 0 92%);
+}
+.pw-back:hover,
+.pw-back:focus-visible {
+  background: var(--red);
+}
+.pw-appname {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  font: 900 18px/1.1 var(--f-cjk);
+  color: var(--paper);
+}
+.pw-appname span {
+  display: block;
+  margin-top: 2px;
+  font: 400 11px/1 var(--f-hat);
+  letter-spacing: 0.18em;
+  color: var(--dim);
+}
+.pw-expand {
+  flex: none;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  background: var(--paper);
+  color: var(--black);
+  font: 400 13px/1 var(--f-hat);
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  transform: skewX(-10deg);
+}
+.pw-expand:hover,
+.pw-expand:focus-visible {
+  background: var(--red);
+  color: var(--paper);
+}
+.pw-appbody {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  color: var(--paper);
+  font: 400 15px/1.6 var(--f-cjk);
+}
+.pw-loading,
+.pw-app-error p {
+  margin: 0;
+  color: var(--paper);
+  font: 400 15px/1.6 var(--f-cjk);
+}
+.pw-app-error h2 {
+  margin: 8px 0;
+  font: 900 20px/1.2 var(--f-cjk);
+  color: var(--paper);
+}
+.pw-app-error-act {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+/* 注册表应用的图标资源（旧站字形图标走 .g，见 phone-desktop.tsx） */
+.pw-app .g-img {
+  display: block;
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
+/* 音效开关：设计 02 §3 把它从「一个 App」合并成音乐卡片下方的一个控件 */
+.pw-snd {
+  align-self: flex-start;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  cursor: pointer;
+  background: rgb(10 10 11 / 0.82);
+  color: var(--paper);
+  border: 2px solid var(--paper);
+  font: 400 13px/1 var(--f-hat);
+  letter-spacing: 0.12em;
+  transform: skewX(-10deg);
+}
+.pw-snd[aria-pressed="false"] {
+  opacity: 0.62;
+}
+.pw-snd:hover,
+.pw-snd:focus-visible {
+  background: var(--red);
+}
+
+@media (max-width: 620px) {
+  .pw-appbar {
+    min-height: 52px;
+  }
+  .pw-appbody {
+    font-size: 16px;
+  }
+}
+
+/* ---------- 数据降级提示（01 §6） ----------
+   只有「显式启用了 API 数据源、但读取失败」时才出现：
+   不把服务错误伪装成「没有文章」，也不在正常状态打扰阅读。 */
+.data-notice {
+  margin: 0;
+  padding: 10px 16px;
+  background: var(--red-deep, #9f0c12);
+  color: var(--paper);
+  font: 500 14px/1.5 var(--f-cjk, sans-serif);
+  text-align: center;
+}
+
+/* ---------- 管理外壳（T02 提供，登录视图归 T01） ---------- */
+.admin-shell {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: calc(var(--hud, 72px) + 24px) 20px 64px;
+}
+.admin-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--line);
+}
+.admin-bar h1 {
+  margin: 0;
+  font: 900 clamp(22px, 3vw, 34px) / 1.1 var(--f-cjk);
+}
+.admin-bar nav {
+  margin-left: auto;
+}
+.admin-bar nav a {
+  color: var(--paper);
+  font: 400 14px/1 var(--f-hat);
+  letter-spacing: 0.12em;
+}
+.admin-body {
+  padding: 20px 0;
+}
+.admin-note {
+  margin: 24px 0 0;
+  padding: 12px 14px;
+  background: rgb(3 3 3 / 0.7);
+  border-left: 6px solid var(--red);
+  color: var(--dim);
+  font: 500 13px/1.6 var(--f-cjk, sans-serif);
+}
+
+/* ---------- 减少动态效果：新增的过渡一律关掉 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    transition: none;
+  }
+}
