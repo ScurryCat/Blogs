@@ -19,6 +19,7 @@
 import os, shutil, subprocess, sys, time, json, urllib.request, urllib.error, uuid, io
 BASE = "postgresql+psycopg://pl@127.0.0.1:55432/"
 DB, PSQL, PORT, API = "pl_verify_multiref", "/opt/homebrew/opt/postgresql@18/bin/psql", 8125, "http://127.0.0.1:8125"
+SRV_LOG = f"/tmp/pl-acceptance-{PORT}.log"   # 服务输出写文件：启动失败时可直接看它
 MEDIA = "/tmp/verify-multiref-media"
 API_DIR = "/Users/学习/blog/Blogs/apps/api"
 ORIGIN = "http://127.0.0.1:3100"
@@ -41,8 +42,8 @@ def judge(label, cond, extra=""):
     print(f"  {'✓' if cond else '✗'} {label}" + (f"  {extra}" if extra else ""))
 
 srv = subprocess.Popen(f"cd {API_DIR} && uv run uvicorn app.main:app --port {PORT} --log-level warning",
-                       shell=True, env=dict(os.environ), stdout=subprocess.DEVNULL,
-                       stderr=subprocess.DEVNULL, start_new_session=True)
+                       shell=True, env=dict(os.environ), stdout=open(SRV_LOG, "w"), stderr=subprocess.STDOUT, start_new_session=True)
+
 import http.cookiejar
 jar = http.cookiejar.CookieJar()
 opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
@@ -61,7 +62,7 @@ def req(method, path, data=None, headers=None, raw=False, anonymous=False, timeo
     except Exception as e:
         return None, type(e).__name__
 
-for _ in range(80):
+for _ in range(120):   # 最多等 60s：现在要导入 9 个内容域，冷启动比早期慢
     if req("GET", "/api/v1/health/live")[0] == 200: break
     time.sleep(0.5)
 

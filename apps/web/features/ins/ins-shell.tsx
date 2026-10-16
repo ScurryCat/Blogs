@@ -20,7 +20,6 @@
  *  - canonical 页面与手机视图共用这一个壳，因此两处内容一致（03 §1、验收用例 1）。
  */
 
-import Link from "next/link";
 import { useId, useState, type ReactNode } from "react";
 
 import {
@@ -32,6 +31,8 @@ import {
   type InsTabContribution,
   type InsTabContext,
 } from "./composition";
+import { SiteLink } from "@/features/runtime/navigation/site-link";
+
 import { SavedView } from "./saved-view";
 import type { Moment } from "./types";
 
@@ -146,7 +147,7 @@ export function InsShell({
       <p className="ins-footnote">
         本应用是本站自己的图文手记，不使用真实 Instagram 登录，也不接入其数据。
         {" "}
-        <Link href="/posts">长文在博客里</Link>。
+        <SiteLink href="/#posts" source="phone-link">长文在博客里</SiteLink>。
       </p>
     </div>
   );
