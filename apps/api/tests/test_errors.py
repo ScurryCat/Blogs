@@ -127,10 +127,14 @@ def test_health_live_reports_process_state_only(test_settings: Settings) -> None
     assert "postgres" not in response.text.lower()
 
 
-def test_readiness_endpoint_is_deliberately_absent(test_settings: Settings) -> None:
-    """T00 不提供 readiness：真实 DB/schema/媒体检查留给 T01 / T10。"""
+def test_core_router_exposes_no_readiness(test_settings: Settings) -> None:
+    """readiness 属于 health 模块（T01），核心 router 只提供 liveness。
+
+    这个模块测试 app 只挂了被测模块，因此 /health/ready 不存在是正确的：
+    T00 的核心不提供就绪判断，也绝不用永远返回 ok 的实现顶上。
+    """
     response = _client(test_settings).get("/api/v1/health/ready")
-    assert response.status_code == 404, "不得用永远返回 ok 的实现冒充 readiness"
+    assert response.status_code == 404, "核心 router 不应提供 readiness"
 
 
 def test_module_app_only_mounts_given_modules(test_settings: Settings) -> None:

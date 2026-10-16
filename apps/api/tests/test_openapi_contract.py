@@ -37,8 +37,23 @@ def test_committed_openapi_matches_generated_schema() -> None:
 def test_contract_covers_health_and_api_prefix() -> None:
     schema = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
     assert "/api/v1/health/live" in schema["paths"]
-    # T00 不提供 readiness；它出现就意味着有人加了假就绪端点。
-    assert "/api/v1/health/ready" not in schema["paths"]
+
+
+def test_readiness_is_either_absent_or_real() -> None:
+    """禁止的是「存在但只会返回 ok」的假就绪，不是 readiness 本身。
+
+    T00 阶段没有 readiness（真实检查留给 T01）；T01 接线后它会存在，且必须能报告
+    未就绪 —— 因此要求它的响应集合里出现 503。永远返回 200/ok 的实现会在这里失败。
+    """
+    schema = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
+    ready = schema["paths"].get("/api/v1/health/ready")
+    if ready is None:
+        return  # 尚未接线：合规
+    responses = ready["get"]["responses"]
+    assert "503" in responses, (
+        "readiness 必须能报告未就绪（503），否则就是永远返回 ok 的假就绪"
+    )
+    assert "200" in responses, "就绪时仍应返回 200"
 
 
 @pytest.mark.parametrize("path", ["/api/v1/health/live"])
