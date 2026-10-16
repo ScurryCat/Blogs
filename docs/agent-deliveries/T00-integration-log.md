@@ -412,3 +412,6 @@ page.click(...)                                                                 
 
 **口径说明**：「磁盘不足」用不可写目录模拟（与 ENOSPC 同走 `OSError`），结论对 ENOSPC 属**推断**而非实测；「API 重启」用的是真实 uvicorn + 真实 PostgreSQL + HTTP 请求，属实测。
 | 2026-10-16 | **验收行「API 重启」验证** | 真实 uvicorn + 真实 PostgreSQL + HTTP 请求（11 项）| ① 启动后 ready 200、公开读有数据；② **SIGKILL** 中断期间请求**如实失败**（连不上，**不是假 ready、也不是假数据**）；③ 重启后 ready 200、公开读恢复，且**数据完全未变**：posts 8→8、palaces 1→1、aliases 6→6、文章标题串校验和与专题行校验和**逐一相同** | 无（仅验证） |
+| 2026-10-16 | **T05+T07 早期模型检查** | 三个新域（journal / leisure / coop）刚落地 models 时做导入与迁移预演（不写文件）| **8 个模块按依赖顺序导入成功、无表名冲突、表总数 16**；新声明 5 张表：`journal_entries`、`journal_entry_media`、`leisure_entries`、`friend_links`、`friend_link_tags`。
+**预演 11 项变更**（5 建表 + 6 索引），**全部为新增、零 drop**；索引覆盖公开列表/日历/日期/关联媒体等查询面。
+**约定继承良好**：三个域的公开列表索引**都用了部分索引**（journal 与 leisure 用 `postgresql_where=sql_text(...)`，coop 抽成共享常量 `_PUBLIC_LISTING_WHERE`），与 posts / palaces / moments 的既定模式一致 | 待交付 |
