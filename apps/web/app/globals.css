@@ -270,3 +270,251 @@ html.ov-lock body {
     transition: none;
   }
 }
+
+/* ==========================================================================
+   手机面板：动效 / 布局 / 桌面端尺寸（T00 优化，2026-10-16）
+   --------------------------------------------------------------------------
+   三条边界，先写清楚，避免以后被误改：
+     1. `styles/legacy/phone.css` 是**旧站快照**，不往里加新样式 —— 本节的规则全部是
+        **覆盖**（同选择器、更高优先级靠后声明），旧站快照保持原样可比对。
+     2. **手机内换屏不播全屏转场**（07 §7）。这里加的都是**面板内部**的动效，
+        不触碰导航协调器，也不会打断音乐单例。
+     3. 所有新增动效都必须在 `prefers-reduced-motion: reduce` 下失效（本节末尾统一处理）。
+   动效数值参照：入场 stagger 每项 30ms、单项 240–320ms（列表 stagger 的合理区间是
+   20–40ms，超过 100ms/项 会显得拖沓）。
+   ========================================================================== */
+
+/* ---------- 1. 桌面端尺寸：按视口分级放大 ----------
+   旧站把 880×715 的外壳用 `zoom: .56` 缩到约 493×400 —— 在 1440p 屏上明显偏小。
+   这里按「宽 AND 高」双条件分级：只看宽度会在矮屏上把手机顶出视口。
+   基础档同时给到 .62，保证 620px 以上的窄桌面也比旧站大一档。 */
+@media (min-width: 621px) {
+  .pw {
+    --z: 0.62;
+  }
+}
+@media (min-width: 1100px) and (min-height: 760px) {
+  .pw {
+    --z: 0.74;
+  }
+}
+@media (min-width: 1340px) and (min-height: 860px) {
+  .pw {
+    --z: 0.88;
+  }
+}
+@media (min-width: 1600px) and (min-height: 980px) {
+  .pw {
+    --z: 0.98;
+  }
+}
+@media (min-width: 1920px) and (min-height: 1080px) {
+  .pw {
+    --z: 1;
+  }
+}
+
+/* ---------- 2. 「掏出手机」的开合动画 ----------
+   参照原作里掏出手机的动作设计，四段构成：
+     ① 从**右下角**（手的位置）带着较大倾角甩进来；② 越过静止位一点点（过冲 + 反向转正）；
+     ③ 回落落定；④ 落定瞬间手机轮廓**红光冲击**一下。
+   轴的选点在右下（`transform-origin: 74% 88%`），这样它看起来是「被手从下方带上来」，
+   而不是「在原地放大」——后者没有掏出来的感觉。
+   数值：进入 440ms、退出一律更快（200ms）；退场方向与进场一致（缩回右下）。 */
+@keyframes pw-draw {
+  0% {
+    opacity: 0;
+    transform: translate(24%, 32%) scale(0.38) rotate(-16deg);
+  }
+  48% {
+    opacity: 1;
+    transform: translate(-2.6%, -4.2%) scale(1.05) rotate(2.8deg);
+  }
+  74% {
+    transform: translate(0.9%, 1.3%) scale(0.994) rotate(-0.9deg);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* 落定时的红光冲击：只对手机**轮廓**生效（drop-shadow 跟不透明像素走），
+   所以不会在透明区域糊出一个红方块。 */
+@keyframes pw-hit {
+  0%,
+  58% {
+    filter: none;
+  }
+  70% {
+    filter: drop-shadow(0 0 26px var(--red)) brightness(1.32);
+  }
+  100% {
+    filter: drop-shadow(0 14px 28px rgb(0 0 0 / 0.55));
+  }
+}
+.pw {
+  transform-origin: 74% 88%;
+  opacity: 0;
+  transform: translate(24%, 32%) scale(0.38) rotate(-16deg);
+  /* 退场：比进场快，方向回到右下 */
+  transition:
+    opacity 0.1s linear,
+    transform 0.2s cubic-bezier(0.45, 0, 0.85, 0.35);
+}
+.pw-wrap.on .pw {
+  animation: pw-draw 0.44s cubic-bezier(0.2, 0.9, 0.22, 1) both;
+}
+.pw-wrap.on .pw-frame {
+  animation: pw-hit 0.5s ease-out both;
+}
+
+/* ---------- 3. 应用磁贴：入场错峰 ----------
+   只在打开时播一次；`animation` 只驱动 opacity + transform，
+   鼠标悬停的 `transform: translateY(-3px)` 在动画结束后照常生效。
+   注意：**不要**在同一规则里同时写 `translate` 与 `transform` —— Next 16 的
+   Lightning CSS 会把两者合并并丢掉 `translate`（T02 记过的构建坑）。 */
+@keyframes pw-tile-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.pw-wrap.on .pw-app {
+  animation: pw-tile-in 0.26s var(--ease) backwards;
+}
+.pw-wrap.on .pw-app:nth-child(1) { animation-delay: 0.30s; }
+.pw-wrap.on .pw-app:nth-child(2) { animation-delay: 0.33s; }
+.pw-wrap.on .pw-app:nth-child(3) { animation-delay: 0.36s; }
+.pw-wrap.on .pw-app:nth-child(4) { animation-delay: 0.39s; }
+.pw-wrap.on .pw-app:nth-child(5) { animation-delay: 0.42s; }
+.pw-wrap.on .pw-app:nth-child(6) { animation-delay: 0.45s; }
+.pw-wrap.on .pw-app:nth-child(7) { animation-delay: 0.2s; }
+.pw-wrap.on .pw-app:nth-child(8) { animation-delay: 0.51s; }
+.pw-wrap.on .pw-app:nth-child(9) { animation-delay: 0.54s; }
+.pw-wrap.on .pw-app:nth-child(n + 10) { animation-delay: 0.57s; }
+
+/* ---------- 4. 应用面板：换屏时的「切入」 ----------
+   面板内部动效，不是全屏转场。从右侧略带斜切地压进来，符合本作的硬边语言。 */
+@keyframes pw-appview-in {
+  from {
+    opacity: 0;
+    transform: translateX(14px) skewX(-2.5deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.pw--app .pw-appview {
+  animation: pw-appview-in 0.2s var(--ease) both;
+}
+
+/* ---------- 5. 按下反馈（80–150ms 内可见，且不改变布局尺寸）---------- */
+.pw-app:active {
+  transform: scale(0.97);
+  transition-duration: 0.08s;
+}
+.pw-close:active,
+.pw-back:active,
+.pw-btn:active {
+  transform: scale(0.94);
+  transition-duration: 0.08s;
+}
+
+/* ---------- 6. 布局：整屏一次滚动，不嵌套滚动区 ----------
+   实测（1440×900）：屏幕盒 616 高，其中音乐卡 301（占 49%）、状态栏 118、音效开关 39，
+   留给应用网格的不足 180，而 10 个应用 4 行需要 325+ —— 旧站是 `overflow: hidden`，
+   第三行起直接被裁掉。
+   改法：**屏幕整体滚动**，状态栏 sticky 在顶部（像真手机的信号栏）。
+   两个坑（都实测踩过）：
+     · `.pw-apps` 在 flex 列里**不能**再 `min-height: 0` —— 那会让它被压扁、磁贴溢出到
+       音效开关上（实测 coop 与开关重叠）。整屏滚动之后网格取自然高度即可。
+     · 状态栏用负外边距吸顶时会把音乐卡顶部盖住，改成「屏幕上内边距为 0、由状态栏自己撑开」。 */
+.pw-screen {
+  gap: 12px;
+  padding: 0 24px 28px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--red) rgb(0 0 0 / 0.35);
+}
+.pw-screen::-webkit-scrollbar {
+  width: 6px;
+}
+.pw-screen::-webkit-scrollbar-track {
+  background: rgb(0 0 0 / 0.35);
+}
+.pw-screen::-webkit-scrollbar-thumb {
+  background: var(--red);
+}
+.pw-status {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0 -24px;
+  padding: 20px 24px 10px;
+  background: rgb(6 6 8 / 0.9);
+  backdrop-filter: blur(2px);
+}
+/* 网格取自然高度；不收缩、不内滚 */
+.pw-apps {
+  flex: none;
+  margin-top: 4px;
+  gap: 11px;
+}
+.pw-app {
+  min-height: 84px;
+  padding: 11px 6px 10px;
+  align-content: center;
+}
+
+/* ---------- 7. 应用面板内的返回键：触控目标补足 ----------
+   实测旧站几何下它只有 25×25 px（缩放后更小），低于 44×44 的触控下限。
+   补足到 44×44，视觉仍按本作的硬边方块呈现。 */
+.pw--app .pw-back {
+  /* **必须除以 --z**：`.pw` 上的 `zoom` 会等比缩放视觉尺寸，写死 44px 时
+     在 `--z: .72` 下实测只有 32×32 视觉像素，仍低于触控下限。
+     除以 --z 后任何档位都是 44×44 的**视觉**尺寸。 */
+  min-width: calc(44px / var(--z, 1));
+  min-height: calc(44px / var(--z, 1));
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+}
+.pw--app .pw-appbar {
+  gap: 12px;
+  padding-bottom: 8px;
+}
+/* 顶部条与正文之间留出层级感；正文滚动时不被压住 */
+.pw--app .pw-appbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--black);
+}
+
+/* ---------- 8. 减少动态效果：上面所有新增动效全部失效 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .pw {
+    transition: none;
+  }
+  /* 「掏出手机」与红光冲击一并关掉；此时靠旧站的
+     `.pw-wrap.on .pw { opacity: 1; transform: none }` 直接显示最终态 ✓ */
+  .pw-wrap.on .pw,
+  .pw-wrap.on .pw-frame,
+  .pw-wrap.on .pw-app,
+  .pw--app .pw-appview {
+    animation: none;
+  }
+  .pw-app:active,
+  .pw-close:active,
+  .pw-back:active,
+  .pw-btn:active {
+    transform: none;
+  }
+}
