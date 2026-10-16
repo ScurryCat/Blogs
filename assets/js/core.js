@@ -215,7 +215,7 @@
     addEventListener('keydown', warmMapCrowd, { once: true, capture: true });
 
     /* 站内跳转的优先级：
-       1) 地图页出发 → 人群过场（不按目的地分）
+       1) 地图关联入口（地点图标 / 出发 / 地点列表）→ 人群过场
        2) 进文章且 dive 视频就绪 → 潜入转场
        3) 其余站内导航 → 矢量帷幕（永远就绪，所以实际上很少落到第 4 步）
        4) 兜底 → CSS 三色斜切 */
@@ -267,11 +267,11 @@
       if (navigating) return;
       navigating = true;
       const fromMap = currentPage === 'map';
-      /* 地图页的三种入口（地图上的地点、右侧卡片的「出发」、下方列表）都走这里，
-         所以人群过场要放在按目的地分派之前 —— 地图上的地点其实都指向 post.html，
-         否则会被 dive 抢走。素材不可用时直接退回帷幕 / CSS。 */
+      /* map.js 给地点图标、卡片出发和地点列表标记 data-map-travel。
+         这些地图关联入口播放车站人群；顶部等普通导航保留 Joker 帷幕。
+         按入口判断，不按目的地；素材不可用时直接退回帷幕 / CSS。 */
       const crowd = window.PL && window.PL.crowd;
-      if (fromMap && crowd && cheap && crowd.play()) {
+      if (fromMap && a.hasAttribute('data-map-travel') && crowd && cheap && crowd.play()) {
         schedule(u.href, crowd.wait, true);
         return;
       }

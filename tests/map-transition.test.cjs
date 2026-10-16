@@ -57,8 +57,9 @@ function navigation({ reduce = false, connection } = {}) {
       PL.chrome(page);
     },
     event(type, value = {}) { (globalEvents[type] || []).forEach(fn => fn(value)); },
-    click(href = 'post.html?p=one', shape = 'card', overrides = {}) {
+    click(href = 'post.html?p=one', shape = 'icon', overrides = {}) {
       const anchor = dom(shape === 'icon' ? 'svg:a' : 'a'); anchor.attributes.href = href;
+      if (['icon', 'card', 'list'].includes(shape)) anchor.attributes['data-map-travel'] = '';
       const child = dom(shape === 'icon' ? 'image' : shape === 'list' ? 'b' : 'span');
       child.closest = selector => selector === 'a[href]' ? anchor : null;
       // SVGAnimatedString deliberately has no usable href string.
@@ -99,6 +100,23 @@ for (const shape of ['icon', 'card', 'list']) test('direct map ' + shape + ' use
   n.click('weather.html'); n.tick(2000); assert.equal(n.navigated.length, 1, 'guard lasts through pending PJAX');
   await n.finish(); n.page('map'); n.click('about.html'); n.tick(crowd.wait);
   assert.equal(n.navigated.length, 2, 'settled PJAX releases navigation guard');
+});
+
+for (const shape of ['nav', 'other-svg']) test('map ' + shape + ' uses Joker instead of the station crowd', () => {
+  const n = navigation(); const crowd = n.crowd(); n.page('map'); n.armDive();
+  n.click('post.html?p=' + shape, shape);
+  assert.equal(crowd.plays, 0, 'ordinary navigation must not play the station crowd');
+  assert.equal(n.curtain.plays, 1);
+  assert.ok(n.elements.filter(el => el.tag === 'video').every(el => !el.plays));
+  n.tick(n.curtain.total - 1); assert.equal(n.navigated.length, 0);
+  n.tick(1); assert.deepEqual(n.navigated, ['http://site.test/post.html?p=' + shape]);
+});
+
+test('top navigation entering the map keeps the Joker transition', () => {
+  const n = navigation(); const crowd = n.crowd(); n.page('home');
+  n.click('map.html', 'nav');
+  assert.equal(crowd.plays, 0); assert.equal(n.curtain.plays, 1);
+  n.tick(n.curtain.total); assert.deepEqual(n.navigated, ['http://site.test/map.html']);
 });
 
 test('map crowd failure bypasses a ready article dive and uses curtain, then CSS fallback', () => {
@@ -326,9 +344,10 @@ test('document fetches bypass stale cached HTML for clicks and history navigatio
 test('site entrypoints consistently version the changed shared resources for PJAX deduplication', () => {
   for (const page of ['index', 'about', 'post', 'map', 'weather', 'guestbook', 'poll-demo']) {
     const html = fs.readFileSync(path.join(__dirname, '..', page + '.html'), 'utf8');
-    for (const [resource, version] of [['assets/css/chrome.css', '1'], ['assets/js/core.js', '2'], ['assets/js/pjax.js', '2']]) {
+    for (const [resource, version] of [['assets/css/chrome.css', '1'], ['assets/js/core.js', '3'], ['assets/js/pjax.js', '2']]) {
       assert.ok(html.includes(resource + '?v=map-travel-' + version), page + ' must version ' + resource);
     }
     if (page === 'map') assert.ok(html.includes('assets/js/crowd.js?v=map-travel-2'));
+    if (page === 'map') assert.ok(html.includes('assets/js/map.js?v=map-travel-3'));
   }
 });

@@ -101,3 +101,9 @@ Final acceptance (2026-10-16):
 - Local preview updated to `http://127.0.0.1:8000/map.html?preview=map-travel-final`, with core/crowd/PJAX `map-travel-2` imports and only one HUD.
 - Screenshots saved outside the repository: `map-travel-final.jpg` and `map-travel-phone.jpg` in the chat visualization directory.
 - The five preexisting poll-related files remain uncommitted and untouched by this task. Map work is locally committed; nothing pushed or merged.
+
+### Follow-up: map-related entrances versus ordinary navigation
+
+User clarified that the map's icons, right-hand departure button and lower location list should retain the station crowd, while the top navigation should use Joker. `map.js` now explicitly marks its three map-travel entrances with `data-map-travel`; `core.js` requires that marker and the current map page before selecting the crowd. Other map-page links use the existing Joker/fallback path. Renderer, music and PJAX loading behavior are unchanged.
+
+Regression evidence: ordinary-navigation tests failed against the page-wide crowd dispatch; card/list tests then failed against icon-only dispatch. The final marker-based implementation passes all 53 tests. Real-browser clicks confirmed top navigation has Joker active and crowd inactive, while each of the three map entrances has crowd active and Joker inactive; all reached the correct destination. Returning to the map left one HUD and neither overlay active. Core and map entry imports use `map-travel-3` to avoid stale cached scripts. Screenshot: `map-top-nav-joker.jpg` in the chat visualization directory. No push or merge.
