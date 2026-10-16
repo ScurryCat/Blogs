@@ -5,6 +5,9 @@
  * 宿主侧不需要任何针对具体应用的判断分支。
  */
 
+import { existsSync } from "node:fs";
+import path from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import { PHONE_APPS, PhoneRegistryError, createPhoneRegistry } from "./registry";
@@ -28,10 +31,23 @@ function embeddedApp(overrides: Partial<PhoneAppManifest> = {}): PhoneAppManifes
 }
 
 describe("手机应用注册表", () => {
-  it("正式桌面不含测试应用，且未接入的能力不显示坏按钮", () => {
+  it("正式桌面只含已登记的真实应用：没有测试应用，也没有未接入能力的占位", () => {
     const registry = createPhoneRegistry(PHONE_APPS);
-    expect(registry.manifests()).toEqual([]);
+
+    // 未接入的能力不显示坏按钮：测试应用不会出现在正式桌面。
     expect(registry.find(TEST_APP_ID)).toBeUndefined();
+
+    // 断言具体清单：新增/移除登记时集成负责人会被强制确认一次，而不是静默改变桌面。
+    expect(registry.manifests().map((manifest) => manifest.id)).toEqual(["metanav"]);
+  });
+
+  it("每个登记应用的图标都指向仓库里真实存在的资源", () => {
+    // 占位路径或指向不存在文件的图标会让桌面出现裂图 —— 类型层看不出这类错误，
+    // 所以在测试里查文件系统（icon 是 public/ 下的站内绝对路径）。
+    for (const manifest of createPhoneRegistry(PHONE_APPS).manifests()) {
+      const file = path.join(process.cwd(), "public", manifest.icon.replace(/^\//, ""));
+      expect(existsSync(file), `${manifest.id} 的图标不存在：${manifest.icon}`).toBe(true);
+    }
   });
 
   it("加入测试应用只需要注册表，不需要改宿主", async () => {

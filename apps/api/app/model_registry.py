@@ -14,13 +14,15 @@ from typing import Iterable, TypeVar
 
 from app.core.db import Base
 
-# 显式清单：顺序固定，便于复现。按依赖顺序排列（auth 的站主/会话被其余域引用）。
+# 显式清单：顺序固定，便于复现。按依赖顺序排列（auth 的站主/会话被其余域引用；
+# media 必须在 moments 之前 —— moment_media.media_id 外键指向 media.id）。
 # T01 于 2026-10-16 声明模型冻结；新增模块需经集成负责人写入这里。
 MODEL_MODULES: tuple[str, ...] = (
     "app.modules.auth.models",
     "app.modules.media.models",
     "app.modules.tags.models",
     "app.modules.posts.models",
+    "app.modules.nav.models",
 )
 
 _ModelT = TypeVar("_ModelT", bound=type)

@@ -18,10 +18,28 @@ export class PhoneRegistryError extends Error {}
 /**
  * 正式桌面应用清单。
  *
- * 目前为空：INS 由 T03 交付、导航由 T04 交付、日常应用由 T05、COOP 由 T07。
- * 未接入的能力**不显示坏按钮**（SHARED-CONTRACTS §4），所以这里不放占位应用。
+ * 未接入的能力**不显示坏按钮**（SHARED-CONTRACTS §4），所以这里只放已交付并接线完成的应用。
+ * INS 由 T03 交付（待登记）、日常应用由 T05、COOP 由 T07。
+ *
+ * 登记规则：各包提供 `features/<pkg>/phone-app.tsx`（`default` + `screens` + 可选 `dispose`）
+ * 与一份 10 字段 manifest，由 T00 写入这里 —— 包不自己往宿主里塞条件分支。
  */
-export const PHONE_APPS: readonly PhoneAppManifest[] = Object.freeze([]);
+export const PHONE_APPS: readonly PhoneAppManifest[] = Object.freeze([
+  {
+    id: "metanav",
+    name: "导航",
+    subtitle: "异世界导航",
+    // 仓库内已有的迁移图标资源（T02 的 public/assets/legacy/img/icon/），不新增素材。
+    icon: "/assets/legacy/img/icon/oracle.webp",
+    order: 20,
+    kind: "embedded",
+    canonical_path: "/apps/metanav",
+    loader: () => import("@/features/metanav/phone-app"),
+    feature_flag: null,
+    // 与 footprint 的存储键版本一致，便于将来迁移旧键。
+    state_version: 1,
+  },
+]);
 
 export interface PhoneRegistryOptions {
   /** 编译期启用的 feature flag 集合；未启用的应用不出现在桌面。 */

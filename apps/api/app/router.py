@@ -22,6 +22,7 @@ MODULE_ROUTER_TARGETS: tuple[tuple[str, str], ...] = (
     ("auth", "app.modules.auth.router"),
     ("health", "app.core.health"),
     ("media", "app.modules.media.router"),
+    ("nav", "app.modules.nav.router"),
     ("posts", "app.modules.posts.router"),
     ("tags", "app.modules.tags.router"),
 )

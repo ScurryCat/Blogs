@@ -208,6 +208,645 @@
         "title": "MediaVariantOut",
         "type": "object"
       },
+      "PalaceActionIn": {
+        "additionalProperties": false,
+        "description": "发布 / 撤回 / 删除的请求体：只需要 CSRF token（版本条件走 `If-Match`）。",
+        "properties": {
+          "csrf_token": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Csrf Token"
+          }
+        },
+        "title": "PalaceActionIn",
+        "type": "object"
+      },
+      "PalaceAdminListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PalaceAdminOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "PalaceAdminListOut",
+        "type": "object"
+      },
+      "PalaceAdminOut": {
+        "properties": {
+          "aliases": {
+            "items": {
+              "$ref": "#/components/schemas/PalaceAliasOut"
+            },
+            "title": "Aliases",
+            "type": "array"
+          },
+          "conflicts": {
+            "items": {
+              "$ref": "#/components/schemas/PalaceConflictOut"
+            },
+            "title": "Conflicts",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "deleted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deleted At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "keywords": {
+            "$ref": "#/components/schemas/PalaceKeywordsOut"
+          },
+          "posts": {
+            "items": {
+              "$ref": "#/components/schemas/PalacePostAdminOut"
+            },
+            "title": "Posts",
+            "type": "array"
+          },
+          "public_post_count": {
+            "title": "Public Post Count",
+            "type": "integer"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "summary",
+          "keywords",
+          "status",
+          "published_at",
+          "created_at",
+          "updated_at",
+          "deleted_at",
+          "version",
+          "aliases",
+          "posts",
+          "conflicts",
+          "public_post_count"
+        ],
+        "title": "PalaceAdminOut",
+        "type": "object"
+      },
+      "PalaceAliasIn": {
+        "properties": {
+          "field": {
+            "enum": [
+              "name",
+              "location",
+              "cognition"
+            ],
+            "title": "Field",
+            "type": "string"
+          },
+          "value": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "value"
+        ],
+        "title": "PalaceAliasIn",
+        "type": "object"
+      },
+      "PalaceAliasOut": {
+        "properties": {
+          "field": {
+            "title": "Field",
+            "type": "string"
+          },
+          "normalized_value": {
+            "title": "Normalized Value",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "value",
+          "normalized_value"
+        ],
+        "title": "PalaceAliasOut",
+        "type": "object"
+      },
+      "PalaceConflictOut": {
+        "description": "别名 / 标准值在其他专题上也出现：允许保存与发布，但管理端必须提示检查。\n\n04 §8：「别名发生重叠时允许返回多候选，但发布预览应提示站主检查」。",
+        "properties": {
+          "field": {
+            "title": "Field",
+            "type": "string"
+          },
+          "normalized_value": {
+            "title": "Normalized Value",
+            "type": "string"
+          },
+          "palaces": {
+            "items": {
+              "$ref": "#/components/schemas/PalaceRefOut"
+            },
+            "title": "Palaces",
+            "type": "array"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "value",
+          "normalized_value",
+          "palaces"
+        ],
+        "title": "PalaceConflictOut",
+        "type": "object"
+      },
+      "PalaceCreateIn": {
+        "additionalProperties": false,
+        "properties": {
+          "aliases": {
+            "items": {
+              "$ref": "#/components/schemas/PalaceAliasIn"
+            },
+            "maxItems": 60,
+            "title": "Aliases",
+            "type": "array"
+          },
+          "csrf_token": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Csrf Token"
+          },
+          "keywords": {
+            "$ref": "#/components/schemas/PalaceKeywordsIn"
+          },
+          "post_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 100,
+            "title": "Post Ids",
+            "type": "array"
+          },
+          "slug": {
+            "maxLength": 200,
+            "minLength": 1,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "title": "Slug",
+            "type": "string"
+          },
+          "summary": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "title",
+          "keywords"
+        ],
+        "title": "PalaceCreateIn",
+        "type": "object"
+      },
+      "PalaceDetailOut": {
+        "description": "公开专题详情：介绍 + 有序公开文章（草稿 / 已撤回的文章不在其中）。",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "keywords": {
+            "$ref": "#/components/schemas/PalaceKeywordsOut"
+          },
+          "post_count": {
+            "title": "Post Count",
+            "type": "integer"
+          },
+          "posts": {
+            "items": {
+              "$ref": "#/components/schemas/PostSummaryOut"
+            },
+            "title": "Posts",
+            "type": "array"
+          },
+          "published_at": {
+            "format": "date-time",
+            "title": "Published At",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "summary",
+          "keywords",
+          "post_count",
+          "published_at",
+          "posts"
+        ],
+        "title": "PalaceDetailOut",
+        "type": "object"
+      },
+      "PalaceKeywordsIn": {
+        "properties": {
+          "cognition": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Cognition",
+            "type": "string"
+          },
+          "location": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Location",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "location",
+          "cognition"
+        ],
+        "title": "PalaceKeywordsIn",
+        "type": "object"
+      },
+      "PalaceKeywordsOut": {
+        "description": "三项标准关键词（04 §4B 的「目标名 / 现实地点 / 认知形态」）。",
+        "properties": {
+          "cognition": {
+            "title": "Cognition",
+            "type": "string"
+          },
+          "location": {
+            "title": "Location",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "location",
+          "cognition"
+        ],
+        "title": "PalaceKeywordsOut",
+        "type": "object"
+      },
+      "PalaceListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PalaceSummaryOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "PalaceListOut",
+        "type": "object"
+      },
+      "PalacePostAdminOut": {
+        "description": "管理端的文章关系：含草稿 / 已撤回，并标明它当前是否公开（供预览判断）。",
+        "properties": {
+          "deleted": {
+            "title": "Deleted",
+            "type": "boolean"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "post_id": {
+            "format": "uuid",
+            "title": "Post Id",
+            "type": "string"
+          },
+          "public": {
+            "title": "Public",
+            "type": "boolean"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "post_id",
+          "slug",
+          "title",
+          "status",
+          "position",
+          "deleted",
+          "public"
+        ],
+        "title": "PalacePostAdminOut",
+        "type": "object"
+      },
+      "PalaceRefOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "status"
+        ],
+        "title": "PalaceRefOut",
+        "type": "object"
+      },
+      "PalaceSummaryOut": {
+        "description": "公开专题摘要。`post_count` 是**每次查询实时统计**的公开文章数，不是缓存的权限条件。",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "keywords": {
+            "$ref": "#/components/schemas/PalaceKeywordsOut"
+          },
+          "post_count": {
+            "title": "Post Count",
+            "type": "integer"
+          },
+          "published_at": {
+            "format": "date-time",
+            "title": "Published At",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "summary",
+          "keywords",
+          "post_count",
+          "published_at"
+        ],
+        "title": "PalaceSummaryOut",
+        "type": "object"
+      },
+      "PalaceUpdateIn": {
+        "additionalProperties": false,
+        "description": "PATCH：只更新**出现过的**字段；`aliases` / `post_ids` 传入时完整替换关系列表。\n\n`slug` 不在可改字段里：公开 URL 必须稳定（05 §2「slug 用于公开文章 / 专题 URL，\n保持稳定且唯一」）。未知字段一律 422，不静默忽略。",
+        "properties": {
+          "aliases": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/PalaceAliasIn"
+                },
+                "maxItems": 60,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aliases"
+          },
+          "csrf_token": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Csrf Token"
+          },
+          "keywords": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PalaceKeywordsIn"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "post_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "maxItems": 100,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Post Ids"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "PalaceUpdateIn",
+        "type": "object"
+      },
       "PostDetailOut": {
         "properties": {
           "category": {
@@ -384,6 +1023,135 @@
           "cover"
         ],
         "title": "PostSummaryOut",
+        "type": "object"
+      },
+      "ResolveIn": {
+        "description": "认知定位的三字段。无副作用：只读取与匹配（05 §5）。",
+        "properties": {
+          "cognition": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Cognition",
+            "type": "string"
+          },
+          "location": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Location",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "location",
+          "cognition"
+        ],
+        "title": "ResolveIn",
+        "type": "object"
+      },
+      "ResolveOut": {
+        "description": "`found` / `ambiguous` / `not_found` 三种业务结果，外加成功时的候选列表。\n\n`not_found` 是正常 200 业务结果；服务故障是 5xx，两者不混为一谈（04 §4B / 05 §6）。",
+        "properties": {
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/PalaceSummaryOut"
+            },
+            "title": "Matches",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "found",
+              "ambiguous",
+              "not_found"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "matches"
+        ],
+        "title": "ResolveOut",
+        "type": "object"
+      },
+      "SearchItemOut": {
+        "description": "搜索结果条目。`href` 由服务端生成，不使用任意第三方重定向地址。",
+        "properties": {
+          "excerpt": {
+            "title": "Excerpt",
+            "type": "string"
+          },
+          "href": {
+            "title": "Href",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "post",
+              "palace"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "slug",
+          "title",
+          "excerpt",
+          "href"
+        ],
+        "title": "SearchItemOut",
+        "type": "object"
+      },
+      "SearchListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SearchItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "SearchListOut",
         "type": "object"
       },
       "SessionStatusOut": {
@@ -564,6 +1332,439 @@
         "summary": "上传单张图片（站主）",
         "tags": [
           "admin-media"
+        ]
+      }
+    },
+    "/api/v1/admin/nav/palaces": {
+      "get": {
+        "description": "含草稿与别名冲突提示。按站主手动维护的规模设计，不做批量优化。",
+        "operationId": "admin_list_palaces_api_v1_admin_nav_palaces_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PalaceAdminListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "管理专题列表",
+        "tags": [
+          "admin-nav"
+        ]
+      },
+      "post": {
+        "description": "新建总是草稿：是否公开由 `publish` 决定（至少一篇公开文章）。",
+        "operationId": "admin_create_palace_api_v1_admin_nav_palaces_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PalaceCreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PalaceAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "新建专题（草稿）",
+        "tags": [
+          "admin-nav"
+        ]
+      }
+    },
+    "/api/v1/admin/nav/palaces/{palace_id}": {
+      "delete": {
+        "description": "软删除专题，**不删除其中的文章**（05 §7）。",
+        "operationId": "admin_delete_palace_api_v1_admin_nav_palaces__palace_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "palace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Palace Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/PalaceActionIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "软删除专题",
+        "tags": [
+          "admin-nav"
+        ]
+      },
+      "get": {
+        "operationId": "admin_read_palace_api_v1_admin_nav_palaces__palace_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "palace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Palace Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PalaceAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "管理专题详情（预览）",
+        "tags": [
+          "admin-nav"
+        ]
+      },
+      "patch": {
+        "operationId": "admin_update_palace_api_v1_admin_nav_palaces__palace_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "palace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Palace Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PalaceUpdateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PalaceAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "更新专题（关系完整替换）",
+        "tags": [
+          "admin-nav"
+        ]
+      }
+    },
+    "/api/v1/admin/nav/palaces/{palace_id}/publish": {
+      "post": {
+        "operationId": "admin_publish_palace_api_v1_admin_nav_palaces__palace_id__publish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "palace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Palace Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/PalaceActionIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PalaceAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "发布专题",
+        "tags": [
+          "admin-nav"
+        ]
+      }
+    },
+    "/api/v1/admin/nav/palaces/{palace_id}/unpublish": {
+      "post": {
+        "operationId": "admin_unpublish_palace_api_v1_admin_nav_palaces__palace_id__unpublish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "palace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Palace Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/PalaceActionIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PalaceAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "撤回专题",
+        "tags": [
+          "admin-nav"
         ]
       }
     },
@@ -769,6 +1970,265 @@
         "summary": "读取媒体变体",
         "tags": [
           "media"
+        ]
+      }
+    },
+    "/api/v1/nav/palaces": {
+      "get": {
+        "description": "默认入口：站主已经整理好的专题卡片（04 §4A）。\n\n「已发现」是叙事名称，不代表必须先解谜解锁 —— 所有公开专题都在这里。",
+        "operationId": "list_palaces_api_v1_nav_palaces_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PalaceListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "可进入的专题列表",
+        "tags": [
+          "nav"
+        ]
+      }
+    },
+    "/api/v1/nav/palaces/{slug}": {
+      "get": {
+        "description": "草稿、已删除、未发布、没有公开文章与不存在**完全同形**（统一 404）。",
+        "operationId": "read_palace_api_v1_nav_palaces__slug__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PalaceDetailOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "公开专题详情",
+        "tags": [
+          "nav"
+        ]
+      }
+    },
+    "/api/v1/nav/resolve": {
+      "post": {
+        "description": "三字段求交集，**确定性地**返回 found / ambiguous / not_found。\n\n不写足迹、不写统计、不需要登录：这是一次普通读取（05 §5）。",
+        "operationId": "resolve_api_v1_nav_resolve_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolveOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "认知定位（三关键词匹配）",
+        "tags": [
+          "nav"
+        ]
+      }
+    },
+    "/api/v1/nav/search": {
+      "get": {
+        "description": "首版不检索草稿、图片 EXIF、原始上传名或管理员字段（04 §6）。",
+        "operationId": "search_api_v1_nav_search_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 80,
+              "minLength": 1,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "post",
+                    "palace"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tag",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 80,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tag"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "普通搜索（公开文章与公开专题）",
+        "tags": [
+          "nav"
         ]
       }
     },
