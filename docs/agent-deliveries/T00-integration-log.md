@@ -191,3 +191,6 @@ docker compose -f deploy/compose.dev.yaml --env-file deploy/.env up -d
 ② **在 /map 页**点顶部导航 → **joker=True / crowd=False**（决定性：按来源而非当前页面）；
 ③ 从 /about 点顶部导航里的「地图」链接（目的地是 /map）→ 仍是 **joker**（目的地也不决定效果）。
 代码侧交叉确认：`map-view.tsx` 的三个入口（图标 277 / 出发 343 / 列表 356）均为 `source="map-travel"` | 无（仅验证） |
+| 2026-10-16 | **T02 修复闭环** | 复核 T02 对我两条反馈的处置 | ① `migrate.mjs` 注释已重写：正确说明单份副本理由、引用 `.gitignore` 与 06 素材分层、指向 `MUSIC_BASE`；
+② `crowd.state` 缺口按倾向方案 2 修复 —— reduce 判定收进 `warm()`（注释「单一判据」），调用方只留连接检测并调 `markSkipped("slow-connection")`。**行为复验**：普通偏好 `state='ready'`、减少动效 `state='reduced-motion'`（修复前为 `not-warmed`）|
+| 2026-10-16 | T02（拒绝与披露） | 验证 T02 未记录（而是修掉）我指出的问题：过时文档与不可达状态均已消除，**没有留下"已知但不修"的痕迹** | 同上 | 无（仅验证） |
