@@ -275,3 +275,12 @@ page.click(...)                                                                 
 **③ `<img>` 警告 × 4**：**不阻塞**（失败的是 error），并给出 T02「保留 `<img>` + 一行带理由的定向豁免」的先例 | 待 T03 修 |
 | 2026-10-16 | T00（手机登记清单前置） | 两个包已建页面但尚无 `PhoneAppModule` 形状的模块；登记是集成关键路径 | `features/phone/registry.ts` 的 `PHONE_APPS` **仍刻意留空**（未接入不放占位应用，符合 §4），且**无任何包改动过它** ✓。已把精确清单前置给 T03/T04：`PhoneAppModule` 需 `default` 默认导出 + `screens` + 可选 `dispose`；`PhoneAppManifest` 固定 10 字段（`id`/`name`/`subtitle`/`icon`/`order`/`kind`/`canonical_path`/`loader`/`feature_flag`/`state_version`），并明确 `icon` 必须是仓库真实存在的资源（我会核对）、`canonical_path` 要对齐 02 的 `/apps/*`、`feature_flag` **只是可见性不是鉴权**。另提示 T03 现为具名导出（宿主取 `module.default`）需补默认导出 | 待交付 |
 | 2026-10-16 | T04（类型错误已修·复验） | 复跑 `npm run lint` 与前端测试 | lint 仍 5 error（T03 的，未修）；**前端测试 20 文件 / 201 通过**（较上次 16/162 增长，两包在补测试）| 无（仅验证） |
+| 2026-10-16 | **T03（05 规格一致性审计）** | 独立审计 moments 是否落实 05 的具体数字与事务约束（不依赖其自测） | **逐条符合**：
+① 文本 ≤2000 码点 —— `TEXT_MAX_CODEPOINTS = 2000`，且**落在数据库 CHECK**（`char_length(text) <= 2000`），符合 05 §64「不能只靠管理表单」；
+② 发布须 1–9 张 ready 图片 —— `publish_moment` 先查数量（<1 / >9 各自 409），再查全部媒体 `ready` 且未删除，否则 409 并列出未就绪 ID；
+③ 最多 8 个标签 —— `TAGS_MAX = 8`，schema 层去空白/去重/去空 + 单个 1–24 码点；
+④ **发布时间服务端生成**（`utcnow()`，注释写明不信任客户端时钟）；
+⑤ **单事务** —— `get_session` 每请求一个 Session 且「提交由 service 决定」，变更路径只有一次 `_commit()`，覆盖文字/图片顺序/标签/版本，符合 05 §102；
+⑥ `IntegrityError` 被翻译成可读 **409 而非 500**（唯一约束的兜底）；
+⑦ 草稿可无图（门槛只在发布时查）、撤回保留图片与标签关系。
+另注意到一处刻意的正确设计：管理回执**如实返回未 ready 的图片**（不静默过滤），以便表单显示「不能发布」，而非看起来少了一张图 | 待交付 |
