@@ -16,6 +16,7 @@ from typing import Any, Mapping
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import DBAPIError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 logger = logging.getLogger(__name__)
@@ -33,7 +34,11 @@ CODE_PRECONDITION_REQUIRED = "PRECONDITION_REQUIRED"
 CODE_VERSION_CONFLICT = "VERSION_CONFLICT"
 CODE_CONFLICT = "CONFLICT"
 CODE_PAYLOAD_TOO_LARGE = "PAYLOAD_TOO_LARGE"
+# 415：05 §9 要求「类型不支持」与 422「解码不合法」分开（T01 媒体上传）。
+CODE_UNSUPPORTED_MEDIA_TYPE = "UNSUPPORTED_MEDIA_TYPE"
 CODE_UNPROCESSABLE = "UNPROCESSABLE"
+# 429：05 §9 要求限流返回 Retry-After。
+CODE_RATE_LIMITED = "RATE_LIMITED"
 CODE_SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE"
 CODE_INTERNAL = "INTERNAL"
 
@@ -47,8 +52,10 @@ _STATUS_CODE_DEFAULTS: dict[int, str] = {
     409: CODE_CONFLICT,
     412: CODE_VERSION_CONFLICT,
     413: CODE_PAYLOAD_TOO_LARGE,
+    415: CODE_UNSUPPORTED_MEDIA_TYPE,
     422: CODE_UNPROCESSABLE,
     428: CODE_PRECONDITION_REQUIRED,
+    429: CODE_RATE_LIMITED,
     503: CODE_SERVICE_UNAVAILABLE,
 }
 
@@ -57,7 +64,11 @@ _OPAQUE_STATUS_CODES = {500, 502, 503, 504}
 
 
 class ApiError(Exception):
-    """业务错误。code 决定前端分支，message 面向人，fields 定位字段级问题。"""
+    """业务错误。code 决定前端分支，message 面向人，fields 定位字段级问题。
+
+    `headers` 用于必须回给调用方的协议头，例如 429 的 `Retry-After`；
+    信封形状保持 `{error: {code, message, fields}, request_id}` 不变。
+    """
 
     def __init__(
         self,
@@ -66,6 +77,7 @@ class ApiError(Exception):
         *,
         status_code: int = 400,
         fields: Mapping[str, Any] | None = None,
+        headers: Mapping[str, str] | None = None,
     ) -> None:
         if status_code < 400:
             raise ValueError("ApiError 的 status_code 必须是 4xx 或 5xx")
@@ -74,6 +86,16 @@ class ApiError(Exception):
         self.message = message
         self.status_code = status_code
         self.fields = dict(fields) if fields else None
+        self.headers = dict(headers) if headers else None
+
+
+def database_unavailable_error() -> ApiError:
+    """数据库不可用（05 §6：不伪装成 404，也不泄漏连接串或库名）。"""
+    return ApiError(
+        CODE_SERVICE_UNAVAILABLE,
+        "服务暂时不可用，请稍后重试",
+        status_code=503,
+    )
 
 
 def error_body(code: str, message: str, fields: Mapping[str, Any] | None, request_id: str) -> dict[str, Any]:
@@ -107,10 +129,16 @@ async def request_id_middleware(request: Request, call_next):
 
 
 def _json_error(request: Request, status_code: int, code: str, message: str,
-                fields: Mapping[str, Any] | None = None) -> JSONResponse:
+                fields: Mapping[str, Any] | None = None,
+                headers: Mapping[str, str] | None = None) -> JSONResponse:
+    # 错误响应永远不进共享缓存：一个被缓存的 404 / 503 会把「临时故障」变成长期状态。
+    merged: dict[str, str] = {"Cache-Control": "no-store"}
+    if headers:
+        merged.update(headers)
     return JSONResponse(
         status_code=status_code,
         content=error_body(code, message, fields, get_request_id(request)),
+        headers=merged,
     )
 
 
@@ -119,7 +147,9 @@ def install_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(ApiError)
     async def _api_error(request: Request, exc: ApiError) -> JSONResponse:
-        return _json_error(request, exc.status_code, exc.code, exc.message, exc.fields)
+        return _json_error(
+            request, exc.status_code, exc.code, exc.message, exc.fields, exc.headers
+        )
 
     @app.exception_handler(RequestValidationError)
     async def _validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
@@ -138,6 +168,21 @@ def install_error_handlers(app: FastAPI) -> None:
         else:
             message = str(exc.detail) if exc.detail else "请求失败"
         return _json_error(request, exc.status_code, code, message)
+
+    @app.exception_handler(DBAPIError)
+    async def _database_error(request: Request, exc: DBAPIError) -> JSONResponse:
+        """数据库不可用 → 503。
+
+        05 §6 明确：服务错误不能伪装成「没有文章 / 不存在」。
+        响应只给 request_id 与固定文案，连接串、库名与堆栈只进日志。
+        """
+        logger.error(
+            "数据库错误 request_id=%s path=%s type=%s",
+            get_request_id(request),
+            request.url.path,
+            type(exc).__name__,
+        )
+        return _json_error(request, 503, CODE_SERVICE_UNAVAILABLE, "服务暂时不可用，请稍后重试")
 
     @app.exception_handler(Exception)
     async def _unhandled(request: Request, exc: Exception) -> JSONResponse:
