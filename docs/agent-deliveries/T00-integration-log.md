@@ -550,3 +550,12 @@ T05 另报告一个**测试陷阱**：服务层 `Session.commit()` 会提交测�
 前端两处：`InsApp` → `InsAppWithMessages`（必须换组件：页签含函数，不能跨服务端/客户端边界传）；`phone-app.tsx` 加屏幕分派。
 **验证用逐目录串行**：整树合跑时撞到 `database "pl_test_t01" does not exist — It seems to have just been dropped`，即并行包跑整棵树 drop 了共享临时库（我们记录的并发规则）。逐目录串行得到 **16 套件 640 项全绿** | `c5602c5` `c4a5bd5` |
 | 2026-10-16 | T00（两次写坏冻结清单） | 更新 `EXPECTED_TABLES` 到 25 张时连错两次 | ① 插入破坏了**字母序**（`conversations` 放到 `audit_events` 前）；② 修的时候脚本**漏调 `import_all_models()`**，`registered_tables()` 返回空，于是把清单**写成空元组**。两次都是「改断言」这一步出的错 —— 与前几轮同类 | 已修正 |
+| 2026-10-16 | **发现并修复：T08 消息功能在手机上不可达** | 接线后用浏览器验证手机端（这是接线的用户可见结果）| 桌面顺序正确 `['ins','palace','journal','tokyo','cast','leisure','coop','profile','metanav']`，但 INS 页签只有 `['动态','收藏']` —— **消息页签没出现**。
+根因：canonical 页面 `app/apps/ins/page.tsx` 已换成 `InsAppWithMessages` ✓，而**手机打开的是 `features/ins/phone-view.tsx` 的 `InsPhoneView`**，它渲染 `InsShell` 时没传 `tabContributions`。
+**这是真实缺口而非观感问题**：T08 已登记 `screens = ["messages","conversation"]`，但手机里只有 `conversation` 能回到 `messages`，**没有任何入口能首次进入 `messages`** —— 功能齐全但用户到不了。
+修法：注入一个消息页签，与 canonical 的 `MESSAGES_TAB` 用**同一个 id/label/order**，只改一处 —— `CharacterList` 的 `onOpen` 接到**宿主** `navigateScreen("conversation")`，点角色留在手机里。
+**端到端验证（真实 API + 真实 Chromium 390px）**：页签出现且 `aria-selected` 切换正确；角色列表**真实加载**出双叶/摩尔加纳、无错误态；对照实验（不起 API）显示「READ FAILED 读不到角色列表 + 重试」—— 降级得体 | `0888e73` |
+| 2026-10-16 | **T10 交付**（发布准备）| 部署编排 / CI / 备份恢复 / 运维文档 / 发布清单 | 实测：备份恢复演练 **34/34**（真实 PG：成对备份 → 校验清单 → 隔离恢复到全新库 → 逐表行数一致 → 恢复后撤销会话，并做对照实验**真实测出「不撤销就会复活」**）；健康演练 **11/11**（DB 掉线/schema 未迁移/媒体缺失/只读/迁移半途一律 503 且不泄漏路径）；**反向代理同源写路径 34/34**（真实 Chromium）；`compose config` 0、`caddy validate` 通过、静态审查 42/42 与 30/30。
+**它独立复现了我在 T03 的更正**：生产网关直转 API 时 `Origin`/`Host` 都保留，T03 §8 的 403 在生产形态下**不存在**，因此**不需要**改 `verify_origin` —— 与我此前 5 步实测的结论一致。
+**未验证（如实）**：容器构建 / `compose up` / 容器内 readiness 与非 root（Docker daemon 不可用，跑通前 `deploy/` 不得宣称可用）；真实域名 TLS 与 `__Host-` Cookie；T02 的 48 项浏览器套件未重跑；真机触控软键盘、Safari/Firefox、音频出声、磁盘塞满演练、GH Actions 实际执行。
+**T10 请求我批准两处最小集成修复**：① `next.config.ts` 加 `output:"standalone"` + `outputFileTracingRoot`（06 §2 要求）；② `app/core/` 支持 `DATABASE_URL_FILE`（目前 DB 口令进容器环境变量，`docker inspect` 可见，它已如实披露）。待处理 | 待交付 |
