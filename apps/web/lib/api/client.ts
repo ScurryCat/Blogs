@@ -10,6 +10,24 @@
 
 export const API_PREFIX = "/api/v1";
 
+/**
+ * 拼出实际请求地址：`path` **已经带了** `/api/v1` 前缀时不再重复加。
+ *
+ * 为什么需要（2026-10-16 实测到的缺陷）：各模块的 `paths.ts` 同时导出两套常量 ——
+ * 「绝对（服务端用，含 `/api/v1`）」与「相对（客户端 `apiRequest` 用）」。
+ * 调用点很容易把绝对的那套传进来，于是拼出 `/api/v1/api/v1/projects` 并得到 **404**。
+ * 它的迷惑性在于：**同一个页面服务端渲染是好的**（服务端自己拼完整地址），
+ * 只有客户端交互（加载更多、筛选、手机里的取数）才暴露。T00 是在手机里点开殿堂
+ * 看到「Not Found」才追到这里的。
+ *
+ * 这里做**幂等**处理而不是逐个改调用点：前缀本来就由本模块拥有，
+ * 接受一个已经完整的形式不会有歧义，而且能一次性覆盖所有现存与将来的调用点。
+ */
+export function requestUrl(path: string, base: string = API_PREFIX): string {
+  const alreadyAbsolute = path === API_PREFIX || path.startsWith(`${API_PREFIX}/`);
+  return `${base}${alreadyAbsolute ? path.slice(API_PREFIX.length) : path}`;
+}
+
 export interface ApiErrorShape {
   code: string;
   message: string;
@@ -134,7 +152,7 @@ export async function apiRequest<T>(
   let lastTransportError: unknown;
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
-      const response = await fetch(`${base}${path}`, {
+      const response = await fetch(requestUrl(path, base), {
         method,
         headers,
         body: options.body === undefined ? undefined : JSON.stringify(options.body),

@@ -5,7 +5,7 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { ApiClientError, ApiTransportError, apiRequest } from "./client";
+import { ApiClientError, ApiTransportError, apiRequest, requestUrl } from "./client";
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -126,5 +126,34 @@ describe("apiRequest", () => {
       name: "AbortError",
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("requestUrl 的前缀幂等", () => {
+  // 回归：各模块的 paths.ts 同时导出「绝对（服务端用）」与「相对（客户端用）」两套常量，
+  // 调用点把绝对的那套传给 apiRequest 会拼出 /api/v1/api/v1/... 并 404。
+  // 迷惑性在于服务端渲染的同一页面是好的，只有客户端交互与手机里才暴露。
+  it("相对路径照常加上前缀", () => {
+    expect(requestUrl("/projects?limit=12")).toBe("/api/v1/projects?limit=12");
+  });
+
+  it("已经带前缀的路径不再重复加", () => {
+    expect(requestUrl("/api/v1/projects?limit=12")).toBe("/api/v1/projects?limit=12");
+    expect(requestUrl("/api/v1/gallery/photos/years")).toBe("/api/v1/gallery/photos/years");
+  });
+
+  it("恰好等于前缀时不产生尾斜杠", () => {
+    expect(requestUrl("/api/v1")).toBe("/api/v1");
+  });
+
+  it("不误伤同前缀开头的其它路径", () => {
+    // `/api/v1x` 不是 `/api/v1` 下的路径，不能把 v1x 当后缀切掉。
+    expect(requestUrl("/api/v1x")).toBe("/api/v1/api/v1x");
+  });
+
+  it("自定义 base（服务端）同样只保留一份前缀", () => {
+    expect(requestUrl("/api/v1/projects", "http://api:8000/api/v1")).toBe(
+      "http://api:8000/api/v1/projects",
+    );
   });
 });
