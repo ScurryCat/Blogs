@@ -1,0 +1,245 @@
+# PHANTOM LOG · CI（T10）
+#
+# 依据：06 §6「发布与回退」第 1–2 步、T10 任务卡「建立 CI 的旧测试、前端类型 / 单测 / 构建、
+# 真实 PostgreSQL API 测试、OpenAPI 漂移、容器构建与冒烟。CI 不自动推送生产部署，
+# 除非用户另行授权」。
+#
+# 本工作流**不自动部署生产**：没有 ssh / scp / rsync，没有任何指向生产主机的步骤。
+# 换句话说：这里的每一步都只在本 runner 里跑，产物是测试结果与镜像，不是线上状态。
+# 它只做四件事：跑既有测试、守卫契约漂移、校验生产编排、构建并冒烟镜像。
+# 生产部署**不自动执行**：需要人工按 docs/operations/release.md 操作。
+#
+# 运行环境是 GitHub Actions `ubuntu-latest`。**本次没有 GitHub 远端，本工作流没有被真正
+# 执行过**（见交付单的未验证项）；本机做的是 `deploy/check-ci-workflows.py` 的结构审查。
+
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+# 只读仓库；CI 不需要写任何东西。
+permissions:
+  contents: read
+
+# 同一分支的重复运行取消旧的，避免多个 run 同时抢数据库。
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # 与 T00 锁定的版本对齐；不要在这里随手升级（TS 5.9.3 是三个工具的交集，见 T00-result §7）。
+  NODE_VERSION: "26"
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  api:
+    name: API（FastAPI + 真实 PostgreSQL 18）
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: pl
+          POSTGRES_PASSWORD: pl_ci_password
+          POSTGRES_DB: pl_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U pl -d pl_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.9.18"
+          enable-cache: true
+      - name: 安装锁定的依赖
+        run: uv sync --project apps/api --frozen
+        env:
+          UV_PYTHON: ${{ env.PYTHON_VERSION }}
+      - name: 模块与共享测试（真实 PostgreSQL）
+        env:
+          # 与 T00 的隔离约定一致：库名必须带 test 标记，否则守卫会拒绝连接。
+          TEST_DATABASE_URL: postgresql+psycopg://pl:pl_ci_password@127.0.0.1:5432/pl_test
+          APP_ENV: test
+          SECRET_KEY: ci-only-secret-key-not-used-in-production-0123456789
+        run: uv run --project apps/api pytest apps/api/tests
+      - name: OpenAPI 导出（契约漂移守卫前半）
+        env:
+          APP_ENV: test
+          DATABASE_URL: postgresql+psycopg://pl:pl_ci_password@127.0.0.1:5432/pl_test
+          SECRET_KEY: ci-only-secret-key-not-used-in-production-0123456789
+        run: uv run --project apps/api python apps/api/scripts/export_openapi.py
+
+  web:
+    name: Web（类型 / lint / 单测 / 生产构建）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: 按锁文件安装
+        run: npm --prefix apps/web ci --no-audit --no-fund
+      - name: 类型检查
+        run: npm --prefix apps/web run typecheck
+      - name: Lint
+        run: npm --prefix apps/web run lint
+      - name: 单元 / 组件测试
+        run: npm --prefix apps/web run test -- --run
+      - name: 生产构建（不传 DEV_API_URL：生产由网关转发）
+        run: npm --prefix apps/web run build
+      - name: 生成前端 API 类型并检查漂移（契约漂移守卫后半）
+        run: |
+          npm --prefix apps/web run gen:api
+          git diff --exit-code -- apps/web/lib/api/generated || {
+            echo "::error::前端 API 类型与 contracts/openapi.json 不一致；请重跑 gen:api 并提交";
+            exit 1;
+          }
+
+  legacy:
+    name: 旧站零回归（node --test）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      # 旧站测试是纯逻辑测试，不需要 npm install（仓库根没有 package.json）。
+      - run: node --test tests/*.test.cjs
+
+  deploy-config:
+    name: 生产编排与配置静态审查
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: 生成一份不含真实密钥的示例 env
+        run: |
+          mkdir -p /tmp/pl-secrets
+          for name in postgres_admin_password postgres_migrator_password postgres_app_password; do
+            printf 'ci-placeholder-%s\n' "$name" > "/tmp/pl-secrets/$name"
+          done
+          cat > /tmp/ci-prod.env <<'ENV'
+          API_IMAGE=registry.invalid/phantom-log/api@sha256:0000000000000000000000000000000000000000000000000000000000000000
+          WEB_IMAGE=registry.invalid/phantom-log/web@sha256:1111111111111111111111111111111111111111111111111111111111111111
+          SITE_ADDRESS=ci.invalid
+          GATEWAY_HTTP_HOST_PORT=8080
+          GATEWAY_HTTPS_HOST_PORT=8443
+          POSTGRES_MIGRATOR_PASSWORD=ci-placeholder-migrator
+          POSTGRES_APP_PASSWORD=ci-placeholder-app
+          POSTGRES_ADMIN_PASSWORD_FILE=/tmp/pl-secrets/postgres_admin_password
+          POSTGRES_MIGRATOR_PASSWORD_FILE=/tmp/pl-secrets/postgres_migrator_password
+          POSTGRES_APP_PASSWORD_FILE=/tmp/pl-secrets/postgres_app_password
+          SECRET_KEY=ci-placeholder-secret-key-not-used-anywhere-0123456789
+          ENV
+      - name: 校验生产编排（只渲染，不起容器）
+        run: |
+          docker compose -f deploy/compose.prod.yaml --env-file /tmp/ci-prod.env config > /tmp/prod-rendered.yaml
+          echo "渲染出的服务："
+          docker compose -f deploy/compose.prod.yaml --env-file /tmp/ci-prod.env config --services
+      - name: 校验开发编排（缺密钥时必须拒绝启动）
+        run: |
+          docker compose -f deploy/compose.dev.yaml --env-file deploy/env/dev.env.example config > /tmp/dev-rendered.yaml
+          if docker compose -f deploy/compose.dev.yaml config >/dev/null 2>&1; then
+            echo "::error::不给 env 时 compose 竟然成功了：缺少密码守卫失效";
+            exit 1;
+          fi
+      - name: 部署配置静态审查（端口 / 网络 / secrets / privileged / 破坏性命令）
+        run: python3 deploy/check-prod-config.py --compose-config /tmp/prod-rendered.yaml
+      - name: Caddyfile 结构审查（本 runner 不下载 Caddy 二进制，只做结构断言）
+        run: python3 deploy/check-prod-config.py --compose-config /tmp/prod-rendered.yaml | tee /tmp/check.log
+      - name: CI 工作流结构审查
+        run: python3 deploy/check-ci-workflows.py
+
+  container-build:
+    name: 容器构建与冒烟（API）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: 构建 API 镜像（按提交 SHA 打标签；不推送）
+        run: |
+          docker build -f deploy/prod.Dockerfile.api \
+            -t phantom-log-api:ci-${{ github.sha }} .
+      - name: 记录镜像摘要
+        run: docker image inspect phantom-log-api:ci-${{ github.sha }} --format '{{index .RepoDigests 0}} {{.Id}}'
+      - name: 启动 PostgreSQL（服务容器）
+        run: |
+          docker network create pl-ci >/dev/null
+          docker run -d --name pl-ci-db --network pl-ci \
+            -e POSTGRES_USER=pl -e POSTGRES_PASSWORD=pl_ci_password -e POSTGRES_DB=pl_ci \
+            postgres:18
+          for i in $(seq 1 40); do
+            docker exec pl-ci-db pg_isready -U pl -d pl_ci && break || sleep 2;
+          done
+      - name: 用镜像跑迁移（验证镜像内 alembic 与迁移文件可用）
+        run: |
+          docker run --rm --network pl-ci \
+            -e APP_ENV=dev \
+            -e DATABASE_URL=postgresql+psycopg://pl:pl_ci_password@pl-ci-db:5432/pl_ci \
+            -e SECRET_KEY=ci-container-smoke-secret-key-0123456789abcdef \
+            phantom-log-api:ci-${{ github.sha }} alembic upgrade head
+      - name: 启动镜像并验证 readiness（数据卷 + schema + 媒体可写）
+        run: |
+          docker run -d --name pl-ci-api --network pl-ci \
+            -e APP_ENV=dev \
+            -e DATABASE_URL=postgresql+psycopg://pl:pl_ci_password@pl-ci-db:5432/pl_ci \
+            -e SECRET_KEY=ci-container-smoke-secret-key-0123456789abcdef \
+            -p 8000:8000 \
+            phantom-log-api:ci-${{ github.sha }}
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8000/api/v1/health/ready > /tmp/ready.json; then break; fi
+            sleep 2
+          done
+          cat /tmp/ready.json
+          python3 -c "import json,sys; body=json.load(open('/tmp/ready.json')); sys.exit(0 if body['status']=='ready' else 1)"
+      - name: 以非 root 运行（容器内 uid 不是 0）
+        run: |
+          uid=$(docker exec pl-ci-api id -u)
+          echo "container uid=$uid"
+          test "$uid" != "0"
+      - name: 收集日志并清理
+        if: always()
+        run: |
+          docker logs pl-ci-api 2>&1 | tail -40 || true
+          docker rm -f pl-ci-api pl-ci-db || true
+          docker network rm pl-ci || true
+
+  container-build-web:
+    name: 容器构建与冒烟（Web）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: 构建 Web 镜像（音频走独立构建上下文）
+        run: |
+          docker build -f deploy/prod.Dockerfile.web \
+            --build-context music=assets/music \
+            -t phantom-log-web:ci-${{ github.sha }} .
+      - name: 启动并验证 /healthz 与静态资源
+        run: |
+          docker run -d --name pl-ci-web -p 3000:3000 phantom-log-web:ci-${{ github.sha }}
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:3000/healthz > /tmp/healthz.json; then break; fi
+            sleep 2
+          done
+          cat /tmp/healthz.json
+          curl -fsS -o /dev/null -w "home=%{http_code}\n" http://127.0.0.1:3000/
+          curl -fsS -o /dev/null -w "music=%{http_code}\n" \
+            http://127.0.0.1:3000/assets/music/beneath-the-mask.mp3
+      - name: 以非 root 运行
+        run: test "$(docker exec pl-ci-web id -u)" != "0"
+      - name: 收集日志并清理
+        if: always()
+        run: |
+          docker logs pl-ci-web 2>&1 | tail -30 || true
+          docker rm -f pl-ci-web || true

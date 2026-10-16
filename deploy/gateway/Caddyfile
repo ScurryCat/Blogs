@@ -1,0 +1,95 @@
+# PHANTOM LOG 网关（Caddy）—— T10。
+#
+# 职责（06 §1）：唯一对公网开放的服务。TLS、同源代理、请求体限制。
+#
+# 明确不做、也不要假设它会做（06 §1 / T10 任务卡）：
+#   - Caddy **默认不提供业务速率限制**（登录失败限制在 FastAPI + PostgreSQL）；
+#     本文件因此不写 rate_limit，避免让人误以为公网已经有登录限流。
+#   - Caddy **不会**因为后端 unhealthy 就自动「修复」；unhealthy 只影响编排的启动依赖与告警。
+#
+# 本文件只做结构校验（`caddy validate`）与本地 HTTP 冒烟；真正的 TLS 需要
+# 已解析的域名、可达的 80/443 与持久证书卷（06 §1，域名尚未落实 → 见发布限制）。
+{
+	# 证书与配置数据必须落在持久卷里，否则重启即重新签发并可能触发 ACME 限流。
+	storage file_system /data
+
+	# 日志只保留必要字段；显式隐藏凭据与 cookie（06 §9：不记录 Cookie / 密码）。
+	log {
+		format json
+		output file /data/logs/access.log {
+			roll_size 10MiB
+			roll_keep 5
+		}
+	}
+
+	# 本机冒烟（无域名、无 443）时的端口覆盖；生产保持 80 / 443。
+	http_port {$GATEWAY_HTTP_PORT:80}
+	https_port {$GATEWAY_HTTPS_PORT:443}
+
+	servers {
+		# 限制单个请求头大小，避免畸形请求打爆内存。
+		max_header_size 32KB
+	}
+}
+
+# 站点地址由环境提供：
+#   本机冒烟   SITE_ADDRESS=http://127.0.0.1:8080
+#   生产       SITE_ADDRESS=blog.example.com（自动 HTTPS）
+{$SITE_ADDRESS:http://127.0.0.1:8080} {
+	# 全站请求体上限；上传图片另有更严格的单文件限制（API 侧 8 MiB）。
+	request_body {
+		max_size 12MB
+	}
+
+	# 结构化访问日志：保留 request id、路径模板、耗时、状态；隐藏凭据类头与查询串。
+	log_skip /healthz
+	log_skip /api/v1/health/live
+
+	# --- API：浏览器与 SSR 都走同源 /api/v1 ---
+	# 01 §2 / 05 §1：前缀原样转发，**不剥离** /api/v1。
+	# 关键：转发时保留 `Origin` 与 `Host`。`verify_origin`（app/core/csrf.py）按
+	# Origin 的 netloc 与 Host 比对判定同源；Caddy 的 reverse_proxy 默认透传这两个头
+	# （不设置 Host 就意味着保留原值），因此**不要**在这里改写 Host，也不要删 Origin。
+	# 实测证据见 docs/agent-deliveries/T10-result.md 的「同源写路径」一节。
+	handle /api/v1/* {
+		header {
+			# 公开数据与权限媒体都不共享缓存（05 §8 / 06 §7）。
+			Cache-Control "no-store"
+			# 健康端点不泄漏任何细节，顺带收紧嗅探与引用来源。
+			X-Content-Type-Options "nosniff"
+			Referrer-Policy "no-referrer"
+			-Server
+		}
+		reverse_proxy {$API_UPSTREAM:api:8000}
+	}
+
+	# --- 音频：沿用旧站静态路径，转发给 web（镜像内 public/assets/music） ---
+	# T02 §6.2：仓库只有一份音频，新站沿用 /assets/music/<file>。
+	handle /assets/music/* {
+		header {
+			Cache-Control "public, max-age=604800"
+			# 音频需要 Range 请求做拖动播放；Caddy 的 file_server / 代理都支持，这里显式声明。
+			Accept-Ranges "bytes"
+		}
+		reverse_proxy {$WEB_UPSTREAM:web:3000}
+	}
+
+	# 网关自身存活探针（不依赖 web / api，避免把下游故障显示成网关故障）。
+	# 必须排在下面的兜底 `handle` **之前**：Caddyfile 里多个同名 `handle` 是有序求值的，
+	# 先匹配者生效，不像 nginx 那样按前缀长度取胜。
+	handle /gateway-healthz {
+		respond "ok" 200
+	}
+
+	# --- 其它一切（页面、静态资源、旧 URL 重定向）交给 web ---
+	handle {
+		header {
+			Strict-Transport-Security "max-age=31536000; includeSubDomains"
+			X-Content-Type-Options "nosniff"
+			Referrer-Policy "strict-origin-when-cross-origin"
+			X-Frame-Options "SAMEORIGIN"
+			-Server
+		}
+		reverse_proxy {$WEB_UPSTREAM:web:3000}
+	}
+}

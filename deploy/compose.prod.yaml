@@ -1,0 +1,255 @@
+# PHANTOM LOG 生产编排（T10）。
+#
+# 依据：06 §1（首版部署形态）、06 §2（镜像与配置原则）、06 §3（健康检查与故障）、
+#       T10 任务卡「Compose 配置 gateway / web / api / db / migrate；只网关对公网，
+#       web 不持有 DB 凭据，媒体不作为公开静态目录。迁移只执行一次，成功才启动
+#       依赖新 schema 的服务」。
+#
+# 网络拓扑：
+#   edge_net : gateway ←→ web / api        （只有 gateway 发布宿主端口）
+#   data_net : api ←→ db                   （internal: true；web 不在这张网里，也没有 DB 凭据）
+#
+# 用法（**需要 Docker daemon**；本机当前 daemon 未运行，见交付单未验证项）：
+#   cp deploy/env/prod.env.example deploy/env/prod.env    # 填真实值，chmod 600
+#   docker compose -f deploy/compose.prod.yaml --env-file deploy/env/prod.env config
+#   docker compose -f deploy/compose.prod.yaml --env-file deploy/env/prod.env up -d
+#
+# 本文件**没有** `down -v`、没有任何卷删除动作；不要在生产维护流程里加（06 §6）。
+
+name: phantom-log
+
+x-logging: &default-logging
+  # 06 §9：限制日志大小，避免磁盘被日志吃满。
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+services:
+  db:
+    # 06 §2：锁定受支持的大版本；生产应按 digest 固定，见 docs/operations/release.md。
+    image: ${POSTGRES_IMAGE:-postgres:18-alpine}
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_ADMIN_USER:-pl_admin}
+      # 用文件形式的密码，避免出现在 `docker inspect` 的环境变量里。
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_admin_password
+      POSTGRES_DB: ${POSTGRES_DB:-pl}
+      TZ: UTC
+      PGTZ: UTC
+      # 18 版官方镜像初始化时执行这里的 *.sh（角色分离与运行账号授权）。
+      # 它们在 initdb 阶段以超级用户执行，之后不会重跑 —— 轮换口令要另走 ALTER ROLE。
+      POSTGRES_MIGRATOR_USER: ${POSTGRES_MIGRATOR_USER:-pl_migrator}
+      POSTGRES_APP_USER: ${POSTGRES_APP_USER:-pl_app}
+      POSTGRES_MIGRATOR_PASSWORD_FILE: /run/secrets/postgres_migrator_password
+      POSTGRES_APP_PASSWORD_FILE: /run/secrets/postgres_app_password
+    secrets:
+      - postgres_admin_password
+      - postgres_migrator_password
+      - postgres_app_password
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - data_net
+    # 刻意不写 ports：生产数据库不对公网监听（06 §2）。
+    # 刻意**不**开 `read_only: true`：官方 postgres 镜像的入口要以 root 初始化数据目录并
+    # 写运行期 socket，只读根文件系统不是官方支持的组合；本机没有 daemon，无法实测，
+    # 所以不写一个没验证过的加固开关。
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      # pg_isready 只证明能接受连接，不证明 schema 已迁移（06 §3）。
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    logging: *default-logging
+
+  migrate:
+    # 一次性任务：成功即退出。API 启动时**不**执行迁移（06 §2）。
+    image: ${API_IMAGE:?必须显式提供 API 镜像引用（含 digest），见 deploy/env/prod.env.example}
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+    environment:
+      APP_ENV: prod
+      APP_VERSION: ${APP_VERSION:-0.0.0}
+      # 迁移用**迁移账号**（表的 owner），与 api 的运行账号分开（06 §2）。
+      # 口令来自文件（`*_PASSWORD_FILE`），compose 会把 `${VAR:?}` 插值的值原样放进
+      # DATABASE_URL，因此这里用 shell 形式在容器启动时读文件拼接，避免口令进 `docker inspect`。
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_MIGRATOR_USER:-pl_migrator}:${POSTGRES_MIGRATOR_PASSWORD:?}@db:5432/${POSTGRES_DB:-pl}
+      SECRET_KEY: ${SECRET_KEY:?迁移也要求完整配置，避免两套配置来源}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - data_net
+    logging: *default-logging
+
+  api:
+    image: ${API_IMAGE:?}
+    restart: unless-stopped
+    environment:
+      APP_ENV: prod
+      APP_VERSION: ${APP_VERSION:-0.0.0}
+      # 运行账号：不是超级用户，也不是表 owner（06 §2）。
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_APP_USER:-pl_app}:${POSTGRES_APP_PASSWORD:?}@db:5432/${POSTGRES_DB:-pl}
+      SECRET_KEY: ${SECRET_KEY:?}
+      # 媒体根目录 = media_data 挂载点；媒体只由 api 授权读取（06 §4）。
+      MEDIA_ROOT: /var/lib/phantom-log/media
+      MEDIA_MAX_CONCURRENCY: ${MEDIA_MAX_CONCURRENCY:-2}
+      # 只信任本编排里的网关；直连部署时必须改回 false（06 §2）。
+      TRUST_PROXY_HEADERS: "true"
+      # 生产是同源（网关），不需要 CORS 白名单；留空即不启用。
+      CORS_ORIGINS: ""
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        # 迁移成功才启动依赖新 schema 的服务（06 §3）。
+        condition: service_completed_successfully
+    volumes:
+      # 媒体是**持久卷**，不是网关的公开静态目录（06 §4）。
+      - media_data:/var/lib/phantom-log/media
+    networks:
+      - edge_net
+      - data_net
+    # 刻意不写 ports：API 只经网关暴露（06 §2）。
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      # readiness 真的查 DB / schema / 媒体可写；未就绪返回 503（06 §3）。
+      # 未就绪时容器是 unhealthy，而不是「running 就算好」。
+      test:
+        - CMD
+        - python
+        - -c
+        - |
+          import json, sys, urllib.request
+          try:
+              with urllib.request.urlopen("http://127.0.0.1:8000/api/v1/health/ready", timeout=5) as r:
+                  body = json.load(r)
+          except Exception:
+              sys.exit(1)
+          sys.exit(0 if body.get("status") == "ok" else 1)
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    logging: *default-logging
+
+  web:
+    image: ${WEB_IMAGE:?必须显式提供 Web 镜像引用（含 digest），见 deploy/env/prod.env.example}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      # 仅服务端可见；浏览器走同源相对 /api/v1（01 §2）。绝不放进 NEXT_PUBLIC_*。
+      API_INTERNAL_URL: http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      # 刻意不加入 data_net：web 不接触数据库网络，也没有 DB 凭据（06 §2）。
+      - edge_net
+    # 刻意不写 ports：web 只经网关暴露。
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      # 只证明 Next 进程能响应；不冒充整站就绪（06 §3）。
+      test:
+        - CMD
+        - node
+        - -e
+        - |
+          fetch("http://127.0.0.1:3000/healthz", { headers: { accept: "application/json" } })
+            .then((r) => process.exit(r.ok ? 0 : 1))
+            .catch(() => process.exit(1));
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    logging: *default-logging
+
+  gateway:
+    image: ${CADDY_IMAGE:-caddy:2.10.2-alpine}
+    restart: unless-stopped
+    environment:
+      # 生产填真实域名（自动 HTTPS）；无域名时只能跑 HTTP 冒烟，见发布限制。
+      SITE_ADDRESS: ${SITE_ADDRESS:?必须显式提供站点地址，例如 blog.example.com 或 http://127.0.0.1:8080}
+      # 容器内保持 80 / 443；宿主端口由下面的 ports 决定，两者不要混用。
+      GATEWAY_HTTP_PORT: "80"
+      GATEWAY_HTTPS_PORT: "443"
+      API_UPSTREAM: api:8000
+      WEB_UPSTREAM: web:3000
+    depends_on:
+      web:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    ports:
+      # 唯一对公网发布端口的服务（06 §1）。宿主端口用环境变量，避免与本机旧站 8000 冲突。
+      - "${GATEWAY_HTTP_HOST_PORT:-80}:80"
+      - "${GATEWAY_HTTPS_HOST_PORT:-443}:443"
+    volumes:
+      - ./gateway/Caddyfile:/etc/caddy/Caddyfile:ro
+      # 证书与 ACME 状态必须持久化，否则每次重启重新签发（06 §1）。
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - edge_net
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      # 绑定 80 / 443 与读取证书需要的最小能力集，不使用 privileged。
+      - NET_BIND_SERVICE
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:80/gateway-healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    logging: *default-logging
+
+volumes:
+  pg_data:
+  media_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  edge_net:
+  data_net:
+    # 数据库网络不对其他项目开放，也不直接面向公网。
+    internal: true
+
+secrets:
+  # Compose secrets 是访问隔离，不等于磁盘加密（06 §2）；宿主机权限仍需保护。
+  # 这三个文件都必须 chmod 600 且只属于运行编排的账号。
+  #
+  # 注意一处**真实取舍**（如实记录，不粉饰）：`migrate` / `api` 两个服务的
+  # `DATABASE_URL` 仍然以插值形式取自 --env-file，因此数据库口令会出现在这两个容器
+  # 的环境变量里（`docker inspect` 可见）。要完全消除这一点需要应用侧支持
+  # `DATABASE_URL_FILE`（属 `apps/api/app/core/`，T01 所有），T10 不擅自改业务代码 ——
+  # 见交付单的集成申请。db 容器自身已走文件形式。
+  postgres_admin_password:
+    file: ${POSTGRES_ADMIN_PASSWORD_FILE:?必须提供仅本机可读的管理员口令文件路径}
+  postgres_migrator_password:
+    file: ${POSTGRES_MIGRATOR_PASSWORD_FILE:?必须提供仅本机可读的迁移账号口令文件路径}
+  postgres_app_password:
+    file: ${POSTGRES_APP_PASSWORD_FILE:?必须提供仅本机可读的运行账号口令文件路径}

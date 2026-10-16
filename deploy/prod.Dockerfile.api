@@ -1,0 +1,55 @@
+# PHANTOM LOG API —— 生产镜像（T10）。
+#
+# 依据：06 §2「FastAPI」/ T10 任务卡「生产化 web standalone 和 API 镜像」。
+#
+# 硬约束：
+#   - 多阶段构建，依赖来自 `uv.lock`（`--frozen` 拒绝隐式更新），只装运行时依赖（`--no-dev`）。
+#   - 非 root 运行（uid 10001）；不 privileged、不挂 docker socket。
+#   - 构建层没有任何密钥：本文件不接收 SECRET_KEY / DATABASE_URL 之类的 build arg，
+#     所有密钥只在运行时由编排注入。
+#   - 迁移不在这里执行（06 §2：不在 worker 启动时跑迁移），由 compose 的一次性 migrate 服务执行。
+#   - 单 worker 起步（06 §1），worker 数由编排显式覆盖而不是镜像内部偷偷多开。
+#
+# 构建上下文是**仓库根目录**：
+#   docker build -f deploy/prod.Dockerfile.api -t phantom-log-api:local .
+
+FROM python:3.13-slim AS base
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/srv/api \
+    UV_PROJECT_ENVIRONMENT=/opt/venv \
+    UV_COMPILE_BYTECODE=1 \
+    PATH="/opt/venv/bin:${PATH}"
+
+# uv 只用于按锁文件安装依赖，镜像里不留任何凭据。
+COPY --from=ghcr.io/astral-sh/uv:0.9 /uv /usr/local/bin/uv
+
+WORKDIR /srv/api
+
+# --- 依赖层：只有依赖清单变化时才失效 ---
+COPY apps/api/pyproject.toml apps/api/uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
+
+# --- 应用层 ---
+# 只复制运行需要的目录：tests / scripts / var / .venv 不进生产镜像。
+COPY apps/api/app ./app
+COPY apps/api/migrations ./migrations
+COPY apps/api/alembic.ini ./alembic.ini
+
+# 非 root 运行；媒体目录是持久卷挂载点，必须可写（readiness 会实际写探针文件，06 §3）。
+# HOME 指向非 root 用户，避免运行时往 /root 写缓存。
+RUN useradd --system --uid 10001 --create-home --home-dir /home/phantom phantom \
+    && mkdir -p /var/lib/phantom-log/media \
+    && chown -R phantom:phantom /srv/api /var/lib/phantom-log /home/phantom
+
+ENV HOME=/home/phantom \
+    MEDIA_ROOT=/var/lib/phantom-log/media
+
+USER phantom
+
+EXPOSE 8000
+
+# 健康检查与编排仍由 compose 的 healthcheck 表达（要区分 liveness / readiness）；
+# 这里只声明默认命令。worker 数由 compose 覆盖。
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

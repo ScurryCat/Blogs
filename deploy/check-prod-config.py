@@ -1,0 +1,316 @@
+#!/usr/bin/env python3
+"""T10 校验：生产部署配置的静态审查（不需要 Docker daemon 也能跑）。
+
+为什么要有这个脚本：本机 Docker daemon 不可用，容器构建与启动**没有**被验证过
+（见交付单的未验证项）。在没有 daemon 的前提下，能做实的是把「生产配置里不该出现
+的东西」变成可执行检查，而不是靠人肉阅读 YAML。
+
+检查项（全部来自 06 §2 / §6 与 T10 任务卡的硬约束）：
+
+  A. 渲染后的生产编排（`docker compose config` 的输出；没有 daemon 也能渲染）
+     1. 只有 gateway 发布宿主端口；db / api / web 一个端口都不发布。
+     2. db 与 api 在 `internal: true` 的网络上；web 不在数据库网络上。
+     3. web 的环境变量里没有任何数据库凭据（名字或值）。
+     4. api / web 不挂源码目录（没有指向仓库源码的 bind mount）。
+     5. 没有任何服务使用 `privileged` 或挂载 docker socket。
+     6. api / web / gateway 都是非 root 的 read-only 根文件系统 + cap_drop。
+     7. 镜像引用不是 `latest`，且 API / WEB 镜像带 digest（生产要求不可变）。
+     8. 没有 `down -v` 之类的卷删除动作出现在任何编排 / 脚本里。
+  B. Caddyfile
+     9. 用真实 Caddy 二进制（若提供 `--caddy`）做 `caddy validate`；
+        没有二进制时退回结构断言，并在输出里明确标注「结构断言，不是 validate」。
+    10. API 与音频两条 `handle` 都在兜底 `handle {}` 之前（Caddyfile 里的顺序决定匹配）。
+    11. 没有把 `Host` 改写成上游地址、没有删 `Origin`（那会破坏同源校验）。
+  C. Dockerfile / 环境变量示例
+    12. 生产 Dockerfile 里没有 `ARG`/`ENV` 形式的密钥，没有 `dev` 阶段的源码挂载。
+    13. `.env` 示例文件里没有看起来像真实密钥的值。
+    14. `.dockerignore` 没有排除镜像真正需要的输入路径。
+
+用法：
+  python3 deploy/check-prod-config.py --compose-config /tmp/rendered.yaml \
+      --caddy /tmp/caddybin/caddy --env-file deploy/env/prod.env.example
+
+退出码 0 = 全部通过；1 = 有失败。
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DEPLOY = REPO_ROOT / "deploy"
+
+# 密钥像是「真值」的形状：够长、不是占位符语法。
+PLACEHOLDER_MARKERS = (
+    "<必填", "replace-with", "change-me", "changeme", "placeholder", "your-", "example",
+    "xxxx", "TODO", "生成", "填",
+)
+SECRET_KEY_HINTS = ("password", "secret", "token", "credential", "apikey", "api_key")
+
+# 镜像输入路径：`.dockerignore` 里出现这些条目就意味着镜像会缺东西。
+REQUIRED_BUILD_INPUTS = (
+    "apps/api/app",
+    "apps/api/migrations",
+    "apps/api/alembic.ini",
+    "apps/api/pyproject.toml",
+    "apps/api/uv.lock",
+    "apps/web/package.json",
+    "apps/web/package-lock.json",
+    "apps/web/next.config.ts",
+    "apps/web/public",
+    "assets/music",
+)
+
+
+class Report:
+    def __init__(self) -> None:
+        self.results: list[tuple[str, bool, str]] = []
+
+    def check(self, label: str, condition: bool, detail: str = "") -> bool:
+        self.results.append((label, bool(condition), detail))
+        print(f"  {'✓' if condition else '✗'} {label}" + (f"  {detail}" if detail else ""))
+        return bool(condition)
+
+    def summary(self) -> int:
+        failed = [item for item in self.results if not item[1]]
+        print(f"\n== 汇总：{len(self.results) - len(failed)}/{len(self.results)} 通过 ==")
+        for label, _, detail in failed:
+            print(f"  ✗ {label}  {detail}")
+        return 1 if failed else 0
+
+
+def load_yaml(path: Path) -> dict:
+    try:
+        import yaml  # type: ignore
+    except ImportError:
+        # 没有 PyYAML 时退回 compose 自己的 json 输出（`docker compose config --format json`）。
+        return json.loads(path.read_text(encoding="utf-8"))
+    return yaml.safe_load(path.read_text(encoding="utf-8"))
+
+
+def check_compose(report: Report, cfg: dict, source: str) -> None:
+    services = cfg.get("services") or {}
+    print(f"== A. 生产编排（{source}）==")
+    report.check("编排里有 gateway / web / api / db / migrate",
+                 {"gateway", "web", "api", "db", "migrate"} <= set(services),
+                 ",".join(sorted(services)))
+
+    publishers = {name: svc.get("ports") for name, svc in services.items() if svc.get("ports")}
+    report.check("只有 gateway 发布宿主端口", set(publishers) == {"gateway"},
+                 f"发布了端口: {sorted(publishers)}")
+
+    db_networks = set((services.get("db") or {}).get("networks") or {})
+    api_networks = set((services.get("api") or {}).get("networks") or {})
+    web_networks = set((services.get("web") or {}).get("networks") or {})
+    internal = {name for name, net in (cfg.get("networks") or {}).items() if (net or {}).get("internal")}
+    report.check("db 在 internal 网络上", bool(db_networks & internal), f"db={sorted(db_networks)} internal={sorted(internal)}")
+    report.check("api 同时接内部数据网络", bool(api_networks & internal), f"api={sorted(api_networks)}")
+    report.check("web 不在数据库网络上", not (web_networks & internal) and not (web_networks & db_networks),
+                 f"web={sorted(web_networks)}")
+
+    web_env = (services.get("web") or {}).get("environment") or {}
+    leaked = [key for key in web_env if any(hint in key.lower() for hint in SECRET_KEY_HINTS)]
+    report.check("web 不持有任何数据库凭据（环境变量名）", not leaked, str(leaked))
+    report.check("web 没有 DATABASE_URL", "DATABASE_URL" not in web_env)
+
+    source_mounts = []
+    for name, svc in services.items():
+        for volume in svc.get("volumes") or []:
+            source_path = str(volume.get("source") or "")
+            if source_path.startswith(str(REPO_ROOT)) and "/deploy/" not in source_path:
+                source_mounts.append((name, source_path))
+    report.check("没有服务挂载仓库源码目录（生产不挂源码）", not source_mounts, str(source_mounts))
+
+    privileged = [name for name, svc in services.items() if svc.get("privileged")]
+    report.check("没有 privileged 服务", not privileged, str(privileged))
+
+    socket_mounts = [
+        (name, str(volume.get("source")))
+        for name, svc in services.items()
+        for volume in svc.get("volumes") or []
+        if "docker.sock" in str(volume.get("source"))
+    ]
+    report.check("没有挂载 docker socket", not socket_mounts, str(socket_mounts))
+
+    for name in ("api", "web", "gateway"):
+        svc = services.get(name) or {}
+        report.check(f"{name}: read_only 根文件系统", svc.get("read_only") is True)
+        report.check(f"{name}: cap_drop ALL", (svc.get("cap_drop") or []) == ["ALL"],
+                     str(svc.get("cap_drop")))
+        report.check(f"{name}: no-new-privileges",
+                     "no-new-privileges:true" in (svc.get("security_opt") or []),
+                     str(svc.get("security_opt")))
+
+    images = {name: str(svc.get("image") or "") for name, svc in services.items()}
+    report.check("没有服务使用 latest 标签",
+                 not [name for name, image in images.items() if image.endswith(":latest")],
+                 str({k: v for k, v in images.items() if v.endswith(":latest")}))
+    for name in ("api", "web"):
+        report.check(f"{name} 镜像按 digest 固定", "@sha256:" in images.get(name, ""),
+                     images.get(name, "")[:70])
+
+
+def check_caddy(r: Report, caddy_binary: str | None) -> None:
+    print("== B. Caddyfile ==")
+    caddyfile = DEPLOY / "gateway" / "Caddyfile"
+    text = caddyfile.read_text(encoding="utf-8")
+
+    order = []
+    for match in re.finditer(r"^\t(handle[^\n{]*)\{", text, re.MULTILINE):
+        order.append(match.group(1).strip())
+    api_index = next((i for i, item in enumerate(order) if "/api/v1" in item), None)
+    music_index = next((i for i, item in enumerate(order) if "/assets/music" in item), None)
+    fallback_index = next((i for i, item in enumerate(order) if item == "handle"), None)
+    r.check("API 的 handle 在兜底 handle 之前",
+            api_index is not None and fallback_index is not None and api_index < fallback_index,
+            f"顺序 {order}")
+    r.check("音频的 handle 在兜底 handle 之前",
+            music_index is not None and fallback_index is not None and music_index < fallback_index)
+    r.check("网关自身探针在兜底 handle 之前",
+            "gateway-healthz" in text and text.index("gateway-healthz") < text.rindex("handle {"))
+
+    rewritten_host = re.search(r"header_up\s+Host", text)
+    r.check("没有改写 Host（同源校验依赖它与 Origin 一致）", rewritten_host is None,
+            rewritten_host.group(0) if rewritten_host else "")
+    r.check("没有删除 Origin 的指令", "-Origin" not in text and "header_up -Origin" not in text)
+    r.check("明确标注不做业务限流（06 §1）", "速率限制" in text or "rate" in text.lower())
+
+    if not caddy_binary:
+        r.check("caddy validate（未提供 --caddy，只做了结构断言）", True,
+                "结构断言已执行；validate 需要 Caddy 二进制")
+        return
+    with tempfile.TemporaryDirectory() as tmp:
+        sandbox = Path(tmp) / "Caddyfile"
+        # 把持久化路径换到临时目录：本机对 /data 没有写权限，而这只影响日志输出目录。
+        sandbox.write_text(text.replace("/data", str(Path(tmp) / "data")), encoding="utf-8")
+        Path(tmp, "data").mkdir(exist_ok=True)
+        result = subprocess.run([caddy_binary, "validate", "--config", str(sandbox),
+                                 "--adapter", "caddyfile"], capture_output=True, text=True)
+        version = subprocess.run([caddy_binary, "version"], capture_output=True, text=True).stdout.strip()
+        r.check(f"caddy validate 通过（{version}）", result.returncode == 0,
+                (result.stderr or result.stdout).strip().splitlines()[-1][:120]
+                if result.returncode else "")
+
+
+def check_dockerfiles(report: Report) -> None:
+    print("== C. Dockerfile / 环境变量示例 ==")
+    for name in ("prod.Dockerfile.api", "prod.Dockerfile.web"):
+        text = (DEPLOY / name).read_text(encoding="utf-8")
+        secret_args = [
+            line for line in text.splitlines()
+            if re.match(r"\s*(ARG|ENV)\s", line) and any(hint in line.lower() for hint in SECRET_KEY_HINTS)
+        ]
+        report.check(f"{name}: 构建层没有密钥类 ARG / ENV", not secret_args, str(secret_args[:2]))
+        report.check(f"{name}: 声明并切换到非 root 用户",
+                     re.search(r"^USER\s+(?!root)", text, re.MULTILINE) is not None)
+        report.check(f"{name}: 锁定依赖（npm ci / uv sync --frozen）",
+                     "npm ci" in text or "uv sync --frozen" in text)
+    web = (DEPLOY / "prod.Dockerfile.web").read_text(encoding="utf-8")
+    report.check("web 镜像显式包含 public 与 .next/static（standalone 不会自动带）",
+                 "/srv/web/public" in web and "/.next/static" in web)
+
+    for env_name in ("prod.env.example", "dev.env.example"):
+        path = DEPLOY / "env" / env_name
+        text = path.read_text(encoding="utf-8")
+        suspicious = []
+        for line in text.splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#") or "=" not in stripped:
+                continue
+            key, _, value = stripped.partition("=")
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            # `*_FILE` 是「密钥文件路径」，不是密钥本身；路径短、可为空，且本来就该出现。
+            if key.endswith("_FILE"):
+                continue
+            if not value or len(value) < 12:
+                continue
+            if any(hint in key.lower() for hint in SECRET_KEY_HINTS):
+                if not any(marker.lower() in value.lower() for marker in PLACEHOLDER_MARKERS):
+                    suspicious.append(key)
+        report.check(f"{env_name}: 没有像真值的密钥（*_FILE 路径不算密钥）", not suspicious, str(suspicious))
+
+    dockerignore = (REPO_ROOT / ".dockerignore").read_text(encoding="utf-8")
+    patterns = [line.strip() for line in dockerignore.splitlines()
+                if line.strip() and not line.strip().startswith("#")]
+    offenders = [pattern for pattern in patterns
+                 if any(pattern.rstrip("/") == required for required in REQUIRED_BUILD_INPUTS)]
+    # `assets/music` 是**刻意**排除的：它由独立的 `music` 构建上下文提供
+    # （compose 的 additional_contexts / CI 的 --build-context），理由见 prod.Dockerfile.web。
+    allowed_exclusions = {"assets/music"}
+    offenders = [pattern for pattern in offenders if pattern.rstrip("/") not in allowed_exclusions]
+    report.check(".dockerignore 没有排除镜像需要的输入路径（music 走独立上下文）",
+                 not offenders, str(offenders))
+    report.check(".dockerignore 排除了密钥文件", any(".env" in pattern for pattern in patterns))
+    report.check(".dockerignore 排除了 node_modules 与 .venv",
+                 any("node_modules" in pattern for pattern in patterns)
+                 and any(".venv" in pattern for pattern in patterns))
+
+
+def strip_docstrings_and_comments(text: str, suffix: str) -> str:
+    """去掉注释与文档字符串，只留下「会真的被执行」的文本。
+
+    第一版直接在原文里搜 `down -v`，结果把「本脚本不做 down -v」这种**声明**当成了违规。
+    检查器自己的注释也算违规 —— 那种检查没有意义，只能改成先剥离再搜。
+    """
+    if suffix == ".py":
+        # 去掉三引号文档字符串（含多行）与 `#` 注释。
+        text = re.sub(r'"""(?:.|\n)*?"""', "", text)
+        text = re.sub(r"'''(?:.|\n)*?'''", "", text)
+        text = re.sub(r"#[^\n]*", "", text)
+        return text
+    if suffix in (".yaml", ".yml", ".sh", ".sql", ""):
+        return re.sub(r"#[^\n]*", "", text)
+    if suffix == ".md":
+        return ""  # Markdown 只是文档，不会被执行
+    return text
+
+
+def check_no_down_v(report: Report, compose_path: Path) -> None:
+    print("== D. 破坏性命令扫描 ==")
+    # 用拼接构造被搜索的字面量：这个文件本身是检查器，不该把自己的检测代码当违规。
+    needle = "down" + " -v"
+    needle_long = "down" + " --volumes"
+    self_path = Path(__file__).resolve()
+    offenders = []
+    for path in sorted(DEPLOY.rglob("*")) + [compose_path]:
+        if not path.is_file() or path.resolve() == self_path:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        body = strip_docstrings_and_comments(text, path.suffix)
+        for line in body.splitlines():
+            if needle in line or needle_long in line:
+                offenders.append(f"{path.relative_to(REPO_ROOT)}: {line.strip()[:80]}")
+    report.check(f"脚本与编排里没有可执行的 {needle}", not offenders, str(offenders[:3]))
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="生产部署配置静态审查")
+    parser.add_argument("--compose-config", required=True,
+                        help="`docker compose config` 的输出（YAML 或 JSON）")
+    parser.add_argument("--caddy", default="", help="Caddy 二进制路径（可选，用于真 validate）")
+    parser.add_argument("--compose-file", default=str(DEPLOY / "compose.prod.yaml"))
+    args = parser.parse_args()
+
+    report = Report()
+    config_path = Path(args.compose_config)
+    cfg = load_yaml(config_path)
+    check_compose(report, cfg, str(config_path))
+    check_caddy(report, args.caddy or shutil.which("caddy"))
+    check_dockerfiles(report)
+    check_no_down_v(report, Path(args.compose_file))
+    return report.summary()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

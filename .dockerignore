@@ -1,0 +1,74 @@
+# 构建上下文排除（T10）。
+#
+# 构建上下文是**仓库根目录**（deploy/prod.Dockerfile.{api,web} / prod.Dockerfile.gateway-check）。
+# 没有这份文件时上下文约 800 MB，其中绝大部分是开发机上的依赖与构建产物，
+# 既拖慢构建，也把本机状态混进镜像的输入。
+#
+# 注意：**不要**在这里排除镜像真正需要的东西 ——
+#   apps/api/app、apps/api/migrations、apps/api/alembic.ini、apps/api/pyproject.toml、
+#   apps/api/uv.lock、apps/web/app、apps/web/features、apps/web/lib、apps/web/public、
+#   apps/web/package.json、apps/web/package-lock.json、apps/web/next.config.ts、assets/music。
+# `deploy/check-build-inputs.py` 会断言这些路径确实没被排除。
+
+# --- 版本控制与编辑器 ---
+.git
+.gitignore
+.gitattributes
+.DS_Store
+Thumbs.db
+.superpowers
+.vscode
+.idea
+
+# --- 密钥：绝不进入任何镜像层 ---
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+secrets
+**/secrets
+
+# --- 本机依赖与构建产物 ---
+**/node_modules
+**/.next
+**/.turbo
+**/.venv
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.tsbuildinfo
+**/next-env.d.ts
+**/.pytest_cache
+**/.ruff_cache
+**/.mypy_cache
+**/coverage
+**/htmlcov
+
+# --- 不入生产镜像的开发资源 ---
+# 后端测试（2.3 MB）与迁移脚本工具不参与运行；迁移本身（migrations/）保留。
+apps/api/tests
+apps/api/scripts
+apps/api/var
+apps/api/alembic.ini.bak
+# 前端工具与测试：浏览器验收脚本、T02 的 48 项套件、各包自带 tools。
+apps/web/tools
+apps/web/tests
+apps/web/features/*/tools
+apps/web/**/__snapshots__
+# 旧站基线资源与测试（镜像里用的是迁移后的 public/assets/legacy）。
+assets/clip
+tests
+tools
+docs
+# 音频：通过独立的小构建上下文 `music` 传入（见 prod.Dockerfile.web 的文件头）。
+assets/music
+
+# --- 部署相关的本机文件 ---
+deploy/.env
+deploy/env/*.env
+deploy/backups
+deploy/*.log

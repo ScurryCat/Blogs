@@ -1,0 +1,118 @@
+# PHANTOM LOG · 发布工作流（T10）
+#
+# 依据：06 §6「发布与回退」第 1–2 步、T10 任务卡「CI 不自动推送生产部署，除非用户另行授权」。
+#
+# 这个工作流只做**构建与记录**：
+#   1. 按 tag 构建 web / api 镜像；
+#   2. 把不可变 digest 与本次 schema head 写进发布记录（artifact）；
+#   3. 推送到镜像仓库**仅当**显式开启了推送（默认关闭，需要仓库变量 + secrets）。
+#
+# 它**不会**：
+#   - 连接任何生产主机（没有 ssh / scp / rsync）；
+#   - 在生产上 `docker compose up`；
+#   - 执行数据库迁移（生产迁移是发布时的一次性人工步骤，见 docs/operations/release.md）。
+#
+# ⚠️ 本次没有 GitHub 远端，本工作流**没有被真正执行过**；本机只做了
+# `deploy/check-ci-workflows.py` 的结构审查（见交付单未验证项）。
+
+name: release-build
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 要构建并记录的版本标签（例如 v0.1.0）
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY: ${{ vars.PHANTOM_REGISTRY || 'ghcr.io' }}
+
+jobs:
+  build:
+    name: 构建镜像并记录 digest
+    runs-on: ubuntu-latest
+    outputs:
+      api_digest: ${{ steps.api.outputs.digest }}
+      web_digest: ${{ steps.web.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - name: 解析版本标签
+        id: meta
+        run: echo "tag=${{ github.event.inputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
+
+      - name: 登录镜像仓库（仅在显式开启推送时）
+        if: ${{ vars.PHANTOM_PUSH_IMAGES == 'true' }}
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 构建 API 镜像
+        id: api
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/prod.Dockerfile.api
+          push: ${{ vars.PHANTOM_PUSH_IMAGES == 'true' }}
+          tags: ${{ env.REGISTRY }}/${{ github.repository }}/api:${{ steps.meta.outputs.tag }}
+          # 同一提交重复构建应得到相同输入；digest 随内容变化。
+          provenance: true
+          sbom: true
+
+      - name: 构建 Web 镜像（音频走独立构建上下文）
+        id: web
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/prod.Dockerfile.web
+          build-contexts: |
+            music=assets/music
+          push: ${{ vars.PHANTOM_PUSH_IMAGES == 'true' }}
+          tags: ${{ env.REGISTRY }}/${{ github.repository }}/web:${{ steps.meta.outputs.tag }}
+          provenance: true
+          sbom: true
+
+      - name: 记录 schema head 与发布元数据
+        run: |
+          mkdir -p release
+          echo "tag=${{ steps.meta.outputs.tag }}" > release/release.env
+          echo "commit=${{ github.sha }}" >> release/release.env
+          echo "api_image=${{ env.REGISTRY }}/${{ github.repository }}/api@sha256:${{ steps.api.outputs.digest }}" >> release/release.env
+          echo "web_image=${{ env.REGISTRY }}/${{ github.repository }}/web@sha256:${{ steps.web.outputs.digest }}" >> release/release.env
+          echo "schema_head=$(grep -c . apps/api/migrations/versions/*.py | wc -l | tr -d ' ') revisions, see alembic" >> release/release.env
+          cat release/release.env
+
+      - name: 发布记录作为 artifact（不做任何部署动作）
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ steps.meta.outputs.tag }}
+          path: release/
+          retention-days: 90
+
+      - name: 冒烟：起容器验证 readiness（不推送到生产）
+        run: |
+          docker run -d --name rel-db \
+            -e POSTGRES_USER=pl -e POSTGRES_PASSWORD=pl_rel_password -e POSTGRES_DB=pl_rel postgres:18
+          for i in $(seq 1 40); do docker exec rel-db pg_isready -U pl -d pl_rel && break || sleep 2; done
+          docker network create rel >/dev/null 2>&1 || true
+          docker network connect rel rel-db
+          docker run --rm --network rel \
+            -e APP_ENV=dev -e SECRET_KEY=rel-smoke-secret-key-0123456789abcdefghij \
+            -e DATABASE_URL=postgresql+psycopg://pl:pl_rel_password@rel-db:5432/pl_rel \
+            "${{ env.REGISTRY }}/${{ github.repository }}/api:${{ steps.meta.outputs.tag }}" \
+            alembic upgrade head || echo "::warning::未推送镜像时本步骤会失败，属预期（本地默认不推送）"
+          docker rm -f rel-db || true
+          docker network rm rel || true
+
+      - name: 提醒：部署需要人工步骤，本工作流不自动部署生产
+        run: |
+          echo "::notice::镜像已构建并记录 digest，生产**不自动部署**。人工步骤见 docs/operations/release.md："
+          echo "::notice::1) 先做部署前备份  2) 只跑一次迁移  3) 起新镜像并等 readiness  4) 跑冒烟  5) 记录恢复点"
