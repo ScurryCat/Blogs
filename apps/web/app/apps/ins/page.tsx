@@ -18,7 +18,7 @@ import { Suspense } from "react";
 
 import { ApiClientError, ApiTransportError } from "@/lib/api/client";
 import { CoopEntry } from "@/features/coop/coop-entry";
-import { InsApp } from "@/features/ins/ins-app";
+import { InsAppWithMessages } from "@/features/messaging/ins-integration";
 import { fetchMomentsOnServer, fetchTagsOnServer } from "@/features/ins/server-api";
 import { INS_SUBTITLE, INS_TITLE } from "@/features/ins/composition";
 import { FEED_PAGE_SIZE, type Moment } from "@/features/ins/types";
@@ -72,7 +72,7 @@ export default async function InsFeedPage({ searchParams }: PageProps): Promise<
 
   return (
     <Suspense fallback={<p className="ins-loading">正在读取图文动态…</p>}>
-      <InsApp
+      <InsAppWithMessages
         tag={tag}
         availableTags={availableTags}
         initialFeed={initialFeed}

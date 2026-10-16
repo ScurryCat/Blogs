@@ -20,6 +20,7 @@ from app.core.db import Base
 MODEL_MODULES: tuple[str, ...] = (
     "app.modules.auth.models",
     "app.modules.media.models",
+    "app.modules.messaging.models",
     "app.modules.tags.models",
     "app.modules.posts.models",
     "app.modules.nav.models",

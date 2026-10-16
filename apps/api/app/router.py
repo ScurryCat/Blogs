@@ -25,6 +25,7 @@ MODULE_ROUTER_TARGETS: tuple[tuple[str, str], ...] = (
     ("journal", "app.modules.journal.router"),
     ("leisure", "app.modules.leisure.router"),
     ("media", "app.modules.media.router"),
+    ("messaging", "app.modules.messaging.router"),
     ("moments", "app.modules.moments.router"),
     ("nav", "app.modules.nav.router"),
     ("posts", "app.modules.posts.router"),

@@ -16,8 +16,27 @@
  * 宿主对未列出的 screen 会正确回退桌面，而不是渲染一个空壳（验收用例 5）。
  */
 
+import type { PhoneViewProps } from "@/features/phone/types";
+import MessagingPhoneView, { screens as MESSAGING_SCREENS } from "@/features/messaging/phone-app";
+
 import { InsPhoneView } from "./phone-view";
 
-export default InsPhoneView;
+/**
+ * 手机根：把消息屏分派给 T08 的实现，其余屏仍由 INS 自己处理。
+ *
+ * 不做这一步的后果是**明确的**：`screen=messages` 会被宿主正确回退桌面（不显示坏按钮），
+ * 但消息功能在手机上就进不去 —— 不是坏体验，是缺功能。
+ */
+/** INS 自己实现的屏幕（原来的 `screens` 导出）。 */
+const INS_APP_SCREENS = ["feed", "detail", "saved"] as const;
 
-export const screens = ["feed", "detail", "saved"] as const;
+function InsPhoneRoot(props: PhoneViewProps) {
+  if ((MESSAGING_SCREENS as readonly string[]).includes(props.screen)) {
+    return <MessagingPhoneView {...props} />;
+  }
+  return <InsPhoneView {...props} />;
+}
+
+export default InsPhoneRoot;
+
+export const screens = [...INS_APP_SCREENS, ...MESSAGING_SCREENS] as const;

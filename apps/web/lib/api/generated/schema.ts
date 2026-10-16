@@ -271,6 +271,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/messaging/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 运行配置与今日用量（成本不隐藏）
+         * @description 给站主看的真实数字：今天到底花了多少单位、有多少会话与消息。
+         *
+         *     `config` 走 `safe_summary()`，密钥只以「是否设置」出现。
+         */
+        get: operations["admin_overview_api_v1_admin_messaging_overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/moments": {
         parameters: {
             query?: never;
@@ -687,6 +709,195 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/messaging/characters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 角色目录（含当前访客自己的会话摘要）
+         * @description 没有会话时摘要是 `null` —— 不会替访客凭空造一段会话。
+         */
+        get: operations["list_characters_api_v1_messaging_characters_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/messaging/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 取得或创建某角色的会话
+         * @description 按角色 id 取得会话。**同一角色只会有一段会话**，两个标签页共用同一顺序。
+         */
+        post: operations["create_conversation_api_v1_messaging_conversations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/messaging/conversations/{conversation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 读取会话 */
+        get: operations["read_conversation_api_v1_messaging_conversations__conversation_id__get"];
+        put?: never;
+        post?: never;
+        /** 清除这段会话 */
+        delete: operations["delete_conversation_api_v1_messaging_conversations__conversation_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/messaging/conversations/{conversation_id}/choice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 选择一个预设选项
+         * @description 非法或过期的选项**不会推进剧情**：422（选项不属于当前节点）/ 409（节点版本过期）。
+         */
+        post: operations["choose_option_api_v1_messaging_conversations__conversation_id__choice_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/messaging/conversations/{conversation_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 自由输入（调用 AI 适配层）
+         * @description 幂等键是 `client_request_id`（作用域 = 当前访客会话）。重试不会重复调用上游。
+         */
+        post: operations["send_message_api_v1_messaging_conversations__conversation_id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/messaging/conversations/{conversation_id}/restart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 重开这段剧情（保留聊天记录） */
+        post: operations["restart_story_api_v1_messaging_conversations__conversation_id__restart_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/messaging/conversations/{conversation_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 回到话题
+         * @description 恢复被暂停的节点与它的选项；重复调用是幂等的空操作。
+         */
+        post: operations["resume_topic_api_v1_messaging_conversations__conversation_id__resume_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/messaging/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 建立或续期访客会话
+         * @description 第一次调用会建立匿名会话（HttpOnly Cookie，库里只有摘要）。
+         *
+         *     这是**唯一**需要「先有会话才有 CSRF token」的引导接口，因此它只做来源校验，
+         *     不要求 token（还没有 token 可带）。跨站页面会被来源校验挡掉。
+         */
+        post: operations["ensure_session_api_v1_messaging_session_post"];
+        /**
+         * 立即清除该访客的全部角色消息
+         * @description 「访客可以立即清除聊天」（08 §7）。
+         *
+         *     全站日预算计数**不**因此回退：已经产生的上游成本仍然如实保留（08 §7）。
+         *
+         *     清除 Cookie 写在**返回的那个** Response 上：FastAPI 会合并注入的 response 与
+         *     返回值的头，但依赖合并顺序迟早会咬人，这里直接构造、直接返回，行为可断言。
+         */
+        delete: operations["clear_session_api_v1_messaging_session_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/messaging/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 角色消息的运行状态与限额
+         * @description **无副作用**：不建会话、不发 Cookie、不读访客身份。
+         *
+         *     因此它可以被健康探针、管理页与首屏同时调用，也不会因为预取而产生垃圾会话。
+         */
+        get: operations["read_status_api_v1_messaging_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/moments": {
         parameters: {
             query?: never;
@@ -861,6 +1072,23 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
+         * AiStateOut
+         * @description AI 侧的状态。`status` 是稳定机器码；`message` 是给人看的原因。
+         */
+        AiStateOut: {
+            /** Message */
+            message: string;
+            /** Provider */
+            provider: string;
+            /**
+             * Retryable
+             * @default false
+             */
+            retryable: boolean;
+            /** Status */
+            status: string;
+        };
+        /**
          * AnimeProgressOut
          * @description 追番进度。`total_episodes` / `completion_ratio` 为 null 表示总数未知。
          */
@@ -884,6 +1112,146 @@ export interface components {
         Body_upload_media_api_v1_admin_media_post: {
             /** File */
             file: string;
+        };
+        /**
+         * CardOut
+         * @description 服务端验证过的站内内容引用。`url` 由服务端生成，前端只用它渲染 SiteLink。
+         */
+        CardOut: {
+            /** Id */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Summary */
+            summary: string;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+        };
+        /** CharacterOut */
+        CharacterOut: {
+            /** Avatar */
+            avatar: string;
+            /** Avatar Alt */
+            avatar_alt: string;
+            conversation?: components["schemas"]["ConversationSummaryOut"] | null;
+            /** Handle */
+            handle: string;
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Story Id */
+            story_id: string;
+            /** Story Version */
+            story_version: string;
+            /** Tagline */
+            tagline: string;
+        };
+        /** ChoiceIn */
+        ChoiceIn: {
+            /** Choice Id */
+            choice_id: string;
+            /** Client Message Id */
+            client_message_id: string;
+            /** Csrf Token */
+            csrf_token?: string | null;
+            /** Node Id */
+            node_id: string;
+            /** Node Version */
+            node_version: number;
+        };
+        /** ChoiceOut */
+        ChoiceOut: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+        };
+        /** ConversationCreateIn */
+        ConversationCreateIn: {
+            /** Character Id */
+            character_id: string;
+            /** Csrf Token */
+            csrf_token?: string | null;
+        };
+        /** ConversationOut */
+        ConversationOut: {
+            ai: components["schemas"]["AiStateOut"];
+            conversation: components["schemas"]["ConversationStateOut"];
+            /** Messages */
+            messages?: components["schemas"]["MessageOut"][];
+            node?: components["schemas"]["NodeOut"] | null;
+            usage: components["schemas"]["UsageOut"];
+        };
+        /** ConversationStateOut */
+        ConversationStateOut: {
+            /** Can Restart */
+            can_restart: boolean;
+            /** Can Resume */
+            can_resume: boolean;
+            /** Can Send */
+            can_send: boolean;
+            /** Character Id */
+            character_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Id */
+            id: string;
+            /** Node Id */
+            node_id: string;
+            /** Node Version */
+            node_version: number;
+            /** Paused Node Id */
+            paused_node_id?: string | null;
+            /** Status */
+            status: string;
+            /** Story Id */
+            story_id: string;
+            /** Story Version */
+            story_version: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * ConversationSummaryOut
+         * @description 角色列表里的会话摘要。**只属于当前访客**；没有会话时为 null。
+         */
+        ConversationSummaryOut: {
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Id */
+            id: string;
+            /** Last Message At */
+            last_message_at?: string | null;
+            /** Message Count */
+            message_count: number;
+            /** Node Id */
+            node_id: string;
+            /** Node Version */
+            node_version: number;
+            /**
+             * Preview
+             * @default
+             */
+            preview: string;
+            /** Status */
+            status: string;
         };
         /**
          * FriendLinkActionIn
@@ -1613,6 +1981,25 @@ export interface components {
             /** Total Episodes */
             total_episodes?: number | null;
         };
+        /** LimitsOut */
+        LimitsOut: {
+            /** Conversation Idle Seconds */
+            conversation_idle_seconds: number;
+            /** Conversation Max Inflight */
+            conversation_max_inflight: number;
+            /** Input Max Codepoints */
+            input_max_codepoints: number;
+            /** Max Bubbles */
+            max_bubbles: number;
+            /** Site Daily Units */
+            site_daily_units: number;
+            /** Site Max Concurrency */
+            site_max_concurrency: number;
+            /** Visitor Daily Requests */
+            visitor_daily_requests: number;
+            /** Visitor Session Idle Seconds */
+            visitor_session_idle_seconds: number;
+        };
         /** LoginIn */
         LoginIn: {
             /** Csrf Token */
@@ -1682,6 +2069,49 @@ export interface components {
             url: string;
             /** Width */
             width: number;
+        };
+        /** MessageIn */
+        MessageIn: {
+            /** Client Request Id */
+            client_request_id: string;
+            /** Csrf Token */
+            csrf_token?: string | null;
+            /** Text */
+            text: string;
+        };
+        /** MessageOut */
+        MessageOut: {
+            /**
+             * Attribution
+             * @default
+             */
+            attribution: string;
+            /** Cards */
+            cards?: components["schemas"]["CardOut"][];
+            /** Choice Id */
+            choice_id?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Generation Request Id */
+            generation_request_id?: string | null;
+            /** Id */
+            id: string;
+            /**
+             * Is Ai
+             * @default false
+             */
+            is_ai: boolean;
+            /** Node Id */
+            node_id?: string | null;
+            /** Origin */
+            origin: string;
+            /** Seq */
+            seq: number;
+            /** Text */
+            text: string;
         };
         /** MomentAdminListOut */
         MomentAdminListOut: {
@@ -1825,6 +2255,32 @@ export interface components {
             tags?: string[] | null;
             /** Text */
             text?: string | null;
+        };
+        /**
+         * NodeOut
+         * @description 当前剧情节点的**可交互部分**。
+         *
+         *     台词不在这里重复下发 —— 它们已经作为消息存在于 `messages` 里，
+         *     再次下发会让「恢复后不重复插入已经展示过的开场」变得无法断言（08 §3）。
+         */
+        NodeOut: {
+            /** Choices */
+            choices?: components["schemas"]["ChoiceOut"][];
+            /** Ending */
+            ending: boolean;
+            /** Id */
+            id: string;
+            /** Resumable */
+            resumable: boolean;
+            /** Resume Text */
+            resume_text?: string | null;
+        };
+        /** NodeVersionIn */
+        NodeVersionIn: {
+            /** Csrf Token */
+            csrf_token?: string | null;
+            /** Node Version */
+            node_version: number;
         };
         /**
          * PalaceActionIn
@@ -2210,6 +2666,18 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /** SessionOut */
+        SessionOut: {
+            ai: components["schemas"]["AiStateOut"];
+            /** Characters */
+            characters?: components["schemas"]["CharacterOut"][];
+            /** Csrf Token */
+            csrf_token: string;
+            /** Disclosure */
+            disclosure: string;
+            usage: components["schemas"]["UsageOut"];
+            visitor: components["schemas"]["VisitorOut"];
+        };
         /**
          * SessionStatusOut
          * @description `GET /auth/session` 与登录成功的响应。预登录时 `authenticated=false`、`user=null`。
@@ -2235,6 +2703,18 @@ export interface components {
             /** Username */
             username: string;
         };
+        /**
+         * StatusOut
+         * @description 公开的运行状态：**不含**任何密钥，也不含访客身份。
+         */
+        StatusOut: {
+            ai: components["schemas"]["AiStateOut"];
+            /** Disclosure */
+            disclosure: string;
+            limits: components["schemas"]["LimitsOut"];
+            /** Provider Notes */
+            provider_notes?: string[];
+        };
         /** TagPublicOut */
         TagPublicOut: {
             /**
@@ -2246,6 +2726,33 @@ export interface components {
             name: string;
             /** Slug */
             slug: string;
+        };
+        /**
+         * UsageOut
+         * @description 用量。**不隐藏成本**：即使额度没用完，也如实给出已结算单位。
+         */
+        UsageOut: {
+            /** Daily Limit */
+            daily_limit: number;
+            /**
+             * Inflight
+             * @default 0
+             */
+            inflight: number;
+            /** Remaining */
+            remaining?: number | null;
+            /** Requests Today */
+            requests_today?: number | null;
+            /**
+             * Site Daily Units
+             * @default 0
+             */
+            site_daily_units: number;
+            /**
+             * Site Settled Units
+             * @default 0
+             */
+            site_settled_units: number;
         };
         /** ValidationError */
         ValidationError: {
@@ -2259,6 +2766,21 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** VisitorOut */
+        VisitorOut: {
+            /**
+             * Absolute Expires At
+             * Format: date-time
+             */
+            absolute_expires_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Id */
+            id: string;
         };
     };
     responses: never;
@@ -3067,6 +3589,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_overview_api_v1_admin_messaging_overview_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
         };
@@ -3953,6 +4497,317 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_characters_api_v1_messaging_characters_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharacterOut"][];
+                };
+            };
+        };
+    };
+    create_conversation_api_v1_messaging_conversations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConversationCreateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_conversation_api_v1_messaging_conversations__conversation_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_conversation_api_v1_messaging_conversations__conversation_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    choose_option_api_v1_messaging_conversations__conversation_id__choice_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChoiceIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    send_message_api_v1_messaging_conversations__conversation_id__messages_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MessageIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restart_story_api_v1_messaging_conversations__conversation_id__restart_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NodeVersionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resume_topic_api_v1_messaging_conversations__conversation_id__resume_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NodeVersionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ensure_session_api_v1_messaging_session_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionOut"];
+                };
+            };
+        };
+    };
+    clear_session_api_v1_messaging_session_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    read_status_api_v1_messaging_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StatusOut"];
                 };
             };
         };

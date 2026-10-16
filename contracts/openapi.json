@@ -1,6 +1,35 @@
 {
   "components": {
     "schemas": {
+      "AiStateOut": {
+        "description": "AI 侧的状态。`status` 是稳定机器码；`message` 是给人看的原因。",
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "retryable": {
+            "default": false,
+            "title": "Retryable",
+            "type": "boolean"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "message",
+          "provider"
+        ],
+        "title": "AiStateOut",
+        "type": "object"
+      },
       "AnimeProgressOut": {
         "description": "追番进度。`total_episodes` / `completion_ratio` 为 null 表示总数未知。",
         "properties": {
@@ -100,6 +129,371 @@
           "file"
         ],
         "title": "Body_upload_media_api_v1_admin_media_post",
+        "type": "object"
+      },
+      "CardOut": {
+        "description": "服务端验证过的站内内容引用。`url` 由服务端生成，前端只用它渲染 SiteLink。",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "title",
+          "summary",
+          "url"
+        ],
+        "title": "CardOut",
+        "type": "object"
+      },
+      "CharacterOut": {
+        "properties": {
+          "avatar": {
+            "title": "Avatar",
+            "type": "string"
+          },
+          "avatar_alt": {
+            "title": "Avatar Alt",
+            "type": "string"
+          },
+          "conversation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConversationSummaryOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "handle": {
+            "title": "Handle",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "story_id": {
+            "title": "Story Id",
+            "type": "string"
+          },
+          "story_version": {
+            "title": "Story Version",
+            "type": "string"
+          },
+          "tagline": {
+            "title": "Tagline",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "handle",
+          "tagline",
+          "avatar",
+          "avatar_alt",
+          "story_id",
+          "story_version"
+        ],
+        "title": "CharacterOut",
+        "type": "object"
+      },
+      "ChoiceIn": {
+        "properties": {
+          "choice_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Choice Id",
+            "type": "string"
+          },
+          "client_message_id": {
+            "pattern": "^[A-Za-z0-9._:-]{1,64}$",
+            "title": "Client Message Id",
+            "type": "string"
+          },
+          "csrf_token": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Csrf Token"
+          },
+          "node_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Node Id",
+            "type": "string"
+          },
+          "node_version": {
+            "maximum": 1000000.0,
+            "minimum": 0.0,
+            "title": "Node Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "choice_id",
+          "node_id",
+          "node_version",
+          "client_message_id"
+        ],
+        "title": "ChoiceIn",
+        "type": "object"
+      },
+      "ChoiceOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "ChoiceOut",
+        "type": "object"
+      },
+      "ConversationCreateIn": {
+        "properties": {
+          "character_id": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Character Id",
+            "type": "string"
+          },
+          "csrf_token": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Csrf Token"
+          }
+        },
+        "required": [
+          "character_id"
+        ],
+        "title": "ConversationCreateIn",
+        "type": "object"
+      },
+      "ConversationOut": {
+        "properties": {
+          "ai": {
+            "$ref": "#/components/schemas/AiStateOut"
+          },
+          "conversation": {
+            "$ref": "#/components/schemas/ConversationStateOut"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/MessageOut"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "node": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NodeOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "usage": {
+            "$ref": "#/components/schemas/UsageOut"
+          }
+        },
+        "required": [
+          "conversation",
+          "ai",
+          "usage"
+        ],
+        "title": "ConversationOut",
+        "type": "object"
+      },
+      "ConversationStateOut": {
+        "properties": {
+          "can_restart": {
+            "title": "Can Restart",
+            "type": "boolean"
+          },
+          "can_resume": {
+            "title": "Can Resume",
+            "type": "boolean"
+          },
+          "can_send": {
+            "title": "Can Send",
+            "type": "boolean"
+          },
+          "character_id": {
+            "title": "Character Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "node_id": {
+            "title": "Node Id",
+            "type": "string"
+          },
+          "node_version": {
+            "title": "Node Version",
+            "type": "integer"
+          },
+          "paused_node_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paused Node Id"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "story_id": {
+            "title": "Story Id",
+            "type": "string"
+          },
+          "story_version": {
+            "title": "Story Version",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "character_id",
+          "status",
+          "story_id",
+          "story_version",
+          "node_id",
+          "node_version",
+          "created_at",
+          "updated_at",
+          "expires_at",
+          "can_send",
+          "can_resume",
+          "can_restart"
+        ],
+        "title": "ConversationStateOut",
+        "type": "object"
+      },
+      "ConversationSummaryOut": {
+        "description": "角色列表里的会话摘要。**只属于当前访客**；没有会话时为 null。",
+        "properties": {
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "last_message_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Message At"
+          },
+          "message_count": {
+            "title": "Message Count",
+            "type": "integer"
+          },
+          "node_id": {
+            "title": "Node Id",
+            "type": "string"
+          },
+          "node_version": {
+            "title": "Node Version",
+            "type": "integer"
+          },
+          "preview": {
+            "default": "",
+            "title": "Preview",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "node_id",
+          "node_version",
+          "message_count",
+          "expires_at"
+        ],
+        "title": "ConversationSummaryOut",
         "type": "object"
       },
       "FriendLinkActionIn": {
@@ -2293,6 +2687,54 @@
         "title": "LeisureUpdateIn",
         "type": "object"
       },
+      "LimitsOut": {
+        "properties": {
+          "conversation_idle_seconds": {
+            "title": "Conversation Idle Seconds",
+            "type": "integer"
+          },
+          "conversation_max_inflight": {
+            "title": "Conversation Max Inflight",
+            "type": "integer"
+          },
+          "input_max_codepoints": {
+            "title": "Input Max Codepoints",
+            "type": "integer"
+          },
+          "max_bubbles": {
+            "title": "Max Bubbles",
+            "type": "integer"
+          },
+          "site_daily_units": {
+            "title": "Site Daily Units",
+            "type": "integer"
+          },
+          "site_max_concurrency": {
+            "title": "Site Max Concurrency",
+            "type": "integer"
+          },
+          "visitor_daily_requests": {
+            "title": "Visitor Daily Requests",
+            "type": "integer"
+          },
+          "visitor_session_idle_seconds": {
+            "title": "Visitor Session Idle Seconds",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "input_max_codepoints",
+          "max_bubbles",
+          "visitor_daily_requests",
+          "site_daily_units",
+          "site_max_concurrency",
+          "conversation_max_inflight",
+          "visitor_session_idle_seconds",
+          "conversation_idle_seconds"
+        ],
+        "title": "LimitsOut",
+        "type": "object"
+      },
       "LoginIn": {
         "properties": {
           "csrf_token": {
@@ -2471,6 +2913,123 @@
           "url"
         ],
         "title": "MediaVariantOut",
+        "type": "object"
+      },
+      "MessageIn": {
+        "properties": {
+          "client_request_id": {
+            "pattern": "^[A-Za-z0-9._:-]{1,64}$",
+            "title": "Client Request Id",
+            "type": "string"
+          },
+          "csrf_token": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Csrf Token"
+          },
+          "text": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "client_request_id"
+        ],
+        "title": "MessageIn",
+        "type": "object"
+      },
+      "MessageOut": {
+        "properties": {
+          "attribution": {
+            "default": "",
+            "title": "Attribution",
+            "type": "string"
+          },
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/CardOut"
+            },
+            "title": "Cards",
+            "type": "array"
+          },
+          "choice_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Choice Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "generation_request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generation Request Id"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_ai": {
+            "default": false,
+            "title": "Is Ai",
+            "type": "boolean"
+          },
+          "node_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Node Id"
+          },
+          "origin": {
+            "title": "Origin",
+            "type": "string"
+          },
+          "seq": {
+            "title": "Seq",
+            "type": "integer"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "seq",
+          "origin",
+          "text",
+          "created_at"
+        ],
+        "title": "MessageOut",
         "type": "object"
       },
       "MomentAdminListOut": {
@@ -2832,6 +3391,75 @@
           }
         },
         "title": "MomentUpdateIn",
+        "type": "object"
+      },
+      "NodeOut": {
+        "description": "当前剧情节点的**可交互部分**。\n\n台词不在这里重复下发 —— 它们已经作为消息存在于 `messages` 里，\n再次下发会让「恢复后不重复插入已经展示过的开场」变得无法断言（08 §3）。",
+        "properties": {
+          "choices": {
+            "items": {
+              "$ref": "#/components/schemas/ChoiceOut"
+            },
+            "title": "Choices",
+            "type": "array"
+          },
+          "ending": {
+            "title": "Ending",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "resumable": {
+            "title": "Resumable",
+            "type": "boolean"
+          },
+          "resume_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resume Text"
+          }
+        },
+        "required": [
+          "id",
+          "ending",
+          "resumable"
+        ],
+        "title": "NodeOut",
+        "type": "object"
+      },
+      "NodeVersionIn": {
+        "properties": {
+          "csrf_token": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Csrf Token"
+          },
+          "node_version": {
+            "maximum": 1000000.0,
+            "minimum": 0.0,
+            "title": "Node Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "node_version"
+        ],
+        "title": "NodeVersionIn",
         "type": "object"
       },
       "PalaceActionIn": {
@@ -3805,6 +4433,43 @@
         "title": "SearchListOut",
         "type": "object"
       },
+      "SessionOut": {
+        "properties": {
+          "ai": {
+            "$ref": "#/components/schemas/AiStateOut"
+          },
+          "characters": {
+            "items": {
+              "$ref": "#/components/schemas/CharacterOut"
+            },
+            "title": "Characters",
+            "type": "array"
+          },
+          "csrf_token": {
+            "title": "Csrf Token",
+            "type": "string"
+          },
+          "disclosure": {
+            "title": "Disclosure",
+            "type": "string"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/UsageOut"
+          },
+          "visitor": {
+            "$ref": "#/components/schemas/VisitorOut"
+          }
+        },
+        "required": [
+          "visitor",
+          "csrf_token",
+          "ai",
+          "usage",
+          "disclosure"
+        ],
+        "title": "SessionOut",
+        "type": "object"
+      },
       "SessionStatusOut": {
         "description": "`GET /auth/session` 与登录成功的响应。预登录时 `authenticated=false`、`user=null`。",
         "properties": {
@@ -3872,6 +4537,35 @@
         "title": "SessionUserOut",
         "type": "object"
       },
+      "StatusOut": {
+        "description": "公开的运行状态：**不含**任何密钥，也不含访客身份。",
+        "properties": {
+          "ai": {
+            "$ref": "#/components/schemas/AiStateOut"
+          },
+          "disclosure": {
+            "title": "Disclosure",
+            "type": "string"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/LimitsOut"
+          },
+          "provider_notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Provider Notes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ai",
+          "limits",
+          "disclosure"
+        ],
+        "title": "StatusOut",
+        "type": "object"
+      },
       "TagPublicOut": {
         "properties": {
           "id": {
@@ -3894,6 +4588,57 @@
           "name"
         ],
         "title": "TagPublicOut",
+        "type": "object"
+      },
+      "UsageOut": {
+        "description": "用量。**不隐藏成本**：即使额度没用完，也如实给出已结算单位。",
+        "properties": {
+          "daily_limit": {
+            "title": "Daily Limit",
+            "type": "integer"
+          },
+          "inflight": {
+            "default": 0,
+            "title": "Inflight",
+            "type": "integer"
+          },
+          "remaining": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remaining"
+          },
+          "requests_today": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requests Today"
+          },
+          "site_daily_units": {
+            "default": 0,
+            "title": "Site Daily Units",
+            "type": "integer"
+          },
+          "site_settled_units": {
+            "default": 0,
+            "title": "Site Settled Units",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "daily_limit"
+        ],
+        "title": "UsageOut",
         "type": "object"
       },
       "ValidationError": {
@@ -3934,6 +4679,31 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "VisitorOut": {
+        "properties": {
+          "absolute_expires_at": {
+            "format": "date-time",
+            "title": "Absolute Expires At",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "expires_at",
+          "absolute_expires_at"
+        ],
+        "title": "VisitorOut",
         "type": "object"
       }
     }
@@ -5444,6 +6214,30 @@
         "summary": "上传单张图片（站主）",
         "tags": [
           "admin-media"
+        ]
+      }
+    },
+    "/api/v1/admin/messaging/overview": {
+      "get": {
+        "description": "给站主看的真实数字：今天到底花了多少单位、有多少会话与消息。\n\n`config` 走 `safe_summary()`，密钥只以「是否设置」出现。",
+        "operationId": "admin_overview_api_v1_admin_messaging_overview_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Admin Overview Api V1 Admin Messaging Overview Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "运行配置与今日用量（成本不隐藏）",
+        "tags": [
+          "admin-messaging"
         ]
       }
     },
@@ -6969,6 +7763,417 @@
         "summary": "读取媒体变体",
         "tags": [
           "media"
+        ]
+      }
+    },
+    "/api/v1/messaging/characters": {
+      "get": {
+        "description": "没有会话时摘要是 `null` —— 不会替访客凭空造一段会话。",
+        "operationId": "list_characters_api_v1_messaging_characters_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CharacterOut"
+                  },
+                  "title": "Response List Characters Api V1 Messaging Characters Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "角色目录（含当前访客自己的会话摘要）",
+        "tags": [
+          "messaging"
+        ]
+      }
+    },
+    "/api/v1/messaging/conversations": {
+      "post": {
+        "description": "按角色 id 取得会话。**同一角色只会有一段会话**，两个标签页共用同一顺序。",
+        "operationId": "create_conversation_api_v1_messaging_conversations_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversationCreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "取得或创建某角色的会话",
+        "tags": [
+          "messaging"
+        ]
+      }
+    },
+    "/api/v1/messaging/conversations/{conversation_id}": {
+      "delete": {
+        "operationId": "delete_conversation_api_v1_messaging_conversations__conversation_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "清除这段会话",
+        "tags": [
+          "messaging"
+        ]
+      },
+      "get": {
+        "operationId": "read_conversation_api_v1_messaging_conversations__conversation_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "读取会话",
+        "tags": [
+          "messaging"
+        ]
+      }
+    },
+    "/api/v1/messaging/conversations/{conversation_id}/choice": {
+      "post": {
+        "description": "非法或过期的选项**不会推进剧情**：422（选项不属于当前节点）/ 409（节点版本过期）。",
+        "operationId": "choose_option_api_v1_messaging_conversations__conversation_id__choice_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChoiceIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "选择一个预设选项",
+        "tags": [
+          "messaging"
+        ]
+      }
+    },
+    "/api/v1/messaging/conversations/{conversation_id}/messages": {
+      "post": {
+        "description": "幂等键是 `client_request_id`（作用域 = 当前访客会话）。重试不会重复调用上游。",
+        "operationId": "send_message_api_v1_messaging_conversations__conversation_id__messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessageIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "自由输入（调用 AI 适配层）",
+        "tags": [
+          "messaging"
+        ]
+      }
+    },
+    "/api/v1/messaging/conversations/{conversation_id}/restart": {
+      "post": {
+        "operationId": "restart_story_api_v1_messaging_conversations__conversation_id__restart_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NodeVersionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "重开这段剧情（保留聊天记录）",
+        "tags": [
+          "messaging"
+        ]
+      }
+    },
+    "/api/v1/messaging/conversations/{conversation_id}/resume": {
+      "post": {
+        "description": "恢复被暂停的节点与它的选项；重复调用是幂等的空操作。",
+        "operationId": "resume_topic_api_v1_messaging_conversations__conversation_id__resume_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NodeVersionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "回到话题",
+        "tags": [
+          "messaging"
+        ]
+      }
+    },
+    "/api/v1/messaging/session": {
+      "delete": {
+        "description": "「访客可以立即清除聊天」（08 §7）。\n\n全站日预算计数**不**因此回退：已经产生的上游成本仍然如实保留（08 §7）。\n\n清除 Cookie 写在**返回的那个** Response 上：FastAPI 会合并注入的 response 与\n返回值的头，但依赖合并顺序迟早会咬人，这里直接构造、直接返回，行为可断言。",
+        "operationId": "clear_session_api_v1_messaging_session_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "立即清除该访客的全部角色消息",
+        "tags": [
+          "messaging"
+        ]
+      },
+      "post": {
+        "description": "第一次调用会建立匿名会话（HttpOnly Cookie，库里只有摘要）。\n\n这是**唯一**需要「先有会话才有 CSRF token」的引导接口，因此它只做来源校验，\n不要求 token（还没有 token 可带）。跨站页面会被来源校验挡掉。",
+        "operationId": "ensure_session_api_v1_messaging_session_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "建立或续期访客会话",
+        "tags": [
+          "messaging"
+        ]
+      }
+    },
+    "/api/v1/messaging/status": {
+      "get": {
+        "description": "**无副作用**：不建会话、不发 Cookie、不读访客身份。\n\n因此它可以被健康探针、管理页与首屏同时调用，也不会因为预取而产生垃圾会话。",
+        "operationId": "read_status_api_v1_messaging_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "角色消息的运行状态与限额",
+        "tags": [
+          "messaging"
         ]
       }
     },
