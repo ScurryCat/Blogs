@@ -506,3 +506,18 @@ html.ov-lock body {
     transform: none;
   }
 }
+
+/* ---------- 10. 手机应用图标（自绘 SVG）----------
+   替换掉原来的「角色头像 + 文字符号」混排（见 features/phone/app-icons.tsx 的说明）。
+   尺寸与旧站文字符号（`.pw-app .g`，34px）保持一致，颜色跟随磁贴的强调色。 */
+.pw-app .g-svg {
+  display: block;
+  width: 34px;
+  height: 34px;
+  color: var(--red);
+}
+/* 悬停 / 聚焦时磁贴底色翻白，图标保持红色以维持对比 */
+.pw-app:hover .g-svg,
+.pw-app:focus-visible .g-svg {
+  color: var(--red);
+}

@@ -12,6 +12,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 
 import { PhoneMusicCard } from "./phone-music-card";
+import { APP_ICONS } from "./app-icons";
 import { usePhone } from "./phone-provider";
 import type { PhoneAppManifest } from "./types";
 import { useAudioOrDefault, useSoundEnabled } from "@/features/runtime/audio/audio-service";
@@ -52,6 +53,9 @@ function SoundSwitch(): ReactNode {
 function AppTile({ app }: { app: PhoneAppManifest }): ReactNode {
   const { host } = usePhone();
   const glyph = LEGACY_GLYPHS[app.id];
+  // 优先用自绘的 SVG 应用图标（一套语言、无许可问题）；
+  // 没有对应条目时才回退到角色头像 / 旧站文字符号。
+  const icon = APP_ICONS[app.id];
   const activate = () => {
     if (app.kind === "embedded") {
       host.openApp(app.id);
@@ -62,7 +66,9 @@ function AppTile({ app }: { app: PhoneAppManifest }): ReactNode {
   };
   return (
     <button className="pw-app" type="button" onClick={activate} data-app-id={app.id}>
-      {glyph ? (
+      {icon ? (
+        icon
+      ) : glyph ? (
         <span className="g" aria-hidden="true">
           {glyph}
         </span>
