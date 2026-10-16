@@ -9,6 +9,7 @@
  */
 
 import { COOP_PHONE_MANIFEST } from "@/features/coop/phone-manifest";
+import { SHOWCASE_MANIFEST } from "@/features/showcase/phone-manifest";
 import { INS_MANIFEST } from "@/features/ins/phone-manifest";
 
 import type { PhoneAppManifest, PhoneAppModule } from "./types";
@@ -25,7 +26,9 @@ export class PhoneRegistryError extends Error {}
  *
  * **order 按 07 §7 的首屏顺序预留序位**（每档留 10，便于插入）：
  *
- *   ins(10) → 手记(20) → 放课后(30) → coop(40) → metanav(50)
+ *   ins(10) → 手记(20) → 放课后(30) → coop(40) → metanav(50) → 殿堂(60)
+ *
+ * 「我的殿堂」不在 07 §7 的首屏清单里，因此排在既有顺序**之后**（60），不打断设计顺序。
  *
  * **注意**：应用与 4 个 site-link 入口（palace/tokyo/cast/profile，order 10/20/30/40）共用同一
  * 个 order 命名空间，因此实际桌面顺序是交错的：
@@ -69,6 +72,8 @@ export const PHONE_APPS: readonly PhoneAppManifest[] = Object.freeze([
   },
   // COOP 由 T07 交付并自带 manifest。
   COOP_PHONE_MANIFEST,
+  // 我的殿堂由 T06 交付并自带 manifest。
+  SHOWCASE_MANIFEST,
   {
     id: "metanav",
     name: "导航",

@@ -368,7 +368,7 @@ def phone_host(browser, base: str) -> None:
     # 断言具体清单而非数量：后续包登记时会被强制确认一次，而不是静默改变桌面。
     check(
         "桌面只显示已登记的真实入口",
-        tiles == ["ins", "palace", "journal", "tokyo", "cast", "leisure", "coop", "profile", "metanav"],
+        tiles == ["ins", "palace", "journal", "tokyo", "cast", "leisure", "coop", "profile", "metanav", "showcase"],
         str(tiles),
     )
     shot(page, "t02-phone-desktop")

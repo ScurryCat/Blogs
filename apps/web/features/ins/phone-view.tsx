@@ -18,6 +18,8 @@
 
 import { useCallback, useMemo, type ReactNode } from "react";
 
+import { galleryTabContribution } from "@/features/gallery/ins-tab";
+import { useGalleryTab } from "@/features/gallery/ins-tab-availability";
 import { CharacterList } from "@/features/messaging/character-list";
 import { MESSAGES_TAB_ID, MESSAGES_TAB_ORDER } from "@/features/messaging/types";
 import type { PhoneViewProps } from "@/features/phone/types";
@@ -59,6 +61,11 @@ function usePhoneMessagesTab(host: PhoneViewProps["host"]): InsTabContribution {
 
 export function InsPhoneView({ screen, item, mode, host }: PhoneViewProps): ReactNode {
   const messagesTab = usePhoneMessagesTab(host);
+  // 相册页签由 T06 提供。这里用**权威确认版** `useGalleryTab` 而不是
+  // `useGalleryTabContribution` —— 后者只接受已经知道的布尔值，而手机首屏没有服务端读到的
+  // 结论，需要客户端确认一次；没有任何公开相册时 `available` 为 false，页签**完全不渲染**
+  // （不显示点了没内容的空页签）。
+  const gallery = useGalleryTab({});
   const openDetail = useCallback(
     (momentId: string) => {
       // 宿主管理返回与历史（02 §6）；应用只声明目的地，不直接改 history。
@@ -98,7 +105,7 @@ export function InsPhoneView({ screen, item, mode, host }: PhoneViewProps): Reac
 
   return (
     <InsShell
-      tabContributions={[messagesTab]}
+      tabContributions={[...(gallery.available ? [galleryTabContribution(true)] : []), messagesTab]}
       renderFeed={() => <FeedView tag={null} />}
       headerExtra={
         <p className="ins-phone-hint" role="note">

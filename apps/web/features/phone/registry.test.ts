@@ -39,7 +39,7 @@ describe("手机应用注册表", () => {
 
     // 断言具体清单：新增/移除登记时集成负责人会被强制确认一次，而不是静默改变桌面。
     expect(registry.manifests().map((manifest) => manifest.id)).toEqual(
-      ["ins", "journal", "leisure", "coop", "metanav"],
+      ["ins", "journal", "leisure", "coop", "metanav", "showcase"],
     );
   });
 

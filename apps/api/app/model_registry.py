@@ -28,6 +28,8 @@ MODEL_MODULES: tuple[str, ...] = (
     "app.modules.coop.models",
     "app.modules.journal.models",
     "app.modules.leisure.models",
+    "app.modules.projects.models",
+    "app.modules.gallery.models",
 )
 
 _ModelT = TypeVar("_ModelT", bound=type)

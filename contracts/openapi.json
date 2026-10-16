@@ -30,6 +30,464 @@
         "title": "AiStateOut",
         "type": "object"
       },
+      "AlbumAdminListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AlbumAdminOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "AlbumAdminListOut",
+        "type": "object"
+      },
+      "AlbumAdminOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "kind_label": {
+            "title": "Kind Label",
+            "type": "string"
+          },
+          "photo_count": {
+            "title": "Photo Count",
+            "type": "integer"
+          },
+          "photos": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoAdminOut"
+            },
+            "title": "Photos",
+            "type": "array"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "description",
+          "kind",
+          "kind_label",
+          "position",
+          "status",
+          "published_at",
+          "created_at",
+          "updated_at",
+          "version",
+          "photo_count",
+          "photos"
+        ],
+        "title": "AlbumAdminOut",
+        "type": "object"
+      },
+      "AlbumCreateIn": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Description",
+            "type": "string"
+          },
+          "kind": {
+            "default": "photo",
+            "enum": [
+              "photo",
+              "screenshot",
+              "other"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "photos": {
+            "items": {
+              "$ref": "#/components/schemas/AlbumPhotoIn"
+            },
+            "maxItems": 200,
+            "title": "Photos",
+            "type": "array"
+          },
+          "position": {
+            "default": 0,
+            "maximum": 100000.0,
+            "minimum": 0.0,
+            "title": "Position",
+            "type": "integer"
+          },
+          "slug": {
+            "maxLength": 200,
+            "minLength": 1,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "title": "Slug",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "title"
+        ],
+        "title": "AlbumCreateIn",
+        "type": "object"
+      },
+      "AlbumDetailOut": {
+        "properties": {
+          "cover": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhotoOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "kind_label": {
+            "title": "Kind Label",
+            "type": "string"
+          },
+          "photo_count": {
+            "title": "Photo Count",
+            "type": "integer"
+          },
+          "photos": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoOut"
+            },
+            "title": "Photos",
+            "type": "array"
+          },
+          "published_at": {
+            "format": "date-time",
+            "title": "Published At",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "description",
+          "kind",
+          "kind_label",
+          "photo_count",
+          "published_at",
+          "cover",
+          "photos"
+        ],
+        "title": "AlbumDetailOut",
+        "type": "object"
+      },
+      "AlbumListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AlbumSummaryOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "AlbumListOut",
+        "type": "object"
+      },
+      "AlbumPhotoIn": {
+        "additionalProperties": false,
+        "description": "相册里的一张照片。`media_id` 必须是**已有**媒体（复用，不重复上传 —— 07 §5）。",
+        "properties": {
+          "alt": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Alt",
+            "type": "string"
+          },
+          "caption": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Caption",
+            "type": "string"
+          },
+          "media_id": {
+            "format": "uuid",
+            "title": "Media Id",
+            "type": "string"
+          },
+          "position": {
+            "maximum": 199.0,
+            "minimum": 0.0,
+            "title": "Position",
+            "type": "integer"
+          },
+          "taken_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taken On"
+          }
+        },
+        "required": [
+          "media_id",
+          "position",
+          "alt"
+        ],
+        "title": "AlbumPhotoIn",
+        "type": "object"
+      },
+      "AlbumSummaryOut": {
+        "properties": {
+          "cover": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhotoOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "kind_label": {
+            "title": "Kind Label",
+            "type": "string"
+          },
+          "photo_count": {
+            "title": "Photo Count",
+            "type": "integer"
+          },
+          "published_at": {
+            "format": "date-time",
+            "title": "Published At",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "description",
+          "kind",
+          "kind_label",
+          "photo_count",
+          "published_at",
+          "cover"
+        ],
+        "title": "AlbumSummaryOut",
+        "type": "object"
+      },
+      "AlbumUpdateIn": {
+        "additionalProperties": false,
+        "description": "PATCH：只改出现过的字段。`slug` 不可改（公开 URL 稳定优先）。",
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "photo",
+                  "screenshot",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "photos": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/AlbumPhotoIn"
+                },
+                "maxItems": 200,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photos"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "maximum": 100000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "AlbumUpdateIn",
+        "type": "object"
+      },
       "AnimeProgressOut": {
         "description": "追番进度。`total_episodes` / `completion_ratio` 为 null 表示总数未知。",
         "properties": {
@@ -4101,6 +4559,223 @@
         "title": "PalaceUpdateIn",
         "type": "object"
       },
+      "PhotoAdminOut": {
+        "description": "管理回执：额外给出媒体状态，让表单能提示「这张图还不能发布」。",
+        "properties": {
+          "album_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Album Id"
+          },
+          "album_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Album Slug"
+          },
+          "album_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Album Title"
+          },
+          "alt": {
+            "title": "Alt",
+            "type": "string"
+          },
+          "caption": {
+            "title": "Caption",
+            "type": "string"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "media_deleted": {
+            "default": false,
+            "title": "Media Deleted",
+            "type": "boolean"
+          },
+          "media_id": {
+            "format": "uuid",
+            "title": "Media Id",
+            "type": "string"
+          },
+          "media_status": {
+            "default": "ready",
+            "title": "Media Status",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "taken_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taken On"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/MediaVariantOut"
+            },
+            "title": "Variants",
+            "type": "array"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "media_id",
+          "position",
+          "alt",
+          "caption",
+          "taken_on",
+          "width",
+          "height",
+          "variants"
+        ],
+        "title": "PhotoAdminOut",
+        "type": "object"
+      },
+      "PhotoItemOut": {
+        "description": "照片墙上的一项：照片 + **它属于哪个相册**。\n\n为什么把相册信息放在每一项里而不是让前端按相册再查一次：跨相册的照片墙是\n「相册 + 照片顺序」的混合排序，前端需要能就地渲染分组标题；再查一次相册\n会产生 N+1，也会让「同一张图属于两个相册」这种真实情况无法表达。",
+        "properties": {
+          "album": {
+            "$ref": "#/components/schemas/WallAlbumOut"
+          },
+          "photo": {
+            "$ref": "#/components/schemas/PhotoOut"
+          }
+        },
+        "required": [
+          "photo",
+          "album"
+        ],
+        "title": "PhotoItemOut",
+        "type": "object"
+      },
+      "PhotoListOut": {
+        "description": "照片墙的扁平列表。`total` 是当前筛选下的实时总张数，不作为权限条件。",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor",
+          "total"
+        ],
+        "title": "PhotoListOut",
+        "type": "object"
+      },
+      "PhotoOut": {
+        "description": "一张照片的公开形态：关系字段 + 媒体尺寸 + 可用变体（**不含原图**）。",
+        "properties": {
+          "alt": {
+            "title": "Alt",
+            "type": "string"
+          },
+          "caption": {
+            "title": "Caption",
+            "type": "string"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "media_id": {
+            "format": "uuid",
+            "title": "Media Id",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "taken_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taken On"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/MediaVariantOut"
+            },
+            "title": "Variants",
+            "type": "array"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "media_id",
+          "position",
+          "alt",
+          "caption",
+          "taken_on",
+          "width",
+          "height",
+          "variants"
+        ],
+        "title": "PhotoOut",
+        "type": "object"
+      },
       "PostDetailOut": {
         "properties": {
           "category": {
@@ -4277,6 +4952,917 @@
           "cover"
         ],
         "title": "PostSummaryOut",
+        "type": "object"
+      },
+      "ProjectAdminImageOut": {
+        "description": "管理回执：额外给出媒体状态，让表单能提示「这张图还不能发布」。",
+        "properties": {
+          "alt": {
+            "title": "Alt",
+            "type": "string"
+          },
+          "caption": {
+            "title": "Caption",
+            "type": "string"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "media_deleted": {
+            "default": false,
+            "title": "Media Deleted",
+            "type": "boolean"
+          },
+          "media_id": {
+            "format": "uuid",
+            "title": "Media Id",
+            "type": "string"
+          },
+          "media_status": {
+            "default": "ready",
+            "title": "Media Status",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "taken_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taken On"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/MediaVariantOut"
+            },
+            "title": "Variants",
+            "type": "array"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "media_id",
+          "position",
+          "kind",
+          "alt",
+          "caption",
+          "taken_on",
+          "width",
+          "height",
+          "variants"
+        ],
+        "title": "ProjectAdminImageOut",
+        "type": "object"
+      },
+      "ProjectAdminListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectAdminOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "ProjectAdminListOut",
+        "type": "object"
+      },
+      "ProjectAdminOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectAdminImageOut"
+            },
+            "title": "Images",
+            "type": "array"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectLinkOut"
+            },
+            "title": "Links",
+            "type": "array"
+          },
+          "maintenance": {
+            "title": "Maintenance",
+            "type": "string"
+          },
+          "maintenance_label": {
+            "title": "Maintenance Label",
+            "type": "string"
+          },
+          "outcomes": {
+            "title": "Outcomes",
+            "type": "string"
+          },
+          "palace_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Palace Id"
+          },
+          "problem": {
+            "title": "Problem",
+            "type": "string"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "tech_stack": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tech Stack",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "tradeoffs": {
+            "title": "Tradeoffs",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "summary",
+          "role",
+          "problem",
+          "tradeoffs",
+          "outcomes",
+          "tech_stack",
+          "links",
+          "maintenance",
+          "maintenance_label",
+          "palace_id",
+          "status",
+          "published_at",
+          "created_at",
+          "updated_at",
+          "version",
+          "images"
+        ],
+        "title": "ProjectAdminOut",
+        "type": "object"
+      },
+      "ProjectCreateIn": {
+        "additionalProperties": false,
+        "properties": {
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectImageIn"
+            },
+            "maxItems": 20,
+            "title": "Images",
+            "type": "array"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectLinkIn"
+            },
+            "maxItems": 8,
+            "title": "Links",
+            "type": "array"
+          },
+          "maintenance": {
+            "default": "maintained",
+            "enum": [
+              "active",
+              "maintained",
+              "paused",
+              "archived"
+            ],
+            "title": "Maintenance",
+            "type": "string"
+          },
+          "outcomes": {
+            "default": "",
+            "maxLength": 8000,
+            "title": "Outcomes",
+            "type": "string"
+          },
+          "palace_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Palace Id"
+          },
+          "problem": {
+            "default": "",
+            "maxLength": 8000,
+            "title": "Problem",
+            "type": "string"
+          },
+          "role": {
+            "default": "",
+            "maxLength": 8000,
+            "title": "Role",
+            "type": "string"
+          },
+          "slug": {
+            "maxLength": 200,
+            "minLength": 1,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "title": "Slug",
+            "type": "string"
+          },
+          "summary": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Summary",
+            "type": "string"
+          },
+          "tech_stack": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 24,
+            "title": "Tech Stack",
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "tradeoffs": {
+            "default": "",
+            "maxLength": 8000,
+            "title": "Tradeoffs",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "title"
+        ],
+        "title": "ProjectCreateIn",
+        "type": "object"
+      },
+      "ProjectDetailOut": {
+        "description": "公开详情（07 §5：「这个作品回答了『你做出了什么』」）。",
+        "properties": {
+          "cover": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProjectImageOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectImageOut"
+            },
+            "title": "Images",
+            "type": "array"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectLinkOut"
+            },
+            "title": "Links",
+            "type": "array"
+          },
+          "maintenance": {
+            "title": "Maintenance",
+            "type": "string"
+          },
+          "maintenance_label": {
+            "title": "Maintenance Label",
+            "type": "string"
+          },
+          "outcomes": {
+            "title": "Outcomes",
+            "type": "string"
+          },
+          "palace": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProjectPalaceLinkOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "problem": {
+            "title": "Problem",
+            "type": "string"
+          },
+          "published_at": {
+            "format": "date-time",
+            "title": "Published At",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "tech_stack": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tech Stack",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "tradeoffs": {
+            "title": "Tradeoffs",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "summary",
+          "tech_stack",
+          "maintenance",
+          "maintenance_label",
+          "published_at",
+          "cover",
+          "palace",
+          "role",
+          "problem",
+          "tradeoffs",
+          "outcomes",
+          "links",
+          "images"
+        ],
+        "title": "ProjectDetailOut",
+        "type": "object"
+      },
+      "ProjectImageIn": {
+        "additionalProperties": false,
+        "description": "一张作品图片。`media_id` 必须是**已有**媒体（复用，不重复上传 —— 07 §5）。",
+        "properties": {
+          "alt": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Alt",
+            "type": "string"
+          },
+          "caption": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Caption",
+            "type": "string"
+          },
+          "kind": {
+            "default": "detail",
+            "enum": [
+              "cover",
+              "detail",
+              "evidence"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "media_id": {
+            "format": "uuid",
+            "title": "Media Id",
+            "type": "string"
+          },
+          "position": {
+            "maximum": 19.0,
+            "minimum": 0.0,
+            "title": "Position",
+            "type": "integer"
+          },
+          "taken_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taken On"
+          }
+        },
+        "required": [
+          "media_id",
+          "position",
+          "alt"
+        ],
+        "title": "ProjectImageIn",
+        "type": "object"
+      },
+      "ProjectImageOut": {
+        "description": "公开图片：只给可用变体与尺寸，不给服务器路径或原图。",
+        "properties": {
+          "alt": {
+            "title": "Alt",
+            "type": "string"
+          },
+          "caption": {
+            "title": "Caption",
+            "type": "string"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "media_id": {
+            "format": "uuid",
+            "title": "Media Id",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "taken_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taken On"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/MediaVariantOut"
+            },
+            "title": "Variants",
+            "type": "array"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "media_id",
+          "position",
+          "kind",
+          "alt",
+          "caption",
+          "taken_on",
+          "width",
+          "height",
+          "variants"
+        ],
+        "title": "ProjectImageOut",
+        "type": "object"
+      },
+      "ProjectLinkIn": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "repo",
+              "demo",
+              "docs",
+              "other"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "url": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "label",
+          "url"
+        ],
+        "title": "ProjectLinkIn",
+        "type": "object"
+      },
+      "ProjectLinkOut": {
+        "properties": {
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "label",
+          "url"
+        ],
+        "title": "ProjectLinkOut",
+        "type": "object"
+      },
+      "ProjectListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectSummaryOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "ProjectListOut",
+        "type": "object"
+      },
+      "ProjectPalaceLinkOut": {
+        "description": "作品详情「攻略记录」用的专题链接。\n\n只包含 slug 与标题 —— 且**只在专题当前公开时**由 service 填值；专题撤回后这里是\n`None`，页面显示「暂时没有可读的攻略记录」，绝不露出隐藏专题的标题（验收 5）。",
+        "properties": {
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "title",
+          "summary"
+        ],
+        "title": "ProjectPalaceLinkOut",
+        "type": "object"
+      },
+      "ProjectSummaryOut": {
+        "description": "公开摘要（列表卡片）。`palace` 只在专题**当前公开**时才出现。",
+        "properties": {
+          "cover": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProjectImageOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "maintenance": {
+            "title": "Maintenance",
+            "type": "string"
+          },
+          "maintenance_label": {
+            "title": "Maintenance Label",
+            "type": "string"
+          },
+          "palace": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProjectPalaceLinkOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "published_at": {
+            "format": "date-time",
+            "title": "Published At",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "tech_stack": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tech Stack",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "summary",
+          "tech_stack",
+          "maintenance",
+          "maintenance_label",
+          "published_at",
+          "cover",
+          "palace"
+        ],
+        "title": "ProjectSummaryOut",
+        "type": "object"
+      },
+      "ProjectUpdateIn": {
+        "additionalProperties": false,
+        "description": "PATCH：只改出现过的字段。`slug` 不可改（公开 URL 稳定优先，与 nav 一致）。",
+        "properties": {
+          "images": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ProjectImageIn"
+                },
+                "maxItems": 20,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Images"
+          },
+          "links": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ProjectLinkIn"
+                },
+                "maxItems": 8,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Links"
+          },
+          "maintenance": {
+            "anyOf": [
+              {
+                "enum": [
+                  "active",
+                  "maintained",
+                  "paused",
+                  "archived"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maintenance"
+          },
+          "outcomes": {
+            "anyOf": [
+              {
+                "maxLength": 8000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcomes"
+          },
+          "palace_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Palace Id"
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "maxLength": 8000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Problem"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "maxLength": 8000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "tech_stack": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 24,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tech Stack"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "tradeoffs": {
+            "anyOf": [
+              {
+                "maxLength": 8000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tradeoffs"
+          }
+        },
+        "title": "ProjectUpdateIn",
         "type": "object"
       },
       "ResolveIn": {
@@ -4705,6 +6291,46 @@
         ],
         "title": "VisitorOut",
         "type": "object"
+      },
+      "WallAlbumOut": {
+        "description": "照片墙上引用的最小相册信息（不含草稿状态与版本，公开 DTO 不能夹带管理字段）。",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "kind_label": {
+            "title": "Kind Label",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "kind",
+          "kind_label",
+          "position"
+        ],
+        "title": "WallAlbumOut",
+        "type": "object"
       }
     }
   },
@@ -4714,6 +6340,473 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/admin/albums": {
+      "get": {
+        "operationId": "list_admin_albums_api_v1_admin_albums_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlbumAdminListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "管理列表（含草稿）",
+        "tags": [
+          "admin-albums"
+        ]
+      },
+      "post": {
+        "operationId": "create_album_api_v1_admin_albums_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlbumCreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlbumAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "新建相册草稿",
+        "tags": [
+          "admin-albums"
+        ]
+      }
+    },
+    "/api/v1/admin/albums/{album_id}": {
+      "delete": {
+        "operationId": "delete_album_api_v1_admin_albums__album_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "album_id",
+            "required": true,
+            "schema": {
+              "title": "Album Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "软删除相册",
+        "tags": [
+          "admin-albums"
+        ]
+      },
+      "get": {
+        "operationId": "read_admin_album_api_v1_admin_albums__album_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "album_id",
+            "required": true,
+            "schema": {
+              "title": "Album Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlbumAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "读取相册（草稿 / 预览）",
+        "tags": [
+          "admin-albums"
+        ]
+      },
+      "patch": {
+        "operationId": "update_album_api_v1_admin_albums__album_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "album_id",
+            "required": true,
+            "schema": {
+              "title": "Album Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlbumUpdateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlbumAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "更新相册",
+        "tags": [
+          "admin-albums"
+        ]
+      }
+    },
+    "/api/v1/admin/albums/{album_id}/photos/{media_id}": {
+      "delete": {
+        "description": "**只移除这一处引用**。返回 204；该媒体仍被其他公开内容引用时继续匿名可读。\n\n媒体本身（文件与 `media` 行）不动：它可能还被动态、作品或另一个相册引用\n（05 §11：「管理端应提示，而不是声称一次撤回收回所有副本」）。",
+        "operationId": "remove_album_photo_api_v1_admin_albums__album_id__photos__media_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "album_id",
+            "required": true,
+            "schema": {
+              "title": "Album Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "media_id",
+            "required": true,
+            "schema": {
+              "title": "Media Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "从相册移除一张照片（单处撤回）",
+        "tags": [
+          "admin-albums"
+        ]
+      }
+    },
+    "/api/v1/admin/albums/{album_id}/publish": {
+      "post": {
+        "operationId": "publish_album_api_v1_admin_albums__album_id__publish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "album_id",
+            "required": true,
+            "schema": {
+              "title": "Album Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlbumAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "发布相册",
+        "tags": [
+          "admin-albums"
+        ]
+      }
+    },
+    "/api/v1/admin/albums/{album_id}/unpublish": {
+      "post": {
+        "operationId": "unpublish_album_api_v1_admin_albums__album_id__unpublish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "album_id",
+            "required": true,
+            "schema": {
+              "title": "Album Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlbumAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "撤回相册",
+        "tags": [
+          "admin-albums"
+        ]
+      }
+    },
     "/api/v1/admin/friends": {
       "get": {
         "description": "含草稿与已删除（`deleted_at` 非空即为已删除，便于管理端区分）。",
@@ -7064,6 +9157,396 @@
         ]
       }
     },
+    "/api/v1/admin/projects": {
+      "get": {
+        "operationId": "list_admin_projects_api_v1_admin_projects_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectAdminListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "管理列表（含草稿）",
+        "tags": [
+          "admin-projects"
+        ]
+      },
+      "post": {
+        "operationId": "create_project_api_v1_admin_projects_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectCreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "新建草稿",
+        "tags": [
+          "admin-projects"
+        ]
+      }
+    },
+    "/api/v1/admin/projects/{project_id}": {
+      "delete": {
+        "operationId": "delete_project_api_v1_admin_projects__project_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "软删除作品",
+        "tags": [
+          "admin-projects"
+        ]
+      },
+      "get": {
+        "operationId": "read_admin_project_api_v1_admin_projects__project_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "读取作品（草稿 / 预览）",
+        "tags": [
+          "admin-projects"
+        ]
+      },
+      "patch": {
+        "operationId": "update_project_api_v1_admin_projects__project_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectUpdateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "更新作品",
+        "tags": [
+          "admin-projects"
+        ]
+      }
+    },
+    "/api/v1/admin/projects/{project_id}/publish": {
+      "post": {
+        "operationId": "publish_project_api_v1_admin_projects__project_id__publish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "发布作品",
+        "tags": [
+          "admin-projects"
+        ]
+      }
+    },
+    "/api/v1/admin/projects/{project_id}/unpublish": {
+      "post": {
+        "operationId": "unpublish_project_api_v1_admin_projects__project_id__unpublish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "撤回作品",
+        "tags": [
+          "admin-projects"
+        ]
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "operationId": "login_api_v1_auth_login_post",
@@ -7310,6 +9793,295 @@
         "summary": "友链标签",
         "tags": [
           "coop"
+        ]
+      }
+    },
+    "/api/v1/gallery/albums": {
+      "get": {
+        "operationId": "list_albums_api_v1_gallery_albums_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 16,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlbumListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "公开相册列表",
+        "tags": [
+          "gallery"
+        ]
+      }
+    },
+    "/api/v1/gallery/albums/{slug}": {
+      "get": {
+        "operationId": "read_album_api_v1_gallery_albums__slug__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlbumDetailOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "公开相册详情",
+        "tags": [
+          "gallery"
+        ]
+      }
+    },
+    "/api/v1/gallery/photos": {
+      "get": {
+        "operationId": "list_photos_api_v1_gallery_photos_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "global",
+              "maxLength": 16,
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "album",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Album"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 16,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "year",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 9999,
+                  "minimum": 1900,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Year"
+            }
+          },
+          {
+            "in": "query",
+            "name": "month",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 12,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 24,
+              "maximum": 60,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotoListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "照片墙（跨相册 / 单相册）",
+        "tags": [
+          "gallery"
+        ]
+      }
+    },
+    "/api/v1/gallery/photos/years": {
+      "get": {
+        "operationId": "list_photo_years_api_v1_gallery_photos_years_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "title": "Response List Photo Years Api V1 Gallery Photos Years Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "照片墙可用的年份",
+        "tags": [
+          "gallery"
         ]
       }
     },
@@ -8692,6 +11464,144 @@
         "summary": "公开文章详情",
         "tags": [
           "posts"
+        ]
+      }
+    },
+    "/api/v1/projects": {
+      "get": {
+        "operationId": "list_projects_api_v1_projects_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "maintenance",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 16,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Maintenance"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tech",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tech"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "公开作品列表",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/{slug}": {
+      "get": {
+        "operationId": "read_project_api_v1_projects__slug__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDetailOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "公开作品详情",
+        "tags": [
+          "projects"
         ]
       }
     },

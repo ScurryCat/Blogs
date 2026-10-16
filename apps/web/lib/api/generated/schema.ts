@@ -4,6 +4,100 @@
  */
 
 export interface paths {
+    "/api/v1/admin/albums": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理列表（含草稿） */
+        get: operations["list_admin_albums_api_v1_admin_albums_get"];
+        put?: never;
+        /** 新建相册草稿 */
+        post: operations["create_album_api_v1_admin_albums_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/albums/{album_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 读取相册（草稿 / 预览） */
+        get: operations["read_admin_album_api_v1_admin_albums__album_id__get"];
+        put?: never;
+        post?: never;
+        /** 软删除相册 */
+        delete: operations["delete_album_api_v1_admin_albums__album_id__delete"];
+        options?: never;
+        head?: never;
+        /** 更新相册 */
+        patch: operations["update_album_api_v1_admin_albums__album_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/albums/{album_id}/photos/{media_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * 从相册移除一张照片（单处撤回）
+         * @description **只移除这一处引用**。返回 204；该媒体仍被其他公开内容引用时继续匿名可读。
+         *
+         *     媒体本身（文件与 `media` 行）不动：它可能还被动态、作品或另一个相册引用
+         *     （05 §11：「管理端应提示，而不是声称一次撤回收回所有副本」）。
+         */
+        delete: operations["remove_album_photo_api_v1_admin_albums__album_id__photos__media_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/albums/{album_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发布相册 */
+        post: operations["publish_album_api_v1_admin_albums__album_id__publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/albums/{album_id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 撤回相册 */
+        post: operations["unpublish_album_api_v1_admin_albums__album_id__unpublish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/friends": {
         parameters: {
             query?: never;
@@ -444,6 +538,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理列表（含草稿） */
+        get: operations["list_admin_projects_api_v1_admin_projects_get"];
+        put?: never;
+        /** 新建草稿 */
+        post: operations["create_project_api_v1_admin_projects_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/projects/{project_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 读取作品（草稿 / 预览） */
+        get: operations["read_admin_project_api_v1_admin_projects__project_id__get"];
+        put?: never;
+        post?: never;
+        /** 软删除作品 */
+        delete: operations["delete_project_api_v1_admin_projects__project_id__delete"];
+        options?: never;
+        head?: never;
+        /** 更新作品 */
+        patch: operations["update_project_api_v1_admin_projects__project_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/projects/{project_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发布作品 */
+        post: operations["publish_project_api_v1_admin_projects__project_id__publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/projects/{project_id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 撤回作品 */
+        post: operations["unpublish_project_api_v1_admin_projects__project_id__unpublish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -547,6 +712,74 @@ export interface paths {
          * @description 只返回已发布友链用到的标签；不返回数量，也不按热度排序。
          */
         get: operations["list_tags_api_v1_coop_tags_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gallery/albums": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 公开相册列表 */
+        get: operations["list_albums_api_v1_gallery_albums_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gallery/albums/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 公开相册详情 */
+        get: operations["read_album_api_v1_gallery_albums__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gallery/photos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 照片墙（跨相册 / 单相册） */
+        get: operations["list_photos_api_v1_gallery_photos_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gallery/photos/years": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 照片墙可用的年份 */
+        get: operations["list_photo_years_api_v1_gallery_photos_years_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1050,6 +1283,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 公开作品列表 */
+        get: operations["list_projects_api_v1_projects_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 公开作品详情 */
+        get: operations["read_project_api_v1_projects__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tags": {
         parameters: {
             query?: never;
@@ -1087,6 +1354,177 @@ export interface components {
             retryable: boolean;
             /** Status */
             status: string;
+        };
+        /** AlbumAdminListOut */
+        AlbumAdminListOut: {
+            /** Items */
+            items: components["schemas"]["AlbumAdminOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** AlbumAdminOut */
+        AlbumAdminOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Description */
+            description: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Kind Label */
+            kind_label: string;
+            /** Photo Count */
+            photo_count: number;
+            /** Photos */
+            photos: components["schemas"]["PhotoAdminOut"][];
+            /** Position */
+            position: number;
+            /** Published At */
+            published_at: string | null;
+            /** Slug */
+            slug: string;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
+        };
+        /** AlbumCreateIn */
+        AlbumCreateIn: {
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Kind
+             * @default photo
+             * @enum {string}
+             */
+            kind: "photo" | "screenshot" | "other";
+            /** Photos */
+            photos?: components["schemas"]["AlbumPhotoIn"][];
+            /**
+             * Position
+             * @default 0
+             */
+            position: number;
+            /** Slug */
+            slug: string;
+            /** Title */
+            title: string;
+        };
+        /** AlbumDetailOut */
+        AlbumDetailOut: {
+            cover: components["schemas"]["PhotoOut"] | null;
+            /** Description */
+            description: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Kind Label */
+            kind_label: string;
+            /** Photo Count */
+            photo_count: number;
+            /** Photos */
+            photos: components["schemas"]["PhotoOut"][];
+            /**
+             * Published At
+             * Format: date-time
+             */
+            published_at: string;
+            /** Slug */
+            slug: string;
+            /** Title */
+            title: string;
+        };
+        /** AlbumListOut */
+        AlbumListOut: {
+            /** Items */
+            items: components["schemas"]["AlbumSummaryOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /**
+         * AlbumPhotoIn
+         * @description 相册里的一张照片。`media_id` 必须是**已有**媒体（复用，不重复上传 —— 07 §5）。
+         */
+        AlbumPhotoIn: {
+            /** Alt */
+            alt: string;
+            /**
+             * Caption
+             * @default
+             */
+            caption: string;
+            /**
+             * Media Id
+             * Format: uuid
+             */
+            media_id: string;
+            /** Position */
+            position: number;
+            /** Taken On */
+            taken_on?: string | null;
+        };
+        /** AlbumSummaryOut */
+        AlbumSummaryOut: {
+            cover: components["schemas"]["PhotoOut"] | null;
+            /** Description */
+            description: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Kind Label */
+            kind_label: string;
+            /** Photo Count */
+            photo_count: number;
+            /**
+             * Published At
+             * Format: date-time
+             */
+            published_at: string;
+            /** Slug */
+            slug: string;
+            /** Title */
+            title: string;
+        };
+        /**
+         * AlbumUpdateIn
+         * @description PATCH：只改出现过的字段。`slug` 不可改（公开 URL 稳定优先）。
+         */
+        AlbumUpdateIn: {
+            /** Description */
+            description?: string | null;
+            /** Kind */
+            kind?: ("photo" | "screenshot" | "other") | null;
+            /** Photos */
+            photos?: components["schemas"]["AlbumPhotoIn"][] | null;
+            /** Position */
+            position?: number | null;
+            /** Title */
+            title?: string | null;
         };
         /**
          * AnimeProgressOut
@@ -2529,6 +2967,96 @@ export interface components {
             /** Title */
             title?: string | null;
         };
+        /**
+         * PhotoAdminOut
+         * @description 管理回执：额外给出媒体状态，让表单能提示「这张图还不能发布」。
+         */
+        PhotoAdminOut: {
+            /** Album Id */
+            album_id?: string | null;
+            /** Album Slug */
+            album_slug?: string | null;
+            /** Album Title */
+            album_title?: string | null;
+            /** Alt */
+            alt: string;
+            /** Caption */
+            caption: string;
+            /** Height */
+            height: number;
+            /**
+             * Media Deleted
+             * @default false
+             */
+            media_deleted: boolean;
+            /**
+             * Media Id
+             * Format: uuid
+             */
+            media_id: string;
+            /**
+             * Media Status
+             * @default ready
+             */
+            media_status: string;
+            /** Position */
+            position: number;
+            /** Taken On */
+            taken_on: string | null;
+            /** Variants */
+            variants: components["schemas"]["MediaVariantOut"][];
+            /** Width */
+            width: number;
+        };
+        /**
+         * PhotoItemOut
+         * @description 照片墙上的一项：照片 + **它属于哪个相册**。
+         *
+         *     为什么把相册信息放在每一项里而不是让前端按相册再查一次：跨相册的照片墙是
+         *     「相册 + 照片顺序」的混合排序，前端需要能就地渲染分组标题；再查一次相册
+         *     会产生 N+1，也会让「同一张图属于两个相册」这种真实情况无法表达。
+         */
+        PhotoItemOut: {
+            album: components["schemas"]["WallAlbumOut"];
+            photo: components["schemas"]["PhotoOut"];
+        };
+        /**
+         * PhotoListOut
+         * @description 照片墙的扁平列表。`total` 是当前筛选下的实时总张数，不作为权限条件。
+         */
+        PhotoListOut: {
+            /** Items */
+            items: components["schemas"]["PhotoItemOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** Total */
+            total: number;
+        };
+        /**
+         * PhotoOut
+         * @description 一张照片的公开形态：关系字段 + 媒体尺寸 + 可用变体（**不含原图**）。
+         */
+        PhotoOut: {
+            /** Alt */
+            alt: string;
+            /** Caption */
+            caption: string;
+            /** Height */
+            height: number;
+            /**
+             * Media Id
+             * Format: uuid
+             */
+            media_id: string;
+            /** Position */
+            position: number;
+            /** Taken On */
+            taken_on: string | null;
+            /** Variants */
+            variants: components["schemas"]["MediaVariantOut"][];
+            /** Width */
+            width: number;
+        };
         /** PostDetailOut */
         PostDetailOut: {
             /** Category */
@@ -2592,6 +3120,344 @@ export interface components {
             tags: components["schemas"]["TagPublicOut"][];
             /** Title */
             title: string;
+        };
+        /**
+         * ProjectAdminImageOut
+         * @description 管理回执：额外给出媒体状态，让表单能提示「这张图还不能发布」。
+         */
+        ProjectAdminImageOut: {
+            /** Alt */
+            alt: string;
+            /** Caption */
+            caption: string;
+            /** Height */
+            height: number;
+            /** Kind */
+            kind: string;
+            /**
+             * Media Deleted
+             * @default false
+             */
+            media_deleted: boolean;
+            /**
+             * Media Id
+             * Format: uuid
+             */
+            media_id: string;
+            /**
+             * Media Status
+             * @default ready
+             */
+            media_status: string;
+            /** Position */
+            position: number;
+            /** Taken On */
+            taken_on: string | null;
+            /** Variants */
+            variants: components["schemas"]["MediaVariantOut"][];
+            /** Width */
+            width: number;
+        };
+        /** ProjectAdminListOut */
+        ProjectAdminListOut: {
+            /** Items */
+            items: components["schemas"]["ProjectAdminOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** ProjectAdminOut */
+        ProjectAdminOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Images */
+            images: components["schemas"]["ProjectAdminImageOut"][];
+            /** Links */
+            links: components["schemas"]["ProjectLinkOut"][];
+            /** Maintenance */
+            maintenance: string;
+            /** Maintenance Label */
+            maintenance_label: string;
+            /** Outcomes */
+            outcomes: string;
+            /** Palace Id */
+            palace_id: string | null;
+            /** Problem */
+            problem: string;
+            /** Published At */
+            published_at: string | null;
+            /** Role */
+            role: string;
+            /** Slug */
+            slug: string;
+            /** Status */
+            status: string;
+            /** Summary */
+            summary: string;
+            /** Tech Stack */
+            tech_stack: string[];
+            /** Title */
+            title: string;
+            /** Tradeoffs */
+            tradeoffs: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
+        };
+        /** ProjectCreateIn */
+        ProjectCreateIn: {
+            /** Images */
+            images?: components["schemas"]["ProjectImageIn"][];
+            /** Links */
+            links?: components["schemas"]["ProjectLinkIn"][];
+            /**
+             * Maintenance
+             * @default maintained
+             * @enum {string}
+             */
+            maintenance: "active" | "maintained" | "paused" | "archived";
+            /**
+             * Outcomes
+             * @default
+             */
+            outcomes: string;
+            /** Palace Id */
+            palace_id?: string | null;
+            /**
+             * Problem
+             * @default
+             */
+            problem: string;
+            /**
+             * Role
+             * @default
+             */
+            role: string;
+            /** Slug */
+            slug: string;
+            /**
+             * Summary
+             * @default
+             */
+            summary: string;
+            /** Tech Stack */
+            tech_stack?: string[];
+            /** Title */
+            title: string;
+            /**
+             * Tradeoffs
+             * @default
+             */
+            tradeoffs: string;
+        };
+        /**
+         * ProjectDetailOut
+         * @description 公开详情（07 §5：「这个作品回答了『你做出了什么』」）。
+         */
+        ProjectDetailOut: {
+            cover: components["schemas"]["ProjectImageOut"] | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Images */
+            images: components["schemas"]["ProjectImageOut"][];
+            /** Links */
+            links: components["schemas"]["ProjectLinkOut"][];
+            /** Maintenance */
+            maintenance: string;
+            /** Maintenance Label */
+            maintenance_label: string;
+            /** Outcomes */
+            outcomes: string;
+            palace: components["schemas"]["ProjectPalaceLinkOut"] | null;
+            /** Problem */
+            problem: string;
+            /**
+             * Published At
+             * Format: date-time
+             */
+            published_at: string;
+            /** Role */
+            role: string;
+            /** Slug */
+            slug: string;
+            /** Summary */
+            summary: string;
+            /** Tech Stack */
+            tech_stack: string[];
+            /** Title */
+            title: string;
+            /** Tradeoffs */
+            tradeoffs: string;
+        };
+        /**
+         * ProjectImageIn
+         * @description 一张作品图片。`media_id` 必须是**已有**媒体（复用，不重复上传 —— 07 §5）。
+         */
+        ProjectImageIn: {
+            /** Alt */
+            alt: string;
+            /**
+             * Caption
+             * @default
+             */
+            caption: string;
+            /**
+             * Kind
+             * @default detail
+             * @enum {string}
+             */
+            kind: "cover" | "detail" | "evidence";
+            /**
+             * Media Id
+             * Format: uuid
+             */
+            media_id: string;
+            /** Position */
+            position: number;
+            /** Taken On */
+            taken_on?: string | null;
+        };
+        /**
+         * ProjectImageOut
+         * @description 公开图片：只给可用变体与尺寸，不给服务器路径或原图。
+         */
+        ProjectImageOut: {
+            /** Alt */
+            alt: string;
+            /** Caption */
+            caption: string;
+            /** Height */
+            height: number;
+            /** Kind */
+            kind: string;
+            /**
+             * Media Id
+             * Format: uuid
+             */
+            media_id: string;
+            /** Position */
+            position: number;
+            /** Taken On */
+            taken_on: string | null;
+            /** Variants */
+            variants: components["schemas"]["MediaVariantOut"][];
+            /** Width */
+            width: number;
+        };
+        /** ProjectLinkIn */
+        ProjectLinkIn: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "repo" | "demo" | "docs" | "other";
+            /** Label */
+            label: string;
+            /** Url */
+            url: string;
+        };
+        /** ProjectLinkOut */
+        ProjectLinkOut: {
+            /** Kind */
+            kind: string;
+            /** Label */
+            label: string;
+            /** Url */
+            url: string;
+        };
+        /** ProjectListOut */
+        ProjectListOut: {
+            /** Items */
+            items: components["schemas"]["ProjectSummaryOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /**
+         * ProjectPalaceLinkOut
+         * @description 作品详情「攻略记录」用的专题链接。
+         *
+         *     只包含 slug 与标题 —— 且**只在专题当前公开时**由 service 填值；专题撤回后这里是
+         *     `None`，页面显示「暂时没有可读的攻略记录」，绝不露出隐藏专题的标题（验收 5）。
+         */
+        ProjectPalaceLinkOut: {
+            /** Slug */
+            slug: string;
+            /** Summary */
+            summary: string;
+            /** Title */
+            title: string;
+        };
+        /**
+         * ProjectSummaryOut
+         * @description 公开摘要（列表卡片）。`palace` 只在专题**当前公开**时才出现。
+         */
+        ProjectSummaryOut: {
+            cover: components["schemas"]["ProjectImageOut"] | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Maintenance */
+            maintenance: string;
+            /** Maintenance Label */
+            maintenance_label: string;
+            palace: components["schemas"]["ProjectPalaceLinkOut"] | null;
+            /**
+             * Published At
+             * Format: date-time
+             */
+            published_at: string;
+            /** Slug */
+            slug: string;
+            /** Summary */
+            summary: string;
+            /** Tech Stack */
+            tech_stack: string[];
+            /** Title */
+            title: string;
+        };
+        /**
+         * ProjectUpdateIn
+         * @description PATCH：只改出现过的字段。`slug` 不可改（公开 URL 稳定优先，与 nav 一致）。
+         */
+        ProjectUpdateIn: {
+            /** Images */
+            images?: components["schemas"]["ProjectImageIn"][] | null;
+            /** Links */
+            links?: components["schemas"]["ProjectLinkIn"][] | null;
+            /** Maintenance */
+            maintenance?: ("active" | "maintained" | "paused" | "archived") | null;
+            /** Outcomes */
+            outcomes?: string | null;
+            /** Palace Id */
+            palace_id?: string | null;
+            /** Problem */
+            problem?: string | null;
+            /** Role */
+            role?: string | null;
+            /** Summary */
+            summary?: string | null;
+            /** Tech Stack */
+            tech_stack?: string[] | null;
+            /** Title */
+            title?: string | null;
+            /** Tradeoffs */
+            tradeoffs?: string | null;
         };
         /**
          * ResolveIn
@@ -2782,6 +3648,27 @@ export interface components {
             /** Id */
             id: string;
         };
+        /**
+         * WallAlbumOut
+         * @description 照片墙上引用的最小相册信息（不含草稿状态与版本，公开 DTO 不能夹带管理字段）。
+         */
+        WallAlbumOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Kind Label */
+            kind_label: string;
+            /** Position */
+            position: number;
+            /** Slug */
+            slug: string;
+            /** Title */
+            title: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -2791,6 +3678,270 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_admin_albums_api_v1_admin_albums_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                kind?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumAdminListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_album_api_v1_admin_albums_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlbumCreateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_admin_album_api_v1_admin_albums__album_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                album_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_album_api_v1_admin_albums__album_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                album_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_album_api_v1_admin_albums__album_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                album_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlbumUpdateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_album_photo_api_v1_admin_albums__album_id__photos__media_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                album_id: string;
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_album_api_v1_admin_albums__album_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                album_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unpublish_album_api_v1_admin_albums__album_id__unpublish_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                album_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     admin_list_links_api_v1_admin_friends_get: {
         parameters: {
             query?: {
@@ -4088,6 +5239,237 @@ export interface operations {
             };
         };
     };
+    list_admin_projects_api_v1_admin_projects_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectAdminListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_project_api_v1_admin_projects_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectCreateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_admin_project_api_v1_admin_projects__project_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_project_api_v1_admin_projects__project_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_project_api_v1_admin_projects__project_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectUpdateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_project_api_v1_admin_projects__project_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unpublish_project_api_v1_admin_projects__project_id__unpublish_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     login_api_v1_auth_login_post: {
         parameters: {
             query?: never;
@@ -4252,6 +5634,127 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FriendTagListOut"];
+                };
+            };
+        };
+    };
+    list_albums_api_v1_gallery_albums_get: {
+        parameters: {
+            query?: {
+                kind?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_album_api_v1_gallery_albums__slug__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_photos_api_v1_gallery_photos_get: {
+        parameters: {
+            query?: {
+                scope?: string;
+                album?: string | null;
+                kind?: string | null;
+                year?: number | null;
+                month?: number | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhotoListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_photo_years_api_v1_gallery_photos_years_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": number[];
                 };
             };
         };
@@ -5059,6 +6562,71 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PostDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_projects_api_v1_projects_get: {
+        parameters: {
+            query?: {
+                maintenance?: string | null;
+                tech?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_project_api_v1_projects__slug__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetailOut"];
                 };
             };
             /** @description Validation Error */

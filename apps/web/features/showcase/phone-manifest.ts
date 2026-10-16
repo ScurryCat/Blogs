@@ -19,8 +19,12 @@ export const SHOWCASE_MANIFEST: PhoneAppManifest = {
   id: "showcase",
   name: "殿堂",
   subtitle: "作品与照片",
-  icon: "/assets/legacy/img/icon/fox.webp",
-  order: 30,
+  // 原稿用 fox.webp，但 T00 集成时已把 fox 给了「放课后」（T05），改用仓库里同样真实存在
+  // 且未被占用的 violet.webp，避免桌面上两个应用同图标。
+  icon: "/assets/legacy/img/icon/violet.webp",
+  // 07 §7 的手机首屏顺序是 INS(10) / 手记(20) / 放课后(30) / COOP(40) / 异世界导航(50) ——
+  // 「我的殿堂」不在那份清单里，因此排在它们**之后**（60），保持设计顺序原样。
+  order: 60,
   kind: "embedded",
   canonical_path: "/showcase",
   loader: () => import("@/features/showcase/phone-app"),

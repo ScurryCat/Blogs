@@ -45,14 +45,18 @@ def register_content_domains() -> tuple[str, ...]:
     from app.modules.coop import wiring as coop_wiring
     from app.modules.journal import wiring as journal_wiring
     from app.modules.leisure import wiring as leisure_wiring
+    from app.modules.gallery import wiring as gallery_wiring
     from app.modules.moments import wiring as moments_wiring
     from app.modules.posts import wiring as posts_wiring
+    from app.modules.projects import wiring as projects_wiring
 
     posts_wiring.register()
     moments_wiring.register()
     coop_wiring.register()
     journal_wiring.register()
     leisure_wiring.register()
+    projects_wiring.register()
+    gallery_wiring.register()
     _content_domains_registered = True
     return (
         "app.modules.posts",
@@ -60,6 +64,8 @@ def register_content_domains() -> tuple[str, ...]:
         "app.modules.coop",
         "app.modules.journal",
         "app.modules.leisure",
+        "app.modules.projects",
+        "app.modules.gallery",
     )
 
 
