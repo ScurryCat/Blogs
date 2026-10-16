@@ -545,3 +545,8 @@ T05 另报告一个**测试陷阱**：服务层 `Session.commit()` 会提交测�
 | 2026-10-16 | **T08 交付入库** | 复核并入库（`c5602c5`，76 文件 / 14734 行）| 后端 23 个文件（含 **`ai/` 适配层**，默认本地模拟不联网不计费）、测试 16 个文件、前端 20 个文件、13 份设计参考截图。T08 自测：后端 **160 例**、前端 58 例、真实浏览器 **42/42**、旧站 53 零回归、build 0。
 **两条诚实标注**：① **真实模型联调与费用未做**（无凭证无预算，且明确不得采购或启用收费调用）；② **原版 IM 视觉还原本身未验证** —— 手上只有元件素材表、没有完整参考帧，因此只做了结构 + 已确证语汇的原创适配。
 **三条跨模块发现**：不需要 Origin 补丁（它自建访客写闸门兼容 Next rewrite 形态）；INS 死链（已修）；数据源未切换时内容卡片指向 404（api 构建下 200，附对照数据）；390px 下问卷浮层盖住输入区（附截图）| `c5602c5` |
+| 2026-10-16 | **T08 接线完成** | 模型/路由/迁移/契约/前端两处 | 契约 **45 → 55 条**、表 **19 → 25 张**（迁移 `18abac49279f`，6 建表、零 drop）。**重点核验 T08 特别强调的那条**：`uq_ai_requests_one_inflight` 落库为**部分唯一索引** —— `CREATE UNIQUE INDEX … ON ai_requests USING btree (conversation_id) WHERE ((status)::text = 'pending'::text)` ✓；它也建了**独立的 `visitor_sessions`**，不复用站主 `sessions`。
+**无需 `wiring.register()`**：该域不向任何共享注册表贡献（无自有媒体、不产生公开标签、会话不进公开搜索），并自带 `verify_no_shared_contributions()`；集成后实测内容域贡献**未变** ✓。
+前端两处：`InsApp` → `InsAppWithMessages`（必须换组件：页签含函数，不能跨服务端/客户端边界传）；`phone-app.tsx` 加屏幕分派。
+**验证用逐目录串行**：整树合跑时撞到 `database "pl_test_t01" does not exist — It seems to have just been dropped`，即并行包跑整棵树 drop 了共享临时库（我们记录的并发规则）。逐目录串行得到 **16 套件 640 项全绿** | `c5602c5` `c4a5bd5` |
+| 2026-10-16 | T00（两次写坏冻结清单） | 更新 `EXPECTED_TABLES` 到 25 张时连错两次 | ① 插入破坏了**字母序**（`conversations` 放到 `audit_events` 前）；② 修的时候脚本**漏调 `import_all_models()`**，`registered_tables()` 返回空，于是把清单**写成空元组**。两次都是「改断言」这一步出的错 —— 与前几轮同类 | 已修正 |

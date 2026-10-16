@@ -83,8 +83,8 @@
       "depends_on": [
         "T03"
       ],
-      "status": "in_progress",
-      "note": "开始条件（T03 已集成）满足，已派发；与 T06 并行"
+      "status": "integrated_verified",
+      "note": "原版 IM 与剧情/AI 混合消息已交付并入库 c5602c5，接线完成 c4a5bd5：模型/路由登记（契约 45→55）、单头迁移 18abac49279f（6 表、零 drop，uq_ai_requests_one_inflight 落库为部分唯一索引 WHERE status='pending'）、EXPECTED_TABLES 25 张、前端两处接入（InsApp→InsAppWithMessages、手机屏幕分派）。**无需 wiring.register()** —— 该域不向任何共享注册表贡献，自带断言。验证：逐目录串行 16 套件 640 项全通过。**未验证**：真实模型联调与费用（无凭证无预算，不得采购或启用收费调用）；原版 IM 视觉还原本身（T08 未拿到完整参考帧，只做结构与已确证语汇的原创适配）；多 worker 压测；真机软键盘；Safari/Firefox；容器内运行；读屏软件。"
     },
     {
       "id": "T09",
