@@ -290,3 +290,8 @@ page.click(...)                                                                 
 ③ **搜索排序稳定** —— 游标元组 `(rank, published_at, id, kind)`，落实 05 §140「同分按 `published_at DESC, id DESC` 稳定排序，再加 kind 最终区分」；游标另带 q/kind/tag **过滤指纹**（与 moments 的标签指纹同一套路）；
 ④ **宿主模块已就绪** —— `features/metanav/index.tsx` 已是 `PhoneAppModule` 形状（`export default MetanavApp` + `export const screens`），且头部注释按协议写明：只用 `PhoneViewProps`、不碰全局/DOM、`metaverse-entry` 只在明确进入时发、足迹走 `host.state`、卸载即取消读取。**我第 41 轮清单里的模块项它已自行满足**，只差 manifest 取值。
 另注意到：文档未规定处（别名/关系条数上限）它做了明确取舍并在注释里说明依据 | 待交付 |
+| 2026-10-16 | **T02（交付后修复）** | 复核 T02 对已入库文件的交付后改动（`site-link.tsx`、`map-view.tsx`、`verify.py`）| **修的是一个真实竞态**：Next 16 在 `document` 上挂了自己的点击处理，等到**冒泡阶段**才 `preventDefault` 时浏览器可能已开始整页跳转（注释记录实测：window 冒泡处 `defaultPrevented` 已是 true，页面依旧重载）。改为 **捕获阶段** `onClickCapture` + `stopPropagation()`，两处入口（`SiteLink` 与地图的 `SvgSiteLink`）都改；并**补了回归测试** `client_navigation()`，覆盖顶部导航/地图图标/地图列表/手机站点链接四类入口。根因定位 → 两处同改 → 补回归测试，处理完整 | 待入库 |
+| 2026-10-16 | T03（JSX 注释，已自愈） | 一次构建失败，报 `Expected '</', got 'ident'` | 初判为 T03 编辑中间态，**下一轮复查已消失**（它自行修好）。期间我做了最小复现确证判据，结论可复用：裸 `/* */` 在 **JS 表达式位置合法**（三元 else 分支，退出码 0），在 **JSX 子元素位置非法**（报 TS17008）——**判据是注释所处位置，不是注释里有没有 `<img>`** | 已自愈 |
+| 2026-10-16 | T04（测试文件类型错误） | `tsc --noEmit` → **9 个错误全在 `metanav-view.test.tsx`** | **① `ReturnType<typeof vi.fn>` 是未特化的 `Mock<Procedure \| Constructable>`**，不能赋给宿主的具体签名（7 个 2322）；已给带类型参数的改法。
+**② `let navigation` 只在闭包内赋值**，TS 控制流分析看不到，使用处仍视为初始值 `null`，对 `null` 可选链即得 **`never`**（3 个 2339）——**TS 已知局限、非逻辑错误**；已给「使用处收回声明类型」与「对象持有者」两种改法。
+并明确**不要为消错把测试文件排除出 tsconfig** | 待 T04 修 |
