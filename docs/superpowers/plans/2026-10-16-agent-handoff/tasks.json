@@ -93,8 +93,8 @@
         "T04",
         "T06"
       ],
-      "status": "in_progress",
-      "note": "开始条件（T04 + T06 已集成）满足，已派发（最后一个功能包）。"
+      "status": "integrated_verified",
+      "note": "天鹅绒技能全书与印象空间问题记录已交付并入库 899392c：模型/路由登记（契约 70→85）、单头迁移 528a38f23614（5 表 + 7 索引、零 drop）、EXPECTED_TABLES 34 张、无需 wiring（两域 CONTRIBUTIONS 为空 + 自检）、作品详情接入 ProjectSkills（验收第 2 条）、并**按 07 §7 只在 /about 与 /apps/metanav 加入口，不登记为手机桌面图标**（设计原文：天鹅绒房间从档案/异世界导航的特殊入口进入，不要求每个场景都占一个 App）。验证：后端 15 域合计 852 通过 + 守卫 59 = 911 全绿；前端 713 通过 / 69 文件；build 0；旧站 53 零回归。**未验证**：Docker/容器；真机触控与软键盘；Safari/Firefox；技能列表第二页（公开 9 门 < limit 12）；跨浏览器 412；与 T04 分类探索的联合回归。"
     },
     {
       "id": "T10",
@@ -103,9 +103,9 @@
         "T01",
         "T02"
       ],
-      "status": "in_progress",
+      "status": "integrated_verified",
       "release_requires": "all modules selected in this release are integrated and verified",
-      "note": "开始条件（T01+T02 已集成）满足，已派发；卡片允许「先准备部署，发布验收等待选定模块」。已交接 T00 查实的事项：恢复后会话复活与 revoke_sessions CLI、网关须转发 /assets/music/ 且保留 Origin/Host、数据源切换需重新构建、四个验收工具、以及全部已知未验证项。Docker daemon 未运行，容器项须如实记为未验证。"
+      "note": "部署编排 / CI / 备份恢复 / 运维文档 / 发布清单已交付（见 T10-result.md）；T00 已采纳其四项申请：standalone 输出与 web 镜像 runner（d457e88）、验收脚本动态端口（fc37afd）、DATABASE_URL_FILE（02af498）、契约与类型重生成。三套演练在**29 张表的当前树**上重跑全部通过：备份恢复 34/34、健康演练 11/11、反代同源写 34/34。**未验证**：容器构建与容器内启动（Docker daemon 不可用，跑通前 deploy/ 不得宣称可用）；真实域名 TLS 与 __Host- Cookie；GitHub Actions 实际执行；真机/Safari/Firefox/音频出声/磁盘塞满。"
     }
   ],
   "updated": "2026-10-16"
