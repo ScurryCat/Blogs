@@ -1,0 +1,463 @@
+/*
+ * 记忆画廊的样式（T06 独占，`features/gallery/gallery.css`）。
+ *
+ * 为什么是普通 CSS 而不是 CSS Module：本包的浏览器验收脚本（Playwright）要按
+ * **稳定的类名**断言图格、图格失败态与灯箱；CSS Module 会把类名哈希掉，
+ * 只能靠 `[class*=...]` 这类脆弱选择器。T03 的 `features/ins/ins.css` 是同一个做法，
+ * 类名一律带前缀（`plg-` / `photo-tile-`）以避免与全站样式互相污染。
+ *
+ * 为什么不写进 `app/globals.css`（T02 所有）也不写进 `styles/legacy/*.css`
+ * （旧站快照，只读）：样式跟着组件走。
+ *
+ * 美术方向（07 §5、03 §4）：
+ *   - 照片是视觉主体：**图片本身不加红色滤镜**，P5 元素只用在边框、标签与按钮上；
+ *   - 图格保持**自然比例**（宽高来自媒体的真实像素，见 types.aspectRatio），
+ *     不做等高裁切 —— 裁切会改变摄影作品的构图（卡片封面除外，那里刻意统一高度）；
+ *   - 320 / 390px 单列、桌面多列；点击区域 ≥ 44px；
+ *   - `prefers-reduced-motion: reduce` 时不做位移 / 淡入。
+ */
+
+.plg-wrap {
+  --gal-ink: #f4f1ea;
+  --gal-dim: #b9b2a6;
+  --gal-red: #d3122a;
+  --gal-line: rgba(244, 241, 234, 0.18);
+  --gal-panel: rgba(18, 18, 21, 0.72);
+  color: var(--gal-ink);
+}
+
+.plg-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: flex-end;
+  justify-content: space-between;
+  border-bottom: 2px solid var(--gal-red);
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+}
+
+.plg-kicker {
+  margin: 0 0 4px;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  color: var(--gal-red);
+}
+
+.plg-title {
+  margin: 0;
+  font-size: clamp(20px, 3vw, 30px);
+  letter-spacing: 0.04em;
+}
+
+.plg-lead {
+  margin: 6px 0 0;
+  color: var(--gal-dim);
+  font-size: 14px;
+  max-width: 60ch;
+}
+
+.plg-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+.plg-tab {
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--gal-line);
+  background: transparent;
+  color: var(--gal-ink);
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.plg-tab[aria-current="page"],
+.plg-tab[aria-pressed="true"] {
+  border-color: var(--gal-red);
+  background: rgba(211, 18, 42, 0.16);
+}
+
+/* ---------- 相册卡 ---------- */
+
+.plg-album-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.plg-album-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--gal-line);
+  background: var(--gal-panel);
+  padding: 10px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.plg-album-card:hover,
+.plg-album-card:focus-visible {
+  border-color: var(--gal-red);
+}
+
+.plg-album-cover {
+  display: block;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  /* 卡片封面用固定框 + object-fit: 卡片高度一致才好看；相册内的图格才是自然比例。 */
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.plg-album-cover-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  border: 1px dashed var(--gal-line);
+  color: var(--gal-dim);
+  font-size: 13px;
+}
+
+.plg-album-card-title {
+  margin: 0;
+  font-size: 16px;
+}
+
+.plg-album-card-meta {
+  margin: 0;
+  color: var(--gal-dim);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+
+.plg-album-card-desc {
+  margin: 0;
+  color: var(--gal-dim);
+  font-size: 13px;
+}
+
+/* ---------- 自然比例图格 ---------- */
+
+.plg-masonry {
+  /* 列式瀑布流：图格保持自然比例（width/height 由内联 aspect-ratio 给出）。 */
+  columns: 3 240px;
+  column-gap: 12px;
+}
+
+@media (max-width: 720px) {
+  .plg-masonry {
+    columns: 2 150px;
+  }
+}
+
+@media (max-width: 420px) {
+  .plg-masonry {
+    columns: 1;
+  }
+}
+
+.photo-tile {
+  break-inside: avoid;
+  margin: 0 0 12px;
+  border: 1px solid var(--gal-line);
+  background: var(--gal-panel);
+  padding: 6px;
+}
+
+.photo-tile-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.photo-tile-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.photo-tile-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 10px;
+  border: 1px dashed var(--gal-line);
+  color: var(--gal-dim);
+  font-size: 13px;
+  text-align: center;
+}
+
+.photo-tile-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+  margin: 6px 2px 0;
+  font-size: 12px;
+  color: var(--gal-dim);
+}
+
+.photo-tile-note {
+  margin: 2px 2px 0;
+  font-size: 12px;
+  color: var(--gal-dim);
+}
+
+/* ---------- 分组标题 ---------- */
+
+.plg-group-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: baseline;
+  margin: 18px 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--gal-line);
+}
+
+.plg-group-title {
+  margin: 0;
+  font-size: 16px;
+}
+
+.plg-group-meta {
+  margin: 0;
+  color: var(--gal-dim);
+  font-size: 12px;
+}
+
+/* ---------- 筛选 ---------- */
+
+.plg-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 14px;
+}
+
+.plg-chip {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--gal-line);
+  background: transparent;
+  color: var(--gal-ink);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.plg-chip[aria-pressed="true"] {
+  border-color: var(--gal-red);
+  background: rgba(211, 18, 42, 0.16);
+}
+
+.plg-chip-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--gal-line);
+  color: var(--gal-ink);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.plg-chip-link[aria-current="page"] {
+  border-color: var(--gal-red);
+  background: rgba(211, 18, 42, 0.16);
+}
+
+.plg-filter-label {
+  color: var(--gal-dim);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+/* ---------- 状态 ---------- */
+
+.plg-state {
+  border: 1px solid var(--gal-line);
+  background: var(--gal-panel);
+  padding: 18px;
+  text-align: center;
+}
+
+.plg-state-kicker {
+  margin: 0 0 6px;
+  color: var(--gal-red);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+}
+
+.plg-state-title {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.plg-state-body {
+  margin: 0;
+  color: var(--gal-dim);
+  font-size: 14px;
+}
+
+.plg-button {
+  min-height: 44px;
+  margin-top: 10px;
+  padding: 10px 16px;
+  border: 1px solid var(--gal-red);
+  background: rgba(211, 18, 42, 0.16);
+  color: var(--gal-ink);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.plg-more-row {
+  display: flex;
+  justify-content: center;
+  margin: 18px 0 0;
+}
+
+/* ---------- 灯箱 ---------- */
+
+.plg-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  background: rgba(6, 6, 8, 0.94);
+  color: var(--gal-ink);
+}
+
+.plg-lightbox-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--gal-line);
+}
+
+.plg-lightbox-counter {
+  margin: 0;
+  color: var(--gal-dim);
+  font-size: 13px;
+}
+
+.plg-lightbox-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.plg-lightbox-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  min-height: 0;
+}
+
+.plg-lightbox-image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.plg-lightbox-caption {
+  margin: 0;
+  padding: 10px 14px 18px;
+  color: var(--gal-dim);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* ---------- INS 紧凑视图 ---------- */
+
+.plg-ins {
+  display: block;
+  color: var(--gal-ink);
+}
+
+.plg-ins-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0 0 10px;
+}
+
+.plg-ins-title {
+  margin: 0;
+  font-size: 15px;
+}
+
+.plg-ins-grid {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+}
+
+.plg-ins-cell {
+  display: block;
+  border: 1px solid var(--gal-line);
+  background: rgba(0, 0, 0, 0.35);
+  aspect-ratio: 1;
+  overflow: hidden;
+}
+
+.plg-ins-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.plg-ins-note {
+  margin: 10px 0 0;
+  color: var(--gal-dim);
+  font-size: 12px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .photo-tile,
+  .plg-album-card {
+    transition: border-color 120ms ease-out;
+  }
+}
+
+
+/* ---------- 灯箱的大图失败态 ---------- */
+
+.plg-lightbox-fallback {
+  padding: 24px;
+  border: 1px dashed var(--gal-line);
+  color: var(--gal-dim);
+  text-align: center;
+}
+
+/* 失败态里的重试提示（不是按钮：外层可点区域已经是 button，嵌套 button 是无效 HTML）。 */
+.photo-tile-retry {
+  display: block;
+  margin-top: 6px;
+  color: var(--gal-red);
+  font-size: 12px;
+}
