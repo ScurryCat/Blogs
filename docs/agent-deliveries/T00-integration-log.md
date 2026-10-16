@@ -264,3 +264,4 @@ page.click(...)                                                                 
 | 2026-10-16 | T04（确定性匹配预检） | 独立验证规范化层与 `not_found` 语义（任务卡要求 NFKC/trim/大小写/别名、**禁止模型猜测**） | **规范化全部正确**：全角→半角（`ＭＥＴＡＶＥＲＳＥ`→`metaverse`）、大小写折叠、首尾 trim、内部连续空白折叠、`\u3000` 全角空格归一；`nav.normalize_keyword` 与 `core.text.normalize_for_match` **同一规则**（单一事实源，不各写一套）。
 **语义正确**：`POST /nav/resolve` 无任何 `try/except`，数据库故障正常冒泡为 5xx，**不会被吞成 not_found**；`not_found` 是响应体 status 字段（HTTP 200），符合 05 §163「not_found 是正常 200 业务结果，API 故障是 5xx」。
 **一次自我纠正**：我把 `①` 的期望值写成原值，判为不符；实际 NFKC 本就把 `①` 分解为 `1` —— 实现正确，是我的预期错了 | 待交付 |
+| 2026-10-16 | T03（前端早期预警） | 只读 `tsc --noEmit`，T04 的页面已落地触发了全量检查 | **2 个类型错误，均在 T03 的 `features/ins/`**，且是同一处写法：`moment.images.length ? variantUrl(moment.images[0]) : null` ——`.length` 为真**不会**让 TS 收窄索引访问，而 tsconfig 开着 `noUncheckedIndexedAccess`（`images[0]` 恒为 `T | undefined`）。已给出「先把首图取进变量再判空」的改法，并明确**不要为了消错去关该严格设置** | 待 T03 修 |
