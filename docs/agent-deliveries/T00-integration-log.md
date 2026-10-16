@@ -181,3 +181,5 @@ docker compose -f deploy/compose.dev.yaml --env-file deploy/.env up -d
 ```
 
 在此之前不得声称容器内可运行（T00 交付单 §9 已列同一项）。
+| 2026-10-16 | T02（构建期 CSS 陷阱） | T02 报告：Next 16（Turbopack/Lightning CSS）把同一规则里的 `translate` 与 `transform` 合并并**丢掉 `translate`** | **独立确认**：构建产物中基础 `.poll-q` 规则的 `translate` 确实缺失（`含 translate: False`），而覆盖规则 `transform: translateY(-20px) rotate(-8deg)` 存活。全量扫描源码：仅 1 处真实命中（`styles/legacy/poll.css` 的 `.poll-q`），另一处是 `app/globals.css` 里的注释示例 | 无（仅验证） |
+| 2026-10-16 | T02（问卷几何回归） | 用真实浏览器量新旧问卷 Q 的渲染几何（T02 修完 CSS 后独立复核） | **390px 与 1280px 两个断点下偏差均为 0.0px**，面板宽度一致（350 / 504）；1280px 下新栈 `translate=none` 但 transform 内含等效 `translateY(-20px)`，净几何相同。我事前担心的「-12px 与 -20px 叠加成 -32px」**未发生** —— 断点拆分处理正确 | 无（仅验证） |
