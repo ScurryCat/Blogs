@@ -23,17 +23,16 @@ window.PL_SITE = {
 
   /* 右下角问卷（poll.js）。票数是本地装饰：base 是设定值，访客那一票只在他自己
      浏览器里叠加 —— 和游戏里那个固定百分比一样是布景，不是真实统计。
-     要接真实统计就把 poll.js 里的 tally() 换成一次 fetch。 */
+     配置与复用方式见 README；新增问题请换稳定 id。 */
   poll: {
+    id: 'phantom-thieves-belief',
     title: '怪盗ch',
-    q: '你相信心灵怪盗吗？',
-    qHtml: '你相信<em>心灵怪盗</em>吗？',
-    options: { yes: 'YES', no: 'NO' },
+    question: '你相信心之怪盗吗？',
+    questionHighlight: ['心之怪盗'],
+    options: [{ value: 'yes', label: 'YES' }, { value: 'no', label: 'NO' }],
     main: 'yes',                                  // 大号百分比显示哪一项
     base: { yes: 73, no: 927 },                   // 设定值，合起来正好 7.3%
-    by: '匿名',
-    commentHtml: '设网站的人根本<b>脑子有洞</b>',   // 用 <b> 标出要上红底的那截
-    comment: '设网站的人根本脑子有洞'
+    comment: { author: '匿名', text: '设网站的人根本脑子有洞', highlight: ['脑子有洞'] }
   },
 
   /* 留言板（guestbook.js + guestbook-store.js）。

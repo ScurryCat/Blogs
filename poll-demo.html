@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>问卷组件示例 · PHANTOM LOG</title>
+<meta name="description" content="怪盗ch问卷组件：独立问题、镜像投票与内嵌示例。">
+<link rel="icon" href="assets/img/icon/joker.webp">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/chrome.css?v=map-travel-1">
+<link rel="stylesheet" href="assets/css/poll.css">
+<link rel="stylesheet" href="assets/css/phone.css">
+</head>
+<body>
+<div class="wipe" aria-hidden="true"><i></i><i></i><i></i></div>
+<main id="main" tabindex="-1">
+  <section class="shell poll-demo" aria-labelledby="poll-demo-heading">
+    <p class="kick">REUSABLE POLL</p>
+    <h1 id="poll-demo-heading">怪盗ch · 问卷示例</h1>
+    <p>每个问题独立保存本机选择。相同 ID 的两个实例会同步，关闭浮层不会投票。<a href="index.html">返回首页</a></p>
+    <div class="poll-demo-controls" aria-label="默认浮层控制">
+      <button type="button" data-action="show-default">显示默认浮层</button>
+      <button type="button" data-action="close-default">关闭默认浮层</button>
+      <button type="button" data-action="reset-default">重置默认问卷</button>
+      <button type="button" data-action="reopen-default">关闭后立即重开</button>
+    </div>
+    <div class="poll-demo-controls" aria-label="内嵌实例控制">
+      <button type="button" data-action="create-inline">创建内嵌实例</button>
+      <button type="button" data-action="destroy-inline">销毁内嵌实例</button>
+      <button type="button" data-action="recreate-inline">重新创建内嵌实例</button>
+      <button type="button" data-action="fresh-inline">新建未投票的示例问题</button>
+    </div>
+    <p class="poll-demo-output" role="status" aria-live="polite">示例已就绪。</p>
+    <div class="poll-demo-grid">
+      <article><h2>01 · 零票起步（00.0%）</h2><div data-slot="zero"></div></article>
+      <article><h2>02 · 全部赞成（100.0%）</h2><div data-slot="full"></div></article>
+      <article><h2>03 · 长问题与长评论</h2><div data-slot="long"></div></article>
+      <article><h2>04 · 同一问题的实例 A</h2><div data-slot="mirror-a"></div></article>
+      <article><h2>05 · 同一问题的实例 B（共享 ID）</h2><div data-slot="mirror-b"></div></article>
+    </div>
+    <p><a href="tests/poll-browser.html" target="_blank" rel="noopener">打开独立浏览器生命周期检查</a></p>
+  </section>
+</main>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/posts.js"></script>
+<script src="assets/js/core.js?v=map-travel-3"></script>
+<script src="assets/js/curtain.js"></script>
+<script src="assets/js/poll-model.js"></script>
+<script src="assets/js/poll.js"></script>
+<script src="assets/js/boot.js"></script>
+<script src="assets/js/fx.js" defer></script>
+<script src="assets/js/music.js"></script>
+<script src="assets/js/phone.js" defer></script>
+<script src="assets/js/poll-demo.js" data-page></script>
+<script src="assets/js/pjax.js?v=map-travel-2"></script>
+</body>
+</html>

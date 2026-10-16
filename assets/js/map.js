@@ -36,7 +36,7 @@
         <text class="en" x="${l.ex}" y="${l.ey}" transform="rotate(${l.rot} ${l.ex} ${l.ey})" textLength="${Math.min(l.lw - 16, sub.length * 9)}" lengthAdjust="spacingAndGlyphs">${esc(sub)}</text>
       </g>`;
     return l.to
-      ? `<a class="loc" href="${esc(l.to.href)}" data-id="${l.id}" aria-label="${esc(l.kanji)}：${esc(l.to.title)}">${body}</a>`
+      ? `<a class="loc" href="${esc(l.to.href)}" data-id="${l.id}" data-map-travel aria-label="${esc(l.kanji)}：${esc(l.to.title)}">${body}</a>`
       : `<g class="loc off" data-id="${l.id}" aria-hidden="true">${body}</g>`;
   };
 
@@ -56,7 +56,7 @@
     </div>
     <aside class="mp-card" aria-live="polite"></aside>
   </div>
-  <ul class="mp-list" aria-label="地点列表">${open.map((l) => `<li><a href="${esc(l.to.href)}" data-id="${l.id}"><b>${esc(l.kanji)}</b><span>${esc(l.to.title)}</span></a></li>`).join('')}</ul>
+  <ul class="mp-list" aria-label="地点列表">${open.map((l) => `<li><a href="${esc(l.to.href)}" data-id="${l.id}" data-map-travel><b>${esc(l.kanji)}</b><span>${esc(l.to.title)}</span></a></li>`).join('')}</ul>
 </section>`;
 
   const svg = document.querySelector('.mp-svg');
@@ -108,7 +108,7 @@
       ${d.cover ? `<img src="${d.cover}" alt="" loading="lazy">` : `<img class="ill" src="${IMG}${l.id}_image.png" alt="">`}
       <p class="kick">${esc(d.en || 'POST')}${d.date ? ' · ' + d.date : ''}</p>
       <h2>${esc(d.title)}</h2><p class="mp-c-n">${esc(d.note || '')}</p>
-      <a class="btn red" href="${esc(d.href)}"><span>出发 ▸</span></a>`;
+      <a class="btn red" href="${esc(d.href)}" data-map-travel><span>出发 ▸</span></a>`;
     if (fromKey) { window.PL.sfx && window.PL.sfx(); g.focus({ preventScroll: true }); }
   }
   svg.addEventListener('mouseover', (e) => { const g = e.target.closest('.loc:not(.off)'); if (g) select(+g.dataset.id); });

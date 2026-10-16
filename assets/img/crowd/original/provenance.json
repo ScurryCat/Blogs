@@ -1,0 +1,19 @@
+{
+  "source": "https://www.spriters-resource.com/playstation_3/persona5/asset/92512/",
+  "artwork": "Original Persona 5 Crowd extracted textures; copyright ATLUS / SEGA.",
+  "notes": "Copied without byte changes. Each pac suffix is a distinct person, not an animation frame. Crop bounds are alpha-channel [left, top, right, bottom], with exclusive right and bottom. Transparent background pixels retain RGB 112,113,112 with alpha 0. Choreography is reconstructed, not original 1:1 timing.",
+  "sprites": [
+    { "file": "crowd000_000.pac_0_risultato.png", "sha256": "d4110b710c037e04d155f212b7521086b2cb9855a612ee1692b02ee18705cc5d", "size": [512, 1024], "crop": [108, 316, 414, 1024] },
+    { "file": "crowd000_000.pac_1_risultato.png", "sha256": "60f327afc600bba01be8fdcab1715c43963b3bd48ff3afe1d7e44e6fe36a1b25", "size": [512, 1024], "crop": [88, 487, 423, 1023] },
+    { "file": "crowd000_000.pac_2_risultato.png", "sha256": "e3c0583cb14b173900d756021ab07e5978db882aa6dc89a78ed10d9b37ea0fc9", "size": [512, 1024], "crop": [72, 378, 356, 1024] },
+    { "file": "crowd000_000.pac_3_risultato.png", "sha256": "b278fd20c79da5286d441f6f65bbd3b4db361236249486f74499ea96c5a93678", "size": [512, 1024], "crop": [116, 424, 394, 1023] },
+    { "file": "crowd001_000.pac_0_risultato.png", "sha256": "fa44ffcfcff4f42cdbfb448ce36703127da09530c519c2a11cac341fa3a672d7", "size": [512, 1024], "crop": [76, 306, 436, 1023] },
+    { "file": "crowd001_000.pac_1_risultato.png", "sha256": "08f274eb1a744c758d336b41807b5f168e0e454d132647786b4a417f38511102", "size": [512, 1024], "crop": [106, 440, 396, 1024] },
+    { "file": "crowd001_000.pac_2_risultato.png", "sha256": "fe02e7038795f75f43d8a678114274067616a6f2cf92d657e598b929b848c5f1", "size": [512, 1024], "crop": [77, 400, 413, 1024] },
+    { "file": "crowd001_000.pac_3_risultato.png", "sha256": "332dbe541f711ab4d5fa03704d2b1fa2d54d11e963e231c5ec53c060c3fec934", "size": [512, 1024], "crop": [60, 320, 453, 1023] },
+    { "file": "crowd003_000.pac_0_risultato.png", "sha256": "36169fe052a535f65aa151e96b694ff87ccbc77cdba2283c9a2e67e4a5ecaa26", "size": [512, 1024], "crop": [123, 308, 390, 1023] },
+    { "file": "crowd003_000.pac_1_risultato.png", "sha256": "d4c35d2e05cf61c3e5ed42bb7ec78b122d9c736360e9e5823affb037f09c01f4", "size": [512, 1024], "crop": [100, 388, 412, 1023] },
+    { "file": "crowd003_000.pac_2_risultato.png", "sha256": "290e266967ab0ea2d8a8df5341e54d69e89c34b394776c5ded2d30120abbeff6", "size": [512, 1024], "crop": [53, 327, 459, 1023] },
+    { "file": "crowd003_000.pac_3_risultato.png", "sha256": "8a1ea71e7b2a6e8e599b7c3e3eec97ced792f60a5573ed8f0b46e450c3aa3283", "size": [512, 1024], "crop": [88, 402, 421, 1023] }
+  ]
+}

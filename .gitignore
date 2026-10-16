@@ -16,3 +16,6 @@ __pycache__/
 
 # 部署版本标记（由 tools/deploy/version.py 生成，不入库）
 version.json
+
+# 临时设计讨论与预览，不作为站点资源发布
+.superpowers/

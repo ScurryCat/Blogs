@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Poll lifecycle checks</title>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="../assets/css/poll.css?lifecycle=9">
+<style>body { padding: 24px; } #results { white-space: pre-wrap; } .fixtures { display: grid; gap: 20px; }</style>
+<h1>Poll lifecycle checks</h1>
+<button id="run" type="button">Run browser checks</button>
+<pre id="results" role="status">Ready</pre>
+<div class="fixtures" id="fixtures"></div>
+<script>window.PL = { onLeave: fn => window.leavers.push(fn) }; window.leavers = [];</script>
+<script src="../assets/js/poll-model.js"></script>
+<script src="../assets/js/poll.js?lifecycle=4"></script>
+<script src="poll-browser.js?lifecycle=8"></script>
+</html>

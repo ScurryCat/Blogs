@@ -13,7 +13,8 @@
 | `assets/js/posts.js` | **文章内容在这里**，正文是 Markdown |
 | `assets/js/md.js` | Markdown 渲染器（含 `>` 对话、`!!!` 提示块语法，见文件头注释） |
 | `assets/js/core.js` | 撕纸字、P5 日历等公共元件 |
-| `assets/js/poll.js` | 右下角的「怪盗ch」问卷，首次进站弹一次；票数是本地装饰（`site.js` 的 `poll.base`） |
+| `assets/js/poll-model.js` / `poll.js` / `assets/css/poll.css` | 可复用二选一问卷：每题本地状态、浮层/内嵌渲染与独立样式 |
+| `poll-demo.html` | 可直接访问的复用示例与操作检查，不加入主导航 |
 | `assets/js/pjax.js` | 站内跳转不重载文档（BGM 因此不断、没有白闪）。页脚本用 `data-page` 标记，每次换页重跑；共享脚本只加载一次 |
 | `assets/css/base.css` | Design Token 与字体声明 |
 
@@ -88,12 +89,79 @@ sh tools/deploy/install-hook.sh
 
 站内链接由 `core.js` 统一接管，转场放完再交给 `pjax.js`：取回目标页 → 换掉 `#main` → `pushState`。这么做有两个直接好处：**BGM 不断**（`<audio>` 是同一个元素，整页重载会把它销毁）、**没有白闪**（转场真正盖住了换页过程）。
 
+地图中的地点图标、右侧“出发”和下方地点列表带有 `data-map-travel` 标记，使用车站人群过场；顶部导航栏等普通导航使用 Joker 帷幕，不会仅因当前处于地图页而触发人群。
+
 写新页面时要遵守两条约定：
 
 1. **页脚本要标 `data-page`**：`<script src="assets/js/xxx.js" data-page></script>`。标了的每次换页都重跑（它负责把内容画进 `#main`），没标的只加载一次（页头页脚、手机挂件、播放器都在这一类，重跑会建两遍）。
 2. **页脚本挂的全局监听/计时器要用 `window.PL.onLeave(fn)` 登记卸载**。元素级监听不用管，随 DOM 一起消失；但 `addEventListener` 挂在 window 上的、以及 `setInterval`，不登记就会随每次换页叠加泄漏。参考 `weather.js`（三个计时器）与 `map.js`（全局方向键 + 自续的 rAF）。
 
 任何一步失败（网络、解析、目标页没有 `#main`）都会退回 `location.href` 整页跳转 —— 纯静态站的底子还在，JS 挂了也能用，只是那次音乐会被打断。
+
+## 新增一题问卷
+
+问卷是原生 JS + CSS/SVG，不需要构建或依赖。默认问题在 `assets/js/site.js` 的 `poll` 中配置；首次访问自动显示，关闭后可点击右下角「怪盗ch · 问卷」重新打开。数字按「展示基准 + 本机的一票」计算，不代表全站统计，也不发送网络请求。
+
+已有六个入口页都已加载组件。独立页面需要按这个顺序引用；`base.css` 提供本站的字体与主题，`poll.css` 不依赖 `chrome.css`：
+
+```html
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/poll.css">
+<script src="assets/js/poll-model.js"></script>
+<script src="assets/js/poll.js"></script>
+```
+
+每道新问题使用新的稳定 `id`。`options` 恰好两个，值和标签各自不能重复；`main` 必须是其中一个值，`base` 中对应的数字必须有限且非负。问题、标题和评论全是纯文本，强调词放进数组；无需写 HTML。评论可以省略。
+
+```js
+const coffeePoll = {
+  id: 'leblanc-coffee-v1',
+  title: '怪盗ch',
+  question: '今晚要来一杯咖啡吗？',
+  questionHighlight: ['咖啡'],
+  options: [
+    { value: 'coffee', label: '来一杯' },
+    { value: 'tea', label: '喝茶吧' }
+  ],
+  main: 'coffee',
+  base: { coffee: 73, tea: 927 },
+  comment: { author: '匿名', text: '深夜的咖啡总是很香', highlight: ['很香'] }
+};
+
+const floatingPoll = PL.poll.create(coffeePoll, { mode: 'floating' });
+floatingPoll.show();
+// 可重复调用 show()；close() 仅记为见过，destroy() 彻底释放实例。
+floatingPoll.close();
+floatingPoll.show();
+floatingPoll.destroy();
+```
+
+内嵌时先准备容器，再在页面的 `data-page` 脚本中创建：
+
+```html
+<div id="coffee-poll"></div>
+<script src="assets/js/coffee-page.js" data-page></script>
+```
+
+```js
+// coffee-page.js：coffeePoll 配置与上例一致。
+const inlinePoll = PL.poll.create(coffeePoll, {
+  mode: 'inline', container: document.getElementById('coffee-poll')
+});
+inlinePoll.show();
+```
+
+内嵌实例自动通过现有 `PL.onLeave` 登记销毁；没有站点框架的独立页面由调用者在卸载时执行 `destroy()`。同 ID 的实例共享选择并立即同步；不同 ID 的问题互不影响。复用问题时保留 ID，改变题意或选项时换 ID。
+
+默认浮层还提供 `PL.poll.show()`、`PL.poll.close()` 和 `PL.poll.reset()`。reset 只清除默认题的新旧记录并更新已显示的默认实例，不会清除示例或自定义题。旧 `pl-poll-v1` 记录仅迁入默认 ID；关闭与投票分别保存。每题使用 `pl-poll-v2:<编码后的 id>` 存储；存储被禁用、损坏或写入失败时，本页内仍可投票并同步，刷新后是否保留取决于浏览器是否允许写入。
+
+可直接打开 [问卷示例](poll-demo.html)，检查 00.0%、100.0%、长问题和同题镜像，以及显示/关闭/重开/销毁。模型验证使用：
+
+```bash
+node --test tests/poll-model.test.cjs
+```
+
+通过 HTTP 打开 `tests/poll-browser.html` 并点击「Run browser checks」，可用真实 DOM 检查重复显示、关闭动画重开、销毁、键盘关闭、镜像同步、纯文本渲染和页面卸载。
 
 ## 留言板接后端
 
@@ -115,7 +183,7 @@ python3 tools/github-heatmap/fetch.py      # 默认抓 ScurryCat 最近一年
 
 - 图像来自 Atlus 官方配布的 P5R 虚拟背景、Steam 商店图与 P5X 官方 Fan Kit（官方许可个人网站使用）
 - 字体：撕纸英文字体为社区同人作品；中文标题/署名用[阿里妈妈数黑体](assets/fonts/AlimamaShuHeiTi-LICENSE.md)（Bold，永久免费商用，含完整 6993 字形）
-- 地图页出发时的**人群过场**（`assets/js/crowd.js` + `assets/img/crowd/*.png`）移植自社区 Vue 组件库 p5-ui（npm 包名 `p5-ui`）的 canvas 组件，12 帧路人图共 228 KB，跟着仓库走
+- 地图页出发时的**人群过场**（`assets/js/crowd.js` + `assets/img/crowd/original/`）使用 [The Spriters Resource 的 Persona 5 Crowd 原始提取纹理](https://www.spriters-resource.com/playstation_3/persona5/asset/92512/)，12 张透明 PNG 共约 458 KB。每张是不同路人，不是连续走路帧；原图字节未修改，来源文件名、SHA-256 和 alpha 裁绘边界见目录内 `provenance.json`。三层白灰人流的方向、速度与约 900ms 的导航节奏是本站重新编排，并非原作影像或 1:1 时间复刻。旧 p5-ui 图片保留在原目录中，当前转场不再使用
 - 对话框里「我」的立绘取自官方画集 `p5artbook-020` 右页的正面线稿，本地抠底成透明 PNG（`tools/portrait-crop/`），11 KB
 - 站内导航的**帷幕转场**（`assets/js/curtain.js` + `curtain-data.js`）是《过场joker拉下帷幕》的矢量复刻：逐帧追踪轮廓成顶点表，渲染时对相邻帧做顶点插值（形变），canvas + rAF 逐帧绘制。数据懒加载（40 KB，gzip 13 KB），生成脚本在 `tools/curtain/`
 - **音频在仓库里**：手机播放器的三首（`Beneath the Mask` / `Beneath the Mask -rain-` / `星と僕らと`）随仓库分发，合计 17 MB，是 **128 kbps 转码版**（原始 320 kbps 每首 10–16 MB，做背景音乐太重；要换回原质就替换文件，`music.js` 不用改）。这三首是 Lyn 演唱、©ATLUS 的商业发行曲，**公开仓库等于公开分发**；不想要就删掉 `assets/music/*.mp3`，播放器会自动落到「还没有曲子」空态。官方过场影像（`assets/clip/`）仍然不进仓库

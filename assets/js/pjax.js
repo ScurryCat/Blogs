@@ -17,7 +17,7 @@
 (function () {
   const LOADED = new Set([...document.querySelectorAll('script[src]')].map((s) => s.src));
   const CSS = new Set([...document.querySelectorAll('link[rel=stylesheet]')].map((l) => l.href));
-  let busy = false;
+  let busy = false, generation = 0, controller = null;
 
   /* ---------- 资源加载 ---------- */
   /* 注入的 <script> 执行完就摘掉：留着的话每换一次页 body 里就多一个死节点。
@@ -46,6 +46,32 @@
     });
   }
 
+  /* 页脚本先作为文本下载，再在当前代次同步执行。直接插入外链 <script> 后，
+     即使删掉标签或在 onload 检查 token，也可能已经执行并写坏后退恢复的 #main。 */
+  async function loadPageScript(script, token, signal) {
+    const url = new URL(script.src, location.href);
+    if (url.origin !== location.origin) throw new Error('foreign page script');
+    const response = await fetch(url.href, { credentials: 'same-origin', signal });
+    if (token !== generation) return null;
+    if (!response.ok || (response.url && new URL(response.url).origin !== location.origin)) throw new Error('page script ' + url.href);
+    const code = await response.text();
+    if (token !== generation) return null;
+    return { code, url: url.href, nonce: script.nonce };
+  }
+
+  function executePageScript(script, token) {
+    if (token !== generation) return;
+    const el = document.createElement('script');
+    const trusted = document.querySelector('script[nonce]');
+    if (script.nonce || (trusted && trusted.nonce)) el.nonce = script.nonce || trusted.nonce;
+    // 标记只用于确认 CSP 允许了同步执行；受策略限制时由 go() 整页降级，不绕过 CSP。
+    el.textContent = 'document.currentScript.dataset.pjaxExecuted = "true";\n' + script.code + '\n//# sourceURL=' + script.url;
+    try {
+      document.body.appendChild(el);
+      if (el.dataset.pjaxExecuted !== 'true') throw new Error('page script blocked by CSP');
+    } finally { el.remove(); }
+  }
+
   /* ---------- 揭开：把转场层收掉，露出新内容 ---------- */
   function unveil() {
     document.querySelectorAll('.clip.on').forEach((el) => {
@@ -60,8 +86,17 @@
     if (PL.crowd) PL.crowd.stop();
   }
 
+  /* 后退、bfcache 恢复或转场超时必须取消旧请求。generation 也覆盖已完成 fetch、
+     正等待样式 / 脚本的阶段，避免旧结果随后换掉页面或 pushState。 */
+  function cancel() {
+    generation++;
+    if (controller) controller.abort();
+    controller = null; busy = false;
+    unveil();
+  }
+
   /* ---------- 换页 ---------- */
-  async function swap(doc, url, push) {
+  async function swap(doc, url, push, token, signal) {
     const PL = window.PL || {};
     const nextMain = doc.getElementById('main');
     if (!nextMain) throw new Error('no #main');
@@ -73,10 +108,14 @@
     const pageScripts = [];
     doc.querySelectorAll('link[rel=stylesheet][href]').forEach((l) => jobs.push(loadCss(l.href)));
     doc.querySelectorAll('script[src]').forEach((s) => {
-      if (s.hasAttribute('data-page')) pageScripts.push(s.src);
+      if (s.hasAttribute('data-page')) pageScripts.push(s);
       else jobs.push(loadScript(s.src));
     });
-    await Promise.all(jobs);
+    const [scripts] = await Promise.all([
+      Promise.all(pageScripts.map(s => loadPageScript(s, token, signal))),
+      Promise.all(jobs)
+    ]);
+    if (token !== generation) return;
 
     /* 2) 卸载上一页登记的全局监听/计时器，然后才真正换内容与地址 */
     if (PL.runLeavers) PL.runLeavers();
@@ -89,7 +128,8 @@
     if (push) history.pushState({ pjax: true }, '', url.href);
 
     /* 3) 页脚本在新 #main 上重跑 —— 它们负责把这一页的内容画进去 */
-    await Promise.all(pageScripts.map((src) => inject(src, false)));
+    for (const script of scripts) executePageScript(script, token);
+    if (token !== generation) return;
 
     /* 4) 内容就位后再滚动 / 移交焦点，最后揭开转场层。
           后退时回到离开前的位置（pushState 之后浏览器不再替你恢复），
@@ -100,30 +140,40 @@
     else if (backY !== null) scrollTo(0, backY);
     else scrollTo(0, 0);
     main.focus({ preventScroll: true });
-    requestAnimationFrame(() => requestAnimationFrame(unveil));
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (token === generation) unveil();
+      resolve();
+    })));
   }
 
   async function go(href, opts) {
     const o = opts || {};
     const url = new URL(href, location.href);
     if (url.origin !== location.origin) { location.href = href; return false; }
-    if (busy) return true;                       // 连点两次：后一次忽略
+    if (o.push === false) cancel();             // 历史导航覆盖尚未完成的点选导航
+    if (busy) return false;                      // 未接受的点选交还 core 清理它刚开的转场
     busy = true;
+    const token = ++generation;
+    controller = typeof AbortController === 'function' ? new AbortController() : null;
     try {
       /* 记下当前这条历史记录的滚动位置，供后退时还原 */
       if (o.push !== false) {
         try { history.replaceState(Object.assign({}, history.state, { y: Math.round(scrollY) }), '', location.href); }
         catch (e) { /* 忽略 */ }
       }
-      const r = await fetch(url.href, { credentials: 'same-origin' });
+      const r = await fetch(url.href, { credentials: 'same-origin', cache: 'no-store', signal: controller ? controller.signal : undefined });
+      if (token !== generation) return false;
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const html = await r.text();
+      if (token !== generation) return false;
       const doc = new DOMParser().parseFromString(html, 'text/html');
-      await swap(doc, url, o.push !== false);
-      busy = false;
+      await swap(doc, url, o.push !== false, token, controller ? controller.signal : undefined);
+      if (token !== generation) return false;
+      busy = false; controller = null;
       return true;
     } catch (e) {
-      busy = false;
+      if (token !== generation) return false;    // 被取消的旧请求不触发整页降级
+      busy = false; controller = null;
       unveil();                                  // 先把转场层收掉，再退回整页跳转
       location.href = url.href;
       return false;
@@ -133,8 +183,8 @@
   /* 前进 / 后退：再取一次那个地址（静态站没有本地快照，取一次最省心） */
   addEventListener('popstate', () => go(location.href, { push: false }));
   /* 被 bfcache 还原时，转场层可能是开着的，收掉 */
-  addEventListener('pageshow', (e) => { if (e.persisted) unveil(); });
+  addEventListener('pageshow', (e) => { if (e.persisted) cancel(); });
 
   window.PL = window.PL || {};
-  window.PL.pjax = { go, unveil };
+  window.PL.pjax = { go, unveil, cancel };
 })();
