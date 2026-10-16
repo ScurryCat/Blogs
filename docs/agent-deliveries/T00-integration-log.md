@@ -25,7 +25,7 @@ T00 在骨架交付后持续承担集成负责人（[T00 任务卡](../superpowe
 | 2026-10-16 | T01（依赖部分） | `uv add pillow argon2-cffi python-multipart` | 锁定 12.3.0 / 25.1.0 / 0.0.32；加完依赖后 51 测试仍全过 | `7974d73` |
 | 2026-10-16 | T01（部署部分） | compose 与 env.example 增加 `MEDIA_ROOT`、`MEDIA_MAX_CONCURRENCY` | `docker compose config` 渲染通过；`MEDIA_ROOT` 与 `media_data` 挂载点逐字一致 | `7974d73` |
 | 2026-10-16 | 基线（旧站） | 浏览器证据自动化：`tools/browser-check/check.py` | 问卷 10/10 + 人群 14/14，退出码 0 | `7974d73` |
-| 2026-10-16 | T01（在途审阅） | 提出并跟踪 429/415 与两个无归属共享能力 | 429 `RATE_LIMITED` + `Retry-After` 已落地；`app/core/pagination.py`、`app/core/http.py` 已建 | 待集成 |
+| 2026-10-16 | T01（在途审阅） | 提出并跟踪 429/415 与两个无归属共享能力 | 429 `RATE_LIMITED` + `Retry-After` 已落地；`app/core/pagination.py`、`app/core/http.py` 已建 | 2026-10-16 | **T01（正式接线）** | 收到模型冻结信号，执行完整集成序列 | MODEL_MODULES 写入 4 模块；5 个 router 登记；`posts.wiring.register()` 单点登记媒体引用与标签来源；生成单一迁移 `f415083eb5d4`（8 建表 + 7 建索引，部分索引谓词完整保留）；契约重生成 10 条路径、readiness 声明 503；前端类型重生成。**空库升级 → 9 表；上一版库升级 → 9 表；`alembic heads` 唯一**。API 测试 103 通过，旧站 53 通过 | `12eb417` |
 | 2026-10-16 | T01（在途回归） | T01 改共享 `app/core/` 后复查契约 | 51 个 API 测试 + 9 个信封断言全过；`create_app()` 正常构建 | 待集成 |
 | 2026-10-16 | T02（在途审阅） | 素材复制红线检查 | `apps/web/public/assets/legacy/` 只含 fonts/img/sfx（6.9M）；**未带入** 15M 商业音乐与 `.gitignore` 排除的 `assets/clip/` | 待集成 |
 | 2026-10-16 | T00（预演） | 用 5 个假 router 预演 T01 的登记形态 | 6 条路径全部按预期解析；**空前缀 media** 正确挂在 `/api/v1` 下；`health/live`（核心）与 `health/ready`（T01）共存；路径顺序确定 | 无（仅验证） |
@@ -41,12 +41,12 @@ T00 在骨架交付后持续承担集成负责人（[T00 任务卡](../superpowe
 
 ### 等 T01 文件落地后立刻做（现在接线会 `ModuleNotFoundError`，应用与 51 个测试一起红）
 
-- [ ] 写入 `MODEL_MODULES`：`app.modules.auth.models` → `app.modules.media.models` → `app.modules.tags.models` → `app.modules.posts.models`（按依赖顺序）
-- [ ] 在 `app/router.py` 登记 5 个 router：`auth→/auth`、`posts→/posts`、`tags→/tags`、`media→""`（内部组合 `/media` 与 `/admin/media`）、`health→/health`
-- [ ] 在 `app/main.py` 显式注册媒体公开引用检查：`from app.modules.posts import public_refs as _posts_public_refs; _posts_public_refs.register()`（不注册 = 公开文章封面图对匿名 404，「安全但坏」）
-- [ ] 按 `MODEL_MODULES` 生成**单一**新 revision（建表 + 索引 + 唯一 / CHECK），核对 drop、数据转换、公共可见性
-- [ ] 迁移链验证：从**空库**升级 + 从上一版测试库升级；确认 `alembic heads` 只有一个
-- [ ] 重新生成 `contracts/openapi.json` 与 `apps/web/lib/api/generated/schema.ts`
+- [x] ~~写入 `MODEL_MODULES`：`app.modules.auth.models` → `app.modules.media.models` → `app.modules.tags.models` → `app.modules.posts.models`（按依赖顺序）
+- [x] ~~在 `app/router.py` 登记 5 个 router：`auth→/auth`、`posts→/posts`、`tags→/tags`、`media→""`（内部组合 `/media` 与 `/admin/media`）、`health→/health`
+- [x] ~~在 `app/main.py` 显式注册（改为 `posts.wiring.register()` 单点）：`from app.modules.posts import public_refs as _posts_public_refs; _posts_public_refs.register()`（不注册 = 公开文章封面图对匿名 404，「安全但坏」）
+- [x] ~~按 `MODEL_MODULES` 生成**单一**新 revision（建表 + 索引 + 唯一 / CHECK），核对 drop、数据转换、公共可见性
+- [x] ~~迁移链验证：从**空库**升级 + 从上一版测试库升级；确认 `alembic heads` 只有一个
+- [x] ~~重新生成 `contracts/openapi.json` 与 `apps/web/lib/api/generated/schema.ts`
 - [ ] 跑 API 测试 + 跨模块测试；更新 `tasks.json` 状态
 
 ### 已提出、待应用
@@ -55,7 +55,7 @@ T00 在骨架交付后持续承担集成负责人（[T00 任务卡](../superpowe
 - [x] ~~**游标分页共用件**（05 §6）~~ —— T01 已建 `app/core/pagination.py`（「不透明游标分页」），集成时审阅其过滤指纹与 400 语义
 - [x] ~~**管理接口与媒体的 `Cache-Control: private, no-store`**~~ —— T01 已建 `app/core/http.py`（「共享缓存的默认关闭」），集成时确认是按路径统一施加而非各 router 自觉
 - [ ] `apps/web/lib/api/client.ts` 的 `ApiRequestOptions` 增加 `headers?: Record<string, string>`，让写操作能带 `X-CSRF-Token`（属于 T02 的文件，等 T02 交付后统一加，T03+ 也会用）
-- [ ] **接线时替换 `test_model_registry_is_explicit_and_has_no_tables_yet`**：它的断言「registered_tables() == ()」是 T00 阶段的不变量（不许预建业务表），T01 接线后必然为假。新断言应改为把表集合钉死为 05 §3 中 T01 范围内的 8 张表，这样「有人悄悄加表却没更新清单」会失败
+- [x] ~~替换 `test_model_registry_is_explicit_and_has_no_tables_yet`~~ —— 已改为钉死 8 张表；同轮还修掉另一处写死 revision 号的脆弱断言：它的断言「registered_tables() == ()」是 T00 阶段的不变量（不许预建业务表），T01 接线后必然为假。新断言应改为把表集合钉死为 05 §3 中 T01 范围内的 8 张表，这样「有人悄悄加表却没更新清单」会失败
 - [ ] 审阅 T01 新增共享件的归属：`concurrency / cookies / csrf / deps / health / http / pagination / passwords / preconditions / text` 共 10 个模块，确认没有把业务逻辑塞进 `app/core/`
 
 ### 等 T02 交付后做
