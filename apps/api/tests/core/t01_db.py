@@ -37,7 +37,41 @@ from tests.support.module_app import build_module_app
 
 T01_DATABASE_NAME = "pl_test_t01"
 T01_EMPTY_DATABASE_NAME = "pl_test_t01_empty"
-ALLOWED_TEMP_DATABASES = (T01_DATABASE_NAME, T01_EMPTY_DATABASE_NAME)
+# T03 在同一个测试集群上另建自己的临时库（见 tests/moments/t03_db.py）。
+T03_DATABASE_NAME = "pl_test_t03"
+T03_SECOND_DATABASE_NAME = "pl_test_t03_second"
+ALLOWED_TEMP_DATABASES = (
+    T01_DATABASE_NAME,
+    T01_EMPTY_DATABASE_NAME,
+    T03_DATABASE_NAME,
+    T03_SECOND_DATABASE_NAME,
+)
+
+# 逐包登记用的附加白名单。
+#
+# 为什么要有它：`create_database` / `drop_database` 是所有包的测试共用工具，而白名单
+# 原先只有一份常量 —— 于是每来一个新包（T04 / T05 / T07 / T08 / T09…）都要编辑本文件，
+# 多个包并行时就是同一文件的写-写争用。
+#
+# 现在各包在自己的测试支撑文件里调一次 `register_temp_database("pl_test_tXX")` 即可，
+# 互不干扰。**安全性不变**：登记时仍然要求库名像测试库（与 `assert_test_database_url`
+# 同一套校验），运行时也仍有 `_guard_name` + `assert_test_database_url` 两层拦截。
+_EXTRA_TEMP_DATABASES: set[str] = set()
+
+
+def register_temp_database(name: str) -> str:
+    """登记本包使用的临时库名，返回它以便直接引用。
+
+    必须在库名像测试库时才通过（含 `test` 段、不含 prod/production/live/main）。
+    """
+    assert_test_database_url(url_with_database("postgresql+psycopg://pl@127.0.0.1:5432/placeholder", name))
+    _EXTRA_TEMP_DATABASES.add(name)
+    return name
+
+
+def allowed_temp_databases() -> frozenset[str]:
+    """当前允许创建/删除的临时库全集（内置 + 各包登记）。"""
+    return frozenset(ALLOWED_TEMP_DATABASES) | frozenset(_EXTRA_TEMP_DATABASES)
 
 # 与集成申请里给 T00 的清单一致；顺序即依赖顺序（auth → media → tags → posts）。
 T01_MODEL_MODULES = (
@@ -55,7 +89,7 @@ def url_with_database(url: str, name: str) -> str:
 
 
 def _guard_name(name: str) -> None:
-    if name not in ALLOWED_TEMP_DATABASES:
+    if name not in allowed_temp_databases():
         raise RuntimeError(f"拒绝操作非 T01 临时库：{name!r}")
 
 

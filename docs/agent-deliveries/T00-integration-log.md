@@ -239,3 +239,21 @@ page.click(...)                                                                 
 **迁移**：预演产出 **12 项**（6 建表 `palaces`/`moments`/`palace_aliases`/`moment_media`/`moment_tags`/`palace_posts` + 6 索引），全部为新增、**无 drop**；`palaces` 与 `moments` 均带 `(published_at, id)` 公开列表索引。
 **路由**：7 个模块全部挂载、无前缀冲突，契约从 10 条扩到 **24 条**，新路径与 05 的端点清单逐条吻合 | 待交付 |
 | 2026-10-16 | T00（预演中的自纠） | 第一次预演脚本只导入新模块、未先导入 `media`，报 `NoReferencedTableError: moment_media.media_id 找不到 media` | **这不是 T03 的缺陷，是我的脚本缺陷**；但它暴露了一条集成约束：**`MODEL_MODULES` 的顺序必须让 `media` 在 `moments` 之前**（`moment_media.media_id` 外键指向 `media.id`）。已按正确顺序重跑通过 | 无（仅验证） |
+| 2026-10-16 | T00（测试基建重构） | `create_database` / `drop_database` 的临时库白名单是一份常量，每个新包都要编辑同一个文件 → **多 agent 写-写争用**（T03 已改过一次，T04 尚未但迟早要改） | 改为可扩展登记：新增 `register_temp_database(name)` 与 `allowed_temp_databases()`，`_guard_name` 改用后者。**两层保险不变**：登记时仍要求库名像测试库，运行时仍有 `_guard_name` + `assert_test_database_url`。实测：登记前 false → 登记后 true；`phantom_log`（不像测试库）、`pl_production`（像生产库）、未登记名均被拒 | 见提交 |
+| 2026-10-16 | T00（并发测试根因） | 全量跑测试时出现 21 failed + 63 errors，其中 T01 的 auth 报 `database "pl_test_t01" does not exist`（刚被 drop） | **根因是并发全量运行**：T03/T04 执行 `pytest apps/api/tests` 会连带收集并运行 T01 的测试，而 T01 的 session 夹具会创建并在结束时 drop `pl_test_t01` —— 两个并发运行互相删库。**不改代码，改为协作规则**（契约本就规定「模块测试由该包负责，跨模块测试由 T10」）：开发期只跑自己的目录，全量套件由集成负责人在无人并发时串行运行。实测按目录跑 T01 的 117 个用例全过、库被正常创建与清理 | 见提交 |
+
+## 测试并发规则（2026-10-16 确立）
+
+**现象**：并发运行全量套件时出现 `database "pl_test_t01" does not exist` 这类神秘失败。
+
+**根因**：各包的 session 夹具用**固定库名**（`pl_test_t01` / `pl_test_t03` / `pl_test_t04`）建库并在会话结束时 drop。而 `pytest apps/api/tests` 会收集**整棵树**，于是 T03 的运行也会跑 T01 的测试、也会建同一个库、也会在结束时把它删掉 —— 另一个并发运行正在用的库就消失了。
+
+**规则**（与契约「模块测试由该包负责，跨模块测试由 T10」一致）：
+
+- **功能包开发期只跑自己的目录**，例如 `uv run --project apps/api pytest apps/api/tests/moments`；
+- **全量套件由集成负责人在无人并发时串行运行**（集成前的固定动作）；
+- 看到 `database ... does not exist` 这类错误时，先怀疑并发，不要当成自己的缺陷去「修」。
+
+**已做的加固**：白名单从常量改为可扩展登记（`register_temp_database`），消除「每个新包都要编辑同一文件」的写-写争用。库名本身仍是固定的，因为 T01 有 3 处断言直接比较库名（`test_import_legacy` / `test_health_readiness` / `test_bootstrap_admin`），改成随机后缀会牵连这些已入库的用例。
+
+**给 T05–T09 的提示**：在自己的测试支撑文件里调用 `register_temp_database("pl_test_tXX")` 登记，不要编辑 `tests/core/t01_db.py` 的白名单常量。
