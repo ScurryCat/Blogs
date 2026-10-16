@@ -55,7 +55,8 @@
         "T01",
         "T02"
       ],
-      "status": "not_started"
+      "status": "in_progress",
+      "note": "开始条件（T01+T02 已集成）满足，已派发；T00/T04 也已集成"
     },
     {
       "id": "T06",
@@ -72,7 +73,8 @@
         "T01",
         "T02"
       ],
-      "status": "not_started"
+      "status": "in_progress",
+      "note": "开始条件（T01+T02 已集成）满足，已派发；T00/T04 也已集成"
     },
     {
       "id": "T08",
