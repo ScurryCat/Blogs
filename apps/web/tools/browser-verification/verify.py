@@ -325,20 +325,25 @@ def client_navigation(browser, base: str) -> None:
     整页重载会与 RSC 请求同时发生（`window` 冒泡处 defaultPrevented 已是 true，页面仍重载）。
     """
     cases = [
-        ("顶部导航", "/", '.hud-nav a[data-k="about"]'),
-        ("地图地点图标", "/map", ".mp-svg .loc.on"),
-        ("地图地点列表", "/map", ".mp-list li:nth-child(3) a"),
-        ("手机站点链接入口", "/", ".pw-tab"),
+        ("顶部导航", "/", '.hud-nav a[data-k="about"]', False),
+        ("地图地点图标", "/map", ".mp-svg .loc.on", False),
+        ("地图地点列表", "/map", ".mp-list li:nth-child(3) a", False),
+        ("手机站点链接入口", "/", ".pw-app[data-app-id='palace']", True),
     ]
-    for label, start, selector in cases:
+    for label, start, selector, needs_phone in cases:
         page = browser.new_page(viewport=DESKTOP, reduced_motion="no-preference")
         open_page(page, start, base)
         # 先等内容出现，再等运行时挂上（大页面首次编译 / 首帧较慢时给足时间）。
         page.wait_for_selector(".hud-nav", timeout=20000)
         page.wait_for_function("() => typeof window.__PHANTOM_DEBUG__ === 'function'", timeout=25000)
-        if selector == ".pw-tab":
+        if needs_phone:
+            # 先打开手机，再点**手机里的站点链接磁贴**。
+            #
+            # 不要写成「点 .pw-tab 预热、再点 .pw-tab」：面板一旦打开，`.pw-scrim` 就盖住
+            # 启动器，第二次点击会被它拦下（Playwright 重试到超时）。旧写法在首帧尚未水合
+            # 时第一次点击会被吞掉，于是偶然通过 —— 水合变快之后就会稳定失败。
             page.click(".pw-tab")
-            page.wait_for_timeout(300)
+            page.wait_for_selector(".pw-wrap.on .pw-app", timeout=10000)
         origin = page.evaluate("() => performance.timeOrigin")
         page.click(selector)
         page.wait_for_timeout(2500)
@@ -359,7 +364,13 @@ def phone_host(browser, base: str) -> None:
     inert = page.evaluate("() => document.getElementById('main').hasAttribute('inert')")
     check("打开手机时背景 inert", inert is True)
     tiles = page.eval_on_selector_all(".pw-app", "els => els.map(e => e.dataset.appId)")
-    check("桌面只显示已迁移的真实入口", tiles == ["palace", "tokyo", "cast", "profile"], str(tiles))
+    # 4 个 site-link 入口（T02 迁移）+ metanav（T04 交付、T00 登记的内置应用）。
+    # 断言具体清单而非数量：后续包登记时会被强制确认一次，而不是静默改变桌面。
+    check(
+        "桌面只显示已登记的真实入口",
+        tiles == ["palace", "metanav", "tokyo", "cast", "profile"],
+        str(tiles),
+    )
     shot(page, "t02-phone-desktop")
 
     page.keyboard.press("Escape")
