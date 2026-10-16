@@ -362,3 +362,4 @@ page.click(...)                                                                 
 2. **桌面清单断言陈旧**：`tiles == ["palace","tokyo","cast","profile"]` 在我登记 metanav 后必然失败。已更新为含 metanav 的完整清单，与两处 vitest 断言保持一致。
 
 **结果**:`tools/browser-verification/verify.py` **48 passed / 0 failed** —— **跨包浏览器全量回归完成**（此前因上述两点一直记为「未完成」）。
+| 2026-10-16 | **批次 2 派发** | T04 集成完成后，按 README「基础集成后并行 2–3 个功能包」派发 T05、T07 | T05（手记 / 追番游戏 / 勒布朗近况）与 T07（COOP 友链）开始条件（T01+T02 已集成）满足，与收尾中的 T03 并行。两份派发均带上积累的既有约束：**SiteLink 规则**（禁裸 `<a>` 与自写 onClick 拦截）、`"use client"` 与「构建 ≠ 类型检查」、`noUncheckedIndexedAccess`、登记式临时库（`register_temp_database`）、**只跑自己目录**的并发规则、**按端口精确杀**、手机登记清单（`phone-app.tsx` + 10 字段 manifest、图标须真实存在）、以及浏览器验证的三个时序坑（等水合、`#boot` 拦截、用 `performance.timeOrigin` 判整页重载而非注入标记/load 计数）| 见提交 |
