@@ -24,7 +24,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 Environment = Literal["dev", "test", "prod"]
@@ -53,7 +53,14 @@ class Settings(BaseSettings):
     )
 
     app_env: Environment = "dev"
-    database_url: str = Field(min_length=1)
+    # 数据库连接串。两种给法（T10 的集成申请 §6.2）：
+    #   1. `DATABASE_URL` —— 简单，但口令会出现在容器环境变量里，`docker inspect` 可见；
+    #   2. `DATABASE_URL_FILE` —— 指向一个文件（Docker secrets / `_FILE` 约定），口令不出现在环境变量里。
+    # **文件优先**：同时给了两者时以文件为准（部署侧因此可以「基础 env + 文件覆盖」）。
+    # 这里默认空串而不是必填：否则只给 `DATABASE_URL_FILE` 时会在读到文件之前就先报「缺少字段」。
+    # 「两者都没给」由下面的校验器报错，报的是同一类错误。
+    database_url: str = ""
+    database_url_file: str | None = None
     secret_key: str = Field(min_length=32)
     # 版本号进健康端点与 OpenAPI，便于确认线上跑的是哪一版。
     app_version: str = "0.0.0"
@@ -80,6 +87,31 @@ class Settings(BaseSettings):
     # 只信任网关传来的代理头；直连部署时保持 False（06 §2）。
     trust_proxy_headers: bool = False
 
+    @model_validator(mode="after")
+    def _resolve_database_url_file(self) -> "Settings":
+        """`DATABASE_URL_FILE` 优先于 `DATABASE_URL`。
+
+        三个容易踩的点，都在这里处理掉：
+          - **去掉结尾换行**：Docker secrets 与 `printf > file` 常带一个换行，直接拼进连接串
+            会得到一个末尾带 `\n` 的 URL，报错信息很难指向真正原因。
+          - **文件缺失/为空必须立刻失败**：静默回退到 `DATABASE_URL` 会连到另一个库 ——
+            那是「以为在跑新库、实际在写旧库」这类事故的来源。
+          - **两者都没给**：报缺失（此前由 `Field(min_length=1)` 承担）。
+        """
+        if self.database_url_file:
+            path = Path(self.database_url_file)
+            if not path.is_file():
+                raise ValueError(f"DATABASE_URL_FILE 指向的文件不存在：{path}")
+            resolved = path.read_text(encoding="utf-8").strip()
+            if not resolved:
+                raise ValueError(f"DATABASE_URL_FILE 指向的文件为空：{path}")
+            if not resolved.startswith(("postgresql://", "postgresql+psycopg://")):
+                raise ValueError(f"DATABASE_URL_FILE 里的值必须是 PostgreSQL 连接串：{path}")
+            self.database_url = resolved
+        if not self.database_url:
+            raise ValueError("必须提供 DATABASE_URL 或 DATABASE_URL_FILE")
+        return self
+
     @field_validator("secret_key")
     @classmethod
     def _reject_placeholder_secret(cls, value: str) -> str:
@@ -90,7 +122,9 @@ class Settings(BaseSettings):
     @field_validator("database_url")
     @classmethod
     def _require_postgres(cls, value: str) -> str:
-        if not value.startswith(("postgresql://", "postgresql+psycopg://")):
+        # 空串先放行：`database_url` 可能由 `DATABASE_URL_FILE` 在 model_validator 里填入，
+        # 那一步在字段校验**之后**执行。「两者都没给」由 `_resolve_database_url_file` 报错。
+        if value and not value.startswith(("postgresql://", "postgresql+psycopg://")):
             raise ValueError("DATABASE_URL 必须是 PostgreSQL 连接串")
         return value
 

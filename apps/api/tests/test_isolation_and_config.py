@@ -216,3 +216,65 @@ def test_repository_has_no_committed_secret_literals() -> None:
             offenders.append(f"{path.name}:{lineno}: {line.strip()}")
 
     assert not offenders, "配置里疑似写死的凭据：\n" + "\n".join(offenders)
+
+
+# --- DATABASE_URL_FILE（T10 的集成申请 §6.2，T00 实现）----------------------
+
+
+def _settings_with(monkeypatch, tmp_path: Path, **env: str) -> Settings:
+    """在干净的环境变量下构造 Settings（不读 .env 文件）。"""
+    for key in ("DATABASE_URL", "DATABASE_URL_FILE"):
+        monkeypatch.delenv(key, raising=False)
+    for key, value in env.items():
+        monkeypatch.setenv(key, value)
+    return Settings(_env_file=None)
+
+
+def test_database_url_file_is_read_and_trailing_newline_stripped(monkeypatch, tmp_path):
+    """文件注入：内容取代 DATABASE_URL，且**结尾换行必须去掉**。
+
+    Docker secrets 与 `printf > file` 常带结尾换行；不处理的话连接串末尾会多一个 `\\n`，
+    报错信息很难指向真正原因。
+    """
+    secret = tmp_path / "database_url"
+    secret.write_text("postgresql+psycopg://pl@db:5432/pl\n", encoding="utf-8")
+    settings = _settings_with(monkeypatch, tmp_path, DATABASE_URL_FILE=str(secret))
+    assert settings.database_url == "postgresql+psycopg://pl@db:5432/pl"
+
+
+def test_database_url_file_wins_over_plain_variable(monkeypatch, tmp_path):
+    """两者都给时**文件优先**，部署侧因此可以「基础 env + 文件覆盖」。"""
+    secret = tmp_path / "database_url"
+    secret.write_text("postgresql+psycopg://pl@file-host:5432/pl", encoding="utf-8")
+    settings = _settings_with(
+        monkeypatch,
+        tmp_path,
+        DATABASE_URL="postgresql+psycopg://pl@env-host:5432/pl",
+        DATABASE_URL_FILE=str(secret),
+    )
+    assert settings.database_url == "postgresql+psycopg://pl@file-host:5432/pl"
+
+
+def test_missing_or_empty_database_url_file_fails_loudly(monkeypatch, tmp_path):
+    """文件缺失 / 为空必须**立刻失败**：静默回退会连到另一个库。"""
+    with pytest.raises(ValidationError):
+        _settings_with(monkeypatch, tmp_path, DATABASE_URL_FILE=str(tmp_path / "nope"))
+
+    empty = tmp_path / "empty"
+    empty.write_text("   \n", encoding="utf-8")
+    with pytest.raises(ValidationError):
+        _settings_with(monkeypatch, tmp_path, DATABASE_URL_FILE=str(empty))
+
+
+def test_database_url_file_content_must_be_postgresql(monkeypatch, tmp_path):
+    """文件内容也要过与 DATABASE_URL 同一套 PostgreSQL 校验。"""
+    bad = tmp_path / "bad"
+    bad.write_text("mysql://pl@db/pl", encoding="utf-8")
+    with pytest.raises(ValidationError):
+        _settings_with(monkeypatch, tmp_path, DATABASE_URL_FILE=str(bad))
+
+
+def test_neither_source_given_is_an_error(monkeypatch, tmp_path):
+    """两者都没给：报缺失（此前由 Field 必填承担，现在由校验器承担）。"""
+    with pytest.raises(ValidationError):
+        _settings_with(monkeypatch, tmp_path)
