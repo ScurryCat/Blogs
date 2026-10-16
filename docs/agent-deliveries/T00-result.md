@@ -109,8 +109,21 @@ pl_test=# \dt                                        → 仅 alembic_version（�
 **未运行项**（不得当作通过）：
 
 - Docker 容器启动、Compose 健康检查联动、`migrate` 服务实际执行 —— **Docker daemon 未运行**（`/Users/v/.docker/run/docker.sock` 不存在），本轮无法验证。
-- 新栈的浏览器自动化（视觉、过场、音乐、320/390px）—— 未建立。旧站的手工浏览器页 `tests/*-browser.html` 仍需人工打开。
+- **新栈**的浏览器自动化（视觉、过场、音乐、320/390px）—— 未建立。T02 接手时应先补浏览器测试基础。
 - 前端对 API 的真实请求链路 —— 首页占位不调用 API；SSR 读取要等 T02。
+
+### 旧站浏览器验收（本轮补做）
+
+环境里有系统级 Playwright 1.60 + chromium-1223（`~/Library/Caches/ms-playwright`），因此旧站原本「需要人工点击」的浏览器检查已经可以自动化，脚本见 `/Users/学习/blog/.dsh/browser-check.py`：
+
+```text
+tests/poll-browser.html → 点击 #run → ALL BROWSER CHECKS PASSED
+  10 项断言全过：可复用 create API / 半透明底板与紧凑短问题 / 参考框+结果标签+百分比整数小数分列 /
+  Q 与票数框不重叠 / 重复显示与同 ID 镜像 / 关闭淡出 / 计时器取消 / Escape 关闭 / 纯文本渲染 / PJAX 清理
+截图：/Users/学习/blog/.dsh/screenshots/{poll-inline-mobile,poll-inline-desktop,index-desktop}.png
+```
+
+两个必须知道的坑（写进这里避免 T02 重踩）：旧站 `#boot` 开屏会拦截全部指针事件，必须先用 Enter / Space / Escape 或点击关掉；问卷浮层是 JS 渲染的，`wait_until="load"` 之后仍要等 `.poll-panel` 出现再截图。
 
 ## 5. 锁定版本
 

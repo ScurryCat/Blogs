@@ -66,6 +66,11 @@ services:
       SECRET_KEY: ${SECRET_KEY:?}
       # 开发期分端口才需要显式 CORS；带凭据请求不允许配成 "*"。
       CORS_ORIGINS: ${CORS_ORIGINS:-http://127.0.0.1:3100}
+      # 媒体的容器内根目录，必须与下面的 media_data 挂载点一致；
+      # 生产指向受控持久卷，且媒体只由 api 授权读取（06 §4），不作为公开静态目录。
+      MEDIA_ROOT: ${MEDIA_ROOT:-/var/lib/phantom-log/media}
+      # 有界图片处理并发（T01 的共享能力）；避免一次性把内存打满。
+      MEDIA_MAX_CONCURRENCY: ${MEDIA_MAX_CONCURRENCY:-2}
     depends_on:
       db:
         condition: service_healthy
