@@ -16,7 +16,7 @@
 ```text
 仓库         /Users/学习/blog/Blogs   分支 main
 发布快照     git HEAD（追踪文件）→ /tmp/pl-release-snapshot（本地验收用）
-迁移 head    c652ce04a8bf（20261016_2014，T07 coop friends）
+迁移 head    528a38f23614（20261016_2155，T09 skills and exploration；单一 head，34 张表）
 本机 PostgreSQL 18.6 @ 127.0.0.1:55432（用户 pl，trust）
 Node 26.8.1 / npm 11.19.0 / Python 3.13.5 / uv 0.9.18
 Docker CLI 29.8.2 / Compose v5.5.1 —— **daemon 未运行**（/Users/v/.docker/run/docker.sock 不存在）

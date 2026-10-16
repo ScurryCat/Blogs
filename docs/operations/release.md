@@ -7,29 +7,34 @@
 > 是五个不同状态。**本次发布停在「可生产发布（就绪报告）」**：容器与域名两条前置没有完成，
 > 没有部署到任何生产环境，也没有获得部署授权。
 
-> ⚠️ **本清单是时间点快照，会过期。** 记录时刻 2026-10-16T12:57Z，`git HEAD = c4a5bd5`，
-> 当时工作区有 26 项未提交改动，且 T05 / T06 / T07 / T08 的接线在并行进行中。
-> 发布前必须重新核对本节的「发布快照」与 schema 版本 —— 只要树变了，这份清单就要重签。
+> ✅ **本清单已重签**：2026-10-16（第 89 轮集成）。重签时 `git HEAD = 866e627`，
+> **工作区干净（0 项未提交改动）**，`alembic heads` 单一 head = `528a38f23614`。
+> 上一次签署停在 `c4a5bd5`（当时 T05–T09 还在并行接线），那一版已作废。
+>
+> 重签依据（都可现场复核）：
+> `git rev-parse HEAD`、`git status --porcelain`（应为空）、
+> `cd apps/api && uv run alembic heads`、`apps/web/features/phone/registry.ts`、
+> `python3 -c "import json;print(len(json.load(open('contracts/openapi.json'))['paths']))"`。
 
 ## 1. 本次发布范围清单
 
 | 项 | 值 |
 | --- | --- |
-| 记录时刻 | 2026-10-16T12:57Z |
-| 代码版本 | `git HEAD = c4a5bd5`（工作区另有 26 项未提交改动；发布前需重新核对） |
-| 发布快照 | 验收时用的 `git archive HEAD` 副本 `/tmp/pl-release-snapshot`（`HEAD` 当时为 `65607e0`） |
+| 记录时刻 | 2026-10-16（重签） |
+| 代码版本 | `git HEAD = 866e627`，**工作区干净** |
 | 前端镜像 | `deploy/prod.Dockerfile.web` → 待 CI 构建并按 `@sha256:<digest>` 固定 |
 | 后端镜像 | `deploy/prod.Dockerfile.api` → 同上 |
-| schema 版本 | 迁移 head **`18abac49279f`**（`20261016_2051_..._t08_messaging.py`）；单一 head |
+| schema 版本 | 迁移 head **`528a38f23614`**（T09 skills/exploration）；**单一 head**，共 9 个迁移文件，**34 张表** |
+| 契约版本 | `contracts/openapi.json` = **85 条路径**（与 `apps/web/lib/api/generated/schema.ts` 同源生成） |
 | 配置版本 | `deploy/compose.prod.yaml` + `deploy/gateway/Caddyfile` + `deploy/env/prod.env.example` |
 | 基础镜像 | PostgreSQL `postgres:18-alpine`、Caddy `caddy:2.10.2-alpine`（生产按 digest 固定） |
 | 运行时 | Node 26 / Python 3.13（与 `package-lock.json`、`uv.lock` 一致） |
 
-> schema 版本在记录期间**变过**：验收快照时 head 是 `c652ce04a8bf`（T07），随后 T05 与 T08
-> 的迁移被集成，head 变成 `18abac49279f`。备份 / 恢复演练在**两个 head 上都跑通过**
-> （34/34）。发布时以实际部署镜像里 `alembic_version` 的值为准。
+> schema 版本在整个集成期变过多次（`c652ce04a8bf` → `18abac49279f` → `f2ce708f46fe` → `528a38f23614`）。
+> 备份 / 恢复演练在**其中三个 head 上都跑通过**（34/34）。发布时以实际部署镜像里
+> `alembic_version` 的值为准。
 
-### 本次包含的模块（快照里真实存在且可访问）
+### 本次包含的模块（**T01–T09 全部已集成**）
 
 | 来源 | 内容 | 手机入口 |
 | --- | --- | --- |
@@ -37,25 +42,25 @@
 | T02 | 旧站迁移外壳、地图 / 关于 / 天气 / 留言板、持久音乐、过场、手机宿主 | — |
 | T03 | INS 图文（草稿 / 发布 / 撤回 / 收藏 / 分享） | `ins` |
 | T04 | 异世界导航（专题 / 关键词匹配 / 搜索 / 印象空间 / 本地足迹） | `metanav` |
-| T05 | 手记（journal）、放课后（leisure）、勒布朗近况（leblanc） | `journal` / `leisure` |
+| T05 | 手记、放课后、勒布朗近况 | `journal` / `leisure` |
+| T06 | 我的殿堂（作品 / 相册 / 照片墙） | `showcase` |
 | T07 | COOP 友链通讯录与管理 | `coop` |
+| T08 | 原版 IM 与剧情 / 混合角色消息（**默认本地模拟，未接通真实模型**） | INS 内「消息」页签 |
+| T09 | 天鹅绒技能全书与印象空间问题记录 | — （按 07 §7 从档案 / 异世界导航进入） |
 
-### 记录时点**尚未**进入发布快照的模块
+### 记录时点尚未进入发布快照的模块
 
-| 来源 | 记录时点状态 | 处置 |
-| --- | --- | --- |
-| T06 展厅与画廊 | 工作区未提交（正在交付） | 不进快照；不显示入口 |
-| T08 混合角色消息 | 工作区未提交（正在交付） | 不进快照；不显示消息页签 |
-| T09 技能与探索 | 未开始 | 不显示「问题记录 / 技能」任何入口 |
+**无。** T01–T09 全部已集成并验证；T10 是发布包本身。
 
-> ⚠️ 记录之后 T05 / T06 / T07 / T08 都被并行接进了 `main` 与工作区（`model_registry.py`、
-> `router.py`、`registry.ts`、OpenAPI 都在变）。**发布时请重新生成这一节**，不要照抄。
-> 「未接入不显示坏按钮」（SHARED-CONTRACTS §4）的实现依据是手机注册表
-> `apps/web/features/phone/registry.ts` —— 它以当时的实际清单为准。
+> **手机注册表是权威清单**（`apps/web/features/phone/registry.ts`，6 个应用）：
+> `ins`(10) / `journal`(20) / `leisure`(30) / `coop`(40) / `metanav`(50) / `showcase`(60)，
+> 与 4 个 site-link 入口（`palace`/`tokyo`/`cast`/`profile`，order 10–40）共用同一序位命名空间，
+> 因此桌面实际顺序是交错的。**T09 的两个模块按 07 §7 刻意不占桌面图标**（设计原文：天鹅绒房间
+> 「从档案 / 异世界导航的特殊入口进入，不要求每个场景都占一个 App」）。
 
-> ⚠️ 另一个重要事实：**构建产物包含快照里的全部路由**。未列入发布范围的 URL（例如
-> `/apps/journal`）页面本身是能打开的。发布范围说的是「我们对外承诺并验收了哪些」；
-> 若要求未发布模块连直接访问都不可达，需要在网关加明确的拒绝规则（属产品决定）。
+> ⚠️ **构建产物包含全部路由**（85 条）。发布范围说的是「我们对外承诺并验收了哪些」，
+> 而**不是**「哪些 URL 不可达」—— 例如 `/apps/journal` 页面本身能打开。若要求未发布模块
+> 连直接访问都不可达，需要在网关加明确的拒绝规则（属产品决定，本次未做）。
 
 ## 2. 发布前置（缺一项就不发布）
 
