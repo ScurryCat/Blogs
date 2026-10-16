@@ -37,15 +37,7 @@ from tests.support.module_app import build_module_app
 
 T01_DATABASE_NAME = "pl_test_t01"
 T01_EMPTY_DATABASE_NAME = "pl_test_t01_empty"
-# T03 在同一个测试集群上另建自己的临时库（见 tests/moments/t03_db.py）。
-T03_DATABASE_NAME = "pl_test_t03"
-T03_SECOND_DATABASE_NAME = "pl_test_t03_second"
-ALLOWED_TEMP_DATABASES = (
-    T01_DATABASE_NAME,
-    T01_EMPTY_DATABASE_NAME,
-    T03_DATABASE_NAME,
-    T03_SECOND_DATABASE_NAME,
-)
+ALLOWED_TEMP_DATABASES = (T01_DATABASE_NAME, T01_EMPTY_DATABASE_NAME)
 
 # 逐包登记用的附加白名单。
 #
@@ -134,6 +126,22 @@ def _run_migrations(url: str) -> None:
     command.upgrade(config, "head")
 
 
+# T01 自己声明的 8 张表（与 `MODEL_MODULES` 一一对应）。
+# 显式列出而不是扫 `Base.metadata`：那是**全进程共享**的注册表，其他域
+# （T03 / T04…）的模型只要在同一个 pytest 进程里被导入过就会出现在里面，
+# 用全量集合做「迁移覆盖度」断言会把别的域的表误算成 T01 漏掉的表。
+T01_TABLES = (
+    "admin_users",
+    "audit_events",
+    "auth_rate_limits",
+    "media",
+    "post_tags",
+    "posts",
+    "sessions",
+    "tags",
+)
+
+
 def _ensure_tables(engine: Engine) -> list[str]:
     """跑完迁移后补齐缺失的表（集成前迁移还没有 T01 表时的临时手段）。
 
@@ -148,7 +156,11 @@ def _ensure_tables(engine: Engine) -> list[str]:
                 text("select table_name from information_schema.tables where table_schema = current_schema()")
             ).scalars()
         )
-    missing = [name for name in Base.metadata.tables if name not in existing]
+    missing = [
+        name
+        for name in T01_TABLES
+        if name not in existing and name in Base.metadata.tables
+    ]
     if missing:
         Base.metadata.create_all(engine, tables=[Base.metadata.tables[name] for name in missing])
     return sorted(missing)
