@@ -363,3 +363,9 @@ page.click(...)                                                                 
 
 **结果**:`tools/browser-verification/verify.py` **48 passed / 0 failed** —— **跨包浏览器全量回归完成**（此前因上述两点一直记为「未完成」）。
 | 2026-10-16 | **批次 2 派发** | T04 集成完成后，按 README「基础集成后并行 2–3 个功能包」派发 T05、T07 | T05（手记 / 追番游戏 / 勒布朗近况）与 T07（COOP 友链）开始条件（T01+T02 已集成）满足，与收尾中的 T03 并行。两份派发均带上积累的既有约束：**SiteLink 规则**（禁裸 `<a>` 与自写 onClick 拦截）、`"use client"` 与「构建 ≠ 类型检查」、`noUncheckedIndexedAccess`、登记式临时库（`register_temp_database`）、**只跑自己目录**的并发规则、**按端口精确杀**、手机登记清单（`phone-app.tsx` + 10 字段 manifest、图标须真实存在）、以及浏览器验证的三个时序坑（等水合、`#boot` 拦截、用 `performance.timeOrigin` 判整页重载而非注入标记/load 计数）| 见提交 |
+| 2026-10-16 | **T04 seed 跨包独立验证** | 独立验证 T04 的两个关键宣称（幂等、数据不足整体不写），并**首次把 T01 导入与 T04 seed 串起来跑** | 流程：新建临时库 → `alembic upgrade head`（含我的 nav 迁移）→ T01 的 `import_legacy --apply` → **8 篇 published 文章** ✓ （第一次验证这两个域能配合）→ T04 的 `seed`。
+① dry-run 正确报告 `found_posts` 4 篇、`missing_posts: []`、`would_create: True`；
+② `--apply --publish` 落库：专题 `phantom-base` **published、4 篇文章、6 个别名**（含规范化值）；
+③ **幂等属实**：二次运行 `created: False`，专题数仍 1、别名数仍 6；
+④ **数据不足整体不写属实**：空库跑 `--apply --publish` → `public_post_count: 0`、**退出码 2**、**专题数 0**。
+**我自己建的三个临时库已全部 drop**，未留残留 | 无（仅验证） |
