@@ -137,27 +137,58 @@ export function ConversationView({
           <p className="msg-thread-handle">@{characterHandle}</p>
           <p className="msg-thread-tags">
             <span className="msg-tag msg-tag-fan">非官方同人</span>
-            <span className="msg-tag">剧本 v{storyVersion}</span>
           </p>
         </div>
-        <div className="msg-thread-actions">
-          <button
-            type="button"
-            className="msg-btn msg-btn-quiet"
-            onClick={controller.restart}
-            disabled={pending !== "none"}
-          >
-            重新开始
-          </button>
-          <button
-            type="button"
-            className="msg-btn msg-btn-quiet"
-            onClick={onClear}
-            disabled={pending !== "none"}
-          >
-            {confirmClear ? "确认清除？" : "清除记录"}
-          </button>
-        </div>
+        {/*
+          剧本版本、节点编号、重新开始、清除记录都收进「详情」菜单（v2 任务书 §4.2）：
+          原始节点 ID 不应长期占据普通聊天正文。用原生 <details> —— 键盘可操作、
+          不需要抢 Escape（Escape 归 OverlayManager 管）。
+        */}
+        <details className="msg-details">
+          <summary className="msg-details-btn" aria-label="会话详情">
+            详情
+          </summary>
+          <div className="msg-details-panel">
+            <dl className="msg-details-list">
+              <div>
+                <dt>剧本版本</dt>
+                <dd>v{storyVersion}</dd>
+              </div>
+              <div>
+                <dt>当前节点</dt>
+                <dd>
+                  <code>{conversation.node_id}</code>
+                </dd>
+              </div>
+              {conversation.status === "free" && conversation.paused_node_id !== null ? (
+                <div>
+                  <dt>暂停于</dt>
+                  <dd>
+                    <code>{conversation.paused_node_id}</code>
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
+            <div className="msg-details-actions">
+              <button
+                type="button"
+                className="msg-btn msg-btn-quiet"
+                onClick={controller.restart}
+                disabled={pending !== "none"}
+              >
+                重新开始
+              </button>
+              <button
+                type="button"
+                className="msg-btn msg-btn-quiet"
+                onClick={onClear}
+                disabled={pending !== "none"}
+              >
+                {confirmClear ? "确认清除？" : "清除记录"}
+              </button>
+            </div>
+          </div>
+        </details>
       </header>
 
       {/* 状态条：明确说明当前发生了什么，不做隐晦暗示（08 §7）。 */}
@@ -173,7 +204,7 @@ export function ConversationView({
 
       {conversation.status === "free" ? (
         <p className="msg-paused" role="status">
-          剧情暂停在「{conversation.paused_node_id ?? conversation.node_id}」—— 聊完可以回到刚才的话题。
+          剧情暂停 —— 聊完可以回到刚才的话题（节点编号在「详情」里）。
         </p>
       ) : null}
 

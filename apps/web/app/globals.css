@@ -853,3 +853,72 @@ html.ov-lock body {
     bottom: calc(var(--mini-h) + max(20px, env(safe-area-inset-bottom)));
   }
 }
+
+/* ---------- 15. IM 会话详情菜单（v2 任务书 §4.2）----------
+   剧本版本 / 节点编号 / 重新开始 / 清除记录都收进原生 <details>：
+   主聊天视图只留角色信息，原始节点 ID 不再长期占据正文。
+   用 <details> 而不是自绘弹层 —— 键盘可操作，也不需要抢 Escape（Escape 归手机宿主）。 */
+.msg-details {
+  position: relative;
+  flex: none;
+}
+.msg-details-btn {
+  display: inline-grid;
+  place-items: center;
+  min-height: 36px;
+  padding: 0 10px;
+  background: rgb(10 10 11 / 0.82);
+  color: var(--paper);
+  border: 1px solid rgb(244 241 234 / 0.35);
+  font: 500 12px/1 var(--f-cjk);
+  cursor: pointer;
+  list-style: none;
+}
+.msg-details-btn::-webkit-details-marker {
+  display: none;
+}
+.msg-details-btn:hover,
+.msg-details[open] .msg-details-btn {
+  border-color: var(--red);
+  color: var(--red);
+}
+.msg-details-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 5;
+  width: max-content;
+  min-width: 218px;
+  padding: 10px 12px;
+  background: rgb(8 8 10 / 0.98);
+  border: 2px solid var(--paper);
+  box-shadow: 6px 6px 0 rgb(0 0 0 / 0.5);
+}
+.msg-details-list {
+  margin: 0 0 8px;
+  display: grid;
+  gap: 6px;
+}
+.msg-details-list > div {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.msg-details-list dt {
+  color: var(--dim);
+  font: 500 11px/1.4 var(--f-cjk);
+}
+.msg-details-list dd {
+  margin: 0;
+  font: 500 12px/1.4 var(--f-mono);
+  color: var(--paper);
+  word-break: break-all;
+  text-align: right;
+}
+.msg-details-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgb(244 241 234 / 0.18);
+}
