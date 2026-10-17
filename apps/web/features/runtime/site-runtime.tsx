@@ -47,7 +47,6 @@ import { OverlayProvider, useOverlayManager } from "@/features/runtime/overlay-m
 import { ToastProvider } from "@/features/runtime/toast";
 import { DefaultPoll } from "@/features/legacy/poll/poll";
 import { PhoneHost } from "@/features/phone/phone-host";
-import { MiniPlayer } from "@/features/runtime/audio/mini-player";
 import { PhoneProvider } from "@/features/phone/phone-provider";
 
 const HandleContext = createContext<TransitionHandle | null>(null);
@@ -113,7 +112,6 @@ export function SiteRuntime({ children }: { children: ReactNode }): ReactNode {
                   <LegacyHashLanding />
                   <LegacyCursor />
                   <PhoneHost />
-                  <MiniPlayer />
                   <DefaultPoll />
                 </PhoneProvider>
               </Suspense>

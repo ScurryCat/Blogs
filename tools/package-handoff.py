@@ -55,6 +55,9 @@ TOOL_WHITELIST = [
     "audit-contrast.py",
     "audit-structure.py",
     "audit-failure-states.py",
+    "seed-demo-content.py",
+    "verify-home-refresh.py",
+    "verify-demo-content.py",
     "package-handoff.py",
 ]
 

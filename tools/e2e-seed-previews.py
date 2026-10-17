@@ -23,12 +23,15 @@ API 细节（实测）：
 from __future__ import annotations
 
 import json
+import os
 import sys
 import urllib.error
 import urllib.request
 
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8130"
 PASSWORD = sys.argv[2] if len(sys.argv) > 2 else "e2e-password-123"
+# 演示数据用的是独立管理员（demo-seeder），不改 owner 密码；e2e 默认仍是 owner。
+USERNAME = os.environ.get("SEED_ADMIN_USERNAME", "owner")
 ORIGIN = BASE
 COOKIE: dict[str, str] = {}
 
@@ -65,6 +68,28 @@ LEISURE = [
         "all_achievements": False,
         "rating": 9,
         "notes": "地图记忆比数值成长更吃功夫，弹反手感是核心。",
+    },
+    {
+        "kind": "anime",
+        "title": "葬送的芙莉莲",
+        "season": "2023 秋",
+        "episodes_watched": 28,
+        "total_episodes": 28,
+        "last_watched_on": "2026-08-30",
+        "airing": False,
+        "rating": 9,
+        "notes": "看完之后想再去翻一遍原作；时间跨度这件事被写得一点都不着急。",
+    },
+    {
+        "kind": "game",
+        "title": "Hi-Fi Rush",
+        "platform": "Xbox / PC",
+        "started_on": "2026-07-11",
+        "completed_on": "2026-07-26",
+        "playtime_minutes": 610,
+        "all_achievements": True,
+        "rating": 8,
+        "notes": "节奏与动作咬合得很紧，难度曲线比看上去温和。",
     },
     {
         "kind": "game",
@@ -107,6 +132,24 @@ FRIENDS = [
         "arcana": "FOOL",
         "tags": ["游戏", "像素画"],
         "position": 30,
+    },
+    {
+        "name": "Next.js 文档",
+        "url": "https://nextjs.org/docs",
+        "summary": "App Router、缓存边界与构建行为的第一手说明。",
+        "story": "开发这个站点时最常翻的文档站；构建期变量、动态渲染这些坑都能在这里对到答案。",
+        "arcana": "MAGICIAN",
+        "tags": ["前端", "文档"],
+        "position": 40,
+    },
+    {
+        "name": "MDN Web Docs",
+        "url": "https://developer.mozilla.org",
+        "summary": "CSS、可访问性与浏览器行为的权威参考。",
+        "story": "做可访问性审计时用来核对 aria 语义与焦点行为的参考站。",
+        "arcana": "JUSTICE",
+        "tags": ["前端", "可访问性"],
+        "position": 50,
     },
 ]
 
@@ -157,6 +200,34 @@ PROJECTS = [
             ("assets/legacy/img/cover/tokyo.jpg", "cover", "消息界面的红黑视觉"),
         ],
     },
+    {
+        "slug": "a11y-audit-toolkit",
+        "title": "可访问性审计工具集",
+        "summary": "用真实浏览器巡检对比度、焦点、结构与失败态，并把发现修掉。",
+        "role": "独立完成：审计脚本、问题定位、修复与回归。",
+        "problem": "手工目测无法覆盖半透明层叠、键盘焦点与接口不可用时的真实表现。",
+        "tradeoffs": "审计脚本排除图片/渐变背景与透明描边字等假阳性；接受少量人工复核。",
+        "outcomes": "对比度不达标项 35→4（剩余为品牌红面板的设计折中）；结构 15 页 0 硬问题；失败态 15/15 通过。",
+        "tech_stack": ["Playwright", "TypeScript", "CSS"],
+        "maintenance": "maintained",
+        "images": [
+            ("assets/legacy/img/cover/a11y.jpg", "cover", "审计输出与修复后的界面"),
+        ],
+    },
+    {
+        "slug": "tokyo-roam-weather",
+        "title": "东京漫游 · 地图与天气",
+        "summary": "把旧站地图与天气移植成可交互页面，并保留移动端体验。",
+        "role": "负责页面迁移、交互与多视口验收。",
+        "problem": "旧站地图是静态定位图，天气板块依赖单一外部接口，两者在移动端都有布局问题。",
+        "tradeoffs": "地图标签保持 SVG 文本以兼顾清晰度；天气明确标注数据来源与刷新频率。",
+        "outcomes": "地图与天气在桌面/手机视口都可用；数据来源与失败态如实展示。",
+        "tech_stack": ["Next.js", "CSS", "Open-Meteo"],
+        "maintenance": "maintained",
+        "images": [
+            ("assets/legacy/img/cover/snow.jpg", "cover", "地图与天气的移动端视图"),
+        ],
+    },
 ]
 
 REPO_COVER_ROOT = "/Users/学习/blog/Blogs/apps/web/public"
@@ -197,7 +268,7 @@ def login() -> dict[str, str] | None:
     status, payload = req(
         "POST",
         "/api/v1/auth/login",
-        json.dumps({"username": "owner", "password": PASSWORD, "csrf_token": csrf}).encode(),
+        json.dumps({"username": USERNAME, "password": PASSWORD, "csrf_token": csrf}).encode(),
         {"Content-Type": "application/json", "Origin": ORIGIN},
     )
     if status != 200:
@@ -376,6 +447,20 @@ ALBUMS = [
             ("menu", (60, 10, 14), (240, 240, 230), "菜单界面"),
             ("battle", (14, 20, 40), (210, 30, 40), "战斗结算"),
             ("city", (30, 40, 30), (230, 210, 120), "街区"),
+        ],
+    },
+    {
+        "slug": "daily-fragments",
+        "title": "日常碎片",
+        "kind": "photo",
+        "description": "没有主题的一天：桌面、咖啡、窗外的雨。",
+        "position": 30,
+        "photos": [
+            ("desk", (40, 34, 30), (220, 180, 120), "下午的桌面"),
+            ("coffee", (30, 26, 24), (200, 150, 90), "第三杯咖啡"),
+            ("window", (26, 34, 44), (120, 170, 220), "窗外的雨"),
+            ("book", (34, 30, 36), (210, 190, 150), "翻到一半的书"),
+            ("lamp", (30, 28, 30), (240, 210, 140), "桌上的灯"),
         ],
     },
 ]

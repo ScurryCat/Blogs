@@ -16,7 +16,7 @@ from app.modules.messaging.stories.schema import (
 
 STORY = StoryDefinition(
     id="morgana-first-visit",
-    version="1.0.0",
+    version="1.1.0",
     character_id="morgana",
     start_node="intro",
     nodes={
@@ -73,6 +73,7 @@ STORY = StoryDefinition(
             ),
             choices=(
                 StoryChoice(id="navigate-phone", label="手机上怎么用", next_node="phone"),
+                StoryChoice(id="navigate-new", label="最近的新入口", next_node="screens"),
                 StoryChoice(id="navigate-back", label="回到刚才的话题", next_node="tour"),
             ),
             resume_text="导航还有哪里没讲清楚？",
@@ -88,6 +89,7 @@ STORY = StoryDefinition(
             ),
             choices=(
                 StoryChoice(id="phone-back", label="再说说导航", next_node="navigate"),
+                StoryChoice(id="phone-music", label="音乐怎么控制", next_node="music"),
                 StoryChoice(id="phone-wrap", label="明白了", next_node="wrap"),
             ),
             resume_text="手机上还有别的问题吗？",
@@ -105,6 +107,53 @@ STORY = StoryDefinition(
             resume_text="还想问据点里的什么？",
             cards=(
                 ContentRef(kind="path", id="/map", label="打开地图"),
+            ),
+        ),
+        "screens": StoryNode(
+            id="screens",
+            lines=(
+                "首页那排应用入口，是我最近加的路标 —— 殿堂、图库、天鹅绒、导航、协助者、放课后、手记、印象空间、IM，九个界面各有一屏。",
+                "从那儿点进去，手机里直接开到对应应用，不用自己在九宫格里翻。",
+            ),
+            choices=(
+                StoryChoice(id="screens-deeplink", label="怎么直接分享某一屏", next_node="deeplink"),
+                StoryChoice(id="screens-nav", label="再说说导航", next_node="navigate"),
+                StoryChoice(id="screens-wrap", label="我去看看", next_node="wrap"),
+            ),
+            resume_text="新入口还想问什么？",
+            cards=(
+                ContentRef(kind="path", id="/showcase", label="先去殿堂"),
+                ContentRef(kind="path", id="/apps/journal", label="打开手记"),
+            ),
+        ),
+        "deeplink": StoryNode(
+            id="deeplink",
+            lines=(
+                "地址栏里带 phone 参数就能直接开某应用，比如 ?phone=journal 开手记、?phone=metanav 开导航。",
+                "再多一个 screen 参数就是应用里的某屏，比如手记的日历屏。打不开的应用会老实回桌面，不会白屏。",
+            ),
+            choices=(
+                StoryChoice(id="deeplink-back", label="回到新入口", next_node="screens"),
+                StoryChoice(id="deeplink-wrap", label="去试试", next_node="wrap"),
+            ),
+            resume_text="深链还有哪里没讲清楚？",
+            cards=(
+                ContentRef(kind="path", id="/apps/leisure", label="放课后深链示例"),
+            ),
+        ),
+        "music": StoryNode(
+            id="music",
+            lines=(
+                "音乐现在只在手机里控制 —— 底下的长条播放器拆掉了，桌面不会再被它挡住。",
+                "进手机看 NOW PLAYING 那张卡，播放、上一首、下一首、音量都在那儿。",
+            ),
+            choices=(
+                StoryChoice(id="music-back", label="回到手机话题", next_node="phone"),
+                StoryChoice(id="music-wrap", label="知道了", next_node="wrap"),
+            ),
+            resume_text="手机里的音乐还有别的问题吗？",
+            cards=(
+                ContentRef(kind="path", id="/apps/leblanc", label="去勒布朗坐坐"),
             ),
         ),
         "wrap": StoryNode(

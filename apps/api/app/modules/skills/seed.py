@@ -210,6 +210,40 @@ SKILLS: tuple[SkillSpec, ...] = (
         ),
         position=70,
     ),
+    SkillSpec(
+        slug="accessibility-audit",
+        name="可访问性审计（WCAG / 键盘 / 失败态）",
+        domain="frontend",
+        scope=(
+            "能对真实页面做可访问性审计：用真实浏览器逐元素计算对比度（含半透明层叠），"
+            "用 Tab 键走查焦点可见性，用结构探针检查图片 alt、重复 id、悬空 aria 引用、"
+            "控件可访问名称，并把接口打挂验证失败态不会伪装成空态。"
+            "范围到「发现并修复可复现的问题」，不包含完整的无障碍认证。"
+        ),
+        evidence=(
+            "本仓库的 tools/audit-contrast.py、audit-structure.py、audit-failure-states.py "
+            "就是这条能力的实现：巡检 12 条主页面把对比度不达标项从 35 降到 4，"
+            "结构巡检 15 页 0 硬问题，失败态巡检 15/15 通过 —— 每项都有真实浏览器证据。"
+        ),
+        position=80,
+    ),
+    SkillSpec(
+        slug="browser-verification-harness",
+        name="真实浏览器验收与内容种子编排",
+        domain="tooling",
+        scope=(
+            "能把「人工看一遍」变成可重放的验收：Playwright 驱动真实浏览器、"
+            "独立集群 + 隔离构建避免抢占共享环境、HTTP 种子脚本造真实内容、"
+            "失败时留下可读日志与截图；同时处理本机代理、端口残留、临时目录等环境噪声。"
+        ),
+        evidence=(
+            "本仓库的 tools/verify-all.sh（7 段验收）、tools/verify-isolated.sh（隔离构建 T02）、"
+            "tools/e2e-stack.sh（独立全栈）与 e2e-seed-*.py 种子脚本，"
+            "支撑了多轮 7/7 段全绿与桌面/移动端到端 12 项通过；"
+            "环境问题（系统代理劫持本地请求、隔离集群残留进程）也被写成踩坑记录。"
+        ),
+        position=90,
+    ),
 )
 
 
@@ -372,7 +406,90 @@ RECORDS: tuple[RecordSpec, ...] = (
         ),
         work_status="archived",
     ),
+    RecordSpec(
+        slug="proxy-hijacked-local-acceptance",
+        title="系统代理把本地验收脚本的 127.0.0.1 也劫持了",
+        background=(
+            "全量验收的业务流脚本突然全部失败：/auth/session 返回 502，"
+            "而用 curl 直接请求同一个本地地址却是 200。看起来像 API 坏了，但 API 日志里没有对应请求。"
+        ),
+        attempts=(
+            "先查 API 与数据库：都在、都健康。再对比 curl 与脚本的差异，"
+            "发现脚本用 Python urllib —— 本机开着系统代理（Clash），"
+            "Python 3.13 在 macOS 上不采用系统代理的 ExceptionsList，"
+            "proxy_bypass('127.0.0.1') 实际返回 False，本地请求被送进了代理。"
+        ),
+        outcome=(
+            "在 verify-all / e2e-stack / verify-isolated 三个脚本里统一 export "
+            "no_proxy=127.0.0.1,localhost,::1，业务流恢复 4/4 通过；"
+            "并把「curl 正常、Python 502 先怀疑系统代理」写进环境踩坑清单。"
+        ),
+        work_status="resolved",
+        evidence_links=(
+            {
+                "kind": "proof",
+                "label": "验收脚本 tools/verify-all.sh",
+                "url": "https://github.com/ScurryCat/Blogs",
+            },
+        ),
+    ),
+    RecordSpec(
+        slug="phone-host-stylesheets-missing",
+        title="手机宿主里三张样式表根本没有加载",
+        background=(
+            "用手机 deep link 直接打开 /?phone=ins 时，页签背景是浏览器默认灰、"
+            "殿堂卡背景透明、相册页签完全没有样式；但先从独立页进入再打开手机又基本正常。"
+        ),
+        attempts=(
+            "对比独立页与手机宿主的样式表清单，发现 ins.css / gallery.css / showcase.css "
+            "只被各自的独立路由页面 import；手机宿主渲染在首页，首页没有 import 这三张表。"
+            "此前 messaging.css 也踩过同一个坑，已改为根布局加载。"
+        ),
+        outcome=(
+            "三张表统一在根布局 import（类名分别带 .ins- / .plg- / .pls- 前缀，不污染全站），"
+            "deep link 下页签、殿堂卡与相册恢复正常；并补了手机 deep link 的样式回归检查。"
+        ),
+        work_status="resolved",
+        project_slugs=(DEFAULT_PROJECT_SLUG,),
+    ),
+    RecordSpec(
+        slug="dangling-aria-controls",
+        title="收起状态下的 aria-controls 指向了不存在的面板",
+        background=(
+            "结构巡检发现每一页都有悬空的 ARIA 引用：迷你播放器的 aria-controls 指向只在展开时"
+            "才渲染的 #mini-panel；COOP 友链卡的「展开相识故事」同样指向未渲染的故事容器。"
+        ),
+        attempts=(
+            "先确认不是 id 拼写错误，再看渲染条件：面板确实是条件渲染。"
+            "ARIA 规范里 aria-controls 引用不存在的 id 属于无效引用，"
+            "读屏软件可能把焦点语义读错。"
+        ),
+        outcome=(
+            "两处都改为「只在目标存在时声明 aria-controls」，aria-expanded 保留；"
+            "巡检脚本 tools/audit-structure.py 复跑 15 页 0 硬问题，并把这两类检查固化成工具。"
+        ),
+        work_status="resolved",
+        project_slugs=(DEFAULT_PROJECT_SLUG,),
+    ),
+    RecordSpec(
+        slug="stale-isolated-cluster-process",
+        title="隔离集群的残留进程让端到端验收假失败",
+        background=(
+            "全量验收第 7 段起隔离栈失败，报错 could not open file global/pg_filenode.map；"
+            "另一次是隔离集群端口被旧进程占着，新集群起不来，业务流跟着 502。"
+        ),
+        attempts=(
+            "先怀疑数据目录损坏，重建后仍复现；用 lsof 查端口发现真正的占用者是一个"
+            "指向已删除数据目录的旧 postgres 进程 —— 新集群连上去就报错。"
+        ),
+        outcome=(
+            "清掉残留进程并重置隔离数据目录后全量验收恢复 7/7 段全绿；"
+            "把「隔离栈起不来先 lsof 查端口残留」写进环境速查清单，并确认清理端口时不要误杀验证前置服务。"
+        ),
+        work_status="resolved",
+    ),
 )
+
 
 
 def build_parser() -> argparse.ArgumentParser:

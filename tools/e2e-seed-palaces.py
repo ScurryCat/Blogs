@@ -14,12 +14,15 @@ API 细节（实测）：
 from __future__ import annotations
 
 import json
+import os
 import sys
 import urllib.error
 import urllib.request
 
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8130"
 PASSWORD = sys.argv[2] if len(sys.argv) > 2 else "e2e-password-123"
+# 演示数据用独立管理员（demo-seeder），e2e 默认仍是 owner。
+USERNAME = os.environ.get("SEED_ADMIN_USERNAME", "owner")
 ORIGIN = BASE
 COOKIE: dict[str, str] = {}
 
@@ -27,6 +30,7 @@ PALACES = [
     ("phantom-base", "怪盗据点工程", "把静态博客改造成怪盗基地。", "怪盗", "个人博客", "据点"),
     ("noise-and-signal", "噪音与信号", "在噪声里找信号。", "信号", "秋叶原", "噪声"),
     ("velvet-door", "天鹅绒之门", "蓝色房间的那扇门。", "天鹅绒", "天鹅绒房间", "门"),
+    ("fourth-wall", "第四面墙", "页面会呼吸，也会出错。", "界面", "工位", "屏幕"),
 ]
 
 
@@ -65,7 +69,7 @@ def main() -> int:
     status, payload = req(
         "POST",
         "/api/v1/auth/login",
-        json.dumps({"username": "owner", "password": PASSWORD, "csrf_token": csrf}).encode(),
+        json.dumps({"username": USERNAME, "password": PASSWORD, "csrf_token": csrf}).encode(),
         {"Content-Type": "application/json", "Origin": ORIGIN},
     )
     if status != 200:

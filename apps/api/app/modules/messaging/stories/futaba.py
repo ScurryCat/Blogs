@@ -16,7 +16,7 @@ from app.modules.messaging.stories.schema import (
 
 STORY = StoryDefinition(
     id="futaba-noise-and-signal",
-    version="1.0.0",
+    version="1.1.0",
     character_id="futaba",
     start_node="intro",
     nodes={
@@ -42,7 +42,7 @@ STORY = StoryDefinition(
             choices=(
                 StoryChoice(id="works-acm", label="有算法相关的吗", next_node="acm"),
                 StoryChoice(id="works-debug", label="有讲调试的吗", next_node="debug"),
-                StoryChoice(id="works-wrap", label="先看到这", next_node="wrap"),
+                StoryChoice(id="works-rebuild", label="最近在改什么", next_node="rebuild"),
             ),
             resume_text="还没看完？行，你继续。",
             cards=(
@@ -118,9 +118,59 @@ STORY = StoryDefinition(
             ),
             choices=(
                 StoryChoice(id="debug-log-back", label="继续说这个 bug", next_node="debug"),
+                StoryChoice(id="debug-log-a11y", label="顺便问验收的事", next_node="a11y"),
                 StoryChoice(id="debug-log-wrap", label="我去加一条", next_node="wrap"),
             ),
             resume_text="还有别的想问的？",
+        ),
+        "rebuild": StoryNode(
+            id="rebuild",
+            lines=(
+                "最近在给这个据点做视觉还原：手机里的应用、殿堂、手记、导航，一屏一屏对着设计稿改。",
+                "改完还得跑验收 —— 截图、色值、触控目标、失败态，一样都不能糊弄。",
+            ),
+            choices=(
+                StoryChoice(id="rebuild-a11y", label="验收都查什么", next_node="a11y"),
+                StoryChoice(id="rebuild-works", label="看看改过的作品", next_node="works"),
+                StoryChoice(id="rebuild-wrap", label="先不聊这个", next_node="wrap"),
+            ),
+            resume_text="刚说到视觉还原 —— 你还想听哪一段？",
+            cards=(
+                ContentRef(kind="path", id="/showcase", label="去我的殿堂看看"),
+                ContentRef(kind="recent_posts", id="2", label="最近改版的长文"),
+            ),
+        ),
+        "a11y": StoryNode(
+            id="a11y",
+            lines=(
+                "验收先看能不能用：键盘能不能走完、焦点看不看得见、触控目标够不够大。",
+                "再看是不是假的：接口挂掉时必须说「读不到」，不能假装「没有内容」。",
+            ),
+            choices=(
+                StoryChoice(id="a11y-verify", label="怎么自动验证", next_node="verify"),
+                StoryChoice(id="a11y-back", label="回到视觉还原", next_node="rebuild"),
+                StoryChoice(id="a11y-wrap", label="够了", next_node="wrap"),
+            ),
+            resume_text="验收还有哪里想细问？",
+            cards=(
+                ContentRef(kind="path", id="/velvet", label="看看技术证据"),
+                ContentRef(kind="path", id="/apps/metanav/mementos", label="印象空间里的事故记录"),
+            ),
+        ),
+        "verify": StoryNode(
+            id="verify",
+            lines=(
+                "用真浏览器跑：对比度算实际像素色、键盘 Tab 走一遍、失败态把接口打挂再访问。",
+                "这些脚本都在仓库里，谁接手都能重跑 —— 证据要能复现，不是截图说说而已。",
+            ),
+            choices=(
+                StoryChoice(id="verify-back", label="回到验收", next_node="a11y"),
+                StoryChoice(id="verify-wrap", label="明白了", next_node="wrap"),
+            ),
+            resume_text="还想追问哪一步？",
+            cards=(
+                ContentRef(kind="recent_posts", id="1", label="读一篇相关长文"),
+            ),
         ),
         "wrap": StoryNode(
             id="wrap",

@@ -11,6 +11,8 @@ import { site } from "@/features/legacy/config";
 import { rn } from "@/features/legacy/text/ransom";
 import { SiteLink } from "@/features/runtime/navigation/site-link";
 
+import type { HomeVariant } from "./home-variant";
+
 /**
  * 首页暂停菜单（第三轮 §2.1 / §1）。
  *
@@ -25,7 +27,7 @@ const MENU = [
   { href: "/about", en: "Dossier", cn: "人物档案" },
 ] as const;
 
-export function HomeHero(): ReactNode {
+export function HomeHero({ variant = "a" }: { variant?: HomeVariant } = {}): ReactNode {
   const [active, setActive] = useState(0);
   const itemsRef = useRef<(HTMLAnchorElement | null)[]>([]);
   const heroRef = useRef<HTMLElement | null>(null);
@@ -61,6 +63,19 @@ export function HomeHero(): ReactNode {
             <span className="cn rn">{rn(site.nameCn, 7)}</span>
           </h1>
           <p className="hero-lead">{site.lead}</p>
+          {variant === "c" ? (
+            <div className="hero-cta">
+              <SiteLink className="btn" href="/posts" source="top-nav">
+                <span>情报档案 ▸</span>
+              </SiteLink>
+              <SiteLink className="btn red" href="/showcase" source="top-nav">
+                <span>我的殿堂 ▸</span>
+              </SiteLink>
+              <SiteLink className="btn" href="/?phone=home" source="phone-link">
+                <span>打开手机 ▸</span>
+              </SiteLink>
+            </div>
+          ) : (
           <nav className="pause" aria-label="快捷菜单">
             <ol>
               {MENU.map((item, index) => (
@@ -86,6 +101,7 @@ export function HomeHero(): ReactNode {
               <kbd>↓</kbd> SELECT &nbsp; <kbd>ENTER</kbd> CONFIRM
             </p>
           </nav>
+          )}
         </div>
         <figure className="hero-art">
           <div className="art-sh">

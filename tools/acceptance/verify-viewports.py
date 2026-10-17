@@ -37,9 +37,7 @@ PROBE = """() => {
     overflowX: document.documentElement.scrollWidth - innerWidth,
     phone: box('.pw'),
     screen: box('.pw-screen'),
-    mini: box('[data-mini-player]'),
-    miniVisible: (() => { const m = document.querySelector('[data-mini-player]');
-      return !!m && getComputedStyle(m).display !== 'none'; })(),
+    miniRemoved: !document.querySelector('[data-mini-player]'),
     pageBtn: box('.pw-page-btn'),
     // 注意：**不能沿包围盒取样** —— 斜屏 + 条自身 skewX 会让包围盒两端落在视觉条之外
     // （第 2 轮踩过：包围盒中点行在两端根本不在条上）。这里沿「两端标记连线」取样。
@@ -114,7 +112,7 @@ def desktop_matrix(browser):
                 "分页按钮": f"{round(data['pageBtn']['w'])}x{round(data['pageBtn']['h'])}" if data["pageBtn"] else None,
                 "滑杆命中": data["barHit"],
                 "磁贴命中": data["tileHit"],
-                "迷你栏可见": data["miniVisible"],
+                "底部播放栏已移除": data["miniRemoved"],
             }
             rows.append(row)
             page.close()
@@ -143,7 +141,7 @@ def small_matrix(browser):
                 "分页按钮": f"{round(data['pageBtn']['w'])}x{round(data['pageBtn']['h'])}" if data["pageBtn"] else None,
                 "滑杆命中": data["barHit"],
                 "磁贴命中": data["tileHit"],
-                "迷你栏可见": data["miniVisible"],
+                "底部播放栏已移除": data["miniRemoved"],
             }
         )
         page.close()
@@ -160,14 +158,14 @@ def main() -> int:
     print("== 桌面：3 视口 × 3 缩放档 ==")
     for r in desk:
         ok_overflow = r["横向溢出"] <= 0
-        ok_hit = all(r["滑杆命中"]) and r["磁贴命中"] and r["分页按钮"]
+        ok_hit = all(r["滑杆命中"]) and r["磁贴命中"] and r["分页按钮"] and r["底部播放栏已移除"]
         print(
             f"  {r['屏幕']:<10} {r['缩放']:<5} CSS={r['CSS视口']:<10} z={r['z']:<5} "
             f"在视口内={'✓' if r['手机在视口内'] else '✗'} "
             f"横向溢出={'✓' if ok_overflow else f'✗ {r[chr(27124)+chr(21521)+chr(28322)+chr(20986)]}'} "
             f"滑杆={'✓' if all(r['滑杆命中']) else str(r['滑杆命中'])} "
             f"磁贴={'✓' if r['磁贴命中'] else '✗'} "
-            f"分页按钮={r['分页按钮']} 迷你栏={'✓' if r['迷你栏可见'] else '✗'} "
+            f"分页按钮={r['分页按钮']} 底部播放栏={'已移除 ✓' if r['底部播放栏已移除'] else '仍在 ✗'} "
             f"按下取值={'✓' if all(r['按下取值']) else str(r['按下取值'])}"
         )
     print("\n== 小屏：全屏手机 ==")
@@ -177,7 +175,7 @@ def main() -> int:
             f"横向溢出={'✓' if r['横向溢出'] <= 0 else '✗'} "
             f"滑杆={'✓' if all(r['滑杆命中']) else str(r['滑杆命中'])} "
             f"磁贴={'✓' if r['磁贴命中'] else '✗'} "
-            f"分页按钮={r['分页按钮']} 迷你栏={'✓' if r['迷你栏可见'] else '（小屏不显示，预期 ✓）'}"
+            f"分页按钮={r['分页按钮']} 底部播放栏={'已移除 ✓' if r['底部播放栏已移除'] else '仍在 ✗'}"
         )
 
     failures = []
@@ -194,13 +192,15 @@ def main() -> int:
             failures.append(f"{r['屏幕']}@{r['缩放']}: 磁贴不可点")
         if r["分页按钮"] is None:
             failures.append(f"{r['屏幕']}@{r['缩放']}: 分页按钮缺失")
+        if not r["底部播放栏已移除"]:
+            failures.append(f"{r['屏幕']}@{r['缩放']}: 底部播放栏仍在（需求：已移除）")
     for r in small:
         if r["横向溢出"] > 0:
             failures.append(f"小屏 {r['屏幕']}: 横向溢出 {r['横向溢出']}px")
         if not all(r["滑杆命中"]):
             failures.append(f"小屏 {r['屏幕']}: 滑杆命中不全 {r['滑杆命中']}")
-        if r["迷你栏可见"]:
-            failures.append(f"小屏 {r['屏幕']}: 迷你栏不该显示")
+        if not r["底部播放栏已移除"]:
+            failures.append(f"小屏 {r['屏幕']}: 底部播放栏仍在（需求：已移除）")
 
     print("\n== 失败项 ==")
     if failures:

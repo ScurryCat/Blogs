@@ -56,6 +56,14 @@ STATIC_LINKS: tuple[StaticLink, ...] = (
     StaticLink("/apps/metanav", "异世界导航", "按关键词找专题"),
     StaticLink("/map", "地图", "从据点出发去各个地方"),
     StaticLink("/about", "关于", "这个站点是什么"),
+    StaticLink("/showcase", "我的殿堂", "作品与专题"),
+    StaticLink("/gallery", "生活图库", "相册与照片墙"),
+    StaticLink("/velvet", "天鹅绒房间", "技能全书"),
+    StaticLink("/apps/journal", "手记", "日记与日历"),
+    StaticLink("/apps/leisure", "放课后", "追番与游戏"),
+    StaticLink("/apps/coop", "协助者", "友链通讯录"),
+    StaticLink("/apps/metanav/mementos", "印象空间", "问题记录"),
+    StaticLink("/apps/leblanc", "勒布朗", "音乐与近况"),
 )
 
 _STATIC_BY_PATH = {link.path: link for link in STATIC_LINKS}
