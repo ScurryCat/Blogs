@@ -1,4 +1,4 @@
-"""给**隔离环境**造「视觉复核」用的数据：放课后记录 + COOP 友链 + 殿堂作品（不碰共享库/生产）。
+"""给**隔离环境**造「视觉复核」用的数据：放课后 + COOP 友链 + 殿堂作品 + 生活相册。
 
 为什么需要：交接包里的 `e2e-seed-journal.py` / `e2e-seed-palaces.py` 只覆盖手记与殿堂；
 做视觉还原时需要放课后、COOP 有真实条目，否则只能对着空态改样式。
@@ -11,6 +11,9 @@ API 细节（实测）：
   - 殿堂作品：先 `POST /api/v1/admin/media`（multipart `file`）上传**仓库里已有**的封面图，
     再 `POST /api/v1/admin/projects` 新建草稿（发布门槛：至少 1 张 ready 图片 + 一句话用途），
     最后 `POST .../{id}/publish`；
+  - 生活相册：`POST /api/v1/admin/media` 上传图片（本脚本用 PIL **现场生成**的中性示意图，
+    不把游戏素材冒充生活照），`POST /api/v1/admin/albums` 新建（含 photos），
+    `POST /admin/albums/{id}/publish` 发布，同样 If-Match；
   - 写请求都要 `Origin` + `X-CSRF-Token`（或 body 里 csrf_token）。
 
 用法：python3 tools/e2e-seed-previews.py [BASE] [OWNER_PASSWORD]
@@ -271,7 +274,7 @@ def upload_media(write: dict[str, str], relative_path: str) -> str | None:
     import pathlib
     import uuid
 
-    file_path = pathlib.Path(REPO_COVER_ROOT) / relative_path
+    file_path = pathlib.Path(relative_path) if relative_path.startswith("/") else pathlib.Path(REPO_COVER_ROOT) / relative_path
     if not file_path.is_file():
         print(f"✗ 找不到封面文件：{file_path}")
         return None
@@ -348,6 +351,124 @@ def seed_projects(write: dict[str, str]) -> int:
     return ok
 
 
+# 生活相册：图片由 PIL 现场生成（中性示意图，不拿游戏素材冒充生活照）。
+ALBUMS = [
+    {
+        "slug": "tokyo-nights",
+        "title": "东京夜景",
+        "kind": "photo",
+        "description": "雨后与霓虹；按拍摄顺序排列。",
+        "position": 10,
+        "photos": [
+            ("night", (24, 30, 52), (210, 60, 70), "雨后的路口"),
+            ("neon", (18, 20, 30), (40, 180, 200), "霓虹招牌"),
+            ("train", (30, 26, 40), (240, 190, 80), "末班电车"),
+            ("rain", (22, 26, 34), (120, 200, 255), "便利店的伞"),
+        ],
+    },
+    {
+        "slug": "screens",
+        "title": "游戏截图",
+        "kind": "screenshot",
+        "description": "今年玩过的几段画面。",
+        "position": 20,
+        "photos": [
+            ("menu", (60, 10, 14), (240, 240, 230), "菜单界面"),
+            ("battle", (14, 20, 40), (210, 30, 40), "战斗结算"),
+            ("city", (30, 40, 30), (230, 210, 120), "街区"),
+        ],
+    },
+]
+
+GALLERY_TMP = "/tmp/pl-gallery-seed"
+
+
+def make_photo(slug: str, label: str, base: tuple[int, int, int], accent: tuple[int, int, int]) -> str:
+    """用 PIL 生成一张中性示意图（渐变 + 色块 + 文字），返回绝对路径。"""
+    from pathlib import Path
+
+    from PIL import Image, ImageDraw
+
+    target = Path(GALLERY_TMP)
+    target.mkdir(parents=True, exist_ok=True)
+    width, height = 1200, 900
+    image = Image.new("RGB", (width, height), base)
+    draw = ImageDraw.Draw(image)
+    for y in range(height):
+        ratio = y / height
+        draw.line(
+            [(0, y), (width, y)],
+            fill=(
+                int(base[0] + (accent[0] - base[0]) * ratio * 0.6),
+                int(base[1] + (accent[1] - base[1]) * ratio * 0.6),
+                int(base[2] + (accent[2] - base[2]) * ratio * 0.6),
+            ),
+        )
+    draw.rectangle([80, 640, 1120, 820], fill=(10, 10, 11))
+    draw.rectangle([80, 640, 1120, 650], fill=accent)
+    draw.text((110, 690), f"{slug} / {label}", fill=(244, 241, 234))
+    path = target / f"{slug}.jpg"
+    image.save(path, quality=88)
+    return str(path)
+
+
+def seed_gallery(write: dict[str, str]) -> int:
+    status, payload = req("GET", "/api/v1/admin/albums?limit=30")
+    existing = payload.get("items") if isinstance(payload, dict) else None
+    by_slug = {item.get("slug"): item for item in (existing or [])}
+    ok = 0
+    for album in ALBUMS:
+        item = by_slug.get(album["slug"])
+        if item is not None and item.get("status") == "published":
+            ok += 1
+            continue
+        photos = []
+        for order, (label, base, accent, caption) in enumerate(album["photos"]):
+            path = make_photo(f"{album['slug']}-{order + 1}", label, base, accent)
+            media_id = upload_media(write, path)
+            if not media_id:
+                break
+            photos.append({"media_id": media_id, "position": order, "alt": caption, "caption": caption})
+        if not photos:
+            continue
+        body = {
+            "slug": album["slug"],
+            "title": album["title"],
+            "kind": album["kind"],
+            "description": album["description"],
+            "position": album["position"],
+            "photos": photos,
+        }
+        if item is None:
+            status, payload = req("POST", "/api/v1/admin/albums", json.dumps(body).encode(), write)
+            if status not in (200, 201) or not isinstance(payload, dict):
+                print(f"✗ 新建相册「{album['title']}」失败：{status} {str(payload)[:140]}")
+                continue
+            item = payload
+        else:
+            status, payload = req(
+                "PATCH",
+                f"/api/v1/admin/albums/{item['id']}",
+                json.dumps({"photos": photos}).encode(),
+                {**write, "If-Match": f'"{item["version"]}"'},
+            )
+            if status != 200:
+                print(f"✗ 补齐相册「{album['title']}」失败：{status} {str(payload)[:140]}")
+                continue
+            item = payload
+        status, payload = req(
+            "POST",
+            f"/api/v1/admin/albums/{item['id']}/publish",
+            b"{}",
+            {**write, "If-Match": f'"{item["version"]}"'},
+        )
+        if status != 200:
+            print(f"✗ 发布相册「{album['title']}」失败：{status} {str(payload)[:140]}")
+            continue
+        ok += 1
+    return ok
+
+
 def main() -> int:
     write = login()
     if write is None:
@@ -359,9 +480,14 @@ def main() -> int:
     print(f"✓ COOP：{friends_ok}/{len(FRIENDS)} 条友链已发布")
     projects_ok = seed_projects(write)
     print(f"✓ 殿堂：{projects_ok}/{len(PROJECTS)} 件作品已发布")
+    gallery_ok = seed_gallery(write)
+    print(f"✓ 相册：{gallery_ok}/{len(ALBUMS)} 个相册已发布")
     return (
         0
-        if leisure_ok == len(LEISURE) and friends_ok == len(FRIENDS) and projects_ok == len(PROJECTS)
+        if leisure_ok == len(LEISURE)
+        and friends_ok == len(FRIENDS)
+        and projects_ok == len(PROJECTS)
+        and gallery_ok == len(ALBUMS)
         else 1
     )
 

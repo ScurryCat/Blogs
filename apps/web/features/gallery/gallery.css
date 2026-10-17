@@ -465,3 +465,383 @@
   color: var(--gal-red);
   font-size: 12px;
 }
+
+/* ==========================================================================
+   生活图库视觉还原 v1（2026-10-17，第二轮 §4.6「相册用记忆展示布局」）
+
+   参考（本地参考库，离线只读）：
+   - `persona5-spriters/p5r/hud/132783-photos-im.png`：P5R 的相册照片页 ——
+     照片以**黑底 + 拍立得式白框**一格格铺开，照片本身保持原色，不加滤镜。
+   - 站点既有白框黑底 / 撕纸字 / 红色硬阴影语言（COOP、手记存档、殿堂展厅同一套）。
+
+   硬规则延续（既有实现，不改）：
+   - **照片自然比例**，继续用内联 aspect-ratio，不做等高裁切；
+   - 图片本身**不加红色滤镜**；P5 元素只用于白框、标签、按钮与灯箱；
+   - 320 / 390px 单列、点击区域 ≥ 44px、prefers-reduced-motion 下不位移。
+   ========================================================================== */
+
+.plg-wrap {
+  container-type: inline-size;
+}
+
+.plg-bar {
+  border-bottom: 3px solid var(--gal-red);
+}
+
+.plg-kicker {
+  font: 400 12px/1.2 var(--f-disp, sans-serif);
+  letter-spacing: 0.26em;
+}
+
+.plg-title {
+  font: 400 clamp(24px, 3.4vw, 38px)/1.05 var(--f-disp, sans-serif);
+  letter-spacing: 0.02em;
+  text-shadow: 3px 3px 0 var(--gal-red);
+}
+
+.plg-lead {
+  color: rgba(244, 241, 234, 0.74);
+}
+
+/* 页签与筛选牌：黑底白框撕纸，当前项红底。 */
+.plg-tab {
+  min-height: 44px;
+  padding: 9px 14px;
+  border: 2px solid var(--gal-ink);
+  background: #0a0a0b;
+  color: var(--gal-ink);
+  font: 400 13px/1 var(--f-hat, sans-serif);
+  letter-spacing: 0.1em;
+  transform: skewX(-8deg);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
+}
+
+.plg-tab[aria-current="page"],
+.plg-tab[aria-pressed="true"] {
+  border-color: var(--gal-ink);
+  background: var(--gal-red);
+  color: var(--gal-ink);
+}
+
+.plg-tab:hover,
+.plg-tab:focus-visible {
+  background: var(--gal-ink);
+  color: #0a0a0b;
+}
+
+.plg-filter-label {
+  font: 400 12px/1.2 var(--f-hat, sans-serif);
+  letter-spacing: 0.16em;
+  color: rgba(244, 241, 234, 0.66);
+}
+
+.plg-chip,
+.plg-chip-link {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid rgba(244, 241, 234, 0.55);
+  color: var(--gal-ink);
+  background: transparent;
+}
+
+.plg-chip[aria-pressed="true"],
+.plg-chip-link[aria-current="page"] {
+  border-color: var(--gal-ink);
+  background: var(--gal-red);
+  color: var(--gal-ink);
+}
+
+/* 照片墙：每张照片＝拍立得白框（照片本体保持原色、自然比例）。 */
+.plg-masonry {
+  column-gap: 18px;
+}
+
+.photo-tile {
+  break-inside: avoid;
+  margin: 0 0 18px;
+  padding: 7px 7px 9px;
+  border: 3px solid var(--gal-ink);
+  background: var(--gal-ink);
+  box-shadow: 7px 7px 0 var(--gal-red);
+  transform: rotate(-0.6deg);
+  transition: transform 0.16s ease-out, box-shadow 0.16s ease-out;
+}
+
+.plg-wrap .photo-tile:nth-child(2n) {
+  transform: rotate(0.6deg);
+}
+
+.plg-wrap .photo-tile:nth-child(3n) {
+  transform: rotate(-0.2deg);
+}
+
+.photo-tile:hover,
+.photo-tile:focus-within {
+  transform: rotate(0deg) translateY(-2px);
+  box-shadow: 10px 10px 0 var(--gal-red);
+}
+
+.photo-tile-image {
+  background: #141416;
+  border: 1px solid rgba(10, 10, 11, 0.35);
+}
+
+.photo-tile-button:focus-visible {
+  outline: 3px solid var(--gal-red);
+  outline-offset: 2px;
+}
+
+/* 拍立得下沿：黑字白纸（照片仍是主体，文字只做记录）。 */
+.photo-tile-caption,
+.plg-wrap .photo-tile-caption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+  margin: 8px 2px 0;
+  font-size: 12px;
+  color: #0a0a0b;
+}
+
+.photo-tile-date {
+  font: 400 13px/1.2 var(--f-disp, sans-serif);
+  letter-spacing: 0.06em;
+  color: #0a0a0b;
+}
+
+.photo-tile-date[data-taken-on="empty"] {
+  color: rgba(10, 10, 11, 0.62);
+}
+
+.photo-tile-note {
+  margin: 3px 2px 0;
+  font-size: 11px;
+  color: rgba(10, 10, 11, 0.66);
+}
+
+.photo-tile-fallback {
+  border: 2px dashed rgba(10, 10, 11, 0.5);
+  background: var(--gal-ink);
+  color: #0a0a0b;
+}
+
+/* 相册卡：白框黑底 + 红硬阴影，封面带白内框，标题撕纸字体。 */
+.plg-album-grid {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.plg-album-card {
+  padding: 0;
+  border: 3px solid var(--gal-ink);
+  background: #0a0a0b;
+  color: var(--gal-ink);
+  box-shadow: 8px 8px 0 var(--gal-red);
+  transform: rotate(-0.5deg);
+  gap: 0;
+}
+
+.plg-album-grid > .plg-album-card:nth-child(2n) {
+  transform: rotate(0.5deg);
+}
+
+.plg-album-card:hover,
+.plg-album-card:focus-visible {
+  transform: rotate(0deg) translateY(-3px);
+  box-shadow: 11px 11px 0 var(--gal-red);
+  border-color: var(--gal-ink);
+}
+
+.plg-album-cover {
+  border-bottom: 3px solid var(--gal-ink);
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  width: 100%;
+}
+
+.plg-album-cover-empty {
+  aspect-ratio: 4 / 3;
+  border-bottom: 3px solid var(--gal-ink);
+  background:
+    repeating-linear-gradient(-45deg, rgba(211, 18, 42, 0.5) 0 14px, transparent 14px 28px),
+    #0a0a0b;
+  color: var(--gal-ink);
+  font: 400 12px/1.4 var(--f-hat, sans-serif);
+  letter-spacing: 0.16em;
+}
+
+.plg-album-card-title {
+  margin: 0;
+  padding: 14px 14px 0;
+  font: 400 clamp(18px, 2vw, 23px)/1.2 var(--f-disp, sans-serif);
+  letter-spacing: 0.02em;
+  color: var(--gal-ink);
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.7);
+}
+
+.plg-album-card:hover .plg-album-card-title,
+.plg-album-card:focus-visible .plg-album-card-title {
+  text-shadow: 3px 3px 0 var(--gal-red);
+}
+
+.plg-album-card-meta {
+  margin: 0;
+  padding: 8px 14px 0;
+  color: rgba(244, 241, 234, 0.72);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+
+.plg-album-card-desc {
+  margin: 0;
+  padding: 6px 14px 14px;
+  color: rgba(244, 241, 234, 0.86);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* 分组标题：白底黑字撕纸牌。 */
+.plg-group-head {
+  border-bottom: 2px solid var(--gal-line);
+  margin: 22px 0 10px;
+}
+
+.plg-group-title {
+  display: inline-block;
+  padding: 2px 12px;
+  background: var(--gal-ink);
+  color: #0a0a0b;
+  font: 400 17px/1.4 var(--f-hat, sans-serif);
+  letter-spacing: 0.12em;
+  transform: skewX(-9deg);
+  box-shadow: 4px 4px 0 var(--gal-red);
+}
+
+.plg-group-meta {
+  color: rgba(244, 241, 234, 0.64);
+}
+
+/* 状态 / 按钮。 */
+.plg-state {
+  border: 3px solid var(--gal-ink);
+  background: #0a0a0b;
+  box-shadow: 8px 8px 0 var(--gal-red);
+  text-align: left;
+}
+
+.plg-state-kicker {
+  font: 400 12px/1.2 var(--f-disp, sans-serif);
+  letter-spacing: 0.26em;
+}
+
+.plg-state-title {
+  font-size: 22px;
+}
+
+.plg-button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 2px solid var(--gal-ink);
+  background: var(--gal-red);
+  color: var(--gal-ink);
+  font: 400 13px/1 var(--f-hat, sans-serif);
+  letter-spacing: 0.1em;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.55);
+}
+
+.plg-button:hover:not([disabled]) {
+  background: var(--gal-ink);
+  color: #0a0a0b;
+}
+
+/* 灯箱：黑场 + 白色展框 + 撕纸计数。
+   z-index 必须高于站点 HUD（globals.css 里 HUD 是 950）：灯箱的顶栏（计数 / 上一张 /
+   下一张 / 关闭）是固定定位，低于 HUD 时会被页头整条盖住（真实截图核对过）。 */
+.plg-lightbox {
+  z-index: 960;
+  background: rgba(6, 6, 8, 0.97);
+}
+
+.plg-lightbox-bar {
+  border-bottom: 3px solid var(--gal-red);
+}
+
+.plg-lightbox-counter {
+  font: 400 15px/1.2 var(--f-disp, sans-serif);
+  letter-spacing: 0.12em;
+  color: var(--gal-ink);
+}
+
+.plg-lightbox-stage {
+  padding: 20px;
+}
+
+.plg-lightbox-image {
+  border: 4px solid var(--gal-ink);
+  box-shadow: 10px 10px 0 var(--gal-red);
+  background: #0a0a0b;
+}
+
+.plg-lightbox-caption {
+  color: rgba(244, 241, 234, 0.8);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+/* INS 紧凑图格：白框小照片（不加滤镜，只加框）。 */
+.plg-ins-cell {
+  border: 2px solid var(--gal-ink);
+  background: #0a0a0b;
+  box-shadow: 3px 3px 0 var(--gal-red);
+}
+
+/* 手机宿主 / 窄屏：两列拍立得、角度收敛、相册单列。 */
+@container (max-width: 700px) {
+  .plg-masonry {
+    columns: 2 140px;
+    column-gap: 12px;
+  }
+
+  .photo-tile,
+  .plg-wrap .photo-tile:nth-child(2n),
+  .plg-wrap .photo-tile:nth-child(3n) {
+    transform: none;
+    margin-bottom: 14px;
+    padding: 5px 5px 7px;
+    box-shadow: 4px 4px 0 var(--gal-red);
+  }
+
+  .plg-album-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .plg-album-card,
+  .plg-album-grid > .plg-album-card:nth-child(2n) {
+    transform: none;
+    box-shadow: 5px 5px 0 var(--gal-red);
+  }
+
+  .plg-title {
+    font-size: 26px;
+  }
+
+  .plg-lightbox-stage {
+    padding: 10px;
+  }
+
+  .plg-lightbox-image {
+    border-width: 3px;
+    box-shadow: 6px 6px 0 var(--gal-red);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-tile,
+  .plg-wrap .photo-tile:nth-child(2n),
+  .plg-wrap .photo-tile:nth-child(3n),
+  .plg-album-card,
+  .plg-album-grid > .plg-album-card:nth-child(2n) {
+    transform: none;
+  }
+}

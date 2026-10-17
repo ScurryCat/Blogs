@@ -136,14 +136,19 @@ export function GalleryView({
     if (index >= 0) setLightboxIndex(index);
   }, [photos]);
 
-  const closeLightbox = useCallback(() => {
-    const current = lightboxIndex === null ? null : photos[lightboxIndex];
-    setLightboxIndex(null);
-    if (current) {
-      // 焦点还给触发它的图格（OverlayManager 的 restoreFocus 会在有宿主时也做一次，
-      // 重复聚焦到同一个元素是无害的）。
-      tileRefs.current.get(current.photo.media_id)?.focus();
-    }
+  /**
+   * 只做「把焦点还给触发图格」，**不改灯箱状态**。
+   *
+   * 为什么必须拆开：OverlayManager 在**注销**图层时会调用 `restoreFocus`；
+   * 开发模式的 StrictMode 会「挂载 → 清理 → 再挂载」跑一遍 effect，
+   * 如果 restoreFocus 里顺手 `setLightboxIndex(null)`，灯箱会在刚打开的同一帧被关掉
+   * （真实现象：dev 下灯箱完全不出现，而生产构建正常 —— 第三轮验收跑的是生产构建，
+   * 所以一直没暴露）。关闭动作统一走 `onClose`，焦点归还走这里。
+   */
+  const restoreTileFocus = useCallback(() => {
+    if (lightboxIndex === null) return;
+    const current = photos[lightboxIndex];
+    if (current) tileRefs.current.get(current.photo.media_id)?.focus();
   }, [lightboxIndex, photos]);
 
   const flatPhotos = photos.map((item) => item.photo);
@@ -318,7 +323,7 @@ export function GalleryView({
           index={lightboxIndex}
           onIndexChange={setLightboxIndex}
           onClose={() => setLightboxIndex(null)}
-          onClosed={closeLightbox}
+          onClosed={restoreTileFocus}
           albumTitle={photos[lightboxIndex]?.album.title}
           hasHost={hasOverlayHost}
         />

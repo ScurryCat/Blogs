@@ -132,5 +132,7 @@
   白框黑底语言（COOP 卡牌、手记存档）。
 - **缺**：我的殿堂（作品展厅）整屏帧；本地库没有该界面截图，P5R Thieves Den 素材不在库中。
 - 结论：做**展陈/收藏式界面语言**级还原（2026-10-17 v1，见
-  `P3-showcase-visual-result.md`），**整屏还原仍标未完成**；`/gallery` 相册视觉下一轮再做
-  （可参考 `p5r/hud/132783-photos-im.png`）。
+  `P3-showcase-visual-result.md`），**整屏还原仍标未完成**。
+- 生活图库（`/gallery`）：本地参考只有 `p5r/hud/132783-photos-im.png`（P5R 相册照片本身，
+  黑底 + 白框照片的展示语言），**没有照片查看器整屏帧**；2026-10-17 做记忆展示语言 v1
+  （见 `P3-gallery-visual-result.md`），整屏还原仍标未完成。
