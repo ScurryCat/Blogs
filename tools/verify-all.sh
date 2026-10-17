@@ -193,7 +193,11 @@ if [ "${DO_E2E:-0}" -eq 1 ]; then
       unset E2E_VIEWPORT
     fi
     tools/e2e-stack.sh down >/dev/null 2>&1
-    record "真实浏览器端到端 ×6" "$e2e_ok" "隔离全栈（up→测→down）"
+        if [ "${DO_MOBILE:-0}" -eq 1 ]; then
+      record "真实浏览器端到端 ×12（桌面 6 + 移动 6）" "$e2e_ok" "隔离全栈（up→测→down）"
+    else
+      record "真实浏览器端到端 ×6" "$e2e_ok" "隔离全栈（up→测→down）"
+    fi
   else
     echo "  ⚠ 隔离全栈没起来，见 /tmp/vf-e2e-stack.log"
     tools/e2e-stack.sh down >/dev/null 2>&1
