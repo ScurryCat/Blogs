@@ -21,13 +21,13 @@ const WEEKDAY_HEADS = ["一", "二", "三", "四", "五", "六", "日"];
 
 export function CalendarPanel({
   calendar,
+  selectedDay = null,
   onPickDay,
-  onReadEntry,
 }: {
   calendar: JournalCalendar;
+  /** 当前选中的日期（日期锚点面板与日历高亮同步）。 */
+  selectedDay?: string | null;
   onPickDay?: (day: string) => void;
-  /** 点某个有记录的日期时，直接进入那一天的第一篇（可选）。 */
-  onReadEntry?: (entryId: string) => void;
 }): ReactNode {
   if (!calendar.months.length) {
     return (
@@ -73,18 +73,19 @@ export function CalendarPanel({
                     </span>
                   );
                 }
+                const isSelected = day === selectedDay;
                 return (
                   <button
                     type="button"
-                    className={`${styles.day} ${styles.dayHasEntry} ${isToday ? styles.dayToday : ""}`}
+                    className={`${styles.day} ${styles.dayHasEntry} ${isToday ? styles.dayToday : ""} ${isSelected ? styles.daySelected : ""}`}
                     key={day}
                     role="gridcell"
                     data-day={day}
                     data-count={count}
+                    aria-selected={isSelected}
                     aria-label={`${day}，${count} 篇公开手记`}
                     onClick={() => {
                       onPickDay?.(day);
-                      onReadEntry?.(day);
                     }}
                   >
                     {dayNumber}

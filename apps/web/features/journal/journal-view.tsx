@@ -24,7 +24,7 @@ import { EntryCard } from "./entry-card";
 import { EntryReadingLoader } from "./entry-reading-loader";
 import { useLoader, type JournalHost } from "./host";
 import styles from "./journal.module.css";
-import { formatMonthLabel, isJournalScreen } from "./paths";
+import { formatMonthLabel, isJournalScreen, parseCalendarDate } from "./paths";
 import { SaveScreen } from "./save-screen";
 import { lastYear, rememberScreen, rememberYear } from "./state";
 import type { JournalCalendar, JournalEntrySummary } from "./types";
@@ -91,17 +91,21 @@ export function JournalView({
           </p>
         </div>
         <nav className={styles.tabs} aria-label="浏览方式">
-          {allowed.map((item) => (
-            <button
-              key={item}
-              type="button"
-              className={styles.tab}
-              aria-current={item === active ? "true" : undefined}
-              onClick={() => changeScreen(item)}
-            >
-              {item === "list" ? "存档列表" : "日历"}
-            </button>
-          ))}
+          {/* 页签只列「浏览方式」两屏；`reading` 是详情屏，不是页签。
+              手机宿主允许的屏幕里含 reading，之前会把第三个页签也画成「日历」（重复且会切到没有 id 的详情屏）。 */}
+          {allowed
+            .filter((item) => item === "list" || item === "calendar")
+            .map((item) => (
+              <button
+                key={item}
+                type="button"
+                className={styles.tab}
+                aria-current={item === active ? "true" : undefined}
+                onClick={() => changeScreen(item)}
+              >
+                {item === "list" ? "存档列表" : "日历"}
+              </button>
+            ))}
         </nav>
       </header>
 
@@ -174,6 +178,25 @@ function CalendarScreen({
     ? entries.filter((entry) => entry.entry_date === selectedDay)
     : entries;
 
+  /**
+   * 日期锚点（第二轮 §4.3「让日期成为主要视觉锚点」）：
+   * 选中日优先；没选中时锚定最近一篇公开手记的日期。它同时驱动右侧的大日期面板
+   * 与日历里的高亮 —— 不新增第二次取数，也不改 URL/权限语义。
+   */
+  const anchorDay = selectedDay ?? entries[0]?.entry_date ?? null;
+  const anchorParts = anchorDay ? parseCalendarDate(anchorDay) : null;
+  const anchorEntries = anchorDay
+    ? entries.filter((entry) => entry.entry_date === anchorDay)
+    : [];
+  const anchor = anchorEntries[0] ?? null;
+  const openEntry = (entry: JournalEntrySummary) =>
+    host.mode === "phone"
+      ? host.changeScreen("reading", entry.id)
+      : host.openContent({
+          destination: `/apps/journal/${encodeURIComponent(entry.id)}`,
+          source: "top-nav",
+        });
+
   return (
     <>
       <div className={styles.actions}>
@@ -182,10 +205,73 @@ function CalendarScreen({
         </button>
         <span className={styles.hint}>日历只用来定位日期；读取仍在存档列表或下方条目里。</span>
       </div>
-      <CalendarPanel
-        calendar={calendar}
-        onPickDay={(day) => onSelectDay(day === selectedDay ? null : day)}
-      />
+      <div className={styles.calendarLayout}>
+        <aside
+          className={styles.dayHero}
+          data-journal-anchor={anchorDay ?? ""}
+          aria-label="日期锚点"
+        >
+          <p className={styles.heroKicker}>{"// Date"}</p>
+          {anchorParts ? (
+            <>
+              <div className={styles.heroDate}>
+                <span className={styles.heroDay} aria-hidden="true">
+                  {anchorParts.day}
+                </span>
+                <span className={styles.heroYm}>
+                  {anchorParts.year}.{anchorParts.month}
+                </span>
+                <span className={styles.heroWeekday}>{anchorParts.weekday}</span>
+              </div>
+              <p className={styles.heroDateLine}>{anchorParts.label}</p>
+              <p className={styles.heroMeta} role="status">
+                {selectedDay
+                  ? `选中日期 · ${anchorEntries.length} 篇公开手记`
+                  : `最近记录 · 共 ${entries.length} 篇公开手记`}
+              </p>
+              {anchor ? (
+                <>
+                  <p className={styles.heroTitle}>{anchor.title}</p>
+                  {anchor.excerpt ? (
+                    <p className={styles.heroExcerpt}>{anchor.excerpt}</p>
+                  ) : null}
+                  <div className={styles.heroActions}>
+                    <button
+                      className={styles.readButton}
+                      type="button"
+                      onClick={() => openEntry(anchor)}
+                    >
+                      读取手记 <span aria-hidden="true">▸</span>
+                    </button>
+                    {selectedDay ? (
+                      <button
+                        className={`${styles.button} ${styles.buttonGhost}`}
+                        type="button"
+                        onClick={() => onSelectDay(null)}
+                      >
+                        显示全部
+                      </button>
+                    ) : null}
+                  </div>
+                </>
+              ) : (
+                <p className={styles.heroEmpty}>这一天没有公开的手记。</p>
+              )}
+            </>
+          ) : (
+            <p className={styles.heroEmpty}>
+              还没有公开的手记：日期会保持空白，不会生成空存档或占位记录。
+            </p>
+          )}
+        </aside>
+        <div className={styles.calendarPane}>
+          <CalendarPanel
+            calendar={calendar}
+            selectedDay={anchorDay}
+            onPickDay={(day) => onSelectDay(day === selectedDay ? null : day)}
+          />
+        </div>
+      </div>
       {selectedDay ? (
         <div className={styles.actions}>
           <p className={styles.hint} role="status">

@@ -935,3 +935,262 @@
     font-size: 48px;
   }
 }
+
+/* ==========================================================================
+   日历视觉还原 v1（2026-10-17，第二轮 §4.3「让日期成为主要视觉锚点」）
+
+   参考（本地参考库，离线只读，元素表）：
+   - `persona5-spriters/p5/hud/92140-save-load.png`：No.1–16 撕纸编号、PLAY TIME、难度条、
+     黑白预览框、×戻る ○選択 提示 —— 本轮把「大日期 + 撕纸条 + 反白选中」语言用到日历。
+   - `persona5-spriters/p5/hud/92120-calendar-jpn.png`：月火水木金土日、午前/午後/放課後/深夜
+     撕纸标签、天气标签、日英混排 —— 用于月标题与星期头。
+   整屏参考帧仍缺，因此**不声称逐像素还原**（见 docs/design-references/reference-frame-gaps.md）。
+   ========================================================================== */
+
+.calendarLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(280px, 0.98fr);
+  gap: 20px;
+  align-items: start;
+  margin: 6px 0 18px;
+}
+
+/* 日期锚点：黑底 + 顶部红条 + 硬阴影，大号撕纸日号。 */
+.dayHero {
+  position: relative;
+  background:
+    linear-gradient(150deg, rgba(244, 241, 234, 0.09), rgba(10, 10, 11, 0.94) 58%),
+    var(--black, #0a0a0b);
+  color: var(--paper, #f4f1ea);
+  border-top: 6px solid var(--red, #e5191c);
+  padding: 18px 20px 20px;
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.45);
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.heroKicker {
+  margin: 0;
+  font: 400 13px/1 var(--f-disp, sans-serif);
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--red, #e5191c);
+}
+
+.heroDate {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+}
+
+.heroDay {
+  font: 400 clamp(58px, 7vw, 92px)/0.84 var(--f-disp, sans-serif);
+  letter-spacing: -0.02em;
+  text-shadow: 5px 5px 0 var(--red, #e5191c);
+}
+
+.heroYm {
+  font: 400 20px/1 var(--f-hat, sans-serif);
+  letter-spacing: 0.14em;
+}
+
+.heroWeekday {
+  padding: 3px 10px;
+  background: var(--paper, #f4f1ea);
+  color: var(--black, #0a0a0b);
+  font: 400 13px/1.5 var(--f-hat, sans-serif);
+  letter-spacing: 0.1em;
+  transform: skewX(-10deg);
+}
+
+.heroDateLine {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--dim, #9b968e);
+}
+
+.heroMeta {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: rgba(244, 241, 234, 0.72);
+}
+
+.heroTitle {
+  margin: 2px 0 0;
+  font-size: clamp(18px, 2vw, 24px);
+  font-weight: 900;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.heroExcerpt {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.75;
+  color: rgba(244, 241, 234, 0.84);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.heroEmpty {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--dim, #9b968e);
+}
+
+/* 日历面板：黑底白框；月份标题 = 白底黑字撕纸条 + 红色硬阴影。 */
+.calendarPane {
+  min-width: 0;
+}
+
+.calendarPane .calendarMonths {
+  grid-template-columns: 1fr;
+}
+
+.calendarPane .month {
+  background: var(--black, #0a0a0b);
+  border: 2px solid var(--paper, #f4f1ea);
+  padding: 14px 16px 16px;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.42);
+  transform: rotate(-0.4deg);
+}
+
+.calendarPane .monthTitle {
+  display: inline-block;
+  margin: 0 0 12px;
+  padding: 3px 12px 4px;
+  background: var(--paper, #f4f1ea);
+  color: var(--black, #0a0a0b);
+  font: 400 17px/1.3 var(--f-hat, sans-serif);
+  letter-spacing: 0.16em;
+  transform: skewX(-9deg);
+  box-shadow: 4px 4px 0 var(--red, #e5191c);
+}
+
+.calendarPane .grid {
+  gap: 6px;
+}
+
+.calendarPane .weekday {
+  font: 400 13px/1.7 var(--f-hat, sans-serif);
+  letter-spacing: 0.1em;
+  color: var(--paper, #f4f1ea);
+  opacity: 1;
+  transform: skewX(-6deg);
+}
+
+.calendarPane .day {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(244, 241, 234, 0.28);
+  background: rgba(244, 241, 234, 0.08);
+  color: rgba(244, 241, 234, 0.92);
+  font: 400 15px/1 var(--f-hat, sans-serif);
+  transition: transform 0.12s var(--ease, ease-out), background-color 0.12s, color 0.12s;
+}
+
+.calendarPane .dayEmpty {
+  aspect-ratio: 1;
+}
+
+/* 有公开记录的日期：红色号牌 + 白框；空白日期保持无装饰（验收 2 不破）。 */
+.calendarPane .dayHasEntry {
+  background: var(--red, #e5191c);
+  border-color: var(--paper, #f4f1ea);
+  color: var(--paper, #f4f1ea);
+  font-weight: 700;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
+}
+
+.calendarPane .dayHasEntry:hover,
+.calendarPane .dayHasEntry:focus-visible {
+  background: var(--paper, #f4f1ea);
+  color: var(--black, #0a0a0b);
+  transform: translateY(-2px);
+}
+
+.calendarPane .dayToday {
+  outline: 2px solid var(--paper, #f4f1ea);
+  outline-offset: -3px;
+}
+
+/* 选中日期：反白 + 红描边 + 轻微旋转（原作选中反馈的撕纸感）。 */
+.calendarPane .daySelected,
+.calendarPane .daySelected:hover,
+.calendarPane .daySelected:focus-visible {
+  background: var(--paper, #f4f1ea);
+  color: var(--black, #0a0a0b);
+  border-color: var(--black, #0a0a0b);
+  outline: 3px solid var(--red, #e5191c);
+  outline-offset: 1px;
+  transform: rotate(-2.5deg) scale(1.05);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.55);
+}
+
+.calendarPane .dayCount {
+  display: block;
+  font-size: 9px;
+  line-height: 1;
+  color: inherit;
+}
+
+/* 窄容器（手机宿主 / 窄独立页）：日期锚点在前、日历在后；角度收敛保可读。 */
+@container journal (max-width: 900px) {
+  .calendarLayout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .dayHero {
+    padding: 14px 16px 16px;
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.4);
+  }
+
+  .heroDay {
+    font-size: clamp(48px, 11vw, 68px);
+  }
+
+  .calendarPane .month {
+    transform: none;
+  }
+}
+
+@container journal (max-width: 620px) {
+  .calendarPane .month {
+    padding: 10px 10px 12px;
+  }
+
+  .calendarPane .grid {
+    gap: 4px;
+  }
+
+  .calendarPane .day {
+    font-size: 13px;
+  }
+
+  .heroDay {
+    font-size: 46px;
+    text-shadow: 4px 4px 0 var(--red, #e5191c);
+  }
+
+  .heroYm {
+    font-size: 16px;
+  }
+}
