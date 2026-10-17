@@ -15,7 +15,7 @@ describe("pickHomeVariant", () => {
     expect(pickHomeVariant("")).toBe("a");
   });
 
-  it("a / b / c 都合法", () => {
+  it("a / b / c / d 都合法", () => {
     for (const variant of HOME_VARIANTS) {
       expect(pickHomeVariant(variant)).toBe(variant);
     }

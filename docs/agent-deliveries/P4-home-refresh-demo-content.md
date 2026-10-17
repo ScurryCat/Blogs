@@ -114,11 +114,12 @@ SEED_ADMIN_PASSWORD='...' python3 tools/seed-demo-content.py --clean
 | A 现状精修 | `/`（或 `/?home=a`） | 保留现有顺序，只修 Hero 可读性/首屏与节奏 |
 | B 杂志版 | `/?home=b` | Hero 紧凑（左文右图、菜单两列）+「最新文章 / 精选作品」两栏摘要 |
 | C 应用枢纽版 | `/?home=c` | Hero 短版（3 个 CTA）+ 9 个视觉还原应用入口网格 + 两栏摘要 |
+| D 精修·人物卡片版 | `/?home=d` | A 的区块顺序不变；主角卡片收小到约 1/3 屏宽、贴右缘、垂直居中，左侧留更多黑场 |
 
 三套都保留：Ticker、CallingCard（`id="latest"`）、LeblancView、最新文章（`id="posts"`）、
 精选作品、归档（`id="archive"`），保证旧锚点与数据失败态不变；移动端单列/网格 3→2 列。
 截图（1440×900 与 390×844）由 `tools/verify-home-refresh.py` 输出到
-`.dsh/screenshots/home-refresh/`。
+`.dsh/screenshots/home-refresh/`（`home-{a,b,c,d}-{desktop,mobile}.png`）。
 
 **待办**：站主选定后，把所选变体设为默认并移除未选的切换参数（下一轮）。
 

@@ -100,51 +100,53 @@ def main() -> int:
             page.wait_for_timeout(900)
             return context, page, errors
 
-        # R2：桌面首屏与文字可读性
-        for width, height in DESKTOP:
-            context, page, errors = visit("/?home=a", width, height)
-            data = page.evaluate(PROBE)
-            key = f"{width}x{height}"
-            results[key] = data
-            if not data["items"]:
-                failures.append(f"{key}: 没有找到左侧栏目（.pm）")
-            if len(data["items"]) != 5:
-                failures.append(f"{key}: 栏目数量 {len(data['items'])} ≠ 5")
-            if data["off"]:
-                failures.append(f"{key}: {len(data['off'])} 个栏目在首屏之外")
-            if data["overlap2d"]:
-                failures.append(f"{key}: 栏目与主角图重叠 {data['overlap2d']} 处")
-            if data["overflowX"] > 0:
-                failures.append(f"{key}: 横向溢出 {data['overflowX']}px")
-            active = next((item for item in data["items"] if item["on"]), None)
-            if active is None:
-                failures.append(f"{key}: 没有当前项（.pm.on）")
-            else:
-                if active["color"] != "rgb(10, 10, 11)":
-                    failures.append(f"{key}: 当前项英文颜色 {active['color']} ≠ 黑字")
-                if active["cnColor"] not in ("rgb(159, 12, 18)", "rgb(168, 12, 20)"):
-                    failures.append(f"{key}: 当前项中文颜色 {active['cnColor']} 不是深红")
-            if data["mini"] != 0:
-                failures.append(f"{key}: 底部播放器仍在 DOM（[data-mini-player] 数量 {data['mini']}）")
-            if errors:
-                failures.append(f"{key}: 页面 JS 错误 {errors[:1]}")
-            context.close()
+        # R2：桌面首屏与文字可读性（A 与 D 都要满足：D 只是人物卡片构图不同）
+        for variant in ("a", "d"):
+            for width, height in DESKTOP:
+                context, page, errors = visit(f"/?home={variant}", width, height)
+                data = page.evaluate(PROBE)
+                key = f"{width}x{height}" if variant == "a" else f"d-{width}x{height}"
+                results[key] = data
+                if not data["items"]:
+                    failures.append(f"{key}: 没有找到左侧栏目（.pm）")
+                if len(data["items"]) != 5:
+                    failures.append(f"{key}: 栏目数量 {len(data['items'])} ≠ 5")
+                if data["off"]:
+                    failures.append(f"{key}: {len(data['off'])} 个栏目在首屏之外")
+                if data["overlap2d"]:
+                    failures.append(f"{key}: 栏目与主角图重叠 {data['overlap2d']} 处")
+                if data["overflowX"] > 0:
+                    failures.append(f"{key}: 横向溢出 {data['overflowX']}px")
+                active = next((item for item in data["items"] if item["on"]), None)
+                if active is None:
+                    failures.append(f"{key}: 没有当前项（.pm.on）")
+                else:
+                    if active["color"] != "rgb(10, 10, 11)":
+                        failures.append(f"{key}: 当前项英文颜色 {active['color']} ≠ 黑字")
+                    if active["cnColor"] not in ("rgb(159, 12, 18)", "rgb(168, 12, 20)"):
+                        failures.append(f"{key}: 当前项中文颜色 {active['cnColor']} 不是深红")
+                if data["mini"] != 0:
+                    failures.append(f"{key}: 底部播放器仍在 DOM（[data-mini-player] 数量 {data['mini']}）")
+                if errors:
+                    failures.append(f"{key}: 页面 JS 错误 {errors[:1]}")
+                context.close()
 
-        # R2：小屏无横向溢出
-        for width, height in MOBILE:
-            context, page, errors = visit("/?home=a", width, height)
-            data = page.evaluate(PROBE)
-            results[f"mobile-{width}"] = data
-            if data["overflowX"] > 0:
-                failures.append(f"小屏 {width}: 横向溢出 {data['overflowX']}px")
-            if data["mini"] != 0:
-                failures.append(f"小屏 {width}: 底部播放器仍在 DOM")
-            if errors:
-                failures.append(f"小屏 {width}: 页面 JS 错误 {errors[:1]}")
-            context.close()
+        # R2：小屏无横向溢出（A 与 D）
+        for variant in ("a", "d"):
+            for width, height in MOBILE:
+                context, page, errors = visit(f"/?home={variant}", width, height)
+                data = page.evaluate(PROBE)
+                results[f"mobile-{width}" if variant == "a" else f"d-mobile-{width}"] = data
+                if data["overflowX"] > 0:
+                    failures.append(f"小屏 {width}: 横向溢出 {data['overflowX']}px")
+                if data["mini"] != 0:
+                    failures.append(f"小屏 {width}: 底部播放器仍在 DOM")
+                if errors:
+                    failures.append(f"小屏 {width}: 页面 JS 错误 {errors[:1]}")
+                context.close()
 
         # R4：三变体
-        for variant in ("a", "b", "c"):
+        for variant in ("a", "b", "c", "d"):
             for width, height, label in ((1440, 900, "desktop"), (390, 844, "mobile")):
                 context, page, errors = visit(f"/?home={variant}", width, height)
                 data = page.evaluate(PROBE)
@@ -177,7 +179,8 @@ def main() -> int:
         browser.close()
 
     print("== 首页刷新验收 ==")
-    for key in ("1024x768", "1280x720", "1440x900", "1728x1080", "mobile-320", "mobile-390"):
+    for key in ("1024x768", "1280x720", "1440x900", "1728x1080", "mobile-320", "mobile-390",
+                "d-1280x720", "d-1440x900", "d-mobile-390"):
         data = results.get(key, {})
         off = len(data.get("off", [])) if isinstance(data, dict) else "?"
         print(
@@ -185,7 +188,7 @@ def main() -> int:
             f"首屏外={off} 重叠={data.get('overlap2d') if isinstance(data, dict) else '?'} "
             f"底部播放器={data.get('mini') if isinstance(data, dict) else '?'}"
         )
-    print(f"  三变体截图：{OUT_DIR}")
+    print(f"  四变体截图（A/B/C/D，桌面+移动）：{OUT_DIR}")
     print("\n== 失败项 ==")
     if failures:
         for item in failures:
