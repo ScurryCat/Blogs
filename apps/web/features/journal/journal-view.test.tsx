@@ -341,7 +341,7 @@ describe("退出清理", () => {
 describe("手机应用模块形状", () => {
   it("default 组件收到 PhoneViewProps 就能渲染，screens 是允许的屏幕集合", async () => {
     const { default: JournalPhoneView, screens } = await import("./phone-app");
-    expect([...screens]).toEqual(["list", "calendar"]);
+    expect([...screens]).toEqual(["list", "calendar", "reading"]);
 
     vi.stubGlobal("fetch", vi.fn<FetchLike>(async () => json({ items: [], next_cursor: null })));
     const calls = { screens: [] as string[], content: [] as string[] };

@@ -38,14 +38,14 @@ export function dispose(): void {
   abortAll();
 }
 
-export default function JournalPhoneView({ screen, host }: PhoneViewProps): ReactNode {
+export default function JournalPhoneView({ screen, item, host }: PhoneViewProps): ReactNode {
   const journalHost: JournalHost = {
     mode: "phone",
     openContent(request) {
       host.openSiteContent(request);
     },
-    changeScreen(next) {
-      host.navigateScreen(next);
+    changeScreen(next, nextItem) {
+      host.navigateScreen(next, nextItem ?? null);
     },
     state: host.state,
     toast(message, options) {
@@ -53,5 +53,5 @@ export default function JournalPhoneView({ screen, host }: PhoneViewProps): Reac
     },
   };
 
-  return <JournalView screen={screen} host={journalHost} screens={screens} />;
+  return <JournalView screen={screen} item={item} host={journalHost} screens={screens} />;
 }

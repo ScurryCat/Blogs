@@ -98,14 +98,17 @@ interface OpenedRequest {
 function stubHost(mode: "site" | "phone" = "site"): {
   host: JournalHost;
   screens: string[];
+  entries: string[];
   opened: OpenedRequest[];
   state: ReturnType<typeof createMemoryStateAdapter>;
 } {
   const screens: string[] = [];
+  const entries: string[] = [];
   const opened: OpenedRequest[] = [];
   const state = createMemoryStateAdapter();
   return {
     screens,
+    entries,
     opened,
     state,
     host: {
@@ -113,8 +116,9 @@ function stubHost(mode: "site" | "phone" = "site"): {
       openContent(request) {
         opened.push({ destination: request.destination, source: request.source });
       },
-      changeScreen(screen) {
+      changeScreen(screen, item) {
         screens.push(screen);
+        if (item) entries.push(item);
       },
       state,
       toast: () => undefined,
@@ -161,13 +165,15 @@ async function mountList(
   unmount: () => void;
   host: JournalHost;
   screens: string[];
+  entries: string[];
   opened: OpenedRequest[];
 }> {
-  const { host, screens, opened } = stubHost(options.mode ?? "site");
+  const { host, screens, opened, entries } = stubHost(options.mode ?? "site");
   if (options.state) host.state = options.state;
   const view = render(<JournalView screen={options.screen ?? "list"} host={host} />);
   await advance(40);
-  return { ...view, host, screens, opened };
+  return { ...view, host, screens,
+    entries, opened };
 }
 
 describe("存档列表", () => {
@@ -414,7 +420,7 @@ describe("返回位置与记忆", () => {
 });
 
 describe("手机紧凑视图与日历定位", () => {
-  it("手机宿主模式复用同一份列表逻辑；读取走 openContent（source=phone-link）", async () => {
+  it("手机宿主模式：读取手记走**应用内换屏**，不再跳独立路由（§3.3）", async () => {
     stubApi();
     const view = await mountList({ mode: "phone" });
 
@@ -423,10 +429,13 @@ describe("手机紧凑视图与日历定位", () => {
       node.textContent?.includes("读取手记"),
     );
     expect(read).toBeDefined();
-    expect(read?.tagName).toBe("BUTTON"); // 手机内不自己造链接跳转，交给宿主
+    expect(read?.tagName).toBe("BUTTON");
     click(read ?? null);
     await advance(10);
-    expect(view.opened).toEqual([{ destination: "/apps/journal/id-a", source: "phone-link" }]);
+    // 手机里：换屏到 reading 并带上条目标识；**不能**再走站点路由（那会关闭手机）
+    expect(view.screens).toEqual(["reading"]);
+    expect(view.entries).toEqual(["id-a"]);
+    expect(view.opened).toEqual([]);
     view.unmount();
   });
 

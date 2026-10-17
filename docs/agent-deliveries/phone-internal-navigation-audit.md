@@ -31,7 +31,7 @@
 | --- | --- | --- | --- | --- |
 | P1 | INS | 标签 chip | `/apps/ins?tag=<tag>` | ✗ 无（`screens` 只有 `feed/detail/saved`）|
 | P2 | INS | 消息 → 角色 | `/apps/ins/messages/<id>` | ✗ 无 |
-| P3 | 手记 | 「读取手记」 | `/apps/journal/<id>` | ✗ 无（只有 `list/calendar`）|
+| ~~P3~~ | 手记 | 「读取手记」 | ~~`/apps/journal/<id>`~~ → **已改为手机内 `screen=reading`** ✅ 第 43 轮完成 | ✅ 有 `reading` |
 | P4 | 导航 | 殿堂详情 | `/apps/metanav/palaces/<slug>` | ✗ 无 |
 
 四处都是 **B 类**（同一 App 的列表→详情 / 筛选 / 会话），却走了站点路由 → **手机被关闭**。
@@ -62,7 +62,18 @@
 **风险**：改动 4 个 App + 宿主 + 测试；需要真实浏览器回归（本会话已有 E2E 能力：见
 `tools/e2e-phone-scroll.py` 的隔离栈搭法）。
 
-## 四、为什么本轮不动手
+## 三·补：P3 已落地（第 43 轮）
+
+`?phone=journal&screen=reading&item=<id>` 现在**留在手机里**渲染正文，不再跳独立路由。
+端到端实测（`tools/e2e-journal-reading.py`）：手机开=True、应用层=True、正文=True、返回钮=True。
+
+过程中发现并修掉两个真实问题：
+1. `isJournalScreen()` 是**硬编码**判断（只认 `list/calendar`）—— 新增 `reading` 后 URL 对了、
+   视图却把它判成非法并回退到列表。**已改为按 `JOURNAL_SCREENS` 集合判断**。
+2. `JournalPhoneView` 的 `changeScreen` 适配器**丢掉了 item** —— URL 里没有 `item`，
+   正文因此渲染不出来。已改为透传。
+
+## 四、为什么其余三处本轮不动手
 
 - 这会同时改 4 个 App 的**屏幕契约**与宿主的打开方式，属于 §3.3「路由约定」层面的改动；
 - 其中 INS / 手记 正在被另一位 worker 的第三轮任务触及；

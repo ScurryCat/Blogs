@@ -15,11 +15,13 @@ import type { JournalImage, MediaVariant } from "./types";
 export const JOURNAL_PATH = "/apps/journal";
 
 /** 手机与独立页共用的屏幕集合。 */
-export const JOURNAL_SCREENS = ["list", "calendar"] as const;
+export const JOURNAL_SCREENS = ["list", "calendar", "reading"] as const;
 export type JournalScreen = (typeof JOURNAL_SCREENS)[number];
 
 export function isJournalScreen(value: string | null | undefined): value is JournalScreen {
-  return value === "list" || value === "calendar";
+  // 按屏幕集合判断，避免新增屏幕时忘了同步这里（加 reading 时踩过一次：URL 对了但视图
+  // 仍判定为非法、回退到 list）。
+  return typeof value === "string" && (JOURNAL_SCREENS as readonly string[]).includes(value);
 }
 
 export function entryPath(entryId: string): string {

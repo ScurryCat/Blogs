@@ -100,10 +100,12 @@ export function SaveScreen({
   const openReading = useCallback(
     (entry: JournalEntrySummary) => {
       rememberEntry(host.state, entry.id);
-      host.openContent({
-        destination: entryPath(entry.id),
-        source: host.mode === "phone" ? "phone-link" : "top-nav",
-      });
+      if (host.mode === "phone") {
+        // 手机里：正文是本应用的屏幕，不跳独立路由（否则手机会被关闭）
+        host.changeScreen("reading", entry.id);
+        return;
+      }
+      host.openContent({ destination: entryPath(entry.id), source: "top-nav" });
     },
     [host],
   );

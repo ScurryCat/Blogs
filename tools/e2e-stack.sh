@@ -83,8 +83,16 @@ cmd_up() {
   ) || { say "✗ 迁移/建站主失败"; exit 1; }
 
   say "3/6 隔离副本 + 构建（首次约 2 分钟）"
+  # 源码比构建新也要重建 —— 否则会拿旧代码跑端到端，判据就失效了（这个坑踩过两次）
+  need_build=0
   if [ ! -f "$WORK/web/apps/web/.next/BUILD_ID" ]; then
-    rm -rf "$WORK/web"
+    need_build=1
+  elif [ -n "$(find "$REPO/apps/web/features" "$REPO/apps/web/app" -newer "$WORK/web/apps/web/.next/BUILD_ID" -type f 2>/dev/null | head -1)" ]; then
+    need_build=1
+    say "源码比构建新，重新构建"
+  fi
+  if [ "$need_build" -eq 1 ]; then
+    rm -rf "$WORK/web/apps/web/.next"
     mkdir -p "$WORK/web"
     rsync -a --exclude node_modules --exclude .next --exclude .git --exclude .dsh --exclude "*.log" \
       "$REPO/" "$WORK/web/"

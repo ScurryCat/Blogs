@@ -21,6 +21,7 @@ import { getCalendar, listAllEntries } from "./api";
 import { CalendarPanel } from "./calendar-panel";
 import { useScrollMemory } from "@/features/runtime/scroll-memory";
 import { EntryCard } from "./entry-card";
+import { EntryReadingLoader } from "./entry-reading-loader";
 import { useLoader, type JournalHost } from "./host";
 import styles from "./journal.module.css";
 import { formatMonthLabel, isJournalScreen } from "./paths";
@@ -32,10 +33,13 @@ const DEFAULT_SCREENS = ["list", "calendar"] as const;
 
 export function JournalView({
   screen,
+  item = null,
   host,
   screens = DEFAULT_SCREENS,
 }: {
   screen: string | null;
+  /** 详情标识：`screen="reading"` 时是要读的那篇手记 id。 */
+  item?: string | null;
   host: JournalHost;
   /** 允许的屏幕集合（手机宿主用它回退非法值，独立页也可以收窄）。 */
   screens?: readonly string[];
@@ -56,6 +60,24 @@ export function JournalView({
     setYear(next);
     rememberYear(host.state, next);
   };
+
+  // 「读取手记」作为**手机内屏幕**：留在手机里，不再跳独立路由（§3.3 手机内导航一致性）。
+  if (active === "reading" && item) {
+    return (
+      <div className={styles.wrap} data-journal-screen="reading">
+        <div className={styles.actions}>
+          <button
+            className={`${styles.button} ${styles.buttonGhost}`}
+            type="button"
+            onClick={() => changeScreen("list")}
+          >
+            返回存档列表
+          </button>
+        </div>
+        <EntryReadingLoader entryId={item} />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.wrap} data-journal-screen={active} data-journal-mode={host.mode}>
@@ -181,10 +203,12 @@ function CalendarScreen({
               key={entry.id}
               entry={entry}
               onOpen={(target) =>
-                host.openContent({
-                  destination: `/apps/journal/${encodeURIComponent(target.id)}`,
-                  source: "phone-link",
-                })
+                host.mode === "phone"
+                  ? host.changeScreen("reading", target.id)
+                  : host.openContent({
+                      destination: `/apps/journal/${encodeURIComponent(target.id)}`,
+                      source: "top-nav",
+                    })
               }
             />
           ))}
