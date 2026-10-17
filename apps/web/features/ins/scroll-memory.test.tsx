@@ -207,10 +207,11 @@ describe("useFeedScrollRestore：在手机滚动容器里工作", () => {
     expect(container.scrollTop).toBe(640);
     expect(scroll.calls).toEqual([]);
 
-    // 卸载时从容器读当前位置写回存储
+    // 滚动时就记录（不能等卸载：真实浏览器里卸载时 DOM 已摘，scrollTop 会归零 ——
+    // 这是第 35 轮用浏览器打点查出来的根因）
     container.scrollTop = 275;
     act(() => {
-      view.unmount();
+      container.dispatchEvent(new Event("scroll"));
     });
     expect(window.sessionStorage.getItem(key)).toBe("275");
   });

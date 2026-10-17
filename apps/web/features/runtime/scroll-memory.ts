@@ -136,21 +136,53 @@ export function useScrollMemory(
   //
   // 解法：每次渲染后把**列表元素本身**同步到一个自有 ref（元素一直有效），
   // 真正解析容器放到卸载那一刻 —— 那时内容已渲染、可滚性可量。
-  // 卸载时 DOM 已经开始拆，那时量不出「可滚动」—— 所以**每次渲染后**就解析好容器
-  // （此刻内容还在、可滚性可量），卸载时直接读它。
+  // 位置必须**边滚边记**，不能等卸载再读。
+  //
+  // 实测（浏览器打点）：组件卸载时 React 已经把 DOM 摘掉了 —— 清理函数里拿到的
+  // `.pw-appbody` 是 `connected=false`，`scrollTop` 已被重置为 0。
+  // 所以：每次渲染后解析出真正可滚的容器并挂 scroll 监听，滚动即写；
+  // 卸载时只做「仍连接才写」的兜底，避免用 0 覆盖掉滚动期间存下的好值。
   const scrollTargetRef = useRef<HTMLElement | Window | null>(null);
+  const attachedRef = useRef<HTMLElement | Window | null>(null);
+  const listenerRef = useRef<(() => void) | null>(null);
+
+  const detach = () => {
+    const attached = attachedRef.current;
+    const listener = listenerRef.current;
+    if (attached && listener) attached.removeEventListener("scroll", listener);
+    attachedRef.current = null;
+    listenerRef.current = null;
+  };
+
+  // 不返回清理函数：这个 effect 每次渲染都会跑，但只在**容器变化**时重挂监听，
+  // 否则每次渲染都会摘掉再挂上（干净但没必要）。真正的摘除在卸载 effect 里。
   useEffect(() => {
+    if (!options.enabled) return undefined;
     const anchor = options.containerRef?.current ?? null;
-    if (!anchor) return;
-    const resolved = scrollContainerFor(anchor);
-    // 解析不到真正可滚的容器时，别把上一轮的好结果覆盖掉。
-    if (resolved !== window || scrollTargetRef.current === null) scrollTargetRef.current = resolved;
+    // 没有列表 ref（例如独立页测试里的简化用法）时，按窗口滚动处理。
+    const target: HTMLElement | Window = anchor ? scrollContainerFor(anchor) : window;
+    scrollTargetRef.current = target;
+    if (attachedRef.current === target) return undefined;
+    detach();
+    const onScroll = () => {
+      const current = scrollTargetRef.current;
+      if (current) writeScroll(key, readOffset(current));
+    };
+    listenerRef.current = onScroll;
+    attachedRef.current = target;
+    target.addEventListener("scroll", onScroll, { passive: true } as AddEventListenerOptions);
+    return undefined;
   });
 
   useEffect(() => {
     if (!options.enabled) return undefined;
     return () => {
-      writeScroll(key, readOffset(scrollTargetRef.current ?? window));
+      const target = scrollTargetRef.current;
+      // 只在元素仍连接时兜底写一次；已卸载的节点 scrollTop 是 0，会覆盖掉好值。
+      if (target && (target === window || (target as HTMLElement).isConnected)) {
+        writeScroll(key, readOffset(target));
+      }
+      detach();
     };
   }, [key, options.enabled]);
 }
