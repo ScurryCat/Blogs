@@ -16,6 +16,7 @@
  *  - 手机紧凑视图与独立页渲染同一个组件，差别只由 `host.mode` 决定读取入口的宿主调用。
  */
 
+import { useScrollMemory } from "@/features/runtime/scroll-memory";
 import {
   useCallback,
   useEffect,
@@ -59,6 +60,12 @@ export function SaveScreen({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const listRef = useRef<HTMLUListElement | null>(null);
   const previewRef = useRef<HTMLElement | null>(null);
+  // 存档列表的滚动位置：打开一条记录再返回时回到原处（任务书 §3.3）。
+  useScrollMemory("journal.save.v1", state.status === "ready", {
+    enabled: true,
+    consume: true,
+    containerRef: listRef,
+  });
 
   const items = useMemo(() => (state.status === "ready" ? state.data : []), [state]);
   const years = useMemo(

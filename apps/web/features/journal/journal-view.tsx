@@ -15,10 +15,11 @@
  *  - 屏幕、年份筛选与选中槽位都记在本机状态里，切屏 / 从正文返回时恢复。
  */
 
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 
 import { getCalendar, listAllEntries } from "./api";
 import { CalendarPanel } from "./calendar-panel";
+import { useScrollMemory } from "@/features/runtime/scroll-memory";
 import { EntryCard } from "./entry-card";
 import { useLoader, type JournalHost } from "./host";
 import styles from "./journal.module.css";
@@ -119,6 +120,14 @@ function CalendarScreen({
     (signal) => Promise.all([getCalendar({}, signal), listAllEntries({}, signal)]),
     ["calendar"],
   );
+  // 列表滚动位置：从存档打开一条记录再返回时回到原处（任务书 §3.3/§4.3）。
+  // 手机里滚的是 `.pw-screen`、独立页滚窗口 —— 容器判定由 useScrollMemory 统一处理。
+  const listRef = useRef<HTMLUListElement | null>(null);
+  useScrollMemory("journal.calendar.v1", state.status === "ready", {
+    enabled: true,
+    consume: true,
+    containerRef: listRef,
+  });
 
   if (state.status === "loading") {
     return (
@@ -166,7 +175,7 @@ function CalendarScreen({
         </div>
       ) : null}
       {visible.length ? (
-        <ul className={styles.cards}>
+        <ul className={styles.list} ref={listRef}>
           {visible.map((entry) => (
             <EntryCard
               key={entry.id}

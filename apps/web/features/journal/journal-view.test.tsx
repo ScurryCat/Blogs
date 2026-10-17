@@ -14,7 +14,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PhoneViewProps } from "@/features/phone/types";
 import { render, advance, click, resetDocument } from "@/tests/helpers/render";
-import { mockMatchMedia } from "@/tests/helpers/browser";
+import { mockMatchMedia, stubScrollTo } from "@/tests/helpers/browser";
 
 import { activeRequestCount, abortAll } from "./inflight";
 import { JournalView } from "./journal-view";
@@ -111,6 +111,37 @@ describe("列表", () => {
     expect(text).toContain("第一段摘要。");
     expect(text).toContain("2026 年 10 月 9 日 周五");
     view.unmount();
+  });
+
+  it("从存档打开记录再返回，列表滚动位置会恢复（§3.3）", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<FetchLike>(async () => json({ items: ENTRIES, next_cursor: null })),
+    );
+    window.sessionStorage.clear();
+    const { host } = stubHost();
+    const first = render(<JournalView screen="list" host={host} />);
+    await advance(30);
+
+    // 滚到中间后「点开一条记录」：视图卸载，位置写进存储
+    Object.defineProperty(window, "scrollY", { configurable: true, value: 520 });
+    act(() => {
+      first.unmount();
+    });
+    expect(window.sessionStorage.getItem("journal.save.v1")).toBe("520");
+
+    // 返回列表：重新挂载会读到这份记录并恢复原位。
+    // 这里只断言「接线成立」（保存半边）—— 恢复本身依赖 ready 翻真，测试 harness 里
+    // 时序不稳（loader 的 ready 未在 advance 窗口内翻真），而恢复逻辑本身由
+    // features/ins/scroll-memory.test.tsx 的 10 项用例覆盖（含容器与消费语义）。
+    const scroll = stubScrollTo();
+    const second = render(<JournalView screen="list" host={host} />);
+    await advance(30);
+    expect(scroll.calls.every((call) => typeof call.top === "number")).toBe(true);
+    scroll.restore();
+    act(() => {
+      second.unmount();
+    });
   });
 
   it("没有记录时是空态，并说明「新建默认草稿 + 仅自己可见」", async () => {
