@@ -200,6 +200,45 @@
 本轮实际改动：`features/showcase/project-card.tsx` 补封面失败态 + 一条回归测试
 （前端全量 912 → **913**）。
 
+## 6.10 第 22 轮补充：跨 App 一致性审计（§8.4）
+
+### 已一致 ✓
+
+- **激活态语义**：INS（`aria-selected` / `aria-current`）、手记（`aria-selected`）、
+  放课后（`aria-current`）、COOP（`aria-pressed`）、殿堂（`aria-pressed`）、
+  相册（`aria-pressed`）、导航与天鹅绒（`aria-current`）—— 都用 ARIA 状态属性而非只靠颜色。
+- **过场来源映射**：由 T02 套件覆盖（52 项含顶部导航 Joker / 地图人群 / 手机链接 / 手机内部）。
+- **禁用态**：各 App 用原生 `disabled`，样式统一由 `:disabled` 处理。
+
+### 仍不一致（已记录，未擅自改）
+
+**`SiteLink` 覆盖 45 个文件；另有 6 个文件用裸 `next/link`**：
+
+| 文件 | 处数 | 影响 |
+| --- | --- | --- |
+| `ins/moment-card.tsx` | 2 | 标签 chip、查看详情 |
+| `ins/feed-view.tsx` | 3 | 标签筛选、返回全部 |
+| `ins/saved-view.tsx` | 2 | 返回 |
+| `ins/detail-view.tsx` | 4 | 回到图文动态 / 返回列表 |
+| `metanav/admin/palace-admin-{list,editor}.tsx` | 6 | 后台页面（不在访客界面内） |
+
+判定：`<Link>` 是 **Next 客户端导航**，**不会整页重载**（T02 那条「不要用裸 `<a>`」的规则
+针对的是裸锚点），所以**功能上没有问题**；差别只是**跳过了全站过场动画**（`SiteLink` 走
+导航协调器，才有 Joker 帷幕 / 手机内部短过渡）。属视觉一致性，非功能缺陷。
+
+### O1 的正解方案（待决策，未实施）
+
+「手机里点 INS 标签会跳出手机」的根因是**手机 URL 状态表达不了 tag**
+（`?phone=<app>&screen=<s>&item=<i>`）。两条可选路：
+
+1. **扩展手机 URL 契约**：给 `url-state.ts` 加 `tag`（或把筛选并入 `item` 的语义），
+   让 `/apps/ins?tag=x` 在手机内等价于 `?phone=ins&tag=x`；
+   代价：**修改路由约定**（§3.3 要求前进后退与直接链接含义一致），需同步 T02 套件与文档；
+2. **接受现状**（点标签 = 离开手机去看独立页的筛选结果），把标签 chip 改成 `SiteLink`，
+   至少让过场一致。
+
+两条都未实施 —— 第 1 条动路由契约、第 2 条是纯视觉取舍，应由 Lead 定。
+
 ## 7. 结论
 
 - **功能与状态层面**：P1 全部完成；P2/P3 的功能项基本完成（视觉除外）；验收工具齐备且可复跑。
