@@ -273,6 +273,22 @@ N6 的 `verify-no-akechi-assets.py` 检查的是「已排除资源不在磁盘�
 
 复跑：`python3 tools/acceptance/verify-phone-icons.py`（退出码 0 即通过）。
 
+## 6.13 第 29 轮补充：静态资源引用审计（生产代码 0 断链）
+
+新增 **`tools/acceptance/verify-asset-refs.py`**：扫 `features/**` 与 `app/**` 里以 `/assets/`
+开头且带扩展名的引用、以及 `globals.css` 的 `url(/assets/…)`，逐个对照 `public/` 查存在性 ——
+Next 的静态资源是**按路径直出**的，写错一个目录名**构建不报错、运行时 404**。
+
+结果：
+- **生产代码断链 0** ✓（15 条具体引用 + 5 条动态前缀全部能找到文件）；
+- 2 处仅存在于**测试夹具/测试数据**的路径（`/assets/img/icon/joker.webp`、
+  `/assets/legacy/img/thumb.webp`）—— 不产出页面、不产生 404，单列提示，未改动；
+- 一处容易误判的**设计例外**：`/assets/music/` 不在 `public/` 下，而在**仓库根静态目录**，
+  开发由 `next.config.ts` 的 rewrite 代理、生产由网关转发（见 `features/legacy/music.ts` 注释）。
+  脚本据此同时认这两个位置，避免误报 —— 第一版正是把它误判为断链，已修正。
+
+复跑：`python3 tools/acceptance/verify-asset-refs.py`（退出码 0 即通过）。
+
 ## 7. 结论
 
 - **功能与状态层面**：P1 全部完成；P2/P3 的功能项基本完成（视觉除外）；验收工具齐备且可复跑。
