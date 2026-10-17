@@ -116,7 +116,7 @@ _buf = _io.BytesIO()
 Image.new("RGB", (900, 600), (30, 30, 40)).save(_buf, format="PNG")   # 够大 → 会产生 w320/w640
 img = _buf.getvalue()
 boundary = "----pl" + uuid.uuid4().hex
-body = (f"--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"crow.webp\"\r\n"
+body = (f"--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"verify-sample.png\"\r\n"
         f"Content-Type: image/png\r\n\r\n").encode() + img + f"\r\n--{boundary}--\r\n".encode()
 s, b = req("POST", "/api/v1/admin/media", body,
            {"Content-Type": f"multipart/form-data; boundary={boundary}", **WRITE})
@@ -126,7 +126,7 @@ variants = b.get("variants") if isinstance(b, dict) else None
 
 print("== 3) 创建草稿并发布 ==")
 s, b = req("POST", "/api/v1/admin/moments",
-           json.dumps({"text": "T00 集成验证：一条图文动态", "images": [{"media_id": media_id, "position": 0, "alt": "一只乌鸦"}],
+           json.dumps({"text": "T00 集成验证：一条图文动态", "images": [{"media_id": media_id, "position": 0, "alt": "验证图片"}],
                        "tags": ["验证"], "csrf_token": csrf}).encode(),
            {"Content-Type": "application/json", "Origin": ALLOWED_ORIGIN})
 mid = b.get("id") if isinstance(b, dict) else None

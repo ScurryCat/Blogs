@@ -27,6 +27,7 @@
  * 重跑本工具会删掉它，保证「只有一份」这条约定不会被悄悄破坏。
  *
  * 用法：node apps/web/tools/legacy-migration/migrate.mjs
+ *       node apps/web/tools/legacy-migration/migrate.mjs --assets-only   # 只重跑资源复制+守卫，不写数据 JSON/CSS
  */
 
 import { createHash } from "node:crypto";
@@ -130,6 +131,36 @@ const CSS_FILES = [
 ];
 
 async function main() {
+  // `--assets-only`：只重跑静态资源复制与「无明智」守卫，**不**重写
+  // `features/legacy/data/*.json` 与旧站 CSS。用于在多人并行开发时验证
+  // 「重跑迁移不会把已移除的图片再生成回 public/」，避免覆盖别人正在改的数据。
+  const assetsOnly = process.argv.includes("--assets-only");
+
+  const copied = {};
+  copied.img = await copyTree(legacy("img"), path.join(webRoot, "public/assets/legacy/img"));
+  copied.fonts = await copyTree(legacy("fonts"), path.join(webRoot, "public/assets/legacy/fonts"));
+  copied.sfx = await copyTree(legacy("sfx"), path.join(webRoot, "public/assets/legacy/sfx"));
+  // 音频有意不复制，见文件头注释。
+  await rm(path.join(webRoot, "public/assets/legacy/music"), { recursive: true, force: true });
+
+  // 第三轮 N6 · 不含明智吾郎的活动素材库：以下图片**不得**进入公开目录。
+  // 源文件已在仓库根 `assets/` 删除/替换；这里再留一道守卫，避免有人回滚旧源
+  // 或手动把文件放回来时又被复制进 `public/`。移除原因、哈希与恢复方式见
+  // `docs/design-references/persona-assets-removed.md`。
+  // 注意：`crowd/**`（人群过场）不在排除范围，禁止按 `crow` 子串批量删除。
+  const EXCLUDED_IMG = ["icon/crow.webp", "band-halftone.jpg"];
+  for (const rel of EXCLUDED_IMG) {
+    await rm(path.join(webRoot, "public/assets/legacy/img", rel), { force: true });
+  }
+
+  if (assetsOnly) {
+    console.log(
+      `assets-only: img=${copied.img} fonts=${copied.fonts} sfx=${copied.sfx}` +
+        `（未重写数据 JSON / CSS）`,
+    );
+    return;
+  }
+
   const site = loadLegacyGlobal("js/site.js", "PL_SITE");
   const posts = loadLegacyGlobal("js/posts.js", "PL_POSTS");
   const map = loadLegacyGlobal("js/map-data.js", "PL_MAP");
@@ -144,13 +175,6 @@ async function main() {
     path.join(webRoot, "features/runtime/effects/curtain-data.json"),
     curtain,
   );
-
-  const copied = {};
-  copied.img = await copyTree(legacy("img"), path.join(webRoot, "public/assets/legacy/img"));
-  copied.fonts = await copyTree(legacy("fonts"), path.join(webRoot, "public/assets/legacy/fonts"));
-  copied.sfx = await copyTree(legacy("sfx"), path.join(webRoot, "public/assets/legacy/sfx"));
-  // 音频有意不复制，见文件头注释。
-  await rm(path.join(webRoot, "public/assets/legacy/music"), { recursive: true, force: true });
 
   const css = [];
   for (const name of CSS_FILES) css.push(await copyCss(name));

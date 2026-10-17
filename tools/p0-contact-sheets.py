@@ -5,6 +5,13 @@
 
 背景用深色 + 交替底色，便于看清透明边缘；每格左上角是报告 JSON 里的 sprite 序号，
 与 `<前缀>-report.json` 的 `index` 一一对应 —— 核对后把「序号 → 应用/用途」回填映射表即可。
+
+⚠️ **第三轮素材安全（2026-10-17，N6）**：本脚本只读本地 `.dsh/p0-analysis/` 的已提取裁片，
+产物也只在 `.dsh/`（不入库、不进构建）。但其中 `p5-profile-pics`、`p5-confidant`、
+`p5r-im-assets` 等来源于**含全体协助者 / IM 头像的合图**，可能含明智吾郎头像、且**未逐元素
+确认身份**；按任务书 §5.2「不确定的不进允许清单」，这些对照图与裁片**只用于人工身份核对，
+不得作为活动素材库允许内容或接入网站**。详见
+`docs/design-references/persona-assets-excluded.md` §3 / §6。
 """
 
 from __future__ import annotations
