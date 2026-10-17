@@ -73,7 +73,7 @@ export function ConversationScreen({
       controller={controller}
       characterName={character?.name ?? characterId}
       characterHandle={character?.handle ?? characterId}
-      avatar={character?.avatar ?? "/assets/legacy/img/portrait/futaba.png"}
+      avatar={character?.avatar ?? "/assets/legacy/img/avatar/futaba.png"}
       avatarAlt={character?.avatar_alt ?? "角色头像"}
       storyVersion={character?.story_version ?? "1.0.0"}
       limits={limits}

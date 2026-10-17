@@ -74,10 +74,13 @@ def test_characters_have_no_duplicate_ids_and_readable_avatars():
     assert len(set(character_ids())) == len(CHARACTERS)
     for card in CHARACTERS:
         assert card.name and card.tone and card.forbidden and card.source_note
-        assert card.avatar.startswith("/assets/legacy/img/portrait/")
-        # 素材库在仓库之外，线上页面不得依赖它（08 §5）
+        assert card.avatar.startswith("/assets/legacy/img/avatar/")
+        assert card.avatar.endswith(".png")
+        # 素材库在仓库之外，线上页面不得依赖它（08 §5）；
+        # 第二轮 §4.2 起头像改用原版黑白 sprite（不再是彩色立绘 + 灰度滤镜）。
         assert "reference" not in card.avatar
         assert "persona5-spriters" not in card.avatar
+        assert "portrait/" not in card.avatar
 
 
 def test_every_branching_node_has_resume_text_and_legal_choices():

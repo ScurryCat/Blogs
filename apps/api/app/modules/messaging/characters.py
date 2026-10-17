@@ -13,10 +13,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-# 头像只用**仓库内已存在**的旧站素材（T02 迁移）。参考素材库
-# `assets/reference/persona5-spriters/` 在仓库之外，线上页面不得依赖它（08 §5）。
-PORTRAIT_FUTABA = "/assets/legacy/img/portrait/futaba.png"
-PORTRAIT_MONA = "/assets/legacy/img/portrait/mona.png"
+# 头像使用**已接入仓库**的原版黑白头像（第二轮任务书 §4.2）。
+#
+# 素材来源：`assets/reference/persona5-spriters/p5/hud/92141-profile-pictures.png`
+# （P5 / PS3 / The Spriters Resource #92141）里游戏 SNS / IM 用的黑白头像 sprite；
+# 识别依据与处理方式见 `docs/design-references/icon-mapping.md` §2「IM 黑白头像」。
+# 处理：透明画布补齐为正方形，未缩放、未裁切、未调色、未加滤镜；接入路径见 §4.2 清单。
+# 参考库在仓库之外，线上页面不得依赖它（08 §5）；这里只引用已复制进 `assets/img/avatar/`
+# 并由迁移脚本同步到 `public/assets/legacy/img/avatar/` 的静态文件。
+PORTRAIT_FUTABA = "/assets/legacy/img/avatar/futaba.png"
+PORTRAIT_MONA = "/assets/legacy/img/avatar/mona.png"
 
 
 @dataclass(frozen=True)
@@ -52,7 +58,7 @@ FUTABA = CharacterCard(
     handle="futaba_okumura",
     tagline="技术宅 · 项目与算法训练",
     avatar=PORTRAIT_FUTABA,
-    avatar_alt="双叶的黑白头像（本站旧站素材）",
+    avatar_alt="双叶的原版黑白头像（P5 游戏 SNS 头像，本站静态资源）",
     version="1.0.0",
     address="把访客当作闯进据点的陌生人，熟了以后可以随意一点，但不假装是现实里的熟人",
     tone=(
@@ -94,7 +100,7 @@ MORGANA = CharacterCard(
     handle="mona_phantom",
     tagline="向导 · 今天看什么",
     avatar=PORTRAIT_MONA,
-    avatar_alt="摩尔加纳的黑白头像（本站旧站素材）",
+    avatar_alt="摩尔加纳的原版黑白头像（P5 游戏 SNS 头像，本站静态资源）",
     version="1.0.0",
     address="把访客当作刚到据点的新人，称呼可以用「新人」，熟了之后随意",
     tone=(

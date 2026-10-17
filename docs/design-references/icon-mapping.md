@@ -46,7 +46,7 @@
 | 元件 | 原图路径 | 版本 | 提取状态 |
 | --- | --- | --- | --- |
 | 按钮/开关/图标（返回、确认、筛选） | `persona5-spriters/p5r/hud/134224-buttons-icons.png` | P5R / PS4 | ✅ 19 个已提取（`p5r-buttons-report.json`）；**未逐元素确认身份 → 未审核** |
-| IM 黑白头像 | `persona5-spriters/p5/hud/92141-profile-pictures.png` | P5 / PS3 | ✅ 50 个已提取（`p5-profile-pics-report.json`）；**合图含全体联系人，未确认明智是否在内 → 不进允许清单** |
+| IM 黑白头像 | `persona5-spriters/p5/hud/92141-profile-pictures.png` | P5 / PS3 | ✅ 50 个已提取（`p5-profile-pics-report.json`）；**已核对并接入 2 个（Futaba / Morgana，见 §4.4）**；其余 48 个仍未逐元素核对，**不进允许清单** |
 | IM 聊天元件 | `persona5-spriters/p5r/hud/132782-im-assets-cn-jp.png` | P5R / PS4 | ✅ 82 个已提取；**合图含头像元件，未逐元素确认 → 不进允许清单** |
 
 ## 3. 参考帧清单（IM 为主）与缺口
@@ -146,3 +146,61 @@ python3 tools/p0-contact-sheets.py     # 排成带编号的对照图，供人工
 - **合图/未审核资源**：见共享元件提示、`persona-assets-excluded.md` §3（含明智的合图整份不进
   允许清单）、§4（未逐帧核完的视频一律「未审核」）。
 - **复验命令**：`python3 tools/acceptance/verify-no-akechi-assets.py`（期望退出码 0）。
+
+### 4.4 IM 黑白头像：已核对并接入（第二轮 §4.2，2026-10-17）
+
+任务书 §4.2 要求「角色列表使用原版黑白头像，替换目前对彩色立绘施加灰度滤镜的方式」。
+本轮（有图像能力的环境）完成两个角色的识别、处理与接入：
+
+| 应用/角色 | 角色 ID | 原图（sprite 表序号） | 库内 bbox（x,y,w,h） | 游戏版本 | 来源 | 前端路径 | 状态 | 许可 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| IM · 双叶 | `futaba` | `92141-profile-pictures` #13 | `148,9,87,117` | P5 / PS3 | [Spriters Resource 92141](https://www.spriters-resource.com/playstation_3/persona5/asset/92141/) | `/assets/legacy/img/avatar/futaba.png` | **原版**（透明画布补正方形） | 未核实（本地参考，仅个人站装饰） |
+| IM · 摩尔加纳 | `morgana` | `92141-profile-pictures` #20 | `273,275,91,93` | P5 / PS3 | 同上 | `/assets/legacy/img/avatar/mona.png` | **原版**（透明画布补正方形） | 未核实 |
+
+**识别依据（不是「看起来像」的猜测）**
+
+1. **这批 sprite 就是游戏内 IM/SNS 头像**：本地参考帧
+   `persona-dist/media/image/P5R/p5r-sns--4aa5330b1fe6.jpg`（P5R SNS 界面截图）里，聊天参与者的
+   头像与 sprite 表的 `#35`（龙司，咧嘴笑）逐像素同源；同一套头像同时出现在 P5R IM 元件表
+   `132782-im-assets-cn-jp`（`#10/#11` = 戴圆眼镜 + 耳机的双叶，`#17` = 猫头）。
+2. **双叶**：圆框大眼镜 + 头戴式耳机 + 长发，是双叶唯一的标志性组合（P5 日常造型）；
+   P5 表 #13 与 P5R IM 元件表 #10/#11 为同一头像。
+3. **摩尔加纳**：全部联系人头像中只有 `#20` 是猫头（尖耳 + 咧嘴獠牙）；摩尔加纳是 IM 里唯一的
+   非人类角色，且猫头同时出现在 P5R IM 元件表（#17）。**旁证**：本地参考库的 P5X SNS 图标
+   （`persona-dist/media/image/P5X/snsicon02/57`）里摩尔加纳的 SNS 头像同样是
+   「黑色猫头 + 尖耳 + 咧嘴獠牙」这一母题（P5X 仅作旁证，不作为站点素材）。
+   两个角色的头像都满足「排除明智」的许可核对。
+4. **排除核对**：第三轮 §5.2 排除明智吾郎（Goro Akechi / クロウ / Crow）；本次接入的两个
+   sprite 均非明智，`tools/acceptance/verify-no-akechi-assets.py` 仍为 PASS。
+   **其余 48 个 sprite（含可能含明智的合图元素）保持「未审核、不接入」**。
+
+**处理方式（可复现）**
+
+```text
+源：.dsh/p0-analysis/p5-profile-pics-13-148_9-88x118.png（双叶，87×117）
+     .dsh/p0-analysis/p5-profile-pics-20-273_275-92x94.png（摩尔加纳，91×93）
+处理：透明画布居中补齐为正方形（双叶 117×117，摩尔加纳 93×93）；
+      未缩放、未裁切、未调色、未加滤镜、未 AI 重绘。
+落盘：assets/img/avatar/{futaba,mona}.png（迁移源）
+      apps/web/public/assets/legacy/img/avatar/{futaba,mona}.png（公开目录）
+哈希：futaba `1f0fc13cef36d2bc…`（4,713 B）/ mona `f2e1e1747c2cddc9…`（3,957 B）
+      （完整值见 `.dsh/avatar-inspect/avatar-manifest.json`，本地分析产物不入库）
+```
+
+**代码变更**
+
+- `apps/api/app/modules/messaging/characters.py`：`PORTRAIT_FUTABA/PORTRAIT_MONA` 指向新路径，
+  `avatar_alt` 改为「原版黑白头像」；**API 契约、DB 模型、角色卡字段均未变**。
+- `apps/web/features/messaging/messaging.css`：移除 `.msg-avatar img` 的
+  `filter: grayscale(1) contrast(1.45) brightness(1.02)`（临时手段，按清单要求删除）。
+- `apps/web/features/messaging/conversation-screen.tsx`：缺省头像回退路径同步到新目录。
+- 测试：`features/messaging/avatar-assets.test.ts`（文件存在 / 正方形 PNG / 体积、角色卡路径）、
+  `features/messaging/messaging-css.test.ts`（头像规则不得再有滤镜）、
+  `apps/api/tests/messaging/test_stories.py`（头像路径前缀 + 不得回退彩色立绘）。
+
+**仍未完成（不得标记为已还原）**
+
+- 其余角色（若将来新增）仍无核对过的头像；目前 IM 只有这两个角色，所以当前 UI 已全部替换。
+- 原版**黑白头像**已接入，但 IM 的**整屏布局还原**仍缺普通文字消息 / 回复选择的完整参考帧
+  （见 `reference-frame-gaps.md` G1/G2），不能据此宣称 IM 视觉还原通过。
+- 许可状态仍为「未核实」；若站点要公开分发这些素材，需要另行确认授权。

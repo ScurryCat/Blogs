@@ -81,6 +81,15 @@ describe("messaging.css 的隔离性", () => {
     expect(css).toContain("prefers-reduced-motion");
   });
 
+  it("头像直接呈现原版黑白 sprite，不再施加灰度/对比度滤镜（第二轮 §4.2）", () => {
+    const clean = stripComments(css);
+    // 头像图片规则里不能再出现 grayscale / contrast / brightness 之类的滤镜。
+    const block = clean.match(/\.msg-avatar img,[\s\S]*?\}/);
+    expect(block?.[0]).toBeTruthy();
+    expect(block?.[0]).not.toMatch(/filter:/);
+    expect(clean).not.toMatch(/grayscale\(/);
+  });
+
   it("为 480px 以下准备了单列布局", () => {
     expect(css).toContain("@media (max-width: 480px)");
     expect(css).toContain(".msg-thread-bar");
