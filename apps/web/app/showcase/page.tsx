@@ -22,6 +22,7 @@ import "@/features/showcase/showcase.css";
 import { ProjectGallery } from "@/features/showcase/project-gallery";
 import { fetchProjectsOnServer } from "@/features/showcase/server-api";
 import { isMaintenanceState, PROJECT_PAGE_SIZE, type ProjectSummary } from "@/features/showcase/types";
+import { AppPageShell } from "@/components/ui/app-page-shell";
 
 export const metadata: Metadata = {
   title: "我的殿堂",
@@ -65,7 +66,7 @@ export default async function ShowcasePage({ searchParams }: PageProps): Promise
   }
 
   return (
-    <section className="shell">
+    <AppPageShell>
       <div className="pls-wrap">
         <header className="pls-bar">
           <div>
@@ -85,6 +86,6 @@ export default async function ShowcasePage({ searchParams }: PageProps): Promise
         loadError={projectsError}
         maintenance={maintenance}
       />
-    </section>
+    </AppPageShell>
   );
 }

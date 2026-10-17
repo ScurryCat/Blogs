@@ -21,6 +21,7 @@ import { VelvetView } from "@/features/velvet/velvet-view";
 import { fetchSkillsOnServer } from "@/features/velvet/server-api";
 import { isSkillDomain, SKILL_PAGE_SIZE, type SkillSummary } from "@/features/velvet/types";
 import "@/features/velvet/velvet.css";
+import { AppPageShell } from "@/components/ui/app-page-shell";
 
 export const metadata: Metadata = {
   title: "天鹅绒房间 · 技能全书",
@@ -59,9 +60,9 @@ export default async function VelvetPage({ searchParams }: PageProps): Promise<R
 
   if (!serverReadingEnabled()) {
     return (
-      <section className="shell">
+      <AppPageShell>
         <VelvetLoader />
-      </section>
+      </AppPageShell>
     );
   }
 
@@ -77,13 +78,13 @@ export default async function VelvetPage({ searchParams }: PageProps): Promise<R
   }
 
   return (
-    <section className="shell">
+    <AppPageShell>
       <VelvetView
         initialSkills={skills}
         initialCursor={cursor}
         loadError={loadError}
         domain={domain}
       />
-    </section>
+    </AppPageShell>
   );
 }

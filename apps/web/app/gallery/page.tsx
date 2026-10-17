@@ -43,6 +43,7 @@ import {
   type WallPhoto,
   type WallScope,
 } from "@/features/gallery/types";
+import { AppPageShell } from "@/components/ui/app-page-shell";
 
 export const metadata: Metadata = {
   title: "生活图库",
@@ -103,13 +104,13 @@ export default async function GalleryPage({ searchParams }: PageProps): Promise<
       loadError = failureReason(error);
     }
     return (
-      <section className="shell">
+      <AppPageShell>
         <div className="plg-wrap">
           <GalleryHeader />
           <GalleryTabs view="albums" />
           <AlbumGallery initialAlbums={albums} initialCursor={cursor} loadError={loadError} />
         </div>
-      </section>
+      </AppPageShell>
     );
   }
 
@@ -143,7 +144,7 @@ export default async function GalleryPage({ searchParams }: PageProps): Promise<
   const years = await fetchWallYearsOnServer();
 
   return (
-    <section className="shell">
+    <AppPageShell>
       <div className="plg-wrap">
         <GalleryHeader />
         <GalleryTabs view="wall" />
@@ -162,7 +163,7 @@ export default async function GalleryPage({ searchParams }: PageProps): Promise<
         loadError={loadError}
         hasOverlayHost
       />
-    </section>
+    </AppPageShell>
   );
 }
 

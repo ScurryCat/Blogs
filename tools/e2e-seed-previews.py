@@ -1,4 +1,4 @@
-"""给**隔离环境**造「视觉复核」用的数据：放课后记录 + COOP 友链（不碰共享库/生产）。
+"""给**隔离环境**造「视觉复核」用的数据：放课后记录 + COOP 友链 + 殿堂作品（不碰共享库/生产）。
 
 为什么需要：交接包里的 `e2e-seed-journal.py` / `e2e-seed-palaces.py` 只覆盖手记与殿堂；
 做视觉还原时需要放课后、COOP 有真实条目，否则只能对着空态改样式。
@@ -8,6 +8,9 @@ API 细节（实测）：
   - 放课后：`POST /api/v1/admin/leisure/entries` 新建（**总是草稿**），
     `POST .../{id}/publish` 发布，需 `If-Match: "<version>"`；
   - COOP：`POST /api/v1/admin/friends` 新建，`POST .../{id}/publish` 发布，同样 If-Match；
+  - 殿堂作品：先 `POST /api/v1/admin/media`（multipart `file`）上传**仓库里已有**的封面图，
+    再 `POST /api/v1/admin/projects` 新建草稿（发布门槛：至少 1 张 ready 图片 + 一句话用途），
+    最后 `POST .../{id}/publish`；
   - 写请求都要 `Origin` + `X-CSRF-Token`（或 body 里 csrf_token）。
 
 用法：python3 tools/e2e-seed-previews.py [BASE] [OWNER_PASSWORD]
@@ -103,6 +106,57 @@ FRIENDS = [
         "position": 30,
     },
 ]
+
+
+# 殿堂作品：只复用仓库里已有的封面图（不新增素材、不用游戏素材冒充摄影作品）。
+# 发布门槛来自后端：至少 1 张 ready 图片 + 一句话用途（role/summary 里要能看出用途）。
+PROJECTS = [
+    {
+        "slug": "phantom-log-next",
+        "title": "怪盗手记 · 站点重构",
+        "summary": "把旧静态页面重构成 Next.js App Router + FastAPI 的全栈站点，内容改为单一来源维护。",
+        "role": "独立完成：前端、后端、数据迁移与验收。",
+        "problem": "旧站是纯静态页面，内容与样式耦合，新增内容类型时协作成本高。",
+        "tradeoffs": "用服务端组件承担首屏，交互下放到客户端；接受更复杂的构建与缓存边界。",
+        "outcomes": "公开页与手机视口都有真实浏览器验收；内容只通过 API 维护一份。",
+        "tech_stack": ["Next.js", "React", "TypeScript", "FastAPI", "PostgreSQL"],
+        "maintenance": "maintained",
+        "images": [
+            ("assets/legacy/img/cover/launch.jpg", "cover", "站点重构后的首页视觉"),
+            ("assets/legacy/img/cover/desk.jpg", "detail", "桌面端布局细节"),
+        ],
+    },
+    {
+        "slug": "velvet-compendium",
+        "title": "天鹅绒技能全书",
+        "summary": "把技能与真实作品证据整理成可筛选的技能全书，并支持技能合体查询。",
+        "role": "设计并实现：技能/作品关系模型、蓝黑视觉语言与真实浏览器验收。",
+        "problem": "技能与作品是两份数据时，读者看不出「技能在哪件作品里被用过」。",
+        "tradeoffs": "技能只关联作品、不复制作品正文；接受更严格的发布门槛（至少一条关联）。",
+        "outcomes": "同一份关系数据同时服务技能页与作品页；没有等级/熟练度等虚构数值。",
+        "tech_stack": ["Next.js", "SQLAlchemy", "Alembic", "CSS"],
+        "maintenance": "maintained",
+        "images": [
+            ("assets/legacy/img/cover/css-menu.jpg", "cover", "技能全书的蓝黑界面"),
+        ],
+    },
+    {
+        "slug": "ins-messaging",
+        "title": "INS 消息与相册",
+        "summary": "给手机内置 IM 加酒馆会话与相册链接，并复用同一份公开数据。",
+        "role": "负责数据模型、后端会话与前端 IM 视觉还原。",
+        "problem": "ISN 动态之外还需要角色消息与相册入口，且不能与真实社交平台混为一谈。",
+        "tradeoffs": "消息只存预设剧情与纯文本 AI 会话；图片消息留给产品决策，不先造数据模型。",
+        "outcomes": "IM 有独立视觉语言与草稿恢复；相册链接与生活图库共用一份数据。",
+        "tech_stack": ["Next.js", "React", "FastAPI"],
+        "maintenance": "active",
+        "images": [
+            ("assets/legacy/img/cover/tokyo.jpg", "cover", "消息界面的红黑视觉"),
+        ],
+    },
+]
+
+REPO_COVER_ROOT = "/Users/学习/blog/Blogs/apps/web/public"
 
 
 def req(method: str, path: str, body: bytes | None = None, headers: dict[str, str] | None = None):
@@ -212,6 +266,88 @@ def seed_friends(write: dict[str, str]) -> int:
     return ok
 
 
+def upload_media(write: dict[str, str], relative_path: str) -> str | None:
+    """上传仓库内已有图片，返回 media_id。multipart 手写，避免额外依赖。"""
+    import pathlib
+    import uuid
+
+    file_path = pathlib.Path(REPO_COVER_ROOT) / relative_path
+    if not file_path.is_file():
+        print(f"✗ 找不到封面文件：{file_path}")
+        return None
+    boundary = "----e2e-" + uuid.uuid4().hex
+    content = file_path.read_bytes()
+    body = (
+        f"--{boundary}\r\n"
+        f'Content-Disposition: form-data; name="file"; filename="{file_path.name}"\r\n'
+        "Content-Type: image/jpeg\r\n\r\n".encode()
+        + content
+        + f"\r\n--{boundary}--\r\n".encode()
+    )
+    headers = {**write, "Content-Type": f"multipart/form-data; boundary={boundary}"}
+    # 上传端点返回 201 与纯 JSON；`req` 里已经带了 Cookie 与 Origin。
+    status, payload = req("POST", "/api/v1/admin/media", body, headers)
+    if status not in (200, 201) or not isinstance(payload, dict):
+        print(f"✗ 上传 {relative_path} 失败：{status} {str(payload)[:140]}")
+        return None
+    return str(payload.get("id") or "")
+
+
+def seed_projects(write: dict[str, str]) -> int:
+    status, payload = req("GET", "/api/v1/admin/projects?limit=30")
+    existing = payload.get("items") if isinstance(payload, dict) else None
+    by_slug = {item.get("slug"): item for item in (existing or [])}
+    ok = 0
+    for project in PROJECTS:
+        item = by_slug.get(project["slug"])
+        if item is not None:
+            if item.get("status") == "published":
+                ok += 1
+                continue
+            media_ids = [str(image_id) for image_id in (item.get("media_ids") or [])]
+        else:
+            images = []
+            media_ids = []
+            failed = False
+            for order, (relative, kind, alt) in enumerate(project["images"]):
+                media_id = upload_media(write, relative)
+                if not media_id:
+                    failed = True
+                    break
+                media_ids.append(media_id)
+                images.append({"media_id": media_id, "position": order, "kind": kind, "alt": alt})
+            if failed:
+                continue
+            body = {
+                "slug": project["slug"],
+                "title": project["title"],
+                "summary": project["summary"],
+                "role": project["role"],
+                "problem": project["problem"],
+                "tradeoffs": project["tradeoffs"],
+                "outcomes": project["outcomes"],
+                "tech_stack": project["tech_stack"],
+                "maintenance": project["maintenance"],
+                "images": images,
+            }
+            status, payload = req("POST", "/api/v1/admin/projects", json.dumps(body).encode(), write)
+            if status not in (200, 201) or not isinstance(payload, dict):
+                print(f"✗ 新建作品「{project['title']}」失败：{status} {str(payload)[:140]}")
+                continue
+            item = payload
+        status, payload = req(
+            "POST",
+            f"/api/v1/admin/projects/{item['id']}/publish",
+            b"{}",
+            {**write, "If-Match": f'"{item["version"]}"'},
+        )
+        if status != 200:
+            print(f"✗ 发布作品「{project['title']}」失败：{status} {str(payload)[:180]}")
+            continue
+        ok += 1
+    return ok
+
+
 def main() -> int:
     write = login()
     if write is None:
@@ -221,7 +357,13 @@ def main() -> int:
     print(f"✓ 放课后：{leisure_ok}/{len(LEISURE)} 条已发布")
     friends_ok = seed_friends(write)
     print(f"✓ COOP：{friends_ok}/{len(FRIENDS)} 条友链已发布")
-    return 0 if leisure_ok == len(LEISURE) and friends_ok == len(FRIENDS) else 1
+    projects_ok = seed_projects(write)
+    print(f"✓ 殿堂：{projects_ok}/{len(PROJECTS)} 件作品已发布")
+    return (
+        0
+        if leisure_ok == len(LEISURE) and friends_ok == len(FRIENDS) and projects_ok == len(PROJECTS)
+        else 1
+    )
 
 
 if __name__ == "__main__":

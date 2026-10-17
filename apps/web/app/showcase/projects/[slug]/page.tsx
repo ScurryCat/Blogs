@@ -19,6 +19,7 @@ import "@/features/showcase/showcase.css";
 import { ProjectReading } from "@/features/showcase/project-reading";
 import { fetchProjectOnServer } from "@/features/showcase/server-api";
 import type { ProjectDetail } from "@/features/showcase/types";
+import { AppPageShell } from "@/components/ui/app-page-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -63,7 +64,7 @@ export default async function ProjectPage({ params }: PageProps): Promise<ReactN
 
   if (failure) {
     return (
-      <section className="shell">
+      <AppPageShell>
         <div className="pls-wrap">
           <div className="pls-state" role="status" data-project-error="">
             <p className="pls-state-kicker">FAILED</p>
@@ -74,7 +75,7 @@ export default async function ProjectPage({ params }: PageProps): Promise<ReactN
             </p>
           </div>
         </div>
-      </section>
+      </AppPageShell>
     );
   }
 
@@ -84,8 +85,8 @@ export default async function ProjectPage({ params }: PageProps): Promise<ReactN
   }
 
   return (
-    <section className="shell">
+    <AppPageShell>
       <ProjectReading project={project} />
-    </section>
+    </AppPageShell>
   );
 }

@@ -394,3 +394,373 @@
     transition: border-color 120ms ease-out;
   }
 }
+
+/* ==========================================================================
+   我的殿堂视觉还原 v1（2026-10-17，第二轮 §4.6）
+
+   参考（本地参考库，离线只读）：
+   - P5 官方设计画册 p219 阿卡那卡牌页：白卡边 → 黑内框 → 红色场 → 卡下撕纸标签
+     （本站不复制游戏卡面插画，只借「白框展签 + 黑底 + 红场」的展陈语言）。
+   - 全站既有的撕纸字 / 红色硬阴影 / 白框黑底语言（`styles/legacy/base.css` 的 `.rn` 与
+     COOP 卡牌、手记存档的同一套观感，保证站点内一致，不是新美术方向）。
+
+   本轮把作品列表做成「二维展厅」：
+   - 每件作品 = 一个展框（白框 + 黑底 + 红硬阴影 + 交替微旋转 + 悬停抬升）；
+   - 展框左上角有展签 `EXHIBIT 01`（CSS counter，编号只是列表顺序，不是评分/成绩）；
+   - 封面全宽铺满（不改写图片本身的颜色）；技术栈＝白框小牌；维护状态在卡底；
+   - 列表视图＝展厅目录（黑底白框表格）；详情页＝展品说明牌。
+   ========================================================================== */
+
+.pls-wrap {
+  container-type: inline-size;
+}
+
+.pls-bar {
+  border-bottom: 3px solid var(--pls-red);
+}
+
+.pls-kicker {
+  font: 400 12px/1.2 var(--f-disp, sans-serif);
+  letter-spacing: 0.26em;
+}
+
+.pls-title {
+  font: 400 clamp(24px, 3.4vw, 38px)/1.05 var(--f-disp, sans-serif);
+  letter-spacing: 0.02em;
+  text-shadow: 3px 3px 0 var(--pls-red);
+}
+
+.pls-lead {
+  color: rgba(244, 241, 234, 0.74);
+}
+
+/* 视图切换 / 状态筛选：撕纸白牌，当前项红底。 */
+.pls-tab {
+  min-height: 44px;
+  padding: 9px 14px;
+  border: 2px solid var(--pls-ink);
+  background: #0a0a0b;
+  color: var(--pls-ink);
+  font: 400 13px/1 var(--f-hat, sans-serif);
+  letter-spacing: 0.1em;
+  transform: skewX(-8deg);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
+}
+
+.pls-tab[aria-current="page"],
+.pls-tab[aria-pressed="true"] {
+  border-color: var(--pls-ink);
+  background: var(--pls-red);
+  color: var(--pls-ink);
+}
+
+.pls-tab:hover,
+.pls-tab:focus-visible {
+  background: var(--pls-ink);
+  color: #0a0a0b;
+}
+
+/* 展厅网格：每张卡是一个展框。 */
+.pls-grid {
+  counter-reset: exhibit;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 22px;
+}
+
+.pls-card {
+  position: relative;
+  counter-increment: exhibit;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 3px solid var(--pls-ink);
+  background: #0a0a0b;
+  color: var(--pls-ink);
+  box-shadow: 8px 8px 0 var(--pls-red);
+  transform: rotate(-0.5deg);
+  transition: transform 0.16s ease-out, box-shadow 0.16s ease-out;
+}
+
+.pls-grid > .pls-card:nth-child(2n) {
+  transform: rotate(0.5deg);
+}
+
+.pls-card:hover,
+.pls-card:focus-visible {
+  transform: rotate(0deg) translateY(-3px);
+  box-shadow: 12px 12px 0 var(--pls-red);
+}
+
+/* 展签：编号只是列表顺序（不表示评分/成绩）。 */
+.pls-card::before {
+  content: "EXHIBIT " counter(exhibit, decimal-leading-zero);
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1;
+  padding: 3px 9px;
+  background: #0a0a0b;
+  color: var(--pls-ink);
+  border: 2px solid var(--pls-ink);
+  font: 400 11px/1.3 var(--f-disp, sans-serif);
+  letter-spacing: 0.18em;
+  box-shadow: 3px 3px 0 var(--pls-red);
+  transform: skewX(-8deg);
+}
+
+.pls-card-cover {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-bottom: 3px solid var(--pls-ink);
+  background: #141416;
+}
+
+.pls-card-cover-empty {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-bottom: 3px solid var(--pls-ink);
+  background:
+    repeating-linear-gradient(-45deg, rgba(211, 18, 42, 0.55) 0 14px, transparent 14px 28px),
+    #0a0a0b;
+  color: var(--pls-ink);
+  font: 400 13px/1.4 var(--f-hat, sans-serif);
+  letter-spacing: 0.18em;
+}
+
+.pls-card-title {
+  margin: 0;
+  padding: 14px 16px 0;
+  font: 400 clamp(19px, 2.1vw, 24px)/1.2 var(--f-disp, sans-serif);
+  letter-spacing: 0.02em;
+  color: var(--pls-ink);
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.7);
+  overflow-wrap: anywhere;
+}
+
+.pls-card:hover .pls-card-title,
+.pls-card:focus-visible .pls-card-title {
+  text-shadow: 3px 3px 0 var(--pls-red);
+}
+
+.pls-card-summary {
+  margin: 0;
+  padding: 8px 16px 0;
+  font-size: 14px;
+  line-height: 1.72;
+  color: rgba(244, 241, 234, 0.86);
+  overflow-wrap: anywhere;
+}
+
+.pls-tech {
+  padding: 10px 16px 0;
+  gap: 6px;
+}
+
+.pls-tech li {
+  border: 1px solid rgba(244, 241, 234, 0.55);
+  color: var(--pls-ink);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  transform: skewX(-8deg);
+}
+
+.pls-card-meta {
+  margin-top: auto;
+  padding: 12px 16px 14px;
+  border-top: 2px solid rgba(244, 241, 234, 0.22);
+  color: rgba(244, 241, 234, 0.68);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+
+.pls-empty-note {
+  padding: 10px 16px;
+  color: rgba(244, 241, 234, 0.6);
+}
+
+/* 列表视图：展厅目录（黑底白框，行悬停反白）。 */
+.pls-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #0a0a0b;
+  border: 3px solid var(--pls-ink);
+  box-shadow: 8px 8px 0 var(--pls-red);
+  font-size: 14px;
+}
+
+.pls-table caption {
+  caption-side: top;
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--pls-ink);
+  color: rgba(244, 241, 234, 0.7);
+  margin: 0;
+}
+
+.pls-table th {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 3px solid var(--pls-red);
+  color: var(--pls-red);
+  font: 400 12px/1.3 var(--f-hat, sans-serif);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.pls-table td {
+  padding: 12px;
+  border-bottom: 1px solid rgba(244, 241, 234, 0.2);
+  vertical-align: top;
+  line-height: 1.6;
+}
+
+.pls-table tbody tr:hover {
+  background: rgba(244, 241, 234, 0.08);
+}
+
+.pls-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.pls-table a {
+  color: var(--pls-ink);
+  font: 400 17px/1.3 var(--f-disp, sans-serif);
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  border-bottom: 2px solid var(--pls-red);
+}
+
+.pls-table a:hover,
+.pls-table a:focus-visible {
+  background: var(--pls-red);
+  color: var(--pls-ink);
+}
+
+/* 状态 / 失败 / 加载更多：展签式面板。 */
+.pls-state {
+  border: 3px solid var(--pls-ink);
+  background: #0a0a0b;
+  box-shadow: 8px 8px 0 var(--pls-red);
+  text-align: left;
+}
+
+.pls-state-kicker {
+  font: 400 12px/1.2 var(--f-disp, sans-serif);
+  letter-spacing: 0.26em;
+}
+
+.pls-state-title {
+  font-size: 22px;
+}
+
+.pls-button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 2px solid var(--pls-ink);
+  background: var(--pls-red);
+  color: var(--pls-ink);
+  font: 400 13px/1 var(--f-hat, sans-serif);
+  letter-spacing: 0.1em;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+}
+
+.pls-button:hover:not([disabled]) {
+  background: var(--pls-ink);
+  color: #0a0a0b;
+}
+
+/* 详情页：展品说明牌。 */
+.pls-hero {
+  border: 3px solid var(--pls-ink);
+  background: #0a0a0b;
+  box-shadow: 8px 8px 0 var(--pls-red);
+  padding: 4px;
+}
+
+.pls-hero-empty {
+  border: 2px dashed rgba(244, 241, 234, 0.45);
+  background: #0a0a0b;
+}
+
+.pls-sections {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.pls-section {
+  border: 2px solid rgba(244, 241, 234, 0.75);
+  background: #0a0a0b;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.5);
+}
+
+.pls-section h3 {
+  display: inline-block;
+  padding: 2px 9px;
+  background: var(--pls-red);
+  color: var(--pls-ink);
+  font: 400 12px/1.4 var(--f-hat, sans-serif);
+  letter-spacing: 0.16em;
+  transform: skewX(-8deg);
+}
+
+.pls-section p {
+  color: rgba(244, 241, 234, 0.9);
+}
+
+.pls-guide {
+  border: 2px solid var(--pls-ink);
+  background: #0a0a0b;
+}
+
+.pls-guide-entry {
+  border: 2px solid var(--pls-ink);
+  background: var(--pls-red);
+  color: var(--pls-ink);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.55);
+}
+
+.pls-gallery-grid {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.pls-figure {
+  border: 2px solid var(--pls-ink);
+  background: #0a0a0b;
+  padding: 5px;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* 手机宿主 / 窄屏：单列，角度收敛；列表视图允许表内横向滚动（不撑破页面）。 */
+@container (max-width: 680px) {
+  .pls-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .pls-card,
+  .pls-grid > .pls-card:nth-child(2n) {
+    transform: none;
+    box-shadow: 5px 5px 0 var(--pls-red);
+  }
+
+  .pls-card-title {
+    font-size: 20px;
+  }
+
+  .pls-table {
+    display: block;
+    overflow-x: auto;
+    border-width: 2px;
+    box-shadow: 5px 5px 0 var(--pls-red);
+  }
+}
