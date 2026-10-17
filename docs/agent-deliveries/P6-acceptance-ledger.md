@@ -30,7 +30,7 @@
 | §2.2 第一页 2×3 固定排列（INS/手记/放课后 · COOP/殿堂/导航） | ✅ | 提交 `dbedb6f`；T02 断言 `["ins","journal","leisure","coop","showcase","metanav"]` |
 | §2.2 第二页 情报/地图/天气/档案，不塞占位 | ✅ | 同上；断言 `["palace","tokyo","cast","profile"]` |
 | §2.2 左右切换 + 可辨识分页指示；滑动只作补充 | ✅ | 按钮 + 「1 / 2」+ 菱形指示；滑动阈值见 `phone-desktop.tsx` |
-| §2.3 原版图标 + 映射表 | 🟡 | 映射表 ✅（`icon-mapping.md` + 563 sprite + 对照图）；**接入 ⛔** —— 12 个头像候选待身份+许可核对，见 `avatar-verification-checklist.md` |
+| §2.3 原版图标 + 映射表 | 🟡 | 映射表 ✅（`icon-mapping.md` + 563 sprite + 对照图）；**引用侧审计 ✅**（第 27 轮：7 个 App 图标全部存在、在 CSV 素材清单内、SHA-256 一致、未引用已移除资源，见 `verify-phone-icons.py`）；头像原版化仍 ⛔（12 候选待身份+许可核对） |
 | §2.3 异世界导航红眼图标 | ⛔ | 本地库无独立原图，见 `reference-frame-gaps.md` G3 |
 | §2.4 中文无衬线 / 中文标题高字重 / 英文标题 P5 字体 | ✅（规范） | `typography-and-feedback.md`；`--f-cjk` 即 Noto Sans SC 栈 |
 | §2.4 依据参考确定构图（不套统一卡片模板） | ⬜ | **未做**（视觉还原，缺参考帧 + 本会话无图像输入） |
@@ -241,6 +241,20 @@
    至少让过场一致。
 
 两条都未实施 —— 第 1 条动路由契约、第 2 条是纯视觉取舍，应由 Lead 定。
+
+## 6.11 第 27 轮补充：手机图标接入的引用侧审计
+
+N6 的 `verify-no-akechi-assets.py` 检查的是「已排除资源不在磁盘上」；
+**引用侧**（代码里声明的图标路径）此前没有检查。新增
+**`tools/acceptance/verify-phone-icons.py`**，对 6 个 manifest 扫描出 **7 个图标引用**，
+逐个校验：文件存在、在 `persona-assets-manifest.csv` 里、**SHA-256 与清单一致**、
+不是已移除资源。
+
+结果：**7/7 全部通过** ✓
+（`coop.png`、`fox/joker/oracle/queen/violet.webp`、`mementos.webp`）。
+
+`exploration` 与 `coop` 的 manifest 注释里提到 `crow.webp` —— 那是**说明「原先用它、
+已按 §5 换成中性图标」**，不是引用；脚本把注释提及单列为「供人工核对」，不算失败。
 
 ## 7. 结论
 
