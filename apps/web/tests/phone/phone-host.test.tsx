@@ -189,12 +189,18 @@ describe("手机桌面", () => {
     const tiles = [...view.container.querySelectorAll(".pw-app")].map(
       (tile) => tile.getAttribute("data-app-id"),
     );
-    expect(tiles).toEqual([
-      "ins", "palace", "journal", "tokyo", "cast", "leisure", "coop", "profile", "metanav", "showcase",
-    ]);
-    // INS（T03）+ metanav（T04）两个内置应用 + 4 个 site-link 入口（T02 迁移的真实目的地）。
+    // v2 两页桌面（任务书 §2.2）：第一页 2×3 固定排列，生活近况（INS / 手记 / 放课后）在第一行。
     // 断言具体清单而非数量：后续包登记时会被强制确认一次，而不是静默改变桌面。
-    expect(tiles).toHaveLength(10);
+    expect(tiles).toEqual(["ins", "journal", "leisure", "coop", "showcase", "metanav"]);
+    expect(view.container.querySelector(".pw-page-num")?.textContent).toContain("1 / 2");
+
+    // 第二页只有 4 个真实入口，**不塞占位 App** 填满网格。
+    click(view.container.querySelector('.pw-page-btn[aria-label="下一页"]'));
+    await commit(view);
+    const page2 = [...view.container.querySelectorAll(".pw-app")].map(
+      (tile) => tile.getAttribute("data-app-id"),
+    );
+    expect(page2).toEqual(["palace", "tokyo", "cast", "profile"]);
     expect(view.container.querySelector(".pw-music")).not.toBeNull();
   });
 

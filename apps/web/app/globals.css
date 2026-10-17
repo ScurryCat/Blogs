@@ -535,3 +535,78 @@ html.ov-lock body {
 .pw-bar {
   touch-action: none;
 }
+
+/* ---------- 12. 两页桌面分页器（v2 任务书 §2.2）----------
+   换页以按钮为主，触控滑动只是补充（在组件里判定）。第二页 2×2，
+   不塞占位 App 填满三列。 */
+.pw-pager {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  margin-top: 2px;
+  padding: 0 4px;
+}
+.pw-page-btn {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  /* 48 而不是 44：zoom 下 44px 实测视觉只有 43.3（<44 触控下限），留出舍入余量 */
+  min-width: calc(48px / var(--z, 1));
+  min-height: calc(48px / var(--z, 1));
+  background: rgb(10 10 11 / 0.82);
+  color: var(--paper);
+  border: 2px solid var(--paper);
+  clip-path: polygon(10% 0, 100% 8%, 90% 100%, 0 90%);
+  font: 500 22px/1 var(--f-mono);
+  cursor: pointer;
+  transition: background-color 0.14s, color 0.14s, transform 0.08s;
+}
+.pw-page-btn:hover:not(:disabled),
+.pw-page-btn:focus-visible {
+  background: var(--paper);
+  color: var(--black);
+}
+.pw-page-btn:active:not(:disabled) {
+  transform: scale(0.94);
+}
+.pw-page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.pw-page-dots {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  flex: none;
+}
+.pw-page-dots i {
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--paper);
+  transform: rotate(45deg);
+  opacity: 0.45;
+}
+.pw-page-dots i.on {
+  background: var(--red);
+  border-color: var(--red);
+  opacity: 1;
+}
+.pw-page-num {
+  flex: none;
+  font: 500 13px/1 var(--f-mono);
+  letter-spacing: 0.08em;
+  color: var(--dim);
+}
+/* 第二页只有 4 个：两列，瓦片稍宽是刻意的（不塞占位） */
+.pw-apps[data-page="1"] {
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (prefers-reduced-motion: reduce) {
+  .pw-page-btn {
+    transition: none;
+  }
+  .pw-page-btn:active:not(:disabled) {
+    transform: none;
+  }
+}

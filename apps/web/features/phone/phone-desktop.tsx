@@ -1,15 +1,20 @@
 "use client";
 
 /**
- * 手机桌面：状态栏 + 音乐卡片 + 应用网格（02 §3）。
+ * 手机桌面：状态栏 + 音乐卡片 + 两页应用网格（v2 任务书 §2.2）。
  *
- * - 只显示**真的可用**的入口：内置应用来自注册表（未接入的能力不出现），
- *   站点链接来自已迁移的页面；不放假信号、假通知数量或占位按钮。
+ * - **两页桌面**：第一页 2×3（INS / 手记 / 放课后，COOP / 我的殿堂 / 异世界导航 ——
+ *   生活近况优先在第一行）；第二页 2×2（情报 / 地图 / 天气 / 档案）。
+ *   页码**单独在桌面定义**，不依赖注册表排序（任务书点名：showcase 与 metanav 的
+ *   注册表顺序不等于桌面要求）。
+ * - 换页：左右按钮 + 「1 / 2」指示（触控**滑动只是补充**，不能是唯一途径）；
+ *   第二页**不塞占位 App** 填满网格。
+ * - 只显示**真的可用**的入口：清单里的 id 若未在注册表登记就不渲染（不放假入口）。
  * - 音效不再独占一个 App（设计 02 §3）：它是音乐卡片下方的开关。
  * - 状态栏时钟只在客户端走时，卸载时清计时器。
  */
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { PhoneMusicCard } from "./phone-music-card";
 import { APP_ICONS } from "./app-icons";
@@ -40,6 +45,12 @@ const LEGACY_GLYPHS: Record<string, string> = {
   cast: "☂",
   profile: "★",
 };
+
+/** 两页桌面的固定排列（v2 任务书 §2.2）。第二页只有 4 个，不填充占位。 */
+const DESKTOP_PAGES: readonly (readonly string[])[] = [
+  ["ins", "journal", "leisure", "coop", "showcase", "metanav"],
+  ["palace", "tokyo", "cast", "profile"],
+];
 
 function SoundSwitch(): ReactNode {
   const audio = useAudioOrDefault();
@@ -100,6 +111,26 @@ function AppTile({ app }: { app: PhoneAppManifest }): ReactNode {
 export function PhoneDesktop(): ReactNode {
   const { apps } = usePhone();
   const [now, setNow] = useState<Date | null>(null);
+  const [page, setPage] = useState(0);
+  const swipe = useRef<{ x: number; y: number } | null>(null);
+
+  // 固定排列之外、但已登记的应用追加到末页：**注册表仍是「存在」的唯一来源**，
+  // 新登记的应用不会从桌面上消失（宿主不加分支）。空页跳过，避免出现空白页。
+  const fixedIds = new Set(DESKTOP_PAGES.flat());
+  const extras = apps.filter((app) => !fixedIds.has(app.id));
+  const pages = DESKTOP_PAGES.map((ids, index) =>
+    index === DESKTOP_PAGES.length - 1 ? [...ids, ...extras.map((app) => app.id)] : [...ids],
+  )
+    .map((ids) =>
+      ids
+        .map((id) => apps.find((app) => app.id === id))
+        .filter((app): app is PhoneAppManifest => Boolean(app)),
+    )
+    .filter((list) => list.length > 0);
+
+  const pageCount = Math.max(1, pages.length);
+  const current = Math.min(page, pageCount - 1);
+  const pageApps = pages[current] ?? [];
 
   useEffect(() => {
     // 挂载后再读时钟：SSR 快照与客户端时间不同，且 effect 里同步 setState 会级联渲染。
@@ -128,11 +159,57 @@ export function PhoneDesktop(): ReactNode {
         </span>
       </header>
       <PhoneMusicCard />
-      <nav className="pw-apps" aria-label="手机应用">
-        {apps.map((app) => (
+      <nav
+        className="pw-apps"
+        aria-label={`手机应用（第 ${current + 1} 页，共 ${pageCount} 页）`}
+        data-page={current}
+        onPointerDown={(event) => {
+          swipe.current = { x: event.clientX, y: event.clientY };
+        }}
+        onPointerUp={(event) => {
+          if (!swipe.current) return;
+          const dx = event.clientX - swipe.current.x;
+          const dy = event.clientY - swipe.current.y;
+          swipe.current = null;
+          // 触控滑动是**补充**：横向位移显著大于纵向才算换页手势，
+          // 避免与屏幕纵向滚动冲突（任务书 §2.2 / §3.2）。
+          if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 2) {
+            setPage((current) => Math.min(pageCount - 1, Math.max(0, current + (dx < 0 ? 1 : -1))));
+          }
+        }}
+      >
+        {pageApps.map((app) => (
           <AppTile app={app} key={app.id} />
         ))}
       </nav>
+      <div className="pw-pager">
+        <button
+          className="pw-page-btn"
+          type="button"
+          aria-label="上一页"
+          disabled={current === 0}
+          onClick={() => setPage((current) => Math.max(0, current - 1))}
+        >
+          ‹
+        </button>
+        <span className="pw-page-dots" aria-hidden="true">
+          {pages.map((_, index) => (
+            <i key={index} className={index === current ? "on" : ""} />
+          ))}
+        </span>
+        <span className="pw-page-num">
+          {current + 1} / {pageCount}
+        </span>
+        <button
+          className="pw-page-btn"
+          type="button"
+          aria-label="下一页"
+          disabled={current === pageCount - 1}
+          onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))}
+        >
+          ›
+        </button>
+      </div>
       <SoundSwitch />
     </>
   );

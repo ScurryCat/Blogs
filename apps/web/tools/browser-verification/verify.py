@@ -344,6 +344,9 @@ def client_navigation(browser, base: str) -> None:
             # 时第一次点击会被吞掉，于是偶然通过 —— 水合变快之后就会稳定失败。
             page.click(".pw-tab")
             page.wait_for_selector(".pw-wrap.on .pw-app", timeout=10000)
+            # v2 两页桌面：palace 在第二页，先翻页（按钮换页是主要途径）。
+            page.click('.pw-page-btn[aria-label="下一页"]')
+            page.wait_for_selector(".pw-app[data-app-id='palace']", timeout=10000)
         origin = page.evaluate("() => performance.timeOrigin")
         page.click(selector)
         page.wait_for_timeout(2500)
@@ -364,13 +367,27 @@ def phone_host(browser, base: str) -> None:
     inert = page.evaluate("() => document.getElementById('main').hasAttribute('inert')")
     check("打开手机时背景 inert", inert is True)
     tiles = page.eval_on_selector_all(".pw-app", "els => els.map(e => e.dataset.appId)")
-    # 4 个 site-link 入口（T02 迁移）+ metanav（T04 交付、T00 登记的内置应用）。
+    # v2 两页桌面（任务书 §2.2）：第一页 2×3 固定排列，生活近况优先在第一行；
     # 断言具体清单而非数量：后续包登记时会被强制确认一次，而不是静默改变桌面。
     check(
-        "桌面只显示已登记的真实入口",
-        tiles == ["ins", "palace", "journal", "tokyo", "cast", "leisure", "coop", "profile", "metanav", "showcase"],
+        "第一页按固定排列显示已登记入口",
+        tiles == ["ins", "journal", "leisure", "coop", "showcase", "metanav"],
         str(tiles),
     )
+    check("分页指示为 1 / 2", page.inner_text(".pw-page-num").strip() == "1 / 2")
+    check("第一页时上一页禁用", page.is_disabled('.pw-page-btn[aria-label="上一页"]'))
+    page.click('.pw-page-btn[aria-label="下一页"]')
+    page.wait_for_timeout(300)
+    tiles2 = page.eval_on_selector_all(".pw-app", "els => els.map(e => e.dataset.appId)")
+    check(
+        "第二页显示情报/地图/天气/档案（不塞占位）",
+        tiles2 == ["palace", "tokyo", "cast", "profile"],
+        str(tiles2),
+    )
+    check("第二页时下一页禁用", page.is_disabled('.pw-page-btn[aria-label="下一页"]'))
+    # 回到第一页，供后续步骤使用
+    page.click('.pw-page-btn[aria-label="上一页"]')
+    page.wait_for_timeout(300)
     shot(page, "t02-phone-desktop")
 
     page.keyboard.press("Escape")
