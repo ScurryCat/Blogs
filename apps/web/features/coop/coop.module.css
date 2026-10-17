@@ -375,3 +375,218 @@
     transition: none;
   }
 }
+
+/* ==========================================================================
+   COOP 阿卡那卡牌视觉还原 v1（2026-10-17，第二轮 §4.5）
+
+   参考（本地参考库，离线只读）：
+   - P5 Official Design Works 画册 p219：**22 张阿卡那塔罗卡设计**
+     （白卡边 → 黑内框 → 红色卡面 → 黑白插画 → 底部撕纸字母卡名 + 顶部罗马数字）。
+   - `persona5-spriters/p5/hud/92093-confidant-icons.png`：协助者卡片的黑白斜切背景、
+     撕纸英文名条（用于卡名/分隔语言）。
+   还原的是**卡牌构图语言**（白边/红场/斜切/罗马数字/撕纸字），不复制任何游戏卡面插画；
+   站点没有塔罗牌美术，也不新引入。
+   ========================================================================== */
+
+.grid {
+  grid-template-columns: repeat(auto-fill, minmax(288px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 3px solid var(--paper, #f4f1ea);
+  background: var(--black, #0a0a0b);
+  color: var(--paper, #f4f1ea);
+  clip-path: none;
+  box-shadow: 8px 8px 0 var(--accent, #e5191c);
+  transform: rotate(-1deg);
+  transition: transform 0.16s var(--ease, ease-out), box-shadow 0.16s;
+}
+
+.grid > li:nth-child(2n) .card {
+  transform: rotate(0.9deg);
+}
+
+.grid > li:nth-child(3n) .card {
+  transform: rotate(-0.4deg);
+}
+
+.card:hover,
+.card:focus-within {
+  transform: rotate(0deg) translateY(-3px);
+  box-shadow: 11px 11px 0 var(--accent, #e5191c);
+}
+
+/* 顶部阿卡那条：黑底 + 罗马数字 + 撕纸英文名。 */
+.cardArcana {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0;
+  padding: 10px 14px 8px;
+  border-bottom: 2px solid var(--paper, #f4f1ea);
+  background: var(--black, #0a0a0b);
+}
+
+.cardNumeral {
+  font: 400 30px/0.9 var(--f-disp, sans-serif);
+  color: var(--paper, #f4f1ea);
+  text-shadow: 3px 3px 0 var(--accent, #e5191c);
+  letter-spacing: 0.02em;
+}
+
+.cardArcanaEn {
+  font: 400 19px/1 var(--f-disp, sans-serif);
+  letter-spacing: 0.08em;
+  color: var(--paper, #f4f1ea);
+}
+
+.cardArcanaCn {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--paper, #f4f1ea);
+  background: var(--accent, #e5191c);
+  padding: 2px 7px;
+  transform: skewX(-9deg);
+}
+
+.cardArcanaHint {
+  margin-left: auto;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--dim, #9b968e);
+}
+
+/* 卡头：红色卡面 + 黑色斜切（原作卡牌的「插画区」语言），头像是白框拍立得。 */
+.cardHead {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 14px 14px;
+  background-color: var(--accent, #e5191c);
+  background-image: linear-gradient(150deg, rgba(10, 10, 11, 0.94) 0 44%, transparent 44%);
+  border-bottom: 2px solid var(--paper, #f4f1ea);
+}
+
+.cardHead .avatar {
+  width: 62px;
+  height: 62px;
+  background: var(--paper, #f4f1ea);
+  border: 3px solid var(--paper, #f4f1ea);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.55);
+  transform: rotate(-5deg);
+}
+
+.cardHead .avatar img {
+  object-fit: cover;
+}
+
+.cardHead .monogram {
+  color: var(--black, #0a0a0b);
+  font: 400 30px/1 var(--f-disp, sans-serif);
+}
+
+.cardHead .cardTitle {
+  display: block;
+  min-width: 0;
+}
+
+.cardHead .name {
+  margin: 0;
+  font: 400 clamp(20px, 2.1vw, 26px)/1.15 var(--f-disp, sans-serif);
+  letter-spacing: 0.02em;
+  color: var(--paper, #f4f1ea);
+  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.85);
+  overflow-wrap: anywhere;
+}
+
+/* 卡身：黑底白字。 */
+.card .summary {
+  margin: 0;
+  padding: 14px 14px 4px;
+  line-height: 1.7;
+  color: rgba(244, 241, 234, 0.9);
+}
+
+.card .cardTags {
+  padding: 0 14px 4px;
+  gap: 6px;
+}
+
+.card .cardTag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid rgba(244, 241, 234, 0.4);
+  color: var(--paper, #f4f1ea);
+}
+
+.card .actions {
+  padding: 10px 14px 14px;
+  margin-top: auto;
+  gap: 10px;
+}
+
+.card .external,
+.card .toggle {
+  border: 2px solid var(--paper, #f4f1ea);
+  background: var(--black, #0a0a0b);
+  color: var(--paper, #f4f1ea);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
+  border-radius: 0;
+  min-height: 40px;
+}
+
+.card .external:hover,
+.card .external:focus-visible,
+.card .toggle:hover,
+.card .toggle:focus-visible {
+  background: var(--accent, #e5191c);
+  border-color: var(--accent, #e5191c);
+  color: var(--paper, #f4f1ea);
+}
+
+/* 展开的相识故事：黑面板 + 红色左条。 */
+.card .story {
+  margin: 0 14px 14px;
+  padding: 10px 12px;
+  background: rgba(244, 241, 234, 0.07);
+  border-left: 5px solid var(--accent, #e5191c);
+  color: rgba(244, 241, 234, 0.88);
+  line-height: 1.7;
+}
+
+.card .story p {
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .card,
+  .grid > li:nth-child(2n) .card,
+  .grid > li:nth-child(3n) .card {
+    transform: none;
+    box-shadow: 6px 6px 0 var(--accent, #e5191c);
+  }
+
+  .cardHead .avatar {
+    width: 54px;
+    height: 54px;
+  }
+
+  .cardArcanaHint {
+    display: none;
+  }
+}

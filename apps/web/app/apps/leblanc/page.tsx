@@ -14,6 +14,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { LeblancView } from "@/features/leblanc/leblanc-view";
+import { AppPageShell } from "@/components/ui/app-page-shell";
 
 export const metadata: Metadata = {
   title: "勒布朗",
@@ -22,8 +23,8 @@ export const metadata: Metadata = {
 
 export default function LeblancPage(): ReactNode {
   return (
-    <section className="shell">
+    <AppPageShell>
       <LeblancView />
-    </section>
+    </AppPageShell>
   );
 }

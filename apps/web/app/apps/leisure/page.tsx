@@ -9,6 +9,7 @@ import type { Metadata } from "next";
 import { Suspense, type ReactNode } from "react";
 
 import { LeisureStandalone } from "@/features/leisure/standalone";
+import { AppPageShell } from "@/components/ui/app-page-shell";
 
 export const metadata: Metadata = {
   title: "放课后",
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function LeisurePage(): ReactNode {
   return (
-    <section className="shell">
+    <AppPageShell>
       {/* 视图用 `useSearchParams()` 读 `screen`，必须有 Suspense 边界。 */}
       <Suspense
         fallback={
@@ -28,6 +29,6 @@ export default function LeisurePage(): ReactNode {
       >
         <LeisureStandalone />
       </Suspense>
-    </section>
+    </AppPageShell>
   );
 }

@@ -59,7 +59,8 @@ export function CoopView({
           <h2 className={styles.title}>友链通讯录</h2>
           <p className={styles.lead}>
             这里只放<strong>真实站点</strong>：站主认识的人与常去的地方。角色消息里的双叶、
-            摩尔加纳属于同人剧情，不是这里的友链。
+            摩尔加纳属于同人剧情，不是这里的友链。卡片上的<strong>阿卡那</strong>是站主给的
+            装饰分类（与原作塔罗同名），<strong>不是</strong>好感度、等级或关系数值。
           </p>
         </header>
       )}

@@ -945,6 +945,21 @@ html.ov-lock body {
   border-top: 1px solid rgb(244 241 234 / 0.18);
 }
 
+/* ---------- 15.1 独立应用页（/apps/*）的顶部/底部留白 ----------
+   站点 HUD 是 fixed；独立应用页此前直接用 `section.shell`，内容被顶栏压住。
+   由 `components/ui/app-page-shell.tsx` 统一套用，避免每个 App 各写一份 padding。 */
+.app-page {
+  padding-top: calc(var(--hud, 66px) + 30px);
+  padding-bottom: 76px;
+}
+
+@media (max-width: 640px) {
+  .app-page {
+    padding-top: calc(var(--hud, 66px) + 16px);
+    padding-bottom: 56px;
+  }
+}
+
 /* ---------- 16. 「我的殿堂」异世界短过场（第三轮 N5 · 任务书 §6.3）----------
    容器结构与旧站 `.clip`（VP9+alpha 抠像视频 + 纯色底衬）同思路，但独立成 `.isekai`：
    底衬用本站主题红，alpha 视频只负责红/黑墨迹层。这样即使浏览器不解码 alpha，

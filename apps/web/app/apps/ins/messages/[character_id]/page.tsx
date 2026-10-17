@@ -16,6 +16,7 @@ import type { ReactNode } from "react";
 import { InsMessagesApp } from "@/features/messaging/ins-integration";
 import { normalizeCharacterId } from "@/features/messaging/types";
 import "@/features/messaging/messaging.css";
+import { AppPageShell } from "@/components/ui/app-page-shell";
 
 export const metadata: Metadata = {
   title: "角色消息",
@@ -30,5 +31,9 @@ export default async function InsConversationPage({ params }: PageProps): Promis
   const { character_id } = await params;
   const characterId = normalizeCharacterId(character_id);
   if (characterId === null) notFound();
-  return <InsMessagesApp characterId={characterId} />;
+  return (
+    <AppPageShell>
+      <InsMessagesApp characterId={characterId} />
+    </AppPageShell>
+  );
 }

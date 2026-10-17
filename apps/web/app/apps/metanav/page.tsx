@@ -11,6 +11,7 @@ import { Suspense, type ReactNode } from "react";
 
 import { MetanavStandalone } from "@/features/metanav/standalone";
 import { SiteLink } from "@/features/runtime/navigation/site-link";
+import { AppPageShell } from "@/components/ui/app-page-shell";
 
 export const metadata: Metadata = {
   title: "异世界导航",
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
 
 export default function MetanavPage(): ReactNode {
   return (
-    <section className="shell">
+    <AppPageShell>
       {/*
         视图通过 `useSearchParams()` 读 `screen` / `item`，因此必须有 Suspense 边界，
         否则整页会被强制变成动态渲染（Next 的 CSR bailout）。静态外壳 + 客户端交互，
@@ -48,6 +49,6 @@ export default function MetanavPage(): ReactNode {
         </SiteLink>
         。
       </p>
-    </section>
+    </AppPageShell>
   );
 }

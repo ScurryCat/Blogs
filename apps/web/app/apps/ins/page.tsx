@@ -23,6 +23,7 @@ import { fetchMomentsOnServer, fetchTagsOnServer } from "@/features/ins/server-a
 import { INS_SUBTITLE, INS_TITLE } from "@/features/ins/composition";
 import { FEED_PAGE_SIZE, type Moment } from "@/features/ins/types";
 import "@/features/ins/ins.css";
+import { AppPageShell } from "@/components/ui/app-page-shell";
 
 export const metadata: Metadata = {
   title: "INS 图文动态",
@@ -71,7 +72,8 @@ export default async function InsFeedPage({ searchParams }: PageProps): Promise<
   const availableTags = await readAvailableTags(tag, initialFeed);
 
   return (
-    <Suspense fallback={<p className="ins-loading">正在读取图文动态…</p>}>
+    <AppPageShell>
+      <Suspense fallback={<p className="ins-loading">正在读取图文动态…</p>}>
       <InsAppWithGalleryAndMessages
         tag={tag}
         availableTags={availableTags}
@@ -80,8 +82,9 @@ export default async function InsFeedPage({ searchParams }: PageProps): Promise<
         feedError={feedError}
         // T07 的头像区 COOP 入口（与 /about 第 02 区、COOP 独立页读同一份数据）。
         profile={{ coop: <CoopEntry /> }}
-      />
-    </Suspense>
+        />
+      </Suspense>
+    </AppPageShell>
   );
 }
 

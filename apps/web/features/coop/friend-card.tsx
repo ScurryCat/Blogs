@@ -15,6 +15,7 @@
 
 import type { ReactNode } from "react";
 
+import { arcanaOf } from "./arcana";
 import { externalLinkAttributes } from "./urls";
 import { FriendAvatar } from "./friend-avatar";
 import type { CoopDetailState } from "./use-links";
@@ -49,15 +50,37 @@ export function FriendCard({
       data-friend-id={link.id}
       data-friend-state={expanded ? "expanded" : "collapsed"}
     >
+      {/* 阿卡那卡牌语言（第二轮 §4.5）：罗马数字 + 英文名在卡头，中文名只作说明。
+          认不出的值按原样显示；**不编数字、不补等级** —— 装饰不是关系数值。 */}
+      {(() => {
+        const arcana = arcanaOf(link.arcana);
+        if (!link.arcana) return null;
+        return (
+          <p
+            className={styles.cardArcana}
+            data-coop-arcana={arcana ? "known" : "raw"}
+            title="阿卡那是站主给的装饰分类，不是等级或好感度"
+          >
+            {arcana ? (
+              <>
+                <span className={styles.cardNumeral} aria-hidden="true">
+                  {arcana.numeral}
+                </span>
+                <span className={styles.cardArcanaEn}>{arcana.en}</span>
+                <span className={styles.cardArcanaCn}>{arcana.cn}</span>
+              </>
+            ) : (
+              <span className={styles.cardArcanaEn}>{link.arcana}</span>
+            )}
+            <span className={styles.cardArcanaHint}>装饰分类 · 非等级</span>
+          </p>
+        );
+      })()}
+
       <header className={styles.cardHead}>
         <FriendAvatar name={link.name} avatar={link.avatar} />
         <div className={styles.cardTitle}>
           <Heading className={styles.name}>{link.name}</Heading>
-          {link.arcana ? (
-            <span className={styles.arcana} title="站主给的装饰主题，不是等级">
-              {link.arcana}
-            </span>
-          ) : null}
         </div>
       </header>
 

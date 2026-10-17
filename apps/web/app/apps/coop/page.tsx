@@ -11,6 +11,7 @@ import type { Metadata } from "next";
 import { Suspense, type ReactNode } from "react";
 
 import { CoopStandalone } from "@/features/coop/standalone";
+import { AppPageShell } from "@/components/ui/app-page-shell";
 
 export const metadata: Metadata = {
   title: "协助者 · 友链",
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
 
 export default function CoopPage(): ReactNode {
   return (
-    <section className="shell">
+    <AppPageShell>
       <Suspense
         fallback={
           <p className="data-notice" role="status">
@@ -34,6 +35,6 @@ export default function CoopPage(): ReactNode {
         <code>item</code> 决定展开哪一条友链。名单里的每一条都是真实站点；
         角色消息属于同人剧情，与友链是两份数据。
       </p>
-    </section>
+    </AppPageShell>
   );
 }

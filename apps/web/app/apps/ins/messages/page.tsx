@@ -21,6 +21,7 @@ import type { ReactNode } from "react";
 
 import { InsMessagesApp } from "@/features/messaging/ins-integration";
 import "@/features/messaging/messaging.css";
+import { AppPageShell } from "@/components/ui/app-page-shell";
 
 export const metadata: Metadata = {
   title: "角色消息",
@@ -29,5 +30,9 @@ export const metadata: Metadata = {
 };
 
 export default function InsMessagesPage(): ReactNode {
-  return <InsMessagesApp />;
+  return (
+    <AppPageShell>
+      <InsMessagesApp />
+    </AppPageShell>
+  );
 }
