@@ -13,6 +13,12 @@
  * 这里不 import `lib/api/generated/schema.ts`：生成类型由 T00 在 `/moments` 挂载后
  * 统一重生成，本包先用**手写但逐字段对齐**的接口，避免依赖尚未生成的产物。
  * 集成后如需切换到生成类型，只需替换接口来源，字段名不变。
+ *
+ * 第三轮（任务书 §4.2–4.3，N4b）追加：动态 → 相册的**收录选择** `album_links`。
+ * 契约冻结在 `docs/agent-deliveries/N3-result.md` §3.2 / §3.3：
+ *  - 写入：`album_links?: { album_id, media_ids[] }[]`；`media_ids` 必须是本条动态当前
+ *    图片的子集；不传 = 保留原配置（但清理已不属于动态的图片）、`[]` = 清空；
+ *  - 回执：管理响应 `album_links` 按相册 position 排序、`media_ids` 按动态图片 position 排序；
  */
 
 export const TEXT_MAX_CODEPOINTS = 2000;
@@ -84,6 +90,126 @@ export interface MomentAdmin extends Moment {
   created_at: string;
   updated_at: string;
   images_admin: MomentImageInput[];
+  /**
+   * 当前收录选择（第三轮 §4.3 / N3 契约 §3.3）。草稿 / 撤回状态也照实返回。
+   *
+   * 契约里该字段**不是 required**（后端有默认空数组），老桩数据也可能没有；
+   * 因此声明为可选，读取处一律 `?? []` 兜底 —— 不能把「缺字段」误当成「清空配置」。
+   */
+  album_links?: MomentAlbumLinkOut[];
+}
+
+// --- 动态 → 相册收录（第三轮任务书 §4.2–4.3） ------------------------------
+
+/** 写入契约：一条「动态 → 相册」收录选择（`media_ids` 是该动态图片的子集）。 */
+export interface MomentAlbumLink {
+  album_id: string;
+  media_ids: string[];
+}
+
+/** 管理回执里的收录选择（形状与写入相同，单独命名以免把回执当成可写值直接回传）。 */
+export interface MomentAlbumLinkOut {
+  album_id: string;
+  media_ids: string[];
+}
+
+/** 单个相册最多收录多少张：动态本身最多 9 张图，因此媒体数组上限与 `IMAGES_MAX` 一致。 */
+export const ALBUM_LINK_MEDIA_MAX = IMAGES_MAX;
+
+/** 收录分区给站主的说明（一句话讲清「配置存在 ≠ 公开资格」）。 */
+export const ALBUM_LINKS_HINT =
+  "逐张勾选本条动态的图片，可以同时收录到多个相册。图片说明与排序仍由相册自己维护，" +
+  "不会复制动态正文；相册是草稿时不会自动发布，图片要等相册公开、且本条动态发布后才会进入照片墙。";
+
+/**
+ * 清洗收录选择（客户端提交前）：去空白、按相册去重、按相册内媒体去重（保留首次顺序）、
+ * 丢弃「没有选中任何图片」的相册条目、截断到契约上限。
+ *
+ * 为什么允许丢弃空条目：契约里非空数组是**完整替换**，一个选了相册却没勾图片的条目
+ * 不产生任何收录来源，提交它只会让服务端多做一次无意义校验。
+ */
+export function cleanAlbumLinks(links: readonly MomentAlbumLink[]): MomentAlbumLink[] {
+  const albums = new Set<string>();
+  const result: MomentAlbumLink[] = [];
+  for (const link of links) {
+    const albumId = (link?.album_id ?? "").trim();
+    if (!albumId || albums.has(albumId)) continue;
+    const mediaIds: string[] = [];
+    const seenMedia = new Set<string>();
+    for (const raw of link.media_ids ?? []) {
+      const mediaId = (raw ?? "").trim();
+      if (!mediaId || seenMedia.has(mediaId)) continue;
+      seenMedia.add(mediaId);
+      mediaIds.push(mediaId);
+      if (mediaIds.length >= ALBUM_LINK_MEDIA_MAX) break;
+    }
+    if (mediaIds.length === 0) continue;
+    albums.add(albumId);
+    result.push({ album_id: albumId, media_ids: mediaIds });
+  }
+  return result;
+}
+
+/**
+ * 动态图片变化后清理收录选择：把已不属于当前动态的媒体从选择里去掉；
+ * 某相册若因此一张不剩，则整条移除。
+ *
+ * 为什么要在客户端预览这一步：服务端对「包含不属于当前动态的媒体」直接 409 整单拒绝
+ * （N3 契约 §3.2），前端不清理就会让一次正常的「删图 + 保存」变成失败。
+ */
+export function purgeAlbumLinks(
+  links: readonly MomentAlbumLink[],
+  availableMediaIds: readonly string[],
+): MomentAlbumLink[] {
+  const available = new Set(availableMediaIds);
+  const result: MomentAlbumLink[] = [];
+  for (const link of links) {
+    const mediaIds = (link.media_ids ?? []).filter((mediaId) => available.has(mediaId));
+    if (mediaIds.length === 0) continue;
+    result.push({ album_id: link.album_id, media_ids: mediaIds });
+  }
+  return result;
+}
+
+/**
+ * 客户端预检（服务端仍是最终权威）：只用于提前给出可读提示，不代替服务端 409/422。
+ * 覆盖两类真实会踩到的错误：媒体不属于本条动态、单相册媒体数超过契约上限。
+ */
+export function validateAlbumLinks(
+  links: readonly MomentAlbumLink[],
+  availableMediaIds: readonly string[],
+): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const available = new Set(availableMediaIds);
+  for (const link of links) {
+    if (link.media_ids.length > ALBUM_LINK_MEDIA_MAX) {
+      issues.push({
+        field: "album_links",
+        message: `每个相册最多收录 ${ALBUM_LINK_MEDIA_MAX} 张图片`,
+      });
+      break;
+    }
+    if (link.media_ids.some((mediaId) => !available.has(mediaId))) {
+      issues.push({
+        field: "album_links",
+        message: "收录选择里有不属于本条动态的图片，请重新勾选",
+      });
+      break;
+    }
+  }
+  return issues;
+}
+
+/** 把相册 id 集合换算成「共几个相册、共几张图」，用于保存后的可读提示。 */
+export function albumLinkSummary(links: readonly MomentAlbumLink[]): {
+  albums: number;
+  media: number;
+} {
+  const cleaned = cleanAlbumLinks(links);
+  return {
+    albums: cleaned.length,
+    media: new Set(cleaned.flatMap((link) => link.media_ids)).size,
+  };
 }
 
 /** 上传响应（T01 的 `MediaAdminOut`，这里只用到这几项）。 */

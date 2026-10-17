@@ -27,12 +27,18 @@ import {
 } from "../api";
 import {
   TAG_INPUT_HINT,
+  albumLinkSummary,
+  cleanAlbumLinks,
   cleanTags,
+  purgeAlbumLinks,
+  validateAlbumLinks,
   validateDraftForPublish,
   validateTagInput,
   type MomentAdmin,
+  type MomentAlbumLink,
   type MomentImageInput,
 } from "../types";
+import { AlbumLinksEditor } from "./album-links-editor";
 import { MediaUploader, type UploadedImage } from "./media-uploader";
 import { fieldMessages } from "./session";
 
@@ -51,7 +57,9 @@ interface EditorState {
   text: string;
   tags: string;
   images: UploadedImage[];
-  /** 是否有未保存的改动（文字 / 标签 / 图片关系）。 */
+  /** 动态 → 相册的收录选择（第三轮 §4.2；保存时随其他字段一起提交完整选择）。 */
+  albumLinks: MomentAlbumLink[];
+  /** 是否有未保存的改动（文字 / 标签 / 图片关系 / 收录选择）。 */
   dirty: boolean;
 }
 
@@ -62,6 +70,7 @@ const EMPTY: EditorState = {
   text: "",
   tags: "",
   images: [],
+  albumLinks: [],
   dirty: false,
 };
 
@@ -70,6 +79,14 @@ function toImageInputs(images: readonly UploadedImage[]): MomentImageInput[] {
     media_id: image.mediaId,
     position: index,
     alt: image.alt.trim(),
+  }));
+}
+
+function albumLinksFromMoment(moment: MomentAdmin): MomentAlbumLink[] {
+  // 回执形状与写入同形；老桩数据可能没有该字段，`?? []` 兜底。
+  return (moment.album_links ?? []).map((link) => ({
+    album_id: link.album_id,
+    media_ids: [...link.media_ids],
   }));
 }
 
@@ -170,6 +187,7 @@ export function MomentWorkspace({
           text: moment.text,
           tags: moment.tags.map((tag) => tag.name).join(" "),
           images: fromMoment(moment),
+          albumLinks: albumLinksFromMoment(moment),
           dirty: false,
         });
         setMessage(
@@ -200,6 +218,7 @@ export function MomentWorkspace({
         text: created.text,
         tags: created.tags.map((tag) => tag.name).join(" "),
         images: [],
+        albumLinks: albumLinksFromMoment(created),
         dirty: false,
       });
       setMessage("草稿已创建。现在可以上传图片了。");
@@ -220,11 +239,20 @@ export function MomentWorkspace({
       setError(tagIssues.map((issue) => issue.message).join("；"));
       return;
     }
+    // 收录选择：客户端先做一次契约预检（服务端仍是权威，失败会显示服务端 409/422）。
+    const albumLinks = cleanAlbumLinks(editor.albumLinks);
+    const albumIssues = validateAlbumLinks(albumLinks, editor.images.map((image) => image.mediaId));
+    if (albumIssues.length) {
+      setError(albumIssues.map((issue) => issue.message).join("；"));
+      return;
+    }
     await run(async () => {
       const updated = await updateMoment(csrfToken, editor.momentId as string, editor.version as number, {
         text: editor.text,
         tags: tagNames,
         images: toImageInputs(editor.images),
+        // 完整选择（含 `[]` = 清空）：界面状态就是服务端配置的唯一来源。
+        album_links: albumLinks,
       });
       setEditor({
         momentId: updated.id,
@@ -236,13 +264,18 @@ export function MomentWorkspace({
           ...image,
           upload: editor.images[index]?.upload ?? image.upload,
         })),
+        albumLinks: albumLinksFromMoment(updated),
         dirty: false,
       });
       // 保存成功后才提示「可以发布」；门槛未满足时如实说明还差什么。
+      const savedIssues = publishIssues.length
+        ? `已保存。还不能发布：${publishIssues.map((issue) => issue.message).join("；")}`
+        : "已保存。可以发布了。";
+      const summary = albumLinkSummary(albumLinks);
       setMessage(
-        publishIssues.length
-          ? `已保存。还不能发布：${publishIssues.map((issue) => issue.message).join("；")}`
-          : "已保存。可以发布了。",
+        summary.albums > 0
+          ? `${savedIssues} 已收录 ${summary.media} 张图到 ${summary.albums} 个相册（相册未公开时暂不展示）。`
+          : savedIssues,
       );
       await loadList();
     });
@@ -264,6 +297,8 @@ export function MomentWorkspace({
         version: published.version,
         status: published.status,
         dirty: false,
+        // 发布回执也带 album_links（N3 契约 §3.3）：以服务端为准同步，避免界面与配置漂移。
+        albumLinks: albumLinksFromMoment(published),
       }));
       setMessage(`已发布（发布时间 ${published.published_at ?? "由服务端生成"}）。`);
       await loadList();
@@ -282,6 +317,8 @@ export function MomentWorkspace({
         ...previous,
         version: withdrawn.version,
         status: withdrawn.status,
+        // 撤回只让动态来源不再贡献公开资格，**配置保留**（N3 契约 §3.1 第 10 条）。
+        albumLinks: albumLinksFromMoment(withdrawn),
       }));
       setMessage("已撤回：公开页面与新媒体请求都将看不到它，图片关系保留着，改完可以再发。");
       await loadList();
@@ -412,7 +449,17 @@ export function MomentWorkspace({
             csrfToken={csrfToken}
             images={editor.images}
             onChange={(images) =>
-              setEditor((previous) => ({ ...previous, images, dirty: true }))
+              setEditor((previous) => ({
+                ...previous,
+                images,
+                // 动态里移除的图片必须同步从收录选择里去掉：否则保存会带一个「不属于
+                // 当前动态的媒体」被服务端 409 整单拒绝（N3 契约 §3.2）。
+                albumLinks: purgeAlbumLinks(
+                  previous.albumLinks,
+                  images.map((image) => image.mediaId),
+                ),
+                dirty: true,
+              }))
             }
             disabled={busy}
           />
@@ -422,6 +469,19 @@ export function MomentWorkspace({
             这样每张图都有服务端确认的 ready 记录，不会出现「看到了缩略图但服务端没有这张图」。
           </p>
         )}
+
+        {editor.momentId ? (
+          <AlbumLinksEditor
+            images={editor.images}
+            links={editor.albumLinks}
+            onChange={(albumLinks) =>
+              setEditor((previous) => ({ ...previous, albumLinks, dirty: true }))
+            }
+            describeError={describeError}
+            fieldError={fieldErrors.album_links ?? null}
+            disabled={busy}
+          />
+        ) : null}
 
         {publishIssues.length ? (
           <ul className="ins-admin-issues" aria-label="发布前仍需处理">

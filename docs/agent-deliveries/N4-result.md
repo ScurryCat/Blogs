@@ -1,9 +1,9 @@
-# N4 交付（N4a）：统一生活图库 `/gallery`、旧照片深链兼容、「我的殿堂」只留作品
+# N4 交付：统一生活图库 `/gallery`、旧照片深链兼容、「我的殿堂」只留作品、INS「同时收录到相册」
 
-> 任务书：`/Users/v/Documents/ChatGPT/Blog开发/docs/superpowers/plans/2026-10-17-p5-content-v3-agent-handoff.md`（第三轮 · P5 内容架构 v3）§4.1、§4.4、§6.1、§7.1 N4、§8.2
+> 任务书：`/Users/v/Documents/ChatGPT/Blog开发/docs/superpowers/plans/2026-10-17-p5-content-v3-agent-handoff.md`（第三轮 · P5 内容架构 v3）§4.1–4.5、§6.1、§7.1 N4、§8.2
 > 仓库：`/Users/学习/blog/Blogs` · 分支 `main`
-> 范围：**task-4（N4a）已完成**；task-5（N4b：INS「同时收录到相册」前端）依赖 N3 契约，按 Lead 安排在其后实施，完成时追加本报告第 3.2 / 7 / 8 节。
-> 状态：本阶段功能、测试与视觉证据已完成；真机触控与 N7 的全量验收未由本任务执行。
+> 范围：**task-4（N4a）与 task-5（N4b）均已完成**。N4a：`/gallery` 统一图库、旧照片深链、「我的殿堂」只留作品；N4b：INS 编辑界面「同时收录到相册」（依赖 N3 冻结契约）。
+> 状态：功能、单元/组件测试与视觉证据已完成；真机触控、真实数据库联调与 N7 的全量验收未由本任务执行（见 §8）。
 
 ## 1. 实际基线、接手状态与保护方式
 
@@ -12,7 +12,7 @@
 | 接手基线（N0 记录） | 分支 `main`，HEAD `e70ad1f`；工作区 dirty（第二轮迷你播放器 + N0 契约改动） |
 | 本报告落笔时观察到的 HEAD | `1b61127`（**本轮期间有其他会话/集成负责人在同一仓库持续产生提交**；N4 自身**没有** `git commit` / `push` / 部署，工作区改动全部未提交。按 Lead 协调，N4 在收尾阶段不再执行任何 git 命令，此快照只作记录、不作验收基线） |
 | 迁移 head | 未触碰 `apps/api`、未执行任何迁移（N3 负责） |
-| 本任务写入范围 | `apps/web/features/gallery/**`、`apps/web/features/showcase/**`、`apps/web/app/gallery/`、`apps/web/app/showcase/**`、自己的测试、本报告 |
+| 本任务写入范围 | N4a：`apps/web/features/gallery/**`、`apps/web/features/showcase/**`、`apps/web/app/gallery/`、`apps/web/app/showcase/**`；N4b：`apps/web/features/ins/**`、`apps/web/app/admin/moments/`；以及自己的测试、本报告 |
 | 明确未改 | `apps/api/**`、`features/phone/**`、`features/runtime/navigation/**`、`app/globals.css`、`package.json`、第二轮 dirty 文件（globals.css / phone-host / site-runtime / mini-player）、聊天业务 |
 
 保护方式：只做增量修改，未回退或格式化任何他人文件；对并行的 N1/N2/N3/N5 正在编辑的文件保持只读（本报告第 7 节列出复跑时观察到的其进行中失败，均不在 N4 范围）。
@@ -65,6 +65,40 @@
 | `apps/web/features/gallery/ins-tab.test.tsx` | INS 相册深链断言改为 `/gallery?scope=album&album=...` |
 | `apps/web/features/showcase/project-gallery.test.tsx` | 清单测试新增 `subtitle === "作品"`；`screens` 断言保持（旧深链兼容需要 `photos`/`album`） |
 
+### 2.3 N4b 需求对照（任务书 §4.2–4.3 / §8.2 前端部分、task-5 清单）
+
+| # | 要求 | 实现 |
+| --- | --- | --- |
+| 1 | INS 编辑界面增加可选区域「同时收录到相册」：逐张选择本条动态图片、选已有目标相册（允许同图多相册） | `features/ins/admin/album-links-editor.tsx`：管理相册下拉（含草稿）+ 每个目标相册的逐张复选框；同一张图可在多个相册分别勾选 |
+| 2 | 需要新相册时进入现有相册管理流程；保留动态文字/图片/收录草稿，返回可继续编辑 | 「新建相册（新标签页）」→ 现有 `/admin/albums`（`target="_blank" rel="noopener"`）；当前页草稿与收录选择不卸载，回来点「刷新相册列表」即可选到新相册；**不自动发布相册** |
+| 3 | 界面明确提示「已收录，待相册公开后展示」；不自动发布、不复制正文成照片说明 | 草稿相册卡片显示「已收录，待相册公开后展示（草稿相册不会自动发布）」+ 底部 `data-album-pending-note`；已公开相册如实写「本条动态发布后才会进入照片墙」；说明文案明确「图片说明与顺序由相册自己维护，不会复制动态正文」 |
+| 4 | 前端类型与请求按 N3 冻结契约（`album_links` 可选、`[]` 清空、不传保留）；真实展示失败与版本冲突（If-Match），不能先提示成功再吞掉收录失败 | `features/ins/types.ts` 增加 `MomentAlbumLink` / `MomentAlbumLinkOut` / 清洗 / 清理 / 预检 / 摘要纯函数；`api.ts` 的 `MomentWritePayload.album_links?`；保存时提交**完整选择**（含 `[]`=清空）；412 保留输入与选择；409/422 的 `error.fields.album_links` 在收录分区内联显示 |
+| 5 | 草稿恢复、旧版本冲突、非法相册/图片的错误展示 | 打开动态时回填 `album_links`；`AlbumLinksEditor` 对服务端返回的已删除相册显示「相册已不可用（可能已删除）」；`validateAlbumLinks` 预检「不属于本条动态 / 超过 9 张」；客户端 409/412 均有测试 |
+| 6 | 旧手机照片/相册深链转发图库（task-4 已做则只补 INS 部分） | task-4 已完成（`features/showcase/phone-view.tsx` 的 `photos`/`album` 屏幕转发），N4b 不重复修改 |
+| 7 | 测试 + 截图 + 更新本报告 INS 章节 | 新增 3 个测试文件 + 扩展工作台测试（见 §7）；截图见 §6 |
+
+### 2.4 逐文件修改清单（N4b 增量）
+
+**新增**
+
+| 文件 | 作用 |
+| --- | --- |
+| `apps/web/features/ins/admin/album-links-editor.tsx` | 「同时收录到相册」受控分区：管理相册列表（含草稿）、逐张勾选、同图多相册、新建相册新标签页入口、草稿/已公开文案、已删除相册提示、字段级错误展示 |
+| `apps/web/features/ins/album-links.test.ts` | 纯函数（清洗 / 清理 / 预检 / 摘要）+ **从 `contracts/openapi.json` 读契约**的字段对齐测试 |
+| `apps/web/features/ins/album-links-editor.test.tsx` | 分区真实交互：读列表、添加/移除相册、勾选、同图多相册、草稿提示、已删除相册、新标签页、失败重试、无图片、busy 禁用 |
+| `apps/web/app/admin/moments/[id]/page.test.tsx` | 单条动态页面（第二条编辑路径）：回填选择、PATCH 带 `album_links`/If-Match、412 保留选择 |
+
+**修改**
+
+| 文件 | 变化 |
+| --- | --- |
+| `apps/web/features/ins/types.ts` | 新增 `MomentAlbumLink` / `MomentAlbumLinkOut` / `ALBUM_LINK_MEDIA_MAX=9` / `ALBUM_LINKS_HINT` / `cleanAlbumLinks` / `purgeAlbumLinks` / `validateAlbumLinks` / `albumLinkSummary`；`MomentAdmin.album_links?`（按契约可选 + `?? []` 兜底） |
+| `apps/web/features/ins/api.ts` | `MomentWritePayload.album_links?: MomentAlbumLink[]` 及契约语义注释 |
+| `apps/web/features/ins/admin/moment-workspace.tsx` | 编辑器状态增加 `albumLinks`；打开/新建/保存/发布/撤回后与服务端回执同步；删图时 `purgeAlbumLinks`；保存 PATCH 带完整 `album_links`；409/422 字段错误传入分区；保存成功提示收录相册/图片数 |
+| `apps/web/app/admin/moments/[id]/page.tsx` | 同一套收录读写：回填、删图清理、保存带 `album_links`、字段错误、412 保留 |
+| `apps/web/features/ins/ins.css` | 追加 `.ins-admin-albums*` / `.ins-admin-album*` 样式（44px 触控行高、窄屏换行） |
+| `apps/web/features/ins/moment-workspace.test.tsx` | 桩数据补 `album_links`；保存断言 `album_links: []`（显式清空）；新增「读回选择并完整提交」「412 保留选择」「409 字段错误与选择保留」3 例 |
+
 ## 3. 新增 / 修改的路由、URL 契约与字段
 
 ### 3.1 URL 契约（N1 地图 / 生活页入口与 N7 按此验收）
@@ -87,9 +121,23 @@
 | --- | --- |
 | `features/gallery/paths.ts` | 新增 `GALLERY_PATH`、`LEGACY_PHOTOS_PATH`、`GalleryViewMode`、`GALLERY_VIEW_PARAM`、`GALLERY_ALBUMS_VIEW`、`normalizeGalleryView()`、`galleryAlbumsHref()`、`legacyPhotosRedirectPath()`；`GALLERY_ROUTES` 增 `albumsView`、`legacyPhotos`，`standalone` 值改为 `/gallery` |
 | 组件导出 | `GalleryTabs`、`AlbumGallery`（gallery）；`legacyGalleryTarget()`、`SHOWCASE_APP_SCREENS`（showcase/phone-view，后者仍含 `photos`/`album` 以便识别旧深链） |
-| 数据库 / 后端接口 | 本阶段**无**（N3 负责；前端公开 DTO 形状未变） |
+| 行为契约 | 本阶段**无**数据库变更；N4b 只消费 N3 已冻结的 `album_links`（见下） |
 
-N4b（INS 收录）将按 N3 冻结契约增加 `album_links` 前端类型与请求，见任务书 §4.3 与 `docs/agent-deliveries/N3-result.md` 第 3 节；本阶段不预先接线，避免出现「界面能选但后端未冻结」的半成品。
+### 3.3 N4b：`album_links` 前端契约（对齐 N3 冻结契约 §3.2 / §3.3）
+
+| 项 | 前端实现 |
+| --- | --- |
+| 写入（POST/PATCH `/api/v1/admin/moments`） | `MomentWritePayload.album_links?: { album_id: string; media_ids: string[] }[]`；编辑器保存时总是提交**当前界面完整选择**（含 `[]` = 清空），不依赖「不传保留」的隐式语义 |
+| 回执 | `MomentAdmin.album_links?: { album_id, media_ids[] }[]`（契约中非 required，前端按可选 + `?? []`；草稿/撤回回执照实返回并在打开时回填） |
+| `media_ids` 约束 | 必须属于本条动态当前图片：**删图时前端同步清理选择**；提交前 `validateAlbumLinks` 预检，服务端 409 仍是权威 |
+| 单相册上限 | `9`（与动态图片上限一致，契约 `maxItems: 9`）；客户端截断 + 预检提示 |
+| 失败展示 | 412 → 保留文字/图片/选择并提示重新读取；409/422 → 顶层错误 + `fields.album_links` 内联在收录分区；不先提示成功 |
+| 草稿/撤回语义 | 配置保留、不贡献公开资格：UI 文案「已收录，待相册公开后展示」，不宣称已展示 |
+| 相册侧变化 | 相册被删除后回执里可能出现不可用 `album_id`：界面显示「相册不可用，请先移除」，不静默丢配置；保存会显示服务端 409 |
+
+契约对齐测试：`features/ins/album-links.test.ts` 直接读取 `contracts/openapi.json`（N3 重新生成），断言 `MomentAlbumLinkIn` / `MomentAlbumLinkOut` / `MomentCreateIn` / `MomentUpdateIn` / `MomentAdminOut` 的字段、required 与 `maxItems`；契约漂移会直接让测试变红。N3 的旧游标版本（照片墙游标 v3）只影响 `features/gallery`，N4a 已按公开 DTO 消费。
+
+**没有运行 `npm run gen:api`**：`features/ins/types.ts` 的设计约定是手写 DTO（文件头写明「生成类型由 T00 统一重生成，本包字段逐一对齐」），本轮 N4b 的契约同步由上述 `contracts/openapi.json` 直读测试保证；`apps/web/lib/api/generated/schema.ts` 属于 T00 的共享生成产物，若其他消费方需要 `album_links` 生成类型，由集成负责人统一运行 `npm run gen:api`（不要手改生成结果）。
 
 ## 4. 与其他任务的依赖与共享文件集成
 
@@ -158,7 +206,24 @@ N4b（INS 收录）将按 N3 冻结契约增加 `album_links` 前端类型与请
 | 正面对照：顶部「作品」→ 殿堂 | `/showcase` | `.isekai.on`（证明异世界短版在本构建可播） |
 | 图库内「照片墙 → 相册」 | `/gallery?view=albums` | 无（`.jk.on`） |
 
-复现脚本（工作区外，无副作用）：`/Users/学习/blog/.dsh/n4-verify/mock_api.py`、`after_shots.py`、`real_api_shots.py`；隔离构建副本 `/Users/学习/blog/.dsh/n4-verify/web/`（`next build` + `next start -p 3101`，**未动 3100 共享服务器**）。
+**改后（N4b · INS「同时收录到相册」，隔离生产构建 + mock fixtures，`/Users/学习/blog/.dsh/n4b-after/`，`report.json` 11/11 checks）**
+
+| 文件 | 内容 |
+| --- | --- |
+| `ins-album-links-editor-section.png` | 收录分区本体：说明、相册下拉、添加/刷新/新建相册（新标签页）、草稿相册「已收录，待相册公开后展示」、已公开相册「本条动态发布后…」、逐张复选框、已选张数 |
+| `ins-album-links-editor-desktop.png` / `-390` | 在 `/admin/moments` 工作台中的完整上下文（桌面 / 390 窄屏，按钮换行、勾选行 ≥44px） |
+| `ins-album-links-saved-desktop.png` | 保存后提示「已收录 N 张图到 M 个相册（相册未公开时暂不展示）」 |
+
+同一次浏览器运行的关键断言（`n4b-after/report.json`）：
+
+| 断言 | 结果 |
+| --- | --- |
+| 保存 PATCH 请求体带完整 `album_links`（同图收录到草稿 + 已公开两个相册） | ✅ `[{album_id, [media_id]}, {album_id, [media_id]}]` |
+| PATCH 带 `If-Match: "2"`（版本冲突由服务端判断） | ✅ |
+| 没有自动发布相册 / 动态（全程无 `/publish` 请求） | ✅ |
+| 页面无 JS 运行错误 | ✅（`errors: []`） |
+
+复现脚本（工作区外，无副作用）：`/Users/学习/blog/.dsh/n4-verify/mock_api.py`、`after_shots.py`、`real_api_shots.py`、`ins_admin_shots.py`；隔离构建副本 `/Users/学习/blog/.dsh/n4-verify/web/`（`next build` + `next start -p 3101`，**未动 3100 共享服务器**）。mock 的 `PATCH /admin/moments` 会记录请求体，因此「请求真的带了 album_links」是网络层证据，不是界面文字推断。
 
 ## 7. 测试命令与实际结果
 
@@ -166,19 +231,20 @@ N4b（INS 收录）将按 N3 冻结契约增加 `album_links` 前端类型与请
 
 | 命令 | 结果 |
 | --- | --- |
-| `npx vitest run features/gallery features/showcase app/showcase/photos` | **11 files / 127 tests 全部通过**，exit 0（N4 范围） |
-| `npm run test -- --run`（最终复跑） | **82 files / 866 tests 全部通过**，exit 0 |
-| `npm run typecheck`（最终复跑） | **exit 0** |
-| `npm run lint`（最终复跑） | 1 error，位于 `features/journal/save-screen.tsx:85`（N2 正在并行改写的文件，非 N4 范围，N4 收尾时尚未落入其最终修复）；N4 范围 `npx eslint features/gallery features/showcase app/gallery app/showcase` → **0 问题** |
+| `npx vitest run features/ins features/gallery features/showcase app/admin/moments app/showcase/photos`（N4 全范围，最终复跑） | **24 files / 254 tests 全部通过**，exit 0 |
+| `npm run test -- --run`（全量，最终复跑） | **87 files / 907 tests 全部通过**，exit 0 |
+| `npm run typecheck`（全量，最终复跑） | **exit 0** |
+| `npm run lint`（全量，最终复跑） | **exit 0**（N2 的 save-screen lint 错误已由其自行修复，本轮收尾时全量 lint 干净） |
 | 隔离副本 `next build`（生产构建，`/Users/学习/blog/.dsh/n4-verify/web`） | **exit 0**；路由清单含 `ƒ /gallery`、`ƒ /showcase`、`ƒ /showcase/photos`、`ƒ /showcase/projects/[slug]` |
-| 隔离副本 `next start -p 3101` + Playwright（mock fixtures） | **33/33 checks 通过**（`n4-after/report.json`） |
-| 隔离副本 + 真实 API 8100 | **6/6 checks 通过**（`n4-after-real/report.json`） |
+| 隔离副本 `next start -p 3101` + Playwright（N4a，mock fixtures） | **33/33 checks 通过**（`n4-after/report.json`） |
+| 隔离副本 + 真实 API 8100（N4a 空态） | **6/6 checks 通过**（`n4-after-real/report.json`） |
+| 隔离副本 `next start -p 3101` + Playwright（N4b，mock 管理端） | **11/11 checks 通过**（`n4b-after/report.json`） |
 
 分项状态：
 
 | 维度 | 状态 | 说明 |
 | --- | --- | --- |
-| 功能 | 通过（本任务范围） | URL 契约、重定向、旧手机深链、殿堂只留作品、相册/照片墙切换均有单元 + 浏览器证据 |
+| 功能 | 通过（本任务范围） | URL 契约、重定向、旧手机深链、殿堂只留作品、相册/照片墙切换、INS 收录选择与保存请求均有单元 + 浏览器证据 |
 | 视觉 | 部分通过 | 桌面 / 390 / 320 截图已对照；**原版参考帧对照不属于本任务**，最终视觉判定交 N7 |
 | 真机 | 未验证 | 触控目标、软键盘、真实手机浏览器由 N7 负责；本任务只做 Chromium 桌面/窄视口 |
 | 迁移 | 不适用 | 本阶段无数据库变更（N3 负责） |
@@ -191,10 +257,10 @@ N4b（INS 收录）将按 N3 冻结契约增加 `album_links` 前端类型与请
 
 **未完成 / 交由他人**
 
-1. **N4b（task-5）**：INS 编辑界面「同时收录到相册」、草稿保留、`album_links` 请求/响应、409/412/422 真实错误展示。N3 契约已冻结，本报告完成时尚未开始；完成时在本文件追加。
+1. **N4b 的真实后端联调（隔离 PostgreSQL）未由本任务执行**：N3 的后端测试覆盖契约与事务，N4b 前端用「mock 管理端 + 网络层断言请求体」证明前端行为；没有在真实 `pl_test_n7` 类隔离库上跑一次「登录 → 打开真实动态 → 勾选 → 保存 → 公开页可见性」的端到端。原因：管理端需要站主会话与 CSRF，本轮共享 dev 库没有可自动化的站主凭据；N7 应在隔离测试库上补这一条（任务书 §8.2 矩阵的行）。**不能把 mock 证据当成真实数据库验收通过。**
 2. **INS 相册页签的浏览器端到端**：共享 dev 库没有公开相册，INS 页签在真实环境中不出现（`isAvailable=false` 是设计行为）；本任务用 `features/gallery/ins-tab.test.tsx`（16 例，含新的 `/gallery` 深链断言）覆盖，未用 mock 冒充 INS 集成通过。
 3. **地图 / 生活页入口**：由 N1 接线到 `/gallery`（本任务已提供 URL 契约与路由），尚未在 N1 完成后做联合浏览器复验。
-4. **真机 / 触控 / N7 全量验收**：未执行。
+4. **真机 / 触控 / N7 全量验收**：未执行（含收录分区的键盘操作、软键盘、真实触控；勾选行已设 ≥44px 高，但没有真机证据）。
 
 **已知限制**
 
@@ -203,9 +269,13 @@ N4b（INS 收录）将按 N3 冻结契约增加 `album_links` 前端类型与请
 - 相册视图的「加载更多」以 30 个为上限服务端分页（API `MAX_LIMIT=30`），已实现客户端追加；真实库相册数量不足 30 时不可见该按钮，属正常。
 - 截图中底部迷你播放器在部分整页截图里与页脚重叠，是第二轮全局播放器的既有布局表现（`app/globals.css` / 播放器组件归第二轮与 N5），不在 N4 修改范围，已在报告中标注给 N7。
 - 旧手机深链转发是一次客户端重定向（先进入手机壳再换页到图库）；视觉上手机壳会短暂出现。这是不改 `features/phone/**`（共享热点）前提下的最小侵入方案；若 N7 认为需要更平滑，可在 N5/N7 集成阶段评估。
+- N4b 的失败展示有两层：组件测试覆盖 412 / 409 / 422 的错误信封与字段级提示；浏览器证据覆盖成功路径。**没有**在真实浏览器里制造一次 409（需要真实后端配合），因此 409 的界面文案只有单测证据。
+- N4b 选择「保存时总是提交完整选择（含 `[]`）」：界面状态是唯一来源，避免「不传保留」造成界面与配置静默漂移；如果将来有第二个客户端只改文字而省略 `album_links`，契约的「不传保留」语义仍由后端保证，本前端不影响它。
+- 「需要新相册」用新标签页打开现有 `/admin/albums`：当前动态草稿不卸载，但新标签页里的新建相册**不会**自动出现在本页下拉里，需要点「刷新相册列表」；这是有意的（不在前端缓存第二份相册列表）。
 
 **回退说明**
 
 - 本任务改动全部可用 `git checkout -- <文件>` / 删除新增文件恢复；无数据库迁移、无素材改动、无依赖变更、无 Git 历史改写。
 - 回退顺序建议：先删 `app/gallery/` 与 `features/gallery/{gallery-tabs,album-gallery}.tsx` 及其测试，再恢复 `app/showcase/photos/page.tsx` 旧页面与 `features/gallery/paths.ts`；回退后旧手机深链与旧照片墙行为回到第二轮状态。
+- N4b 回退：删除 `features/ins/admin/album-links-editor.tsx` 与 3 个新增测试，恢复 `features/ins/{types.ts,api.ts,admin/moment-workspace.tsx,ins.css}`、`app/admin/moments/[id]/page.tsx` 与 `features/ins/moment-workspace.test.tsx`；由于保存时多提交一个可选字段，旧前端/旧后端组合不会受影响（字段可选）。
 - 本轮未提交任何 Git 对象；生产服务器（3100）和共享 API（8100）未被本任务重启或改配置。

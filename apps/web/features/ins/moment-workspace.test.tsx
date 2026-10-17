@@ -35,6 +35,7 @@ const DRAFT = {
   created_at: "2026-10-16T04:00:00Z",
   updated_at: "2026-10-16T04:00:00Z",
   images_admin: [],
+  album_links: [],
 };
 
 const MEDIA = {
@@ -54,6 +55,38 @@ const MEDIA = {
     },
   ],
   original_url: "/api/v1/media/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/original",
+};
+
+const ALBUM_ID = "33333333-3333-4333-8333-333333333333";
+const ALBUM_ADMIN = {
+  id: ALBUM_ID,
+  slug: "tokyo-2026",
+  title: "东京相册",
+  description: "一次旅行",
+  kind: "photo",
+  kind_label: "摄影",
+  position: 0,
+  status: "draft",
+  published_at: null,
+  created_at: "2026-10-01T00:00:00Z",
+  updated_at: "2026-10-01T00:00:00Z",
+  version: 1,
+  photo_count: 1,
+  photos: [],
+};
+
+/** 已带收录选择的动态：用来断言「读回选择 → 保存时完整提交」。 */
+const MOMENT_LINKED = {
+  ...DRAFT,
+  version: 2,
+  images: [],
+  images_admin: [{ media_id: MEDIA.id, position: 0, alt: "操场" }],
+  album_links: [{ album_id: ALBUM_ID, media_ids: [MEDIA.id] }],
+};
+
+const ALBUM_ROUTE = {
+  match: "/admin/albums",
+  body: { items: [ALBUM_ADMIN], next_cursor: null },
 };
 
 /** 取「新建草稿」按钮：它才是真的创建服务端草稿（列表头那个是「清空工作台」）。 */
@@ -88,6 +121,7 @@ afterEach(() => {
 describe("MomentWorkspace", () => {
   it("列表读取失败显示原因，不显示成「还没有任何动态」", async () => {
     stub = stubFetch([
+      ALBUM_ROUTE,
       {
         match: "/admin/moments",
         status: 401,
@@ -103,6 +137,7 @@ describe("MomentWorkspace", () => {
 
   it("空列表时如实显示「还没有任何动态」", async () => {
     stub = stubFetch([
+      ALBUM_ROUTE,
       { match: "/admin/moments", body: { items: [], next_cursor: null } },
     ]);
     const view = render(<MomentWorkspace {...props()} />);
@@ -113,6 +148,7 @@ describe("MomentWorkspace", () => {
 
   it("新建草稿：POST 到 /admin/moments，随后才能上传图片", async () => {
     stub = stubFetch([
+      ALBUM_ROUTE,
       { match: "/admin/moments", method: "POST", status: 201, body: DRAFT },
       { match: "/admin/moments", body: { items: [], next_cursor: null } },
     ]);
@@ -136,6 +172,7 @@ describe("MomentWorkspace", () => {
 
   it("保存草稿带上 If-Match，并在成功后提示「可以发布」", async () => {
     stub = stubFetch([
+      ALBUM_ROUTE,
       { match: "/publish", method: "POST", body: { ...DRAFT, status: "published", version: 3, published_at: "2026-10-16T05:00:00Z" } },
       { match: "/admin/moments/", method: "PATCH", body: { ...DRAFT, version: 2 } },
       { match: "/admin/moments", method: "POST", status: 201, body: DRAFT },
@@ -152,12 +189,15 @@ describe("MomentWorkspace", () => {
     const patch = stub.requests.find((request) => request.method === "PATCH");
     expect(patch?.headers["if-match"]).toBe('"1"');
     expect((patch?.body as Record<string, unknown>)?.csrf_token).toBe("csrf-token");
+    // 界面上的完整选择就是提交值：没有任何收录时显式发 []（= 清空），不能靠「不传」猜。
+    expect((patch?.body as Record<string, unknown>)?.album_links).toEqual([]);
     expect(view.container.textContent).toContain("还不");
     view.unmount();
   });
 
   it("412 冲突：保留输入、提示重新读取、不自动覆盖，并且不会发出发布请求", async () => {
     stub = stubFetch([
+      ALBUM_ROUTE,
       {
         match: "/admin/moments/",
         method: "PATCH",
@@ -206,6 +246,7 @@ describe("MomentWorkspace", () => {
 
   it("有未保存改动时发布按钮被禁用，避免发布旧内容", async () => {
     stub = stubFetch([
+      ALBUM_ROUTE,
       { match: "/admin/moments", method: "POST", status: 201, body: DRAFT },
       { match: "/admin/moments", body: { items: [], next_cursor: null } },
     ]);
@@ -233,6 +274,7 @@ describe("MomentWorkspace", () => {
 
   it("上传成功后才把图片计入草稿，并且替代文本默认留空（不编假描述）", async () => {
     stub = stubFetch([
+      ALBUM_ROUTE,
       { match: "/admin/media", method: "POST", status: 201, body: MEDIA },
       {
         match: "/admin/moments/",
@@ -270,6 +312,7 @@ describe("MomentWorkspace", () => {
 
   it("上传失败（413）保留本地预览并说明原因，不计入草稿", async () => {
     stub = stubFetch([
+      ALBUM_ROUTE,
       {
         match: "/admin/media",
         method: "POST",
@@ -295,6 +338,130 @@ describe("MomentWorkspace", () => {
     expect(view.container.textContent).toContain("本地预览 · 尚未上传");
     expect(view.container.textContent).toContain("8 MiB");
     expect(view.container.textContent).not.toContain("已上传（ready）");
+    view.unmount();
+  });
+
+  it("打开已有动态：读回已保存的收录选择，保存时把完整选择一起提交", async () => {
+    stub = stubFetch([
+      ALBUM_ROUTE,
+      {
+        match: "/admin/moments/",
+        method: "PATCH",
+        body: { ...MOMENT_LINKED, version: 3 },
+      },
+      { match: "/admin/moments/", body: MOMENT_LINKED },
+      { match: "/admin/moments", body: { items: [MOMENT_LINKED], next_cursor: null } },
+    ]);
+    const view = render(<MomentWorkspace {...props()} />);
+    await advance(40);
+
+    // 从列表打开这条动态（列表 → 编辑与直接打开走同一套读写逻辑）。
+    const item = view.container.querySelector<HTMLButtonElement>(".ins-admin-list-item");
+    expect(item).not.toBeNull();
+    click(item);
+    await advance(60);
+
+    // 已保存的收录选择被读回并渲染（相册标题 + 已勾选的图片）。
+    expect(view.container.textContent).toContain("东京相册");
+    const box = view.container.querySelector<HTMLInputElement>(".ins-admin-album-media input");
+    expect(box?.checked).toBe(true);
+
+    click([...view.container.querySelectorAll("button")].find((b) => b.textContent?.includes("保存草稿")) ?? null);
+    await advance(40);
+
+    const patch = stub.requests.find((request) => request.method === "PATCH");
+    expect((patch?.body as Record<string, unknown>)?.album_links).toEqual([
+      { album_id: ALBUM_ID, media_ids: [MEDIA.id] },
+    ]);
+    // 保存成功后以服务端回执为准同步（此处服务端回执仍是同一份选择）。
+    expect(view.container.querySelector<HTMLInputElement>(".ins-admin-album-media input")?.checked).toBe(
+      true,
+    );
+    view.unmount();
+  });
+
+  it("412 冲突时收录选择不丢失（不自动覆盖、也不静默清空）", async () => {
+    stub = stubFetch([
+      ALBUM_ROUTE,
+      {
+        match: "/admin/moments/",
+        method: "PATCH",
+        status: 412,
+        body: {
+          error: {
+            code: "VERSION_CONFLICT",
+            message: "内容已在别处更新，请先读取最新版本。",
+            fields: { version: ["当前版本为 3"] },
+          },
+          request_id: "r",
+        },
+      },
+      { match: "/admin/moments/", body: MOMENT_LINKED },
+      { match: "/admin/moments", body: { items: [MOMENT_LINKED], next_cursor: null } },
+    ]);
+    const view = render(<MomentWorkspace {...props()} />);
+    await advance(40);
+    click(view.container.querySelector<HTMLButtonElement>(".ins-admin-list-item"));
+    await advance(60);
+
+    // 修改文字制造「有未保存改动」，再保存触发 412。
+    const textarea = view.container.querySelector<HTMLTextAreaElement>("textarea");
+    const setter = Object.getOwnPropertyDescriptor(
+      window.HTMLTextAreaElement.prototype,
+      "value",
+    )?.set;
+    setter?.call(textarea, "冲突中的改动");
+    await act(async () => {
+      textarea?.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await advance(10);
+    click([...view.container.querySelectorAll("button")].find((b) => b.textContent?.includes("保存草稿")) ?? null);
+    await advance(40);
+
+    expect(view.container.textContent).toContain("版本冲突");
+    // 文字与收录选择都保留（冲突只提示、不清空输入）。
+    expect(view.container.querySelector<HTMLTextAreaElement>("textarea")?.value).toBe("冲突中的改动");
+    expect(view.container.querySelector<HTMLInputElement>(".ins-admin-album-media input")?.checked).toBe(
+      true,
+    );
+    view.unmount();
+  });
+
+  it("服务端 409（非法相册 / 不属于动态的媒体）如实显示，并保留界面上的选择", async () => {
+    stub = stubFetch([
+      ALBUM_ROUTE,
+      {
+        match: "/admin/moments/",
+        method: "PATCH",
+        status: 409,
+        body: {
+          error: {
+            code: "CONFLICT",
+            message: "收录失败：有图片不属于这条动态，请刷新后重试。",
+            fields: { album_links: ["媒体 111 不属于当前动态"] },
+          },
+          request_id: "r",
+        },
+      },
+      { match: "/admin/moments/", body: MOMENT_LINKED },
+      { match: "/admin/moments", body: { items: [MOMENT_LINKED], next_cursor: null } },
+    ]);
+    const view = render(<MomentWorkspace {...props()} />);
+    await advance(40);
+    click(view.container.querySelector<HTMLButtonElement>(".ins-admin-list-item"));
+    await advance(60);
+
+    click([...view.container.querySelectorAll("button")].find((b) => b.textContent?.includes("保存草稿")) ?? null);
+    await advance(40);
+
+    // 顶层错误 + 字段级错误都来自服务端信封，不谎报成功。
+    expect(view.container.textContent).toContain("收录失败");
+    const fieldError = view.container.querySelector("[data-album-links-error]");
+    expect(fieldError?.textContent).toContain("不属于当前动态");
+    // 选择没有被清掉（服务端事务未提交，界面保持用户输入）。
+    expect(view.container.querySelector<HTMLInputElement>(".ins-admin-album-media input")?.checked).toBe(
+      true,
+    );
     view.unmount();
   });
 });

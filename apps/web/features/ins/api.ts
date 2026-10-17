@@ -25,13 +25,26 @@ import {
   type MediaAdminUpload,
   type Moment,
   type MomentAdmin,
+  type MomentAlbumLink,
   type MomentImageInput,
 } from "./types";
 
+/**
+ * 管理写请求体（第三轮 §4.3 / N3 契约 §3.2）。
+ *
+ * `album_links` 语义（服务端为准，前端只在保存时提交**完整选择**）：
+ *  - 不传 / `null`：保留原配置，但清理已不属于该动态的图片配置；
+ *  - `[]`：清空该动态的全部收录选择；
+ *  - 非空数组：以这次完整选择替换配置；媒体必须属于本条动态，否则 409 整单不写入。
+ *
+ * 编辑器总是把「当前界面上的完整选择」发出去（包括 `[]`），因为它在打开动态时已经从
+ * 管理响应拿到了选择；这样不会出现「界面上没有收录、数据库里还留着」的静默偏差。
+ */
 export interface MomentWritePayload {
   text?: string;
   images?: MomentImageInput[];
   tags?: string[];
+  album_links?: MomentAlbumLink[];
 }
 
 /**

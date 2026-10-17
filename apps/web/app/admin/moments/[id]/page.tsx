@@ -14,9 +14,19 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 
 import { fetchAdminMoment, updateMoment } from "@/features/ins/api";
+import { AlbumLinksEditor } from "@/features/ins/admin/album-links-editor";
 import { MediaUploader, type UploadedImage } from "@/features/ins/admin/media-uploader";
-import { useAdminSession } from "@/features/ins/admin/session";
-import { isMomentId, validateDraftForPublish, type MomentAdmin } from "@/features/ins/types";
+import { fieldMessages, useAdminSession } from "@/features/ins/admin/session";
+import {
+  albumLinkSummary,
+  cleanAlbumLinks,
+  isMomentId,
+  purgeAlbumLinks,
+  validateAlbumLinks,
+  validateDraftForPublish,
+  type MomentAdmin,
+  type MomentAlbumLink,
+} from "@/features/ins/types";
 import "@/features/ins/ins.css";
 
 export default function AdminMomentDetailPage(): ReactNode {
@@ -29,6 +39,9 @@ export default function AdminMomentDetailPage(): ReactNode {
   const [text, setText] = useState("");
   const [tags, setTags] = useState("");
   const [images, setImages] = useState<UploadedImage[]>([]);
+  // 动态 → 相册的收录选择（第三轮 §4.2）：与列表页共用同一个编辑组件与语义。
+  const [albumLinks, setAlbumLinks] = useState<MomentAlbumLink[]>([]);
+  const [albumFieldError, setAlbumFieldError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -37,6 +50,7 @@ export default function AdminMomentDetailPage(): ReactNode {
     if (!isMomentId(rawId)) return;
     setBusy(true);
     setError(null);
+    setAlbumFieldError(null);
     try {
       const payload = await fetchAdminMoment(rawId);
       setMoment(payload);
@@ -56,6 +70,12 @@ export default function AdminMomentDetailPage(): ReactNode {
             variants: [],
             original_url: "",
           },
+        })),
+      );
+      setAlbumLinks(
+        (payload.album_links ?? []).map((link) => ({
+          album_id: link.album_id,
+          media_ids: [...link.media_ids],
         })),
       );
     } catch (failure) {
@@ -108,35 +128,55 @@ export default function AdminMomentDetailPage(): ReactNode {
       .split(/[\s,，、]+/)
       .map((tag) => tag.trim())
       .filter(Boolean);
-    const issues = validateDraftForPublish({
-      text,
-      images: images.map((image, index) => ({
-        media_id: image.mediaId,
-        position: index,
-        alt: image.alt.trim(),
-      })),
-    });
+    const imageInputs = images.map((image, index) => ({
+      media_id: image.mediaId,
+      position: index,
+      alt: image.alt.trim(),
+    }));
+    const issues = validateDraftForPublish({ text, images: imageInputs });
+    const cleanedAlbumLinks = cleanAlbumLinks(albumLinks);
+    const albumIssues = validateAlbumLinks(
+      cleanedAlbumLinks,
+      imageInputs.map((image) => image.media_id),
+    );
+    if (albumIssues.length) {
+      setError(albumIssues.map((issue) => issue.message).join("；"));
+      return;
+    }
     setBusy(true);
     setError(null);
+    setAlbumFieldError(null);
     try {
       const updated = await updateMoment(session.csrf_token, moment.id, moment.version, {
         text,
         tags: cleanedTags,
-        images: images.map((image, index) => ({
-          media_id: image.mediaId,
-          position: index,
-          alt: image.alt.trim(),
-        })),
+        images: imageInputs,
+        // 完整选择（含 `[]` = 清空）；服务端负责事务内协调动态与相册（N3 契约 §3.6）。
+        album_links: cleanedAlbumLinks,
       });
       setMoment(updated);
+      setAlbumLinks(
+        (updated.album_links ?? []).map((link) => ({
+          album_id: link.album_id,
+          media_ids: [...link.media_ids],
+        })),
+      );
+      const albumSummary = albumLinkSummary(cleanedAlbumLinks);
       setNotice(
-        issues.length
-          ? `已保存（v${updated.version}）。还不能发布：${issues.map((issue) => issue.message).join("；")}`
-          : `已保存（v${updated.version}）。`,
+        `${
+          issues.length
+            ? `已保存（v${updated.version}）。还不能发布：${issues.map((issue) => issue.message).join("；")}`
+            : `已保存（v${updated.version}）。`
+        }${
+          albumSummary.albums > 0
+            ? ` 已收录 ${albumSummary.media} 张图到 ${albumSummary.albums} 个相册（相册未公开时暂不展示）。`
+            : ""
+        }`,
       );
     } catch (failure) {
-      // 冲突时**保留输入**：只显示原因，不动 text / tags / images。
+      // 冲突时**保留输入**：只显示原因，不动 text / tags / images / albumLinks。
       setError(describe(failure));
+      setAlbumFieldError(fieldMessages(failure).album_links ?? null);
       if (isConflict(failure)) {
         setNotice("版本冲突：输入都还在。点「重新读取」拿到最新版本后再决定怎么改。");
       }
@@ -179,7 +219,22 @@ export default function AdminMomentDetailPage(): ReactNode {
       <MediaUploader
         csrfToken={session.csrf_token}
         images={images}
-        onChange={setImages}
+        onChange={(nextImages) => {
+          setImages(nextImages);
+          // 移除的图片同步从收录选择里清掉，避免保存时被服务端 409 拒绝。
+          setAlbumLinks((previous) =>
+            purgeAlbumLinks(previous, nextImages.map((image) => image.mediaId)),
+          );
+        }}
+        disabled={busy}
+      />
+
+      <AlbumLinksEditor
+        images={images}
+        links={albumLinks}
+        onChange={setAlbumLinks}
+        describeError={describe}
+        fieldError={albumFieldError}
         disabled={busy}
       />
 

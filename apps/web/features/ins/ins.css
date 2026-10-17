@@ -1001,3 +1001,102 @@
   color: var(--ins-dim);
   max-width: 160px;
 }
+
+/* ---------- 动态 → 相册收录（第三轮 §4.2，N4b） ---------- */
+
+.ins-admin-albums {
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px solid var(--ins-line);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ins-admin-albums h2 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.ins-admin-albums-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-end;
+  margin: 10px 0;
+}
+
+.ins-admin-albums-pick {
+  margin: 0;
+  flex: 1 1 220px;
+  min-width: 200px;
+}
+
+.ins-admin-albums-pick select {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  background: #000;
+  color: var(--ins-ink);
+  border: 1px solid var(--ins-line);
+}
+
+.ins-admin-album-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.ins-admin-album {
+  border: 1px solid var(--ins-line);
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.ins-admin-album.is-missing {
+  border-color: var(--ins-red);
+}
+
+.ins-admin-album-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.ins-admin-album-head strong {
+  font-size: 14px;
+}
+
+.ins-admin-album-meta {
+  flex: 1 1 260px;
+  font-size: 12px;
+  color: var(--ins-dim);
+}
+
+.ins-admin-album-media {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 6px 12px;
+}
+
+.ins-admin-album-media label {
+  display: flex;
+  /* 触控目标至少 44px 高（验收 §8.4）。 */
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.ins-admin-album-media input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--ins-red);
+}
