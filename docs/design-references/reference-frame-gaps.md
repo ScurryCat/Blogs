@@ -8,10 +8,10 @@
 
 | # | 缺口 | 影响验收项 | 现状 | 严重度 |
 | --- | --- | --- | --- | --- |
-| G1 | **普通文字消息完整帧** | §4.2 普通文字消息 / §8.1「三类完整参考帧」 | ⚠️ **部分可用（2026-10-17 有图像能力的复核更新）**：`p5r-sns--4aa5330b1fe6.jpg` 是一整屏 IM 画面，含「文字消息面板 + 拍立得头像 + 图片消息」，可作文字消息与整屏布局参考；但它是**群聊语境**（本站不加群聊）且只有一条文字样例，仍缺「两条往返 + 时间戳位置」的完整对照 | 可做部分还原；整屏验收仍不可判定 |
-| G2 | **回复选择完整帧** | §4.2 剧情回复 / §8.1 | ❌ 仍完全没有（本地库已全量审计，见 §6） | 阻塞回复选择还原验收 |
+| G1 | **普通文字消息完整帧** | §4.2 普通文字消息 / §8.1「三类完整参考帧」 | ✅ **已有完整帧（2026-10-18）**：普通对话整屏 ×2（PS 官方 CDN 4K + 本地导入 Maruki）+ IM 完整屏 ×2（群聊/含图片消息，1920×1080/1280×720），可作为文字消息与整屏布局对照；**仍不覆盖**「对方→我方→对方」的发送方气泡帧与时间戳位置（无该样例） | 可做整屏布局对照；交互细节仍标未完成 |
+| G2 | **回复选择完整帧** | §4.2 剧情回复 / §8.1 | ✅ **已有完整帧（2026-10-18）**：`hud/p5r-dialogue-choice-fullframe.jpg`（P5R，1920×1080，Fox 场景 + 3 个可选回复），来源 Game UI Database 图片直链，逐帧实看无明智 | 已可做回复选择还原对照 |
 | G3 | **异世界导航经典红眼图标原图** | §2.3 图标 / §4.7 | ⚠️ **已落地（验收 F2 返工，2026-10-17）**：本地 HUD 表仍无独立原图；改用可追溯外部清理版（Imgur）+ P5 动画原版画面证据，接入桌面实际渲染 `app/original/metanav-original.png`；属「原版视觉清理版」，不宣称官方原始矢量。详见 `original-app-icons.md` | 已接入；官方原始 sprites 仍未入库 |
-| G4 | 图片消息完整帧（**来源未核实**） | §4.2 图片消息 | ⚠️ `persona-dist/media/image/P5R/p5r-sns--4aa5330b1fe6.jpg`（目录标 P5R，原始发布 URL 未核实）；**已确认它就是完整 IM 屏**（见 §6） | 可先用，但需补来源；本站消息模型暂无图片字段（B4） |
+| G4 | 图片消息完整帧（**来源未核实**） | §4.2 图片消息 | ⚠️ **部分补齐（2026-10-18）**：图片消息完整帧仍为 `p5r-im-photo-fullframe.jpg`（本地导入，原始 URL 未核实；即原 `p5r-sns`）；另补 IM 群聊完整帧（Pinterest 图片直链，原始发布 URL 未核实）。**来源核实仍不通过** | 可做布局对照；来源与 B4 图片消息协议仍待解决 |
 
 ## 2. 每个缺口要什么
 
@@ -155,3 +155,21 @@
   `P3-velvet-phone-registration-result.md`）；印象空间做**问题档案（暗紫品红）**级视觉
   细化 v1（2026-10-17，见 `P3-mementos-visual-result.md`）。
   两者**整屏还原仍标未完成**。
+
+## 7. 2026-10-18 补帧记录（验收 v2 §5.1 / §7.3）
+
+> 执行方式：Yandex 图片检索定位候选 → 下载 → 人眼逐帧核对 → dHash 与本地帧交叉比对 →
+> 写入外部精选库 `persona-curated/hud/` → 仓库脚本复验哈希。
+> 逐帧画面复核均为「无明智吾郎」；来源/许可一律「未核实」口径，不冒充官方授权素材。
+
+| 帧（`persona-curated/hud/`） | 用途 | 来源 | 规格 / SHA-256 | 画面复核 |
+| --- | --- | --- | --- | --- |
+| `p5r-dialogue-choice-fullframe.jpg` | **G2 回复选择完整帧** | Game UI Database 图片直链：`https://www.gameuidatabase.com/uploads/Persona-402132021-025557-75229.jpg` | 1920×1080 / `2392b491…` | Fox 对话 + 3 选项（Ask for healing / Pat its head / Don't do anything）；无明智 |
+| `p5r-dialogue-normal-fullframe.jpg` | G1 普通对话完整帧 | **PlayStation 官方图片 CDN**：`https://image.api.playstation.com/vulcan/ap/rnd/202209/0202/QZuvnoBy0DhHj8CH5znQLIpL.jpg` | 3840×2160 / `7ca48c1b…` | Shadow Kamoshida 场景；与本地 screenshot-04 dHash 距离 1（同帧） |
+| `p5r-dialogue-maruki-fullframe.jpg` | G1 普通对话完整帧 | 本地导入 `persona-dist/.../screenshot-01`（原始 URL 未核实；文件名内嵌 SHA-256 前缀 `feabb359…`） | 1920×1080 / `feabb359…` | 教室 + Maruki + 文本框；无明智 |
+| `p5r-im-groupchat-fullframe.jpg` | IM 完整屏（群聊） | Pinterest 图片直链（原始发布 URL 未核实）：`https://i.pinimg.com/originals/8e/fc/c1/8efcc13d4eae5df544dadf98c202bd47.jpg` | 1280×720 / `44b761f4…` | Ryuji/Makoto 头像 + 3 条对方消息 + 底部提示；无明智 |
+| `p5r-im-photo-fullframe.jpg` | IM 完整屏（含图片消息） | 本地导入 `p5r-sns--4aa5330b1fe6.jpg`（G4 口径：原始 URL 未核实） | 1920×1080 / `4aa5330b…` | 手机 + IM 列表 + 图片消息 + 气泡；无明智 |
+| `p5r-street-hud-fullframe.jpg` | 手机 HUD 完整帧 | 本地导入 `screenshot-07`（原始 URL 未核实；文件名内嵌 SHA-256 前缀 `c56d8e14…`） | 1920×1080 / `c56d8e14…` | 日期/天气 + IM 通知图标（红 IM + 角标 3）+ 小地图 + 地点 toast；无明智 |
+
+复验脚本：`python3 tools/acceptance/verify-reference-frames.py`（6/6 帧存在、哈希/尺寸/索引/来源一致；
+参考库不存在时 SKIP）。仍缺：**存档/读取整屏帧**（只有 `92140` 元件表）、殿堂/天鹅绒/印象空间/COOP/放课后的整屏帧。

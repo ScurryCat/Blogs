@@ -74,6 +74,7 @@ run_section "1/6 静态审计（引用完整性 / 素材许可）"
 static_ok=0
 python3 tools/acceptance/verify-phone-icons.py >/tmp/vf-icons.log 2>&1 || static_ok=1
 python3 tools/acceptance/verify-reference-entry.py >/tmp/vf-refentry.log 2>&1 || static_ok=1
+python3 tools/acceptance/verify-reference-frames.py >/tmp/vf-refframes.log 2>&1 || static_ok=1
 python3 tools/acceptance/verify-asset-refs.py >/tmp/vf-assets.log 2>&1 || static_ok=1
 python3 tools/acceptance/verify-no-akechi-assets.py >/tmp/vf-akechi.log 2>&1 || static_ok=1
 echo "  图标/路由：$(tail -1 /tmp/vf-icons.log)"

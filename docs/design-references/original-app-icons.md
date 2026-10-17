@@ -41,6 +41,7 @@
 | 源文件 SHA-256 | `2fb9d001caa9ea0cb507413143f8e6a8300b86e86dd564cf9b56b2abf5d4d3c7` |
 | 原版画面证据 | `persona-dist/media/image/P5R/p5r-sns--4aa5330b1fe6.jpg`（P5R SNS/IM 界面参考，顶部 IM 标识；本地库内，源 URL 未核实——沿用既有 G4 记录） |
 | 证据图 SHA-256 | `4aa5330b1fe601bf40737f584ffc4a5a5d8dfe30526e75614c1076d3c3c3f3bf` |
+| 游戏内身份证据（补充） | `persona-curated/hud/p5r-street-hud-fullframe.jpg`（P5R 街景 HUD，左上角 IM 应用图标 + 角标 3，与清理版红色对话框一致；2026-10-18 入库） |
 | 官方素材表交叉核对 | `persona5-spriters/p5r/hud/132782-im-assets-cn-jp.png`（Spriters Resource #132782，P5R）内 **SNS logo** 的独立提取：裁切 `(1212,594)-(1532,758)` → 320×164 PNG，SHA-256 `9dddfb4ec56d6e3397c06df4e6d974e8135e455a686bc1dd95f491b5edfb207b`（源表 SHA-256 `c8510c56…`） |
 | 身份 / 版本核对 | P5R（PS4）原版消息标识（IM / SNS）；红色对话框 + 白色“IM”字样，与 P5R SNS 界面参考一致 |
 | 处理 | 裁到图标内容 → 居中到 512×512 黑底方图（未 AI 重绘） |
