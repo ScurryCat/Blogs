@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * 我的殿堂的手机视图（T06）。
+ * 我的殿堂的手机视图（T06；第三轮任务书 §4.1 起**只保留作品**）。
  *
  * 宿主契约（`features/phone/types.ts`、02 §4）：
  *  - 只用 `PhoneViewProps` 的四个字段与 `host` 的八项能力；
@@ -9,21 +9,26 @@
  *  - 非法 `item`（不是 slug）显示「未找到」，**不执行任意路径**；
  *  - 音乐继续播放：本视图不创建、不播放任何音频（验收 4）。
  *
- * 与独立页共用同一批取数函数（`api.ts`）与同一套展示组件（`PhotoTile` / `ProjectCard` /
- * `Lightbox`），因此两处内容一致。**完整**的筛选 / 分组 / 分页留在独立页：
- * 手机里只给「能一眼看完的一屏 + 明确的展开入口」。
+ * 第三轮的职责拆分（任务书 §4.1 / §7.1 N4）：
+ *  - `projects` / `project`：作品列表与作品详情（复用 `ProjectCard` 与 `api.ts`）；
+ *  - 生活照片不在殿堂里 —— `photos` / `album` 两个**旧屏幕**只做兼容转发：
+ *    手机深链 `?phone=showcase&screen=photos` / `&screen=album&item=<slug>` 会被
+ *    `host.openSiteContent()` 送到生活图库 `/gallery`（保留目标相册），不会停在
+ *    一个已经不存在的「殿堂照片展区」；
+ *  - 转发**不带 `intent`**：目的地是图库，不是作品殿堂边界，不能触发异世界过场
+ *    （任务书 §6.1）；手机参数也不透传，进入图库后手机壳自然收起。
+ *
+ * 与独立页共用同一批取数函数（`api.ts`）与同一套展示组件（`ProjectCard`），
+ * 因此两处内容一致；完整的筛选 / 分页留在独立页。
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
-import type { PhoneViewProps } from "@/features/phone/types";
+import { ApiClientError, ApiTransportError } from "@/lib/api/client";
+import { SiteLink } from "@/features/runtime/navigation/site-link";
+import type { PhoneHost, PhoneViewProps } from "@/features/phone/types";
 
-import { fetchAlbums, fetchWallPhotos } from "@/features/gallery/api";
-import { classifyFailure } from "@/features/gallery/failure";
-import { Lightbox } from "@/features/gallery/lightbox";
-import { PhotoTile } from "@/features/gallery/photo-tile";
 import { galleryAlbumHref, galleryHref } from "@/features/gallery/paths";
-import type { AlbumSummary, Photo, WallPhoto } from "@/features/gallery/types";
 import { fetchProject, fetchProjects } from "./api";
 import { trackRequest } from "./inflight";
 import { SHOWCASE_PATH, palacePath, projectPath } from "./paths";
@@ -38,7 +43,25 @@ export function isSlug(value: string | null | undefined): value is string {
   return !!value && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value);
 }
 
+/**
+ * 旧手机照片 / 相册屏幕 → 生活图库地址（纯函数，测试与组件共用）。
+ *
+ * 返回 `null` 表示这不是图库兼容屏幕（由调用方按作品屏幕处理）。
+ * 相册 slug 非法（旧链接被篡改 / 手输）时退回图库首页，而不是把任意值拼进 URL。
+ */
+export function legacyGalleryTarget(screen: string, item: string | null): string | null {
+  if (screen === "photos") return galleryHref();
+  if (screen === "album") return isSlug(item) ? galleryAlbumHref(item) : galleryHref();
+  return null;
+}
+
 export function ShowcasePhoneView({ screen, item, mode, host }: PhoneViewProps): ReactNode {
+  // 旧照片 / 相册屏幕：第三轮起殿堂不再有照片展区，全部转发到生活图库。
+  const legacyTarget = legacyGalleryTarget(screen, item);
+  if (legacyTarget) {
+    return <LegacyGalleryForward target={legacyTarget} host={host} />;
+  }
+
   if (screen === "project") {
     if (!isSlug(item)) {
       return (
@@ -59,32 +82,42 @@ export function ShowcasePhoneView({ screen, item, mode, host }: PhoneViewProps):
     );
   }
 
-  if (screen === "photos" || screen === "album") {
-    const albumSlug = screen === "album" && isSlug(item) ? item : null;
-    if (screen === "album" && !albumSlug) {
-      return (
-        <Missing
-          title="这个相册不存在"
-          body="链接里的名字不是有效的相册 slug。"
-          onBack={() => host.navigateScreen("photos")}
-        />
-      );
-    }
-    return (
-      <PhotosScreen
-        albumSlug={albumSlug}
-        onOpenFull={(slug) =>
-          host.openSiteContent({ destination: slug ? galleryAlbumHref(slug) : galleryHref(), source: "phone-link" })
-        }
-      />
-    );
-  }
-
   return (
     <ProjectsScreen
       onOpenProject={(slug) => host.navigateScreen("project", slug)}
       onOpenFull={() => host.openSiteContent({ destination: SHOWCASE_PATH, source: "phone-link" })}
     />
+  );
+}
+
+/**
+ * 旧手机照片 / 相册深链的转发屏幕。
+ *
+ * 用 `host.openSiteContent({ destination, source: "phone-link" })` 走宿主的统一导航
+ * （应用不自己改 history）—— 不传 `intent`，因此不会播放殿堂过场。
+ * `sentRef` 防 StrictMode / 重渲染时重复提交历史。
+ */
+function LegacyGalleryForward({ target, host }: { target: string; host: PhoneHost }): ReactNode {
+  const sentRef = useRef(false);
+  useEffect(() => {
+    if (sentRef.current) return;
+    sentRef.current = true;
+    host.openSiteContent({ destination: target, source: "phone-link" });
+  }, [host, target]);
+
+  return (
+    <div className="pls-wrap">
+      <div className="pls-state" role="status" data-legacy-gallery-forward={target}>
+        <p className="pls-state-kicker">GALLERY</p>
+        <h2 className="pls-state-title">正在打开生活图库…</h2>
+        <p className="pls-state-body">
+          照片与相册已经迁入「生活图库」，正在跳转并保留原来的相册与筛选。
+        </p>
+        <SiteLink href={target} source="phone-link" className="pls-button">
+          打开生活图库
+        </SiteLink>
+      </div>
+    </div>
   );
 }
 
@@ -135,7 +168,7 @@ function ProjectsScreen({
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") return;
         setPhase("failed");
-        setMessage(classifyFailure(error).message);
+        setMessage(classifyFailureMessage(error).message);
       } finally {
         release();
       }
@@ -221,8 +254,8 @@ function ProjectScreen({
         setPhase("ready");
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") return;
-        const failure = classifyFailure(error);
-        if (failure.kind === "not_found") setPhase("missing");
+        const failure = classifyFailureMessage(error, { notFound: true });
+        if (failure.notFound) setPhase("missing");
         else {
           setPhase("failed");
           setMessage(failure.message);
@@ -313,118 +346,31 @@ function ProjectScreen({
   );
 }
 
-function PhotosScreen({
-  albumSlug,
-  onOpenFull,
-}: {
-  albumSlug: string | null;
-  onOpenFull: (slug: string | null) => void;
-}): ReactNode {
-  const [photos, setPhotos] = useState<readonly WallPhoto[]>([]);
-  const [albums, setAlbums] = useState<readonly AlbumSummary[]>([]);
-  const [phase, setPhase] = useState<"loading" | "ready" | "failed">("loading");
-  const [message, setMessage] = useState<string | null>(null);
-  const [lightbox, setLightbox] = useState<number | null>(null);
-  const controllers = useRef<AbortController[]>([]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    controllers.current.push(controller);
-    const release = trackRequest(controller);
-    void (async () => {
-      try {
-        const [albumPage, photoPage] = await Promise.all([
-          fetchAlbums({ limit: 12 }, controller.signal),
-          fetchWallPhotos(
-            { scope: albumSlug ? "album" : "global", album: albumSlug, limit: 24 },
-            controller.signal,
-          ),
-        ]);
-        setAlbums(albumPage.items);
-        setPhotos(photoPage.items);
-        setPhase("ready");
-      } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        setPhase("failed");
-        setMessage(classifyFailure(error).message);
-      } finally {
-        release();
-      }
-    })();
-    return () => controller.abort();
-  }, [albumSlug]);
-
-  const flat: Photo[] = useMemo(() => photos.map((item) => item.photo), [photos]);
-  const open = useCallback(
-    (photo: Photo) => {
-      const index = flat.findIndex((candidate) => candidate.media_id === photo.media_id);
-      if (index >= 0) setLightbox(index);
-    },
-    [flat],
-  );
-
-  if (phase === "loading") {
-    return (
-      <p className="plg-group-meta" role="status">
-        正在读取照片…
-      </p>
-    );
+/**
+ * 作品读取失败的可读文案。
+ *
+ * 为什么不用 `features/gallery/failure.ts` 的 `classifyFailure`：那个模块归图库
+ * （相册语境）；本轮把照片从殿堂拆走后，殿堂不再 import 图库的客户端模块，
+ * 只保留「404 → 不存在 / 其它 → 如实显示」两档。
+ */
+function classifyFailureMessage(
+  error: unknown,
+  options: { notFound?: boolean } = {},
+): { message: string; notFound: boolean } {
+  if (error instanceof ApiClientError) {
+    if (options.notFound && error.status === 404) {
+      return { message: "这件作品不存在或还没有公开。", notFound: true };
+    }
+    if (error.status >= 500) {
+      return { message: `服务暂时不可用（HTTP ${error.status}），请稍后重试。`, notFound: false };
+    }
+    return { message: error.message || `请求失败（HTTP ${error.status}）`, notFound: false };
   }
-  if (phase === "failed") {
-    return (
-      <div className="plg-state" role="status">
-        <p className="plg-state-body">{message}</p>
-      </div>
-    );
+  if (error instanceof ApiTransportError) {
+    return { message: "连不上接口服务，请检查网络后重试。", notFound: false };
   }
-  if (flat.length === 0) {
-    return (
-      <div className="plg-state" role="status">
-        <p className="plg-state-title">这个相册还没有照片</p>
-        <p className="plg-state-body">没有占位图，也没有编造的张数。</p>
-      </div>
-    );
+  if (error instanceof Error && error.message) {
+    return { message: error.message, notFound: false };
   }
-
-  return (
-    <div className="plg-wrap">
-      <div className="plg-filters" aria-label="相册">
-        <button
-          type="button"
-          className="plg-chip"
-          aria-pressed={albumSlug === null}
-          onClick={() => onOpenFull(null)}
-        >
-          全部（完整页）
-        </button>
-        {albums.map((album) => (
-          <button
-            key={album.id}
-            type="button"
-            className="plg-chip"
-            aria-pressed={albumSlug === album.slug}
-            onClick={() => onOpenFull(album.slug)}
-          >
-            {album.title}（{album.photo_count}）
-          </button>
-        ))}
-      </div>
-      <div className="plg-masonry">
-        {flat.map((photo) => (
-          <PhotoTile key={`${photo.media_id}-${photo.position}`} photo={photo} onOpen={open} />
-        ))}
-      </div>
-      <p className="plg-group-meta">筛选、分组与分页在完整照片墙里。</p>
-
-      {lightbox !== null ? (
-        <Lightbox
-          photos={flat}
-          index={lightbox}
-          onIndexChange={setLightbox}
-          onClose={() => setLightbox(null)}
-          hasHost
-        />
-      ) : null}
-    </div>
-  );
+  return { message: "读取作品失败。", notFound: false };
 }

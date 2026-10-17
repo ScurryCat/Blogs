@@ -145,7 +145,7 @@ describe("InsGalleryView（紧凑相册）", () => {
     // 每一格都链到独立照片墙的**同一个**相册（不复制图库）。
     expect(
       container.querySelector('[data-ins-album="tokyo-2026"]')?.getAttribute("href"),
-    ).toBe("/showcase/photos?scope=album&album=tokyo-2026");
+    ).toBe("/gallery?scope=album&album=tokyo-2026");
     const urls = stub.requests.map((request) => request.url);
     expect(urls.some((url) => url.includes("/api/v1/gallery/albums"))).toBe(true);
     expect(urls.some((url) => url.includes("/api/v1/gallery/photos"))).toBe(true);

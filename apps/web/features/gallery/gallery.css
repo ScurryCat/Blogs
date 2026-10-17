@@ -109,6 +109,10 @@
 .plg-album-cover {
   display: block;
   width: 100%;
+  /* `height: auto` 不能省：`<img height="900">` 的 presentational hint 会变成
+     `height: 900px`，比 `aspect-ratio` 优先，封面就被拉成整张原图的高（真实截图抓到）。
+     这里显式声明 auto，让 4:3 固定框生效；相册内的图格才是自然比例。 */
+  height: auto;
   background: rgba(0, 0, 0, 0.35);
   /* 卡片封面用固定框 + object-fit: 卡片高度一致才好看；相册内的图格才是自然比例。 */
   aspect-ratio: 4 / 3;

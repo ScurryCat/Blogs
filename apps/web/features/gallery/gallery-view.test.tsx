@@ -223,7 +223,9 @@ describe("GalleryView", () => {
       <GalleryView {...baseProps} initialPhotos={[]} initialCursor={null} initialTotal={0} />,
     );
     const tokyo = container.querySelector('[data-filter="album-tokyo-2026"]');
-    expect(tokyo?.getAttribute("href")).toBe("/showcase/photos?scope=album&album=tokyo-2026");
+    expect(tokyo?.getAttribute("href")).toBe("/gallery?scope=album&album=tokyo-2026");
+    const all = container.querySelector('[data-filter="album-all"]');
+    expect(all?.getAttribute("href")).toBe("/gallery");
     const year2026 = container.querySelector('[data-filter="year-2026"]');
     expect(year2026?.getAttribute("href")).toContain("year=2026");
     unmount();

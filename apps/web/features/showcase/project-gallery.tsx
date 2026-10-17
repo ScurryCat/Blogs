@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * 我的殿堂 · 作品展厅视图（T06，07 §5）。
+ * 我的殿堂 · 作品展厅视图（T06，07 §5；第三轮 §4.1 起殿堂**只保留作品**）。
  *
  * 这是**独立页**（`/showcase`）用的完整视图；手机内置应用复用同一个组件，
  * 只换注入的宿主（SHARED-CONTRACTS §1：「同一内容在手机与 canonical 页面使用同一
@@ -131,9 +131,6 @@ export function ProjectGallery({
             {state.label}
           </SiteLink>
         ))}
-        <SiteLink href={SHOWCASE_PATH + "/photos"} source="phone-link" className="pls-tab">
-          照片墙
-        </SiteLink>
       </div>
 
       {loadError ? (

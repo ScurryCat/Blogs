@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * 记忆画廊的**独立页视图**（`/showcase/photos`）。
+ * 生活图库的**照片墙视图**（`/gallery` 的默认视图）。
  *
  * 这是「同一内容在手机与 canonical 页面使用同一功能视图和数据」里的 canonical 侧
  * （SHARED-CONTRACTS §1）；INS 的相册页签用 `ins-gallery-view.tsx` 复用同一批取数函数
@@ -19,11 +19,10 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 
 import { SiteLink } from "@/features/runtime/navigation/site-link";
 
-import { AlbumCard } from "./album-card";
 import { fetchWallPhotos } from "./api";
 import { classifyFailure, groupByAlbum, IMAGE_FAILURE_TEXT } from "./failure";
 import { Lightbox } from "./lightbox";
-import { galleryHref, PHOTOS_PATH } from "./paths";
+import { GALLERY_PATH, galleryHref } from "./paths";
 import { PhotoTile } from "./photo-tile";
 import {
   albumKindLabel,
@@ -154,7 +153,7 @@ export function GalleryView({
       <div className="plg-filters" role="group" aria-label="照片筛选">
         <span className="plg-filter-label">相册</span>
         <SiteLink
-          href={PHOTOS_PATH}
+          href={GALLERY_PATH}
           source="phone-link"
           className="plg-chip-link"
           aria-current={album ? undefined : "page"}

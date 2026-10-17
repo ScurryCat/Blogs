@@ -3,11 +3,16 @@
 /**
  * 我的殿堂的手机应用清单（T06 交付给 T00 登记的 10 字段 manifest）。
  *
+ * 第三轮任务书 §4.1：殿堂只保留作品与作品详情，副标题从「作品与照片」改为「作品」；
+ * 字段仍是固定 10 个（`PhoneAppManifest` 不再扩展），照片入口迁到生活图库 `/gallery`。
+ *
  * 说明：
  *  - `icon` 用的是仓库里**真实存在**的迁移图标（`public/assets/legacy/img/icon/fox.webp`，
  *    T02 从旧站 `assets/img/icon/` 迁移过来的资源），不新增任何素材；
  *    选狐狸（祐介 / EMPEROR）是因为「画廊 / 美术」的角色气质最贴近展厅。
- *  - `loader` 指向本包的 `phone-app.tsx`（`export default` + `screens` + `dispose`）。
+ *  - `loader` 指向本包的 `phone-app.tsx`（`export default` + `screens` + `dispose`）；
+ *    `screens` 里仍保留 `photos` / `album` 只为转发**旧手机深链**到 `/gallery`，
+ *    不再是殿堂里的照片屏幕（见 `phone-view.tsx`）。
  *  - `state_version` 为 1：本应用**不写任何本机状态**（没有收藏 / 足迹），
  *    这个值只是契约要求的字段，保持与将来扩展时的迁移空间。
  *  - `canonical_path` 是 `/showcase`：独立页与手机视图读同一份数据（验收 4）。
@@ -18,7 +23,7 @@ import type { PhoneAppManifest } from "@/features/phone/types";
 export const SHOWCASE_MANIFEST: PhoneAppManifest = {
   id: "showcase",
   name: "殿堂",
-  subtitle: "作品与照片",
+  subtitle: "作品",
   // 原稿用 fox.webp，但 T00 集成时已把 fox 给了「放课后」（T05），改用仓库里同样真实存在
   // 且未被占用的 violet.webp，避免桌面上两个应用同图标。
   icon: "/assets/legacy/img/icon/violet.webp",

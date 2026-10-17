@@ -1,13 +1,14 @@
 /**
  * 作品的 URL 构造（浏览器端与服务端共用，`features/showcase`）。
  *
- * 路由映射（07 §7）：
+ * 路由映射（第三轮任务书 §4.1 起；07 §7 的旧表已被覆盖）：
  *
  * | 用途 | 路径 |
  * | --- | --- |
- * | 我的殿堂（作品列表 + 照片页签） | `/showcase` |
+ * | 我的殿堂（**只保留作品**，不再有照片页签） | `/showcase` |
  * | 作品详情 | `/showcase/projects/<slug>` |
- * | 照片墙 | `/showcase/photos` |
+ * | 生活照片（独立生活图库，不属殿堂） | `/gallery` |
+ * | 旧照片墙（兼容重定向到 `/gallery`） | `/showcase/photos` |
  * | 管理：作品 | `/admin/projects`、`/admin/projects/<id>` |
  *
  * 「攻略记录」进入的是 T04 的专题页 `/apps/metanav/palaces/<slug>`（不新建一套专题路由）。

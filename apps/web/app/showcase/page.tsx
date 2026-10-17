@@ -1,11 +1,13 @@
 /**
- * 我的殿堂（`/showcase`，T06；07 §5 / §7）。
+ * 我的殿堂（`/showcase`，T06；第三轮任务书 §4.1 起**只保留作品**）。
  *
  * 这是**服务端组件**：第一页作品在服务端读（`API_INTERNAL_URL`），把可序列化的结果交给
  * 客户端视图 `ProjectGallery`。这样首屏就有内容，不需要客户端空转一圈再渲染。
  *
- * 页签：作品（本页） / 照片墙（`/showcase/photos`）。两者在「我的殿堂」里**并列**，
- * 用标签页分开，避免作品首页被大量生活照淹没（07 §5 末段）。
+ * 第三轮职责拆分（任务书 §4.1 / §7.1 N4）：
+ *  - 「我的殿堂」只保留作品与作品详情；生活照片全部迁入 `/gallery` 生活图库；
+ *  - 作品配图仍归作品本身（作品详情页的「图集」），**不**自动转入生活图库；
+ *  - 旧照片墙 `/showcase/photos` 由重定向页转到 `/gallery`（见 app/showcase/photos）。
  *
  * 读取失败的处理（01 §6）：把失败原因**如实显示**，绝不降级成「没有作品」。
  * `API_INTERNAL_URL` 未配置时同样给出明确原因，而不是抛 500。
@@ -16,16 +18,14 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { ApiClientError, ApiTransportError } from "@/lib/api/client";
-import "@/features/gallery/gallery.css";
 import "@/features/showcase/showcase.css";
-import { fetchAlbumsOnServer } from "@/features/gallery/server-api";
 import { ProjectGallery } from "@/features/showcase/project-gallery";
 import { fetchProjectsOnServer } from "@/features/showcase/server-api";
 import { isMaintenanceState, PROJECT_PAGE_SIZE, type ProjectSummary } from "@/features/showcase/types";
 
 export const metadata: Metadata = {
   title: "我的殿堂",
-  description: "作品与照片：真实项目的一句话用途、职责、关键取舍与可验证成果，以及记忆画廊。",
+  description: "作品：真实项目的一句话用途、职责、关键取舍与可验证成果。",
 };
 
 // 公开数据首版不共享缓存（01 §6），也不预生成固定页面。
@@ -64,16 +64,6 @@ export default async function ShowcasePage({ searchParams }: PageProps): Promise
     projectsError = failureReason(error);
   }
 
-  // 相册页签的可用性：服务端确认一次（失败按「没有」处理，客户端不再重试，
-  // 因为这里已经知道服务读不到了 —— 让页面少一个页签，而不是多一个坏按钮）。
-  let galleryAvailable = false;
-  try {
-    const albums = await fetchAlbumsOnServer({ limit: 1 });
-    galleryAvailable = albums.items.length > 0;
-  } catch {
-    galleryAvailable = false;
-  }
-
   return (
     <section className="shell">
       <div className="pls-wrap">
@@ -82,26 +72,11 @@ export default async function ShowcasePage({ searchParams }: PageProps): Promise
             <p className="pls-kicker">{"// MY PALACE"}</p>
             <h1 className="pls-title">我的殿堂</h1>
             <p className="pls-lead">
-              作品与照片。作品页回答「我做出了什么」，
-              <Link href="/apps/metanav">异世界殿堂</Link>
-              解释「怎么做出来的」；照片墙按相册与拍摄时间浏览。
+              作品。这里回答「我做出了什么」；<Link href="/apps/metanav">异世界殿堂</Link>
+              解释「怎么做出来的」。生活照片不在殿堂里，已迁入生活图库。
             </p>
           </div>
         </header>
-
-        <nav className="pls-tabs" aria-label="我的殿堂分区">
-          <Link className="pls-tab" href="/showcase" aria-current="page">
-            作品
-          </Link>
-          <Link className="pls-tab" href="/showcase/photos">
-            照片墙
-          </Link>
-          {galleryAvailable ? (
-            <span className="pls-card-meta" data-gallery-available="true">
-              已有公开相册
-            </span>
-          ) : null}
-        </nav>
       </div>
 
       <ProjectGallery
@@ -110,17 +85,6 @@ export default async function ShowcasePage({ searchParams }: PageProps): Promise
         loadError={projectsError}
         maintenance={maintenance}
       />
-
-      {/*
-        INS 的相册页签由 T00 在 T03 的 INS 页里接一次（本包不修改 InsShell / InsApp）：
-
-            import { GalleryTabLoader } from "@/features/gallery/gallery-tab-loader";
-            <GalleryTabLoader initialAlbums={albumPage?.items ?? null}>
-              {(galleryTab) => <InsShell tabContributions={[galleryTab]} … />}
-            </GalleryTabLoader>
-
-        这里不渲染任何 INS 结构，只把接线方式留在交付单 §集成申请 里。
-      */}
     </section>
   );
 }

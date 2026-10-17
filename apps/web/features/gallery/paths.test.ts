@@ -14,11 +14,15 @@ import {
   albumDetailPath,
   albumListQuery,
   galleryAlbumHref,
+  galleryAlbumsHref,
   galleryHref,
+  legacyPhotosRedirectPath,
+  normalizeGalleryView,
   wallQuery,
   GALLERY_API,
+  GALLERY_PATH,
   GALLERY_ROUTES,
-  PHOTOS_PATH,
+  LEGACY_PHOTOS_PATH,
   projectHref,
 } from "./paths";
 import {
@@ -94,13 +98,17 @@ describe("相册查询串", () => {
     );
   });
 
-  it("页面地址（SiteLink 用）", () => {
-    expect(galleryHref()).toBe(PHOTOS_PATH);
+  it("页面地址（SiteLink 用）：图库的独立入口是 /gallery", () => {
+    expect(galleryHref()).toBe(GALLERY_PATH);
     // 相册链接 = 相册浏览：显式带 scope=album（服务端据此用手工顺序）。
     expect(galleryHref({ album: "tokyo-2026" })).toBe(
-      `${PHOTOS_PATH}?scope=album&album=tokyo-2026`,
+      `${GALLERY_PATH}?scope=album&album=tokyo-2026`,
     );
-    expect(galleryAlbumHref("tokyo-2026")).toBe(`${PHOTOS_PATH}?scope=album&album=tokyo-2026`);
+    expect(galleryAlbumHref("tokyo-2026")).toBe(
+      `${GALLERY_PATH}?scope=album&album=tokyo-2026`,
+    );
+    // 照片墙是默认视图，因此不带 view 参数；相册视图才显式带 view=albums。
+    expect(galleryAlbumsHref()).toBe(`${GALLERY_PATH}?view=albums`);
     expect(projectHref("phantom-blog")).toBe("/showcase/projects/phantom-blog");
   });
 
@@ -120,10 +128,83 @@ describe("路由映射（交给 T00 注入 INS 页签）", () => {
     expect(GALLERY_ROUTES.insTabOrder).toBeGreaterThanOrEqual(30);
   });
 
-  it("canonical 路由与设计文档一致（07 §7）", () => {
+  it("canonical 路由：殿堂只留作品，图库独立成 /gallery（第三轮 §4.1）", () => {
     expect(GALLERY_ROUTES.showcase).toBe("/showcase");
-    expect(GALLERY_ROUTES.standalone).toBe("/showcase/photos");
+    expect(GALLERY_ROUTES.standalone).toBe("/gallery");
+    expect(GALLERY_ROUTES.legacyPhotos).toBe("/showcase/photos");
+    expect(GALLERY_ROUTES.albumsView).toBe("albums");
     expect(GALLERY_ROUTES.admin).toBe("/admin/albums");
+  });
+
+  it("旧手机照片 / 相册屏幕仍登记（只为转发旧深链到图库）", () => {
+    expect(GALLERY_ROUTES.phoneAppId).toBe("showcase");
+    expect(GALLERY_ROUTES.phoneScreens).toContain("photos");
+    expect(GALLERY_ROUTES.phoneScreens).toContain("album");
+  });
+});
+
+describe("生活图库视图与旧照片墙重定向（第三轮 §4.1 / 验收 §8.2 末行）", () => {
+  it("默认照片墙；只有 view=albums 是相册视图，未知值按默认处理", () => {
+    expect(normalizeGalleryView(null)).toBe("wall");
+    expect(normalizeGalleryView("")).toBe("wall");
+    expect(normalizeGalleryView("wall")).toBe("wall");
+    expect(normalizeGalleryView("albums")).toBe("albums");
+    expect(normalizeGalleryView("album")).toBe("wall");
+  });
+
+  it("旧照片墙根地址重定向到图库根地址", () => {
+    expect(LEGACY_PHOTOS_PATH).toBe("/showcase/photos");
+    expect(legacyPhotosRedirectPath({})).toBe(GALLERY_PATH);
+    expect(legacyPhotosRedirectPath(new URLSearchParams())).toBe(GALLERY_PATH);
+  });
+
+  it("保留原相册与合法筛选参数（album / scope / kind / year / month）", () => {
+    expect(
+      legacyPhotosRedirectPath({
+        album: "tokyo-2026",
+        scope: "album",
+        kind: "photo",
+        year: "2026",
+        month: "5",
+      }),
+    ).toBe(`${GALLERY_PATH}?album=tokyo-2026&scope=album&kind=photo&year=2026&month=5`);
+    // 只给 album（全局筛选，不是相册手工顺序）：不补 scope。
+    expect(legacyPhotosRedirectPath({ album: "tokyo-2026" })).toBe(
+      `${GALLERY_PATH}?album=tokyo-2026`,
+    );
+    // URLSearchParams 与页面 searchParams 同形结果。
+    expect(
+      legacyPhotosRedirectPath(new URLSearchParams("album=tokyo-2026&scope=album")),
+    ).toBe(`${GALLERY_PATH}?album=tokyo-2026&scope=album`);
+  });
+
+  it("scope=album 但没有 album 时丢弃（无意义的组合）", () => {
+    expect(legacyPhotosRedirectPath({ scope: "album" })).toBe(GALLERY_PATH);
+  });
+
+  it("非法筛选被丢弃，不把垃圾参数带进新地址", () => {
+    expect(
+      legacyPhotosRedirectPath({
+        album: "  ",
+        scope: "global",
+        kind: "video",
+        year: "abc",
+        month: "13",
+      }),
+    ).toBe(GALLERY_PATH);
+    expect(legacyPhotosRedirectPath({ year: "2026", month: "0" })).toBe(
+      `${GALLERY_PATH}?year=2026`,
+    );
+    // 分页游标 / 未知参数不转发（游标属于上一页，跨页面复用会错位）。
+    expect(
+      legacyPhotosRedirectPath({
+        album: "x",
+        cursor: "opaque-cursor",
+        limit: "24",
+        phone: "showcase",
+        screen: "photos",
+      }),
+    ).toBe(`${GALLERY_PATH}?album=x`);
   });
 });
 

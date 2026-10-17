@@ -383,5 +383,7 @@ describe("手机模块（PhoneAppModule 形状）", () => {
     expect(SHOWCASE_MANIFEST.kind).toBe("embedded");
     expect(SHOWCASE_MANIFEST.canonical_path).toBe("/showcase");
     expect(SHOWCASE_MANIFEST.icon.startsWith("/assets/legacy/img/icon/")).toBe(true);
+    // 第三轮任务书 §4.1：殿堂只留作品，副标题从「作品与照片」改为「作品」。
+    expect(SHOWCASE_MANIFEST.subtitle).toBe("作品");
   });
 });

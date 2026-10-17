@@ -15,7 +15,6 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { ApiClientError, ApiTransportError } from "@/lib/api/client";
-import "@/features/gallery/gallery.css";
 import "@/features/showcase/showcase.css";
 import { ProjectReading } from "@/features/showcase/project-reading";
 import { fetchProjectOnServer } from "@/features/showcase/server-api";
