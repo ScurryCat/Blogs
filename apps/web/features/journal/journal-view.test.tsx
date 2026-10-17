@@ -130,14 +130,17 @@ describe("列表", () => {
     });
     expect(window.sessionStorage.getItem("journal.save.v1")).toBe("520");
 
-    // 返回列表：重新挂载会读到这份记录并恢复原位。
-    // 这里只断言「接线成立」（保存半边）—— 恢复本身依赖 ready 翻真，测试 harness 里
-    // 时序不稳（loader 的 ready 未在 advance 窗口内翻真），而恢复逻辑本身由
-    // features/ins/scroll-memory.test.tsx 的 10 项用例覆盖（含容器与消费语义）。
+    // 返回列表：重新挂载后读回位置并恢复原位。
+    // 恢复是在 ready 翻真之后的**下一帧**（rAF）里做的：第一个 advance 让 loader 就绪，
+    // 第二个 advance 才轮到 rAF —— 只等一次会看到「还没恢复」，是测试时序，不是缺陷。
     const scroll = stubScrollTo();
     const second = render(<JournalView screen="list" host={host} />);
     await advance(30);
-    expect(scroll.calls.every((call) => typeof call.top === "number")).toBe(true);
+    await advance(30);
+    expect(second.container.textContent ?? "").toContain("公开的一天");
+    expect(scroll.calls).toContainEqual({ top: 520 });
+    // 恢复成功会消费掉记录
+    expect(window.sessionStorage.getItem("journal.save.v1")).toBeNull();
     scroll.restore();
     act(() => {
       second.unmount();
