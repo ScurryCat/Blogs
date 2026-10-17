@@ -23,7 +23,7 @@ import { useOverlay } from "@/features/runtime/overlay-manager";
 /** 打开手机时把背景收起来（设计 02 §9 的「背景 inert」）。 */
 function setBackgroundInert(inert: boolean): void {
   // `.pw-tab` 也一起收起来：否则 Tab 会跑到手机上，而焦点圈定应当在对话框内。
-  for (const selector of ["#main", "#hud", ".foot", ".skip", ".pw-tab"]) {
+  for (const selector of ["#main", "#hud", ".foot", ".skip", ".pw-tab", "[data-mini-player]"]) {
     const node = document.querySelector(selector);
     if (!node) continue;
     if (inert) node.setAttribute("inert", "");

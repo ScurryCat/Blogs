@@ -605,3 +605,251 @@ html.ov-lock body {
     transform: none;
   }
 }
+
+/* ---------- 13. 桌面底部迷你播放器（v2 任务书 §3.2）----------
+   固定在视口底部，与内容区分离（聊天正文区不放常驻音乐面板）。
+   z-index 590：在跳过链接（600）之下、内容之上；手机弹层（880）打开时会被盖住，
+   同时 phone-host 会把它一起 inert。 */
+.mini {
+  display: none;
+}
+@media (min-width: 621px) {
+  .mini {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 590;
+  }
+}
+.mini-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 14px;
+  background: rgb(8 8 10 / 0.95);
+  border-top: 2px solid var(--paper);
+  box-shadow: 0 -8px 24px rgb(0 0 0 / 0.5);
+}
+.mini-open {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 6px;
+  background: none;
+  border: 0;
+  color: var(--paper);
+  text-align: left;
+  cursor: pointer;
+}
+.mini-open:hover,
+.mini-open:focus-visible {
+  background: rgb(230 0 18 / 0.14);
+}
+.mini-note {
+  flex: none;
+  color: var(--red);
+  font: 400 20px/1 var(--f-hat);
+}
+.mini-title {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 700 15px/1.2 var(--f-cjk);
+}
+.mini-artist {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--dim);
+  font: 400 12px/1 var(--f-cjk);
+}
+.mini-state {
+  flex: none;
+  margin-left: auto;
+  padding: 3px 8px;
+  border: 1px solid var(--dim);
+  color: var(--dim);
+  font: 500 11px/1 var(--f-mono);
+  letter-spacing: 0.08em;
+}
+.mini-state.on {
+  border-color: var(--red);
+  color: var(--black);
+  background: var(--red);
+}
+.mini-ctl {
+  flex: none;
+  display: flex;
+  gap: 6px;
+}
+.mini-btn {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-grid;
+  place-items: center;
+  background: rgb(10 10 11 / 0.82);
+  color: var(--paper);
+  border: 2px solid var(--paper);
+  clip-path: polygon(10% 0, 100% 8%, 90% 100%, 0 90%);
+  font: 500 14px/1 var(--f-mono);
+  cursor: pointer;
+}
+.mini-btn:hover:not(:disabled),
+.mini-btn:focus-visible {
+  background: var(--paper);
+  color: var(--black);
+}
+.mini-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.mini-btn.play {
+  background: var(--red);
+  border-color: var(--red);
+}
+.mini-panel {
+  max-height: min(52vh, 420px);
+  overflow: hidden auto;
+  padding: 12px 16px 14px;
+  background: rgb(8 8 10 / 0.97);
+  border-top: 1px solid rgb(244 241 234 / 0.18);
+}
+.mini-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.mini-kick {
+  margin: 0;
+  color: var(--red);
+  font: 400 12px/1 var(--f-hat);
+  letter-spacing: 0.16em;
+}
+.mini-collapse {
+  min-height: 32px;
+  padding: 0 10px;
+  background: none;
+  border: 1px solid var(--dim);
+  color: var(--paper);
+  font: 500 12px/1 var(--f-cjk);
+  cursor: pointer;
+}
+.mini-collapse:hover,
+.mini-collapse:focus-visible {
+  border-color: var(--paper);
+}
+.mini-list {
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+.mini-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 4px 8px;
+  background: none;
+  border: 1px solid transparent;
+  color: var(--paper);
+  text-align: left;
+  cursor: pointer;
+}
+.mini-item:hover,
+.mini-item:focus-visible {
+  border-color: var(--dim);
+}
+.mini-item.on {
+  border-color: var(--red);
+  background: rgb(230 0 18 / 0.16);
+}
+.mini-item-i {
+  flex: none;
+  width: 22px;
+  color: var(--red);
+  font: 500 12px/1 var(--f-mono);
+}
+.mini-item-t {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 600 14px/1.3 var(--f-cjk);
+}
+.mini-item-t em {
+  margin-left: 8px;
+  color: var(--dim);
+  font: 400 12px/1 var(--f-cjk);
+  font-style: normal;
+}
+.mini-slider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+.mini-slider-l {
+  flex: none;
+  width: 34px;
+  color: var(--dim);
+  font: 500 12px/1 var(--f-cjk);
+}
+.mini-slider input[type="range"] {
+  flex: 1;
+  min-width: 0;
+  height: 24px;
+  accent-color: var(--red);
+  /* 拖滑杆不误触页面滚动（任务书 §3.2） */
+  touch-action: none;
+  cursor: pointer;
+}
+.mini-slider input[type="range"]:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.mini-slider-v {
+  flex: none;
+  min-width: 92px;
+  color: var(--paper);
+  font: 500 12px/1 var(--f-mono);
+  text-align: right;
+}
+.mini-hint {
+  margin: 6px 0 0;
+  color: var(--dim);
+  font: 400 12px/1.5 var(--f-cjk);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mini-open,
+  .mini-btn,
+  .mini-item {
+    transition: none;
+  }
+}
+
+/* ---------- 14. 迷你播放器与旧站底部元素避让 ----------
+   旧站的问卷启动器固定在右下（bottom: 20px, z-index 500），会被全宽的迷你播放器
+   压住（实测 T02 套件点不到它）。这里把它抬到迷你栏之上 ——
+   只在本文件做覆盖，**不修改旧站快照** `styles/legacy/poll.css`。 */
+:root {
+  --mini-h: 58px;
+}
+@media (min-width: 621px) {
+  .poll-launcher {
+    bottom: calc(var(--mini-h) + max(20px, env(safe-area-inset-bottom)));
+  }
+}
