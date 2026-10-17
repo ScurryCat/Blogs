@@ -52,6 +52,17 @@ export function FeedView({
   const wrapRef = useRef<HTMLElement | null>(null);
   const feed = useMomentFeed(tag, { initial, initialCursor, initialError });
 
+  // 手机里没传 availableTags（服务端只在独立页给），从**已加载的动态**里派生。
+  // 否则手机里的标签 chip 只剩「全部」，用户根本没法在手机内切换筛选。
+  const tagNames = useMemo(() => {
+    if (availableTags.length > 0) return availableTags;
+    const seen = new Set<string>();
+    for (const moment of feed.items) {
+      for (const item of moment.tags) seen.add(item.name);
+    }
+    return [...seen];
+  }, [availableTags, feed.items]);
+
   useFeedScrollRestore(scrollKey(tag), feed.loaded, {
     enabled: true,
     consume: true,
@@ -93,7 +104,7 @@ export function FeedView({
             全部
           </SiteLink>
         )}
-        {availableTags.map((name) =>
+        {tagNames.map((name) =>
           onSelectTag ? (
             <button
               key={name}

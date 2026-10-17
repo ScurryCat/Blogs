@@ -53,6 +53,27 @@ describe("FeedView", () => {
     view.unmount();
   });
 
+  it("手机里（传 onSelectTag）：标签从已加载动态派生，点击走调用方而不是站内跳转", async () => {
+    stub = stubFetch([{ match: "/moments", body: page([makeApiMoment()]) }]);
+    const onSelectTag = vi.fn();
+    const view = render(
+      <FeedView tag={null} initial={[]} initialCursor={null} onSelectTag={onSelectTag} />,
+    );
+    await advance(20);
+
+    const chips = [...view.container.querySelectorAll("button.ins-chip")];
+    expect(chips.map((chip) => chip.textContent?.trim())).toContain("#校园");
+
+    const campus = chips.find((chip) => chip.textContent?.includes("校园")) ?? null;
+    click(campus);
+    expect(onSelectTag).toHaveBeenCalledWith("校园");
+
+    const all = chips.find((chip) => chip.textContent?.includes("全部")) ?? null;
+    click(all);
+    expect(onSelectTag).toHaveBeenLastCalledWith(null);
+    view.unmount();
+  });
+
   it("标签无结果时显示该标签的专属空态与「看全部动态」入口", async () => {
     stub = stubFetch([{ match: "/moments", body: page([]) }]);
     const view = render(<FeedView tag="校园" initial={[]} initialCursor={null} />);
