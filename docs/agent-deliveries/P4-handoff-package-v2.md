@@ -13,7 +13,7 @@
 | 文件 | 说明 |
 | --- | --- |
 | `tools/package-handoff.py`（新增） | 可复现打包脚本：收集文档与工具白名单 → 生成 HANDOFF（v2 横幅 + 原文）+ MANIFEST + SHA256SUMS → 写 zip；`--check` 只校验现有包 |
-| `docs/handoff-package-2026-10-17-v2.zip`（新增） | **v2 交接包**：94 个文件 / 约 580 KiB / 包内记录 HEAD 为打包时提交（`--check` 按祖先关系校验） |
+| `docs/handoff-package-2026-10-17-v2.zip`（新增） | **v2 交接包**：文件数/文档数以包内 `MANIFEST.txt` 为准（每次构建打印）／包内 HEAD 为打包时提交（`--check` 按祖先关系校验） |
 | `docs/agent-deliveries/HANDOFF-ADDENDUM-2026-10-17.md` | 补充说明（已随包分发），增加「与 v2 包一体」引用 |
 | `docs/agent-deliveries/P4-handoff-package-v2.md` | 本报告 |
 
@@ -26,9 +26,9 @@ handoff/
 ├── HANDOFF.md               # v2 更新横幅（指向 ADDENDUM + 说明 B1 仍不可判定）+ 第一版原文
 ├── MANIFEST.txt             # 文件清单 + 打包时间/HEAD/内容说明
 ├── SHA256SUMS               # 逐文件 sha256（含 HANDOFF.md）
-├── docs/agent-deliveries/   # 55 份交付单（含本会话新增 17 份：P2/P3/P4/HANDOFF-ADDENDUM…）
+├── docs/agent-deliveries/   # 全部交付单（含本会话新增的 P2/P3/P4/HANDOFF-ADDENDUM 系列）
 ├── docs/design-references/  # 9 份设计参考文档（含 reference-frame-gaps、allowlist、图标映射等）
-└── tools/                   # 27 个文件：验收脚本 + 端到端 + 种子 + p0 分析 + pg-local（含 acceptance/ 子目录）
+└── tools/                   # 验收/端到端/种子/p0 分析/pg-local/对比度审计（白名单见 package-handoff.py）
 ```
 
 - **新增进包的工具**：`tools/e2e-seed-previews.py`（视觉复核种子）、
@@ -44,7 +44,7 @@ handoff/
 | `python3 tools/package-handoff.py` 自检 | ✓ 91 个文件；包内 HEAD 是当前 HEAD 的祖先（允许落后） |
 | `python3 tools/package-handoff.py --check` | ✓ 必需文件齐全、MANIFEST 路径全部存在、包内 HEAD 与当前仓库是**祖先关系**（打包提交不可能与包同提交完成，允许落后）、HANDOFF 含 v2 横幅 |
 | 解压后逐文件校验 | `shasum -a 256 -c SHA256SUMS` **全部 OK** |
-| 文档完整性 | 仓库 `docs/agent-deliveries` 55 份 = 包内 55 份；`docs/design-references` 9 份 = 包内 9 份 |
+| 文档完整性 | 仓库 `docs/agent-deliveries` 与 `docs/design-references` 全部 md 均随包分发（`--check` 校验 MANIFEST 路径齐全） |
 | HANDOFF | v2 横幅存在（原文完整保留） |
 | 大小 | 约 578 KiB（未压缩约 1.27 MiB） |
 

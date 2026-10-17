@@ -563,7 +563,8 @@
   font: 400 14px/1 var(--f-disp, sans-serif);
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--red, #e5191c);
+  /* 小号红字在近黑底需 ≥4.5:1（品牌红只有 4.23）。 */
+  color: #ff4b4f;
 }
 
 .saveTitle {
@@ -842,7 +843,8 @@
   gap: 8px;
   min-height: 44px;
   padding: 10px 20px;
-  background: var(--red, #e5191c);
+  /* 纸白字在品牌红上只有 4.15:1 → 深红底（≈7.1:1）。 */
+  background: var(--red-deep, #9f0c12);
   color: var(--paper, #f4f1ea);
   border: 2px solid var(--black, #0a0a0b);
   font: 700 15px/1.2 var(--f-cjk, sans-serif);

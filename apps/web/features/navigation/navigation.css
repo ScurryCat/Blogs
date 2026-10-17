@@ -108,9 +108,10 @@
   border-color: var(--paper);
 }
 .pv-tab[aria-pressed="true"] {
-  background: var(--red);
-  border-color: var(--red);
-  color: var(--black);
+  /* 黑字在品牌红上只有 4.23:1 → 深红底 + 纸白字（≈7:1）。 */
+  background: var(--red-deep, #9f0c12);
+  border-color: var(--red-deep, #9f0c12);
+  color: var(--paper);
 }
 .pv-archive {
   margin-top: 8px;
@@ -211,7 +212,8 @@
   font: 400 11px/1.5 var(--f-hat);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--red);
+  /* 小号文字在近黑底上需要 ≥4.5:1（品牌红只有 4.23）。 */
+  color: var(--red-ink, #ff4b4f);
 }
 
 /* 归档年份入口 */

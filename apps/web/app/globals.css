@@ -960,6 +960,57 @@ html.ov-lock body {
   }
 }
 
+/* ---------- 15.2 小号文字对比度修正（WCAG AA） ----------
+   品牌红 #e5191c 在近黑底（#0a0a0b）上的对比度是 4.23:1，小号文字不达 WCAG AA 的 4.5:1。
+   只对**小号文字**引入更亮的 --red-ink（红色块、大标题与描边仍用品牌红）；
+   红底纸字的小徽标（.cn）改用深红底，纸白文字达标。 */
+:root {
+  --red-ink: #ff4b4f;
+}
+
+.kick,
+.pw-kick,
+.row-cat,
+.no,
+.sec-h .no,
+.n1-work-tech {
+  color: var(--red-ink);
+}
+
+.cn,
+.sec-h .cn,
+.cal-wd.we {
+  background-color: #a80c14;
+}
+
+/* 红底按钮/当前项：纸白字在品牌红上只有 4.15 → 深红底（≈7:1）。 */
+.btn.red {
+  background-color: var(--red-deep, #9f0c12);
+}
+
+.btn.red:hover,
+.btn.red:focus-visible {
+  color: var(--red-deep, #9f0c12);
+}
+
+/* 手机菜单当前项的红字（品牌红在近黑底上 4.23）。 */
+.pm.on .pm-c {
+  color: var(--red-ink);
+}
+
+/* 当前项/当前筛选：黑字或纸字压在品牌红上只有 4.15–4.23:1 → 深红底 + 纸白字。 */
+.chip[aria-pressed="true"] {
+  background-color: #a80c14;
+}
+
+.pm.on {
+  color: var(--paper);
+}
+
+.pm.on::before {
+  background: var(--red-deep, #9f0c12);
+}
+
 /* ---------- 16. 「我的殿堂」异世界短过场（第三轮 N5 · 任务书 §6.3）----------
    容器结构与旧站 `.clip`（VP9+alpha 抠像视频 + 纯色底衬）同思路，但独立成 `.isekai`：
    底衬用本站主题红，alpha 视频只负责红/黑墨迹层。这样即使浏览器不解码 alpha，

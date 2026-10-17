@@ -52,6 +52,7 @@ TOOL_WHITELIST = [
     "verify-all.sh",
     "verify-backend-isolated.sh",
     "verify-isolated.sh",
+    "audit-contrast.py",
 ]
 
 UPDATE_BANNER = """<!-- PACKAGE-V2 -->

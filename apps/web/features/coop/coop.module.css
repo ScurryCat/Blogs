@@ -30,7 +30,8 @@
   font-size: 12px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--accent, #d81f2a);
+  /* 小号红字在近黑底需 ≥4.5:1（#d81f2a 只有 3.91）。 */
+  color: #ff4b4f;
 }
 
 .title {
@@ -453,7 +454,8 @@
   font-size: 12px;
   letter-spacing: 0.14em;
   color: var(--paper, #f4f1ea);
-  background: var(--accent, #e5191c);
+  /* 纸白字在品牌红上只有 4.15:1 → 改深红底（≈7.1:1）。 */
+  background: #a80c14;
   padding: 2px 7px;
   transform: skewX(-9deg);
 }

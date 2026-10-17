@@ -491,6 +491,8 @@
 .plg-kicker {
   font: 400 12px/1.2 var(--f-disp, sans-serif);
   letter-spacing: 0.26em;
+  /* 小号红字在近黑底需 ≥4.5:1；#d3122a 只有 3.67，改用亮红。 */
+  color: #ff4b4f;
 }
 
 .plg-title {
