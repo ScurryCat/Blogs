@@ -199,13 +199,14 @@ describe("手机桌面", () => {
     expect(tiles).toEqual(["ins", "journal", "leisure", "coop", "showcase", "metanav"]);
     expect(view.container.querySelector(".pw-page-num")?.textContent).toContain("1 / 2");
 
-    // 第二页只有 4 个真实入口，**不塞占位 App** 填满网格。
+    // 第二页：4 个站点链接 + 固定排列之外**已登记的应用**追加在末页
+    // （天鹅绒房间 70 / 印象空间 80，第二轮 §4.8 补登记）。不塞占位 App 填满网格。
     click(view.container.querySelector('.pw-page-btn[aria-label="下一页"]'));
     await commit(view);
     const page2 = [...view.container.querySelectorAll(".pw-app")].map(
       (tile) => tile.getAttribute("data-app-id"),
     );
-    expect(page2).toEqual(["palace", "tokyo", "cast", "profile"]);
+    expect(page2).toEqual(["palace", "tokyo", "cast", "profile", "velvet", "mementos"]);
     expect(view.container.querySelector(".pw-music")).not.toBeNull();
   });
 

@@ -9,8 +9,10 @@
  */
 
 import { COOP_PHONE_MANIFEST } from "@/features/coop/phone-manifest";
+import { EXPLORATION_MANIFEST } from "@/features/exploration/phone-manifest";
 import { SHOWCASE_MANIFEST } from "@/features/showcase/phone-manifest";
 import { INS_MANIFEST } from "@/features/ins/phone-manifest";
+import { VELVET_MANIFEST } from "@/features/velvet/phone-manifest";
 
 import type { PhoneAppManifest, PhoneAppModule } from "./types";
 
@@ -27,6 +29,7 @@ export class PhoneRegistryError extends Error {}
  * **order 按 07 §7 的首屏顺序预留序位**（每档留 10，便于插入）：
  *
  *   ins(10) → 手记(20) → 放课后(30) → coop(40) → metanav(50) → 殿堂(60)
+ *   → 天鹅绒(70) → 印象空间(80)
  *
  * 「我的殿堂」不在 07 §7 的首屏清单里，因此排在既有顺序**之后**（60），不打断设计顺序。
  *
@@ -74,6 +77,11 @@ export const PHONE_APPS: readonly PhoneAppManifest[] = Object.freeze([
   COOP_PHONE_MANIFEST,
   // 我的殿堂由 T06 交付并自带 manifest。
   SHOWCASE_MANIFEST,
+  // 天鹅绒房间 / 印象空间由 T09 交付并自带 manifest（order 70 / 80）。
+  // 第二轮任务书 §4.8 要求它们成为手机内置应用；两包的 manifest 早就交齐，
+  // 但一直没登记（`?phone=velvet` 会静默回落到桌面）—— 这里补上登记。
+  VELVET_MANIFEST,
+  EXPLORATION_MANIFEST,
   {
     id: "metanav",
     name: "导航",

@@ -409,3 +409,293 @@
     padding: 18px 14px 20px;
   }
 }
+
+/* ==========================================================================
+   天鹅绒房间视觉细化 v1（2026-10-17，第二轮 §4.8）
+
+   参考（本地参考库，离线只读）：
+   - `persona5-spriters/p5/hud/92152-velvet-prison.png`：蓝黑牢房背景 + 冷光；
+     「ペルソナの登録 / 名簿記載」的**登记簿**语言（白字名簿网格 + 撕裂字体标题），
+     以及 現在のステータス / 登録済ステータス 一类白色栏目牌。
+   站点已有 T09 建立的冷色变量与牢门栅格（只在本组件子树内生效，未改全站红黑），
+   本轮在其上补「登记簿」观感：技能列表加登记编号、冷色硬阴影、撕裂字体标题、
+   合体面板更像登记台。**不新增等级/熟练度等数值**（数据本来就没有）。
+
+   样式隔离要求（`velvet-css.test.ts`）：所有选择器仍然只用 `.plv-` 前缀，
+   不覆盖全站 `--red/--black/--paper` 变量。
+   ========================================================================== */
+
+.plv-room {
+  container-type: inline-size;
+}
+
+.plv-bar {
+  border-bottom: 2px solid var(--v-ice);
+  padding-bottom: 14px;
+}
+
+.plv-kicker {
+  font-family: var(--f-disp, sans-serif);
+  letter-spacing: 0.28em;
+}
+
+.plv-title {
+  font-family: var(--f-disp, sans-serif);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-shadow: 3px 3px 0 rgb(159 216 255 / 0.35);
+}
+
+.plv-lead {
+  color: rgb(244 241 234 / 0.76);
+}
+
+/* 牢门面板：加强冷光边缘（栅格伪元素由既有实现提供）。 */
+.plv-gate {
+  border: 1px solid rgb(159 216 255 / 0.45);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.55),
+    0 0 28px rgb(43 92 147 / 0.35),
+    8px 8px 0 rgb(0 0 0 / 0.45);
+}
+
+/* 领域页签：冷色号牌，当前项冰蓝反白。 */
+.plv-tabs {
+  gap: 8px;
+}
+
+.plv-tab {
+  border: 2px solid rgb(159 216 255 / 0.45);
+  background: rgb(6 12 20 / 0.85);
+  color: var(--paper, #f4f1ea);
+  font-family: var(--f-hat, sans-serif);
+  letter-spacing: 0.1em;
+  padding: 8px 14px;
+  transform: skewX(-8deg);
+}
+
+.plv-tab[aria-current="true"] {
+  border-color: var(--v-ice);
+  background: var(--v-ice);
+  color: var(--v-blue-deep);
+  box-shadow: 4px 4px 0 rgb(0 0 0 / 0.5);
+}
+
+.plv-tab:hover,
+.plv-tab:focus-visible {
+  border-color: var(--v-ice);
+  background: rgb(159 216 255 / 0.16);
+  color: var(--v-ice);
+}
+
+.plv-tab[aria-current="true"]:hover {
+  background: var(--v-ice);
+  color: var(--v-blue-deep);
+}
+
+/* 技能列表＝登记簿：每张卡片一个登记编号（CSS counter，编号只是列表顺序）。 */
+.plv-cards {
+  counter-reset: velvet-entry;
+  gap: 18px;
+}
+
+.plv-card {
+  position: relative;
+  counter-increment: velvet-entry;
+  border: 2px solid rgb(159 216 255 / 0.4);
+  border-left: 6px solid var(--v-blue);
+  background:
+    linear-gradient(155deg, rgb(43 92 147 / 0.22), rgb(9 19 32 / 0.94) 55%),
+    rgb(9 19 32 / 0.92);
+  box-shadow: 6px 6px 0 rgb(0 0 0 / 0.5);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.plv-card::before {
+  content: "No." counter(velvet-entry, decimal-leading-zero);
+  display: inline-block;
+  margin: 0 0 8px;
+  padding: 2px 8px;
+  border: 1px solid var(--v-ice);
+  color: var(--v-ice);
+  font: 400 11px/1.3 var(--f-disp, sans-serif);
+  letter-spacing: 0.18em;
+  transform: skewX(-8deg);
+}
+
+.plv-card:hover,
+.plv-card:focus-visible {
+  border-color: var(--v-ice);
+  border-left-color: var(--v-ice);
+  box-shadow:
+    9px 9px 0 rgb(0 0 0 0.55),
+    0 0 22px rgb(159 216 255 / 0.28);
+  transform: translateY(-2px);
+}
+
+.plv-card-name {
+  font-family: var(--f-disp, sans-serif);
+  font-size: clamp(19px, 2vw, 23px);
+  letter-spacing: 0.02em;
+  text-shadow: 2px 2px 0 rgb(0 0 0 / 0.6);
+}
+
+.plv-card:hover .plv-card-name,
+.plv-card:focus-visible .plv-card-name {
+  color: var(--v-ice);
+}
+
+.plv-card-domain {
+  border: 1px solid var(--v-ice);
+  color: var(--v-ice);
+  transform: skewX(-8deg);
+}
+
+.plv-card-scope {
+  color: rgb(244 241 234 / 0.8);
+}
+
+.plv-card-meta {
+  border-top: 1px solid rgb(159 216 255 / 0.28);
+  padding-top: 10px;
+  color: var(--v-steel);
+}
+
+.plv-card-meta strong {
+  color: var(--v-ice);
+}
+
+/* 合体面板：两块登记台 + 中间的大「×」刻印。 */
+.plv-combo {
+  padding: 16px;
+  border: 1px solid rgb(159 216 255 / 0.4);
+  background:
+    linear-gradient(180deg, rgb(13 27 44 / 0.88), rgb(6 12 20 / 0.94));
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.5);
+}
+
+.plv-field-label {
+  color: var(--v-ice);
+  font-family: var(--f-hat, sans-serif);
+  letter-spacing: 0.12em;
+}
+
+.plv-select {
+  border: 2px solid rgb(159 216 255 / 0.45);
+  background: rgb(6 12 20 / 0.95);
+  color: var(--paper, #f4f1ea);
+  padding: 10px 12px;
+}
+
+.plv-select:focus-visible {
+  outline: 3px solid var(--v-ice);
+  outline-offset: 1px;
+}
+
+.plv-glyph {
+  font-family: var(--f-disp, sans-serif);
+  font-size: 34px;
+  color: var(--v-ice);
+  text-shadow: 3px 3px 0 rgb(0 0 0 / 0.6);
+}
+
+/* 按钮：冷色登记按钮。 */
+.plv-button {
+  border: 2px solid var(--v-ice);
+  color: var(--v-ice);
+  font-family: var(--f-hat, sans-serif);
+  letter-spacing: 0.08em;
+  padding: 10px 18px;
+  box-shadow: 3px 3px 0 rgb(0 0 0 / 0.5);
+}
+
+.plv-button:hover,
+.plv-button:focus-visible {
+  background: var(--v-ice);
+  color: var(--v-blue-deep);
+  box-shadow: 4px 4px 0 rgb(0 0 0 / 0.55);
+}
+
+.plv-button:disabled {
+  border-color: rgb(159 216 255 / 0.25);
+  color: var(--v-steel);
+  box-shadow: none;
+}
+
+.plv-button-ghost {
+  border-color: rgb(159 216 255 / 0.45);
+}
+
+/* 登记结果 / 证据 / 说明：冷色号牌与左侧光条。 */
+.plv-evidence-list a {
+  border: 1px solid rgb(159 216 255 / 0.45);
+  transform: skewX(-6deg);
+}
+
+.plv-note {
+  border-left: 5px solid var(--v-ice);
+  background: rgb(13 27 44 / 0.8);
+  box-shadow: inset 0 0 0 1px rgb(159 216 255 / 0.18);
+}
+
+.plv-alert {
+  border-left: 5px solid var(--red, #d40000);
+}
+
+.plv-empty {
+  border: 2px dashed rgb(159 216 255 / 0.4);
+  background: rgb(6 12 20 / 0.6);
+  color: var(--v-steel);
+}
+
+/* 技能详情页：登记条目 + 冷色章节。 */
+.plv-project-row {
+  border: 1px solid rgb(159 216 255 / 0.35);
+  background: rgb(9 19 32 / 0.9);
+  box-shadow: 4px 4px 0 rgb(0 0 0 / 0.4);
+}
+
+.plv-project-title {
+  font-family: var(--f-disp, sans-serif);
+}
+
+.plv-project-summary {
+  color: rgb(244 241 234 / 0.78);
+}
+
+.plv-table th {
+  border-bottom: 2px solid rgb(159 216 255 / 0.45);
+}
+
+.plv-table td {
+  border-bottom: 1px solid rgb(159 216 255 / 0.2);
+}
+
+/* 手机宿主 / 窄屏：登记卡单列、冷光收敛。 */
+@container (max-width: 680px) {
+  .plv-cards {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .plv-card {
+    box-shadow: 4px 4px 0 rgb(0 0 0 / 0.5);
+  }
+
+  .plv-combo {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  .plv-glyph {
+    font-size: 26px;
+    padding: 2px 0;
+  }
+
+  .plv-title {
+    font-size: 27px;
+  }
+}

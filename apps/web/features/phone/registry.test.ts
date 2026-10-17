@@ -10,6 +10,7 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { APP_ICONS } from "./app-icons";
 import { PHONE_APPS, PhoneRegistryError, createPhoneRegistry } from "./registry";
 import type { PhoneAppManifest, PhoneAppModule, PhoneHost } from "./types";
 import { TEST_APP_ID, testAppManifest } from "./__fixtures__/test-app";
@@ -39,7 +40,7 @@ describe("手机应用注册表", () => {
 
     // 断言具体清单：新增/移除登记时集成负责人会被强制确认一次，而不是静默改变桌面。
     expect(registry.manifests().map((manifest) => manifest.id)).toEqual(
-      ["ins", "journal", "leisure", "coop", "metanav", "showcase"],
+      ["ins", "journal", "leisure", "coop", "metanav", "showcase", "velvet", "mementos"],
     );
   });
 
@@ -49,6 +50,28 @@ describe("手机应用注册表", () => {
     for (const manifest of createPhoneRegistry(PHONE_APPS).manifests()) {
       const file = path.join(process.cwd(), "public", manifest.icon.replace(/^\//, ""));
       expect(existsSync(file), `${manifest.id} 的图标不存在：${manifest.icon}`).toBe(true);
+    }
+  });
+
+  it("每个登记应用都有桌面图标资源（app/<id>.png 或自绘 SVG）", () => {
+    // 桌面 `ICON_STYLE="raster"` 会请求 `app/<id>.png`；新增登记但没准备位图时，
+    // 桌面会出现裂图（真实踩过：登记 velvet / mementos 后 404）。
+    // 允许用自绘 SVG 兜底，但至少要有一个真实存在的图标来源。
+    for (const manifest of createPhoneRegistry(PHONE_APPS).manifests()) {
+      const raster = path.join(
+        process.cwd(),
+        "public",
+        "assets",
+        "legacy",
+        "img",
+        "app",
+        `${manifest.id}.png`,
+      );
+      const hasSvg = Boolean(APP_ICONS[manifest.id]);
+      expect(
+        existsSync(raster) || hasSvg,
+        `${manifest.id} 没有桌面图标：既没有 ${raster}，也没有自绘 SVG 条目`,
+      ).toBe(true);
     }
   });
 

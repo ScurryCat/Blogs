@@ -30,7 +30,7 @@
 | --- | --- | --- | --- |
 | 角色头像图标 | 9 | `/assets/legacy/img/icon/*.webp` | 各为对应 PT 角色（Joker/Fox/Morgana/Noir/Oracle/Panther/Queen/Skull/Violet），无明智 |
 | 适配图标 | 1 | `/assets/legacy/img/icon/mementos.webp` | 由 `app/metanav.png` 转格式；红黑星形导航符号，无角色/文字 |
-| 手机 app 图标 | 10 | `/assets/legacy/img/app/*.png` | 第二轮 AI 生成的功能线图标；逐张实看，无角色/文字 |
+| 手机 app 图标 | 12 | `/assets/legacy/img/app/*.png` | 第二轮 AI 生成的 10 张功能线图标 + 第二轮 P4 补的 2 张格式转换图标（`velvet.png` / `mementos.png`，见 §2.4）；逐张实看，无角色/文字 |
 | 角色立绘 | 10 | `/assets/legacy/img/portrait/*.png` | PT 成员 / Joker（其中 `joker.png` 实为 Arsène、`morgana-thief.webp` 实为芳泽霞，见 §2.3 命名问题） |
 | 文章封面 | 9 | `/assets/legacy/img/cover/*.jpg` | 8 张为 PT 角色插画；`platinum.jpg` 已替换为天鹅绒房间空景（见 §2.1） |
 | 美术 / 背景 / UI | 9 | `hero-joker.webp`、`joker-aoa.png`、`joker-thief.webp`、`morgana-thief.webp`、`logo-p5r.webp`、`bg-leblanc.jpg`、`bg-velvet.jpg`、`phone/frame.webp`、`ui/dialog.png` | 均无明智 |
@@ -70,6 +70,20 @@
 
 > 手机桌面实际图标样式为 `ICON_STYLE="raster"`（`app/<id>.png`）；角色头像文件仅作 manifest
 > 回退值与数据记录。两处引用替换后，浏览器不再请求 `icon/crow.webp`（见 N6-result 第 7 节下载证据）。
+
+### 2.4 手机桌面新增应用图标（2026-10-17，第二轮 P4 登记补齐）
+
+登记「天鹅绒房间 / 印象空间」到手机桌面后，桌面 `ICON_STYLE="raster"` 会请求
+`app/<id>.png`；两个新应用没有位图会 404（裂图）。补两张**格式转换**（非 AI 重绘）：
+源文件都是本清单已允许的迁移素材，只做 WebP→PNG 无损容器转换，尺寸不变。
+
+| 公开路径 | 源文件 | 处理 | SHA-256（前 16 位） |
+| --- | --- | --- | --- |
+| `app/velvet.png`（160×160 RGBA） | `icon/queen.webp`（Queen 角色头像图标） | WebP→PNG，Pillow 无损重编码，**非 AI 重绘** | `e0f5ad6f4a7bed58…` |
+| `app/mementos.png`（128×128 RGBA） | `icon/mementos.webp`（红黑星形导航符号） | WebP→PNG，Pillow 无损重编码，**非 AI 重绘** | `4cf676ebeabcbe53…` |
+
+> 用途仅限桌面 34×34 应用图标；`features/phone/registry.test.ts` 新增回归断言：
+> 每个登记应用必须有 `app/<id>.png` 或自绘 SVG，避免下次登记再出现裂图。
 
 ### 2.3 命名与画面不一致的已知记录（不影响清理结论，未改名）
 
