@@ -729,7 +729,8 @@ html.ov-lock body {
   color: var(--red-ink);
 }
 
-.cn,
+/* 注意：这里**不能**用通用 `.cn` —— 首页 Hero 的「怪盗手记」也是 `.cn`，
+   会被整体刷上深红底（站主反馈的红带）。只给区块徽标 `.sec-h .cn` 上色。 */
 .sec-h .cn,
 .cal-wd.we {
   background-color: #a80c14;
@@ -767,6 +768,69 @@ html.ov-lock body {
     content: "";
     position: absolute;
     inset: -12px 0;
+  }
+}
+
+/* ---------- 15.4 首页 Hero：去「怪盗手记」红底后，首屏完整显示 ----------
+   站主指令（2026-10-17 晚）：
+   1) 只去掉「PHANTOM LOG」下方「怪盗手记」的红底（来源是上面 15.2 的通用 `.cn`，
+      现已收窄为 `.sec-h .cn`）；
+   2) 打开首页（首屏、不滚动）就要完整看到人物卡片 + 左侧 5 个选择栏。
+   做法：桌面按视口高度（svh）统一收一档，人物卡按剩余高度限高；
+   不改区块顺序/构图，只在 ≥901px 生效（手机维持上下滚动布局）。
+   实测目标：1024×768 ~ 1920×1080 的常见桌面视口，Hero 整体 ≤ 一屏。 */
+@media (min-width: 901px) {
+  /* Hero 整体收进一屏：原 padding-bottom 70px 让 hero 比视口高出一截。 */
+  .hero {
+    min-height: 100svh;
+    padding-bottom: clamp(8px, 1.2svh, 18px);
+  }
+
+  .hero-in {
+    min-height: 0;
+    max-height: calc(100svh - var(--hud, 66px) - 30px - clamp(8px, 1.2svh, 18px));
+    align-items: center;
+    gap: clamp(16px, 2.2vw, 34px);
+  }
+
+  /* 标题两行是最大的一块：用 min(vw, svh) 让矮屏优先按高度收。 */
+  .hero-t .en {
+    font-size: clamp(56px, min(9.4vw, 16.5svh), 140px);
+  }
+
+  .hero-t .cn {
+    margin-top: clamp(6px, 0.8svh, 12px);
+    font-size: clamp(24px, min(3.1vw, 4.8svh), 44px);
+  }
+
+  .hero-lead {
+    margin: clamp(8px, 1.3svh, 14px) 0 clamp(10px, 1.7svh, 18px);
+    font-size: clamp(12px, 1.55svh + 2px, 15px);
+    max-width: 32em;
+  }
+
+  .pause {
+    margin-top: clamp(4px, 0.8svh, 10px);
+  }
+
+  .pm {
+    font-size: clamp(25px, min(3.4vw, 4.9svh), 52px);
+    padding: 0 18px 0 8px;
+  }
+
+  .pause li {
+    margin-left: calc(var(--i) * clamp(10px, 1.5vw, 22px));
+  }
+
+  .pause-hint {
+    margin-top: clamp(5px, 0.8svh, 12px);
+  }
+
+  /* 人物卡同步限高：只缩高度，宽度/裁切/相框/旋转不变形。 */
+  .art-frame img {
+    height: min(740px, calc(100svh - var(--hud, 66px) - 190px));
+    width: 100%;
+    object-fit: cover;
   }
 }
 
