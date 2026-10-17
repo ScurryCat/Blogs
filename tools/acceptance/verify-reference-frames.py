@@ -82,6 +82,32 @@ EXPECTED = {
         (1920, 1080),
         "东京地图整屏帧（东京漫游参考）",
     ),
+    # --- 2026-10-18 第三批：界面整屏帧（天鹅绒/印象空间/COOP/殿堂/放课后） ---
+    "hud/p5r-velvet-room-fullframe.jpg": (
+        "2ee23c9363ebc617ff82d2d88393d5ffbd4ff55f961f8dfb8eea0f46389457cc",
+        (3840, 2160),
+        "天鹅绒房间整屏帧（P5R Velvet Room）",
+    ),
+    "hud/p5-mementos-fullframe.jpg": (
+        "e94b414fda0caea2575a68a0435db25e0c09676a23c9478437694280b75df3f4",
+        (800, 447),
+        "印象空间整屏帧（Mementos Aiyatsbus）",
+    ),
+    "hud/p5r-coop-confidant-fullframe.jpg": (
+        "b3ef4cc5615854ae6d784bb2bac56bcbd34534d10b869f4bd3c6951690ebace8",
+        (1400, 788),
+        "COOP 协助者整屏帧（Confidant 升阶）",
+    ),
+    "hud/p5-palace-treasure-fullframe.jpg": (
+        "a5e4d4ce11edc42c6ef228583c024a9e5f306a432ba4a250e74c864ae62da3f3",
+        (1280, 720),
+        "殿堂整屏帧（宝库/殿堂内景）",
+    ),
+    "hud/p5-leisure-batting-fullframe.jpg": (
+        "69aeee91e074a6b911dc5c968610e210e272a771196e71c349c666b5cb59d0d8",
+        (1281, 723),
+        "放课后整屏帧（打击练习场迷你游戏）",
+    ),
 }
 
 failures: list[str] = []

@@ -156,7 +156,7 @@
   细化 v1（2026-10-17，见 `P3-mementos-visual-result.md`）。
   两者**整屏还原仍标未完成**。
 
-## 7. 2026-10-18 补帧记录（验收 v2 §5.1 / §7.3，共 12 张完整帧）
+## 7. 2026-10-18 补帧记录（验收 v2 §5.1 / §7.3，共 17 张完整帧）
 
 > 执行方式：Yandex 图片检索定位候选 → 下载 → 人眼逐帧核对 → dHash 与本地帧交叉比对 →
 > 写入外部精选库 `persona-curated/hud/` → 仓库脚本复验哈希。
@@ -182,5 +182,16 @@
 | `p5-map-school-fullframe.jpg` | 校内地图整屏帧 | `https://www.gameuidatabase.com/uploads/Persona-511142020-082124-80802.jpg` | 1920×1080 / `1c9e0717…` | Shujin Academy 1F 平面图 + 图例；无明智 |
 | `p5-tokyo-map-fullframe.jpg` | 东京地图整屏帧 | `https://www.gameuidatabase.com/uploads/Persona504202020-044456.jpg` | 1920×1080 / `b5036e93…` | 东京城市地图 + 日期覆盖 + Joker 剪影；无明智 |
 
-复验脚本：`python3 tools/acceptance/verify-reference-frames.py`（**12/12** 帧存在、哈希/尺寸/索引/来源一致；
-参考库不存在时 SKIP）。**存档/读取整屏帧已补齐**；仍缺：殿堂/天鹅绒/印象空间/COOP/放课后等界面整屏帧。
+### 7.3 第三批：界面整屏帧（天鹅绒/印象空间/COOP/殿堂/放课后，2026-10-18）
+
+| 帧（`persona-curated/hud/`） | 用途 | 来源 | 规格 / SHA-256 | 画面复核 |
+| --- | --- | --- | --- | --- |
+| `p5r-velvet-room-fullframe.jpg` | **天鹅绒房间整屏帧** | `https://i.playground.ru/i/pix/3183010/image.jpg` | 3840×2160 / `2ee23c93…` | P5R 蓝色天鹅绒房间内景 + Igor/Lavenza；无明智 |
+| `p5-mementos-fullframe.jpg` | **印象空间整屏帧** | `https://blogger.googleusercontent.com/.../s1600/p5-07.png` | 800×447 / `e94b414f…` | Mementos「Aiyatsbus: Area 1」+ HUD；无明智（原图分辨率较低，如实记录） |
+| `p5r-coop-confidant-fullframe.jpg` | **COOP 协助者整屏帧** | `https://telegra.ph/file/00eba9dd4038e3fca38c5.jpg` | 1400×788 / `b3ef4cc5…` | CONFIDANT / Arcana Fool / RANK 1 / NEW ABILITY；无明智 |
+| `p5-palace-treasure-fullframe.jpg` | **殿堂整屏帧** | `https://i.ytimg.com/vi/RFZtVfi35PE/maxresdefault.jpg` | 1280×720 / `a5e4d4ce…` | 宫殿宝库内景 + Futaba 对话；无明智 |
+| `p5-leisure-batting-fullframe.jpg` | **放课后整屏帧** | `https://cdn.segmentnextimages.com/wp-content/uploads/2023/06/persona-5-batting-cage.jpg` | 1281×723 / `69aeee91…` | 打击练习场 HOMERUN 记分牌 + Swing/Stop；无明智 |
+
+复验脚本：`python3 tools/acceptance/verify-reference-frames.py`（**17/17** 帧存在、哈希/尺寸/索引/来源一致；
+参考库不存在时 SKIP）。**存档/读取 + 天鹅绒/印象空间/COOP/殿堂/放课后整屏帧均已补齐**；
+仍缺：真实设备渲染证据、IM 图片消息协议（B4）；部分帧来源 URL 未核实（已在来源记录标注）。

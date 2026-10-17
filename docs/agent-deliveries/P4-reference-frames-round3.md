@@ -1,4 +1,4 @@
-# 参考帧补齐（验收 v2 §5.1 / §7.3，两批共 12 张）
+# 参考帧补齐（验收 v2 §5.1 / §7.3，三批共 17 张）
 
 > 验收报告剩余项：「补存档 / IM 等完整参考和视觉对照证据」。
 > 日期：2026-10-18 ｜ 范围：外部精选库 `persona-curated/hud/` 新增 6 张完整帧 +
@@ -14,6 +14,7 @@
 | **手机 HUD 完整帧**（日期/IM 通知/小地图） | 无 | ✅ 街景 HUD 完整帧 1 张 |
 | **存档/读取整屏帧** | 缺 | ✅ 有完整 1920×1080 帧（P5 Load Game 存档槽界面） |
 | 手机主屏 / 日历 / 五维状态 / 校内地图 / 东京地图 | 无 | ✅ 各有 1 张 P5 完整帧 |
+| **天鹅绒 / 印象空间 / COOP / 殿堂 / 放课后** | 无 | ✅ 各有 1 张整屏帧（第三批） |
 
 新增 12 帧（P5R 6 + P5 6）均在外部精选库 `assets/reference/persona-curated/hud/`，逐帧实看**无明智吾郎**；
 来源/哈希/规格/画面复核见 `docs/design-references/reference-frame-gaps.md` §7 与
@@ -56,9 +57,22 @@ P5 原版完整帧（全部 1920×1080，逐帧实看无明智吾郎）：
 
 来源 URL 与哈希见 `reference-frame-gaps.md` §7.2；`verify-reference-frames.py` 扩展为 **12/12**。
 
+## 4.1 第三批：界面整屏帧（2026-10-18）
+
+补充 5 张界面整屏帧（逐帧实看无明智吾郎）：
+
+| 帧 | 用途 |
+| --- | --- |
+| `p5r-velvet-room-fullframe.jpg` | 天鹅绒房间（P5R 内景 + Igor/Lavenza） |
+| `p5-mementos-fullframe.jpg` | 印象空间（Mementos Aiyatsbus Area 1 + HUD） |
+| `p5r-coop-confidant-fullframe.jpg` | COOP 协助者（Confidant 升阶 / Arcana / New Ability） |
+| `p5-palace-treasure-fullframe.jpg` | 殿堂（宝库内景 + 对话框） |
+| `p5-leisure-batting-fullframe.jpg` | 放课后（打击练习场迷你游戏 HUD） |
+
+来源/哈希见 `reference-frame-gaps.md` §7.3；`verify-reference-frames.py` 扩展为 **17/17**。
+
 ## 5. 仍未关闭（不冒充完成）
 
-1. **殿堂 / 天鹅绒 / 印象空间 / COOP / 放课后** 等界面仍没有整屏参考帧（只有元件表/截图）；
-2. 回复选择帧为 P5R 英文 UI、部分帧来源 URL 未核实（G4 同口径）；
-3. 真实触控 / 软键盘 / 移动 Safari 与 IM 图片消息（B4）仍待解决；
-4. 所有帧许可状态「未核实」，仅本地开发参考，不进入网站构建或公开分发。
+1. **真实触控 / 软键盘 / 移动 Safari** 与 **IM 图片消息（B4）** 仍待解决（非参考帧问题）；
+2. 回复选择帧为 P5R 英文 UI；部分帧来源 URL 未核实（G4 同口径，已在记录中标注）；
+3. 所有帧许可状态「未核实」，仅本地开发参考，不进入网站构建或公开分发。
