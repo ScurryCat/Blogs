@@ -922,3 +922,38 @@ html.ov-lock body {
   padding-top: 8px;
   border-top: 1px solid rgb(244 241 234 / 0.18);
 }
+
+/* ---------- 16. 「我的殿堂」异世界短过场（第三轮 N5 · 任务书 §6.3）----------
+   容器结构与旧站 `.clip`（VP9+alpha 抠像视频 + 纯色底衬）同思路，但独立成 `.isekai`：
+   底衬用本站主题红，alpha 视频只负责红/黑墨迹层。这样即使浏览器不解码 alpha，
+   看到的也是一次纯红闪，**不会露出绿幕或黑屏**；视频未就绪时协调器根本不会进这一层，
+   而是走 `.wipe` 斜切兜底。
+   层级：手机宿主 880 / 人群与 Joker 899 / 斜切 900 → 异世界 901（覆盖手机）。
+   跳过按钮在容器外（容器是 aria-hidden 装饰层），只在播放中出现。 */
+.isekai {
+  position: fixed; inset: 0; z-index: 901; overflow: hidden;
+  background: var(--red);
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .14s linear, visibility 0s linear .14s;
+}
+.isekai.on { opacity: 1; visibility: visible; transition: opacity .06s linear; }
+.isekai video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.isekai-skip {
+  position: fixed; z-index: 902; display: none; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 44px; padding: 0 14px;
+  right: max(16px, env(safe-area-inset-right));
+  top: calc(max(16px, env(safe-area-inset-top)) + 56px);
+  background: var(--black); color: var(--paper);
+  border: 2px solid var(--paper); box-shadow: 4px 4px 0 rgb(0 0 0 / .45);
+  font: 700 13px/1 var(--f-mono); letter-spacing: .06em; cursor: pointer;
+  touch-action: manipulation;
+}
+.isekai-skip[hidden] { display: none; }
+.isekai-skip.is-on { display: inline-flex; }
+.isekai-skip:hover,
+.isekai-skip:focus-visible { background: var(--paper); color: var(--black); border-color: var(--black); }
+.isekai-skip:focus-visible { outline: 3px solid var(--paper); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  .isekai { display: none !important; }
+  .isekai-skip { display: none !important; }
+}
