@@ -54,11 +54,43 @@
 
 ## 4. 提取说明（可复现）
 
-- 方法：RGBA 透明度连通域（8 邻域）分块，过滤 <60px（按钮表）/ <400px（IM 表）/ <250px（头像表）的噪点，输出逐块 PNG + `bbox` 坐标 JSON。
-- **身份核对缺口**：提取只证明「有这些元件与坐标」，**每个 sprite 是哪个图标尚未核对** ——
-  本轮开发模型无图像输入，此步需图像能力复核后回填本表（不标注身份的元件不得接入前端）。
-- 大表（`92093-confidant-icons` 3592×6730、`92120-calendar` 3592×4103、`132783-photos-im`、
-  `92711/92712`）**尚未提取**，P0 后续轮次按同样方法处理。
+脚本（提交在仓库里，只读参考库、只写 `.dsh/p0-analysis/`）：
+
+```bash
+python3 tools/p0-extract-sheets.py     # 大表连通域提取（scipy.ndimage.label）
+python3 tools/p0-contact-sheets.py     # 排成带编号的对照图，供人工/图像模型核对
+# 早期三张表用同法提取（脚本内 SHEETS 可加）：
+#   p5r-buttons(19) / p5-profile-pics(50) / p5r-im-assets(82)
+```
+
+### 4.1 提取结果总表
+
+| 表 | 原图尺寸 | sprite 数 | 对照图 |
+| --- | --- | --- | --- |
+| P5R 按钮/图标 `134224-buttons-icons` | 461×150 | **19** | `contact-p5r-buttons.png` |
+| P5 头像表 `92141-profile-pictures` | 1024×512 | **50** | `contact-p5-profile-pics.png` |
+| P5R IM 元件 `132782-im-assets-cn-jp` | 2560×768 | **82** | `contact-p5r-im-assets.png` |
+| P5 协助者/阿卡那 `92093-confidant-icons` | 3592×6730 | **124** | `contact-p5-confidant.png` |
+| P5 日历 `92120-calendar-jpn` | 3592×4103 | **147** | `contact-p5-calendar.png` |
+| P5 迷你游戏 `92711-minigames-jpn` | 1064×3448 | **102** | `contact-p5-minigames.png` |
+| P5 商店 `92712-shops` | 532×1576 | **39** | `contact-p5-shops.png` |
+| P5R IM 照片集 `132783-photos-im` | 3846×2053 | **1（整张连通）** ✗ | — |
+
+- 合计 **563** 个 sprite，逐个带 `bbox` 坐标（`<前缀>-report.json`）。
+- **`132783-photos-im` 无法用连通域切分**：照片是满幅拼贴、彼此相接，整张只连通成 1 块。
+  若要按照片切分，需要手工框选或按网格裁切 —— 记录为限制，不假装已切好。
+
+### 4.2 身份核对流程（缺口 + 现成入口）
+
+提取只证明「有这些元件与坐标」，**每个 sprite 是哪个图标尚未核对**。本轮执行模型无图像输入，
+因此生成了**带序号的对照图**降低复核成本：
+
+1. 打开 `.dsh/p0-analysis/contact-<前缀>.png`（每格左上角的数字 = 报告 JSON 的 `index`）；
+2. 对照原版界面确认「这个序号是什么」；
+3. 回填本文件第 2 节表格的「处理方式」列，并注明游戏版本与语言；
+4. **未回填身份的 sprite 不得接入前端**。
+
+> 对照图与切图是本地分析产物（`.dsh/`，不入库），脚本入库保证可复现。
 
 ## 5. 现状与结论
 
