@@ -11,12 +11,18 @@ import { site } from "@/features/legacy/config";
 import { rn } from "@/features/legacy/text/ransom";
 import { SiteLink } from "@/features/runtime/navigation/site-link";
 
+/**
+ * 首页暂停菜单（第三轮 §2.1 / §1）。
+ *
+ * 这里与顶部五栏目用**同一套内容职责命名**，不再出现「Palace Index / 宫殿索引」
+ * 这个会与作品集混淆的文章列表名；天气退出菜单（保留手机与地图入口）。
+ */
 const MENU = [
-  { href: "/#latest", en: "Calling Card", cn: "预告信" },
-  { href: "/#posts", en: "Palace Index", cn: "文章" },
-  { href: "/map", en: "Tokyo Map", cn: "地图" },
-  { href: "/weather", en: "Forecast", cn: "天气" },
-  { href: "/about", en: "Confidant", cn: "关于我" },
+  { href: "/posts", en: "Intel Archive", cn: "情报档案" },
+  { href: "/apps/leblanc", en: "Leblanc", cn: "勒布朗" },
+  { href: "/showcase", en: "My Palace", cn: "我的殿堂" },
+  { href: "/map", en: "Tokyo Roam", cn: "东京漫游" },
+  { href: "/about", en: "Dossier", cn: "人物档案" },
 ] as const;
 
 export function HomeHero(): ReactNode {

@@ -3,7 +3,7 @@
  *
  * 为什么放在这里而不是 `registry.ts`：`registry.ts` 归 T00，且它目前**只有正式
  * 内置应用清单**（INS / 导航 / 日常由 T03–T07 登记）。这里登记的是**已经迁移完成、
- * 真的能打开的页面**（地图 / 天气 / 档案 / 宫殿索引），所以不是「尚未上线的坏按钮」。
+ * 真的能打开的页面**（地图 / 天气 / 档案 / 情报档案），所以不是「尚未上线的坏按钮」。
  *
  * 宿主只按类型消费：`site-link` 走 `canonical_path` + `source: phone-link`，
  * 与 `embedded` 走同一条渲染路径，没有针对具体应用的条件分支。
@@ -15,11 +15,12 @@ export const LEGACY_PHONE_APPS: readonly PhoneAppManifest[] = Object.freeze([
   {
     id: "palace",
     name: "情报",
-    subtitle: "宫殿索引",
+    subtitle: "情报档案",
     icon: "/assets/legacy/img/icon/joker.webp",
     order: 10,
     kind: "site-link",
-    canonical_path: "/#posts",
+    // 第三轮 §2.2：文章列表的正式位置是 /posts（/#posts 只是旧锚点兼容）。
+    canonical_path: "/posts",
     feature_flag: null,
     state_version: 1,
   },

@@ -26,8 +26,8 @@ export default function NotFound(): ReactNode {
       <p style={{ color: "var(--dim)", margin: 0 }}>
         这个地址没有对应的内容。回到菜单换个目标吧。
       </p>
-      <SiteLink className="btn red" href="/#posts" source="top-nav">
-        <span>返回宫殿索引</span>
+      <SiteLink className="btn red" href="/posts" source="top-nav">
+        <span>返回情报档案</span>
       </SiteLink>
     </section>
   );
