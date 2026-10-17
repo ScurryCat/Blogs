@@ -23,7 +23,7 @@
 | 浏览器 T02 + 取数审计 | **52 / 52** + 0 失败 | 段 4（隔离构建，不抢共享 `.next`）|
 | 多视口 × 缩放档 | **11 项全绿**（3 视口 × 3 缩放 + 320/390） | 段 5 |
 | 业务流验收脚本 ×4 | **全部退出码 0** | 段 6 |
-| **真实浏览器端到端 ×2** | **PASS**（手机滚动恢复 / IM 草稿）| `tools/verify-all.sh --e2e`（自动起停隔离全栈）|
+| **真实浏览器端到端 ×6** | **PASS** —— 手机滚动恢复 / IM 草稿 / 手记正文(P3) / 殿堂正文(P4) / INS 标签(P1) / INS 会话(P2) | `tools/verify-all.sh --e2e`（自动起停隔离全栈）|
 | 迁移链 | 10 迁移 / 36 表 / 可回滚 / 单头 `b7c3e9a1d2f4` | 第 8 轮隔离库验证 |
 | 契约同步 | 通过 | `pytest apps/api/tests/test_openapi_contract.py` |
 
@@ -63,10 +63,10 @@
 
 ## 六、待决策的两条观察
 
-- **O1（已扩成专项审计）**：手机内「应用内状态却离开手机」共 **4 处** ——
-  P1 INS 标签、P2 INS 消息会话、P3 手记读取、P4 导航殿堂详情（详见
-  `phone-internal-navigation-audit.md`）。**关键发现：手机 URL 已有 `phone/screen/item`，
-  足以表达这四种状态，不需要改 URL 契约**；方案已在专项文档里，**等决策**。
+- ~~**O1**~~ → **已完成（第 43–49 轮）**：手机内「应用内状态却离开手机」共 4 处
+  （P1 INS 标签、P2 INS 消息会话、P3 手记读取、P4 导航殿堂详情），**全部改为手机内屏幕**
+  并逐项通过真实浏览器端到端验证。全程**未改 URL 契约**（沿用已有的 `phone/screen/item`）。
+  详见 `phone-internal-navigation-audit.md`。
 - **O2** 手机里的 IM 可能**嵌套滚动**（列表自带 520px 上限 + 屏幕也是滚动区）。属视觉精修。
 
 ## 七、验证工具（全部已实跑，命令均可直接运行）
@@ -85,6 +85,11 @@
 | `tools/e2e-seed-journal.py` | 给隔离环境造公开手记（含 4 个实测踩到的 API 细节）|
 | `tools/e2e-phone-scroll.py` | 端到端：手机里手记「列表 → 读取 → 返回」滚动位置恢复 |
 | `tools/e2e-im-draft.py` | 端到端：IM 草稿「离开会话 → 再进入」后仍在 |
+| `tools/e2e-journal-reading.py` | 端到端：手记「读取手记」留在手机内（审计 P3）|
+| `tools/e2e-metanav-palace.py` | 端到端：导航「进入殿堂」留在手机内（审计 P4）|
+| `tools/e2e-ins-tag.py` | 端到端：INS 标签筛选留在手机内（审计 P1）|
+| `tools/e2e-ins-conversation.py` | 端到端：INS 点角色进入会话留在手机内（审计 P2）|
+| `tools/e2e-seed-palaces.py` | 给隔离环境造殿堂（幂等；需先导入文章才能发布）|
 
 ## 八、文档地图（哪份是权威）
 
@@ -95,7 +100,7 @@
 | `integration-snapshot-round8.md` / `round11.md` | 历史快照（第 8/11 轮的现场，**不代表当前状态**）|
 | `P0–P3-result.md` | 各阶段交付说明（历史，按阶段记录）|
 | `N0–N6-result.md` | 并行 worker 的第三轮交付（**不同任务书**，勿与第二轮混用判定）|
-| `phone-internal-navigation-audit.md` | **专项审计**：手机内 4 处「应用内状态却离开手机」+ 统一方案（**待决策**）|
+| `phone-internal-navigation-audit.md` | **专项审计**：手机内 4 处「应用内状态却离开手机」—— **已全部修复并通过端到端验证** |
 
 ## 九、给 Lead 的判定建议
 
