@@ -521,3 +521,17 @@ html.ov-lock body {
 .pw-app:focus-visible .g-svg {
   color: var(--red);
 }
+
+/* ---------- 11. 滑杆的变换感知轴标记 ----------
+   三个零尺寸标记给 phone-music-card 的委托命中/取值用（v2 任务书 §3.1）。
+   不参与绘制与命中，只是几何参考点。 */
+.pw-axis {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+/* 斜屏上的滑杆拖动不应触发页面滚动：指针捕获后由卡片自己消化水平手势 */
+.pw-bar {
+  touch-action: none;
+}
