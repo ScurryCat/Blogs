@@ -76,6 +76,16 @@ def git_head() -> str:
     return run("git", "rev-parse", "--short", "HEAD").strip()
 
 
+def is_ancestor(ancestor: str, descendant: str) -> bool:
+    """`ancestor` 是否是 `descendant` 的祖先（包内 HEAD 通常落后于当前 HEAD 1–2 个提交，
+    因为「生成包」与「提交包」不可能在同一个提交里完成）。"""
+    try:
+        run("git", "merge-base", "--is-ancestor", ancestor, descendant)
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+
 def file_sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -179,14 +189,22 @@ def check(out: Path) -> int:
             print(f"✗ MANIFEST 列出但包里没有：{sorted(absent)}")
             return 1
         head_line = next((line for line in manifest.splitlines() if line.startswith("打包时间")), "")
-        if head not in head_line:
-            print(f"✗ MANIFEST 的 HEAD 与当前仓库不一致（期望 {head}）：{head_line}")
+        pkg_head = head_line.split("HEAD ")[-1].split("（")[0].strip() if "HEAD " in head_line else ""
+        if not pkg_head:
+            print(f"✗ MANIFEST 缺少 HEAD 记录：{head_line}")
+            return 1
+        if pkg_head != head and not is_ancestor(pkg_head, head):
+            print(
+                f"✗ 包内 HEAD {pkg_head} 既不是当前 HEAD {head}，也不是它的祖先 —— "
+                "包可能来自另一条分支，请重新打包"
+            )
             return 1
         handoff = archive.read(f"{PACKAGE_DIR}/HANDOFF.md").decode("utf-8")
         if "PACKAGE-V2" not in handoff:
             print("✗ HANDOFF.md 缺少 v2 更新横幅")
             return 1
-    print(f"✓ 包校验通过：{len(actual)} 个文件，HEAD {head}")
+    behind = "（包内 HEAD 落后于当前 HEAD，属正常：打包与提交不在同一提交里）" if pkg_head != head else ""
+    print(f"✓ 包校验通过：{len(actual)} 个文件；包内 HEAD {pkg_head}，当前 HEAD {head}{behind}")
     return 0
 
 

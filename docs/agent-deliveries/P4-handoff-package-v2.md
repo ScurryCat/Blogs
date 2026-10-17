@@ -13,7 +13,7 @@
 | 文件 | 说明 |
 | --- | --- |
 | `tools/package-handoff.py`（新增） | 可复现打包脚本：收集文档与工具白名单 → 生成 HANDOFF（v2 横幅 + 原文）+ MANIFEST + SHA256SUMS → 写 zip；`--check` 只校验现有包 |
-| `docs/handoff-package-2026-10-17-v2.zip`（新增） | **v2 交接包**：91 个文件 / 约 570 KiB / HEAD `63ba62f` |
+| `docs/handoff-package-2026-10-17-v2.zip`（新增） | **v2 交接包**：91 个文件 / 约 570 KiB / 包内记录 HEAD `b157f9d`（打包时） |
 | `docs/agent-deliveries/HANDOFF-ADDENDUM-2026-10-17.md` | 补充说明（已随包分发），增加「与 v2 包一体」引用 |
 | `docs/agent-deliveries/P4-handoff-package-v2.md` | 本报告 |
 
@@ -41,8 +41,8 @@ handoff/
 
 | 检查 | 结果 |
 | --- | --- |
-| `python3 tools/package-handoff.py` 自检 | ✓ 91 个文件，HEAD `63ba62f` |
-| `python3 tools/package-handoff.py --check` | ✓ 必需文件齐全、MANIFEST 路径全部存在、HEAD 与仓库一致、HANDOFF 含 v2 横幅 |
+| `python3 tools/package-handoff.py` 自检 | ✓ 91 个文件；包内 HEAD 是当前 HEAD 的祖先（允许落后） |
+| `python3 tools/package-handoff.py --check` | ✓ 必需文件齐全、MANIFEST 路径全部存在、包内 HEAD 与当前仓库是**祖先关系**（打包提交不可能与包同提交完成，允许落后）、HANDOFF 含 v2 横幅 |
 | 解压后逐文件校验 | `shasum -a 256 -c SHA256SUMS` **全部 OK** |
 | 文档完整性 | 仓库 `docs/agent-deliveries` 52 份 = 包内 52 份；`docs/design-references` 9 份 = 包内 9 份 |
 | HANDOFF | v2 横幅存在（原文完整保留） |
