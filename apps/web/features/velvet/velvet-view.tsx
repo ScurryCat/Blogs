@@ -88,6 +88,25 @@ export function VelvetView({
   // 卸载时取消在途请求（ACCEPTANCE §1「模块退出取消读取与监听」）。
   useEffect(() => () => inflight.current?.abort(), []);
 
+  /** 首屏读取失败后原地重试（不需要整页刷新）。 */
+  const reload = useCallback(async () => {
+    inflight.current?.abort();
+    const controller = new AbortController();
+    inflight.current = controller;
+    setLoading(true);
+    try {
+      const page = await fetchSkills({ domain, limit: SKILL_PAGE_SIZE }, controller.signal);
+      setSkills(page.items);
+      setCursor(page.next_cursor);
+      setFailure(null);
+    } catch (error) {
+      if (isAbort(error)) return;
+      setFailure(SERVICE_UNAVAILABLE);
+    } finally {
+      if (!controller.signal.aborted) setLoading(false);
+    }
+  }, [domain]);
+
   const loadMore = useCallback(async () => {
     if (!cursor) return;
     inflight.current?.abort();
@@ -156,7 +175,15 @@ export function VelvetView({
 
       {failure ? (
         <p className="plv-alert" role="alert">
-          {failure}
+          {failure}{" "}
+          <button
+            type="button"
+            className="plv-button"
+            onClick={() => void reload()}
+            disabled={loading}
+          >
+            {loading ? "正在重新读取…" : "重新读取"}
+          </button>
         </p>
       ) : null}
 

@@ -180,6 +180,40 @@ describe("MementosView", () => {
     unmount();
   });
 
+  it("失败态的「重新读取」重新请求首屏并恢复列表（不用整页刷新）", async () => {
+    stub = stubFetch([
+      {
+        match: "/api/v1/exploration/records",
+        body: {
+          items: [makeApiRecord({ slug: "recovered-record", title: "恢复的记录" })],
+          next_cursor: null,
+        },
+      },
+    ]);
+    const { container, unmount } = render(
+      <MementosView
+        initialRecords={[]}
+        initialCursor={null}
+        stats={null}
+        loadError="读取问题记录失败（HTTP 503）：服务暂时不可用"
+        workStatus="investigating"
+      />,
+    );
+
+    const button = [...container.querySelectorAll("button")].find((node) =>
+      node.textContent?.includes("重新读取"),
+    );
+    click(button ?? null);
+    await advance(60);
+
+    const request = stub?.requests.at(-1);
+    expect(request?.url).toContain("/api/v1/exploration/records");
+    expect(request?.url).toContain("work_status=investigating");
+    expect(container.querySelector('[role="alert"]')).toBeNull();
+    expect(container.textContent).toContain("恢复的记录");
+    unmount();
+  });
+
   it("记录卡是站点内链接（可新标签打开、可分享）", () => {
     stub = stubFetch([]);
     const { container, unmount } = render(

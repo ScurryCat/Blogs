@@ -657,3 +657,9 @@ textarea.pme-input {
   align-items: center;
   justify-content: center;
 }
+
+/* 失败态里的「重新读取」按钮：与说明文字同一行，保留可点开的间距（触控目标 44px 由 .pme-button 保证）。 */
+.pme-alert .pme-button {
+  margin-left: 10px;
+  vertical-align: middle;
+}
