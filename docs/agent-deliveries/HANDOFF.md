@@ -1,0 +1,210 @@
+# 交接包 · 怪盗手机 P5 第二轮 UI
+
+> **接手请先读这份。** 它把「现在是什么状态、怎么验证、还差什么、坑在哪」四件事讲清楚，
+> 其余细节都指向已有文档，不在这里重复。
+>
+> 打包时间：**2026-10-17** ｜ 分支 `main` ｜ HEAD **`6320861`** ｜
+> **84 个提交尚未推送**（任务书要求"只本地提交、不自动推送"）。
+
+---
+
+## 一、一句话现状
+
+**任务书里"能独立验证与修复"的部分已全部完成，桌面与手机两种视口全绿；
+"整屏视觉还原"因缺参考帧 + 执行模型无图像输入能力而无法判定 —— 这是唯一的硬阻塞。**
+
+判定依据可一条命令复验（见 §二）。**不要**把"功能全绿"当作"视觉验收通过"。
+
+---
+
+## 二、怎么验证（三条命令，按需选）
+
+| 命令 | 耗时 | 覆盖 |
+| --- | --- | --- |
+| `tools/verify-all.sh --fast` | ~1 分钟 | 静态审计 + 前端 typecheck/lint/单测 |
+| `tools/verify-all.sh --e2e` | ~15 分钟 | 上面 + 后端整树 + T02 + 多视口 + 业务流 + **六项端到端（桌面）** |
+| `tools/verify-all.sh --e2e --mobile` | ~20 分钟 | 上面 + **六项端到端再跑一遍手机全屏视口 390×844** |
+
+**最后一次完整结果（`--e2e --mobile`，干净树，退出码 0）**：
+
+```
+静态审计（图标/路由/资源/明智资源）  PASS
+前端 typecheck / lint / 单测          PASS   924 / 924
+后端整树                              PASS   942 / 0
+浏览器 T02 + 取数审计                 PASS   52 / 52
+多视口 × 缩放档                       PASS   11 项
+业务流验收脚本 ×4                     PASS
+真实浏览器端到端                      PASS   12 项（六项流程 × 桌面 + 手机）
+全部通过 ✓
+```
+
+> ⚠️ **验收注意事项**：仓库曾有两位 worker 并行。若另一端在验收过程中提交，隔离构建会
+> rsync 到"半新半旧"的树，产生**假失败**（本会话实测：T02/视口/端到端三段同时报错，
+> 手工复跑全部通过）。**验收前确认 `git status` 干净、且另一端不在提交。**
+
+---
+
+## 三、已完成 / 未完成
+
+### 3.1 已完成（每项都有验证证据）
+
+- **功能 / 操作 / 状态 / 回归 / 一致性** —— 任务书的判定主体，全部达成：
+  桌面第一页 6 个磁贴 + 第二页 4 个磁贴、滑杆、分页、迷你播放器跨 App 连续、
+  弹层滚动锁、状态保持、20 个应用内界面、必备状态与降级文案、320/390 无横向溢出、
+  触控目标尺寸、代码入口与契约、交付格式。
+- **手机内导航一致性专项审计 P1–P4** —— 四处"应用内状态却离开手机"全部修复，
+  每项都有真实浏览器端到端证据（`phone-internal-navigation-audit.md`）。
+- **移动端全屏模式长内容不可滚** —— 390×844 下手记正文根本读不到的**真实缺陷**，
+  已修复并普查所有手机应用确认无同类（见 `phone-internal-navigation-audit.md` §三补五/补六）。
+- **B2 头像原版化** —— 由并行的第二位 worker 完成（`85ec0c9`），双叶/摩尔加纳改用
+  P5 原版黑白 sprite；他们的模型具备读图能力，交付说明见 `P2-original-avatars-result.md`。
+
+### 3.2 未完成（外部阻塞，见 §六）
+
+| 项 | 状态 | 卡在哪 |
+| --- | --- | --- |
+| **B1 整屏视觉还原**（§2.4 / §4.x 视觉 / §8.1）| ⛔ 不可判定 | 缺 G1/G2 等参考帧 + 执行模型**无图像输入能力** |
+| **B4 IM 图片消息**（§4.2）| ⛔ 需决策 | 消息模型只有 `text` + `cards`，无图片字段；属扩 API/DB，越过任务书边界 |
+| **真机触控 / 软键盘**（§8.2 真机部分）| ⚠️ 未做 | 无真机；仅用 320/390 视口模拟 |
+
+---
+
+## 四、代码与文档地图
+
+### 4.1 手机与各应用（`apps/web/features/`）
+
+```
+phone/            宿主：宿主与桌面、分页/滑杆/转场、mini player、弹层、状态适配器
+                  关键文件：phone-provider.tsx（含 navigateScreen）、phone-host.tsx、
+                  desktop.tsx、registry.ts（PHONE_APPS）、types.ts（PhoneViewProps/Host）
+music/            音乐单例：跨 App/路由连续播放
+journal/          手记：列表/日历/正文（手机内 screen=reading）
+metanav/          异世界导航：殿堂列表/正文（手机内 screen=palace）
+ins/              图文动态：feed/detail/saved/tagged 屏幕
+messaging/        IM：角色列表、会话、草稿持久化
+gallery/ leisure/ coop/ showcase/ velvet/ exploration/ moments/ posts/ projects/ skills/ ...
+                  其余应用与站点页面
+runtime/          SiteLink、路由切换（不重载文档）、滚动记忆 scroll-memory.ts
+```
+
+**手机内换屏的统一约定**：`host.navigateScreen(screen, item)`；
+应用自己的 `phone-manifest.tsx` 必须导出**分派根**与**完整 screens 列表**
+（`ins/phone-manifest.tsx` 曾经只导出内层视图、screens 漏了消息两屏 —— 那是 P2 的根因）。
+
+### 4.2 后端与数据（`apps/api/`）
+
+- 契约 `/api/v1`，**85 个路径、36 张表、10 个迁移**，单 head `b7c3e9a1d2f4`。
+- 模块：`auth / journal / posts / media / moments / messaging / nav / gallery / leisure /
+  coop / showcase / exploration / projects / skills / tags`。
+
+### 4.3 交付文档（`docs/agent-deliveries/`）
+
+| 文档 | 用途 |
+| --- | --- |
+| **`P6-final-report.md`** | **结论摘要**（先读这个）|
+| **`P6-acceptance-ledger.md`** | 逐条验收台账（§2–§8 + 阻塞清单 + 结论）|
+| **`phone-internal-navigation-audit.md`** | 导航一致性 P1–P4 的证据与修复记录 |
+| `integration-snapshot-round8/11.md` | 中途集成快照 |
+| `P0-*` … `P5-*`、`T00–T10-*`、`N0–N7-*`、`P2-original-avatars-result.md` | 各阶段历史交付 |
+
+---
+
+## 五、验证工具体系（`tools/`）
+
+| 脚本 | 作用 |
+| --- | --- |
+| `verify-all.sh` | 一键验收主入口（`--fast` / `--e2e` / `--mobile` / `--no-backend` / `--no-browser`）|
+| `verify-isolated.sh` | **隔离构建**（不抢共享 `.next`）+ 起隔离站（3120）|
+| `verify-backend-isolated.sh` | **独占 Postgres 集群**（55433）跑后端全树 |
+| `e2e-stack.sh` | 隔离全栈：集群 55434 + API 8130 + 前端 3130 + 种子（`up/down/status`）|
+| `e2e-seed-journal.py` / `e2e-seed-palaces.py` | 给隔离环境造手记/殿堂数据（**殿堂发布要求先有公开文章**）|
+| `e2e-phone-scroll.py` 等 **6 个** | 六项真实浏览器端到端（支持 `E2E_VIEWPORT=390x844`）|
+| `acceptance/verify-*.py` | 视口/图标/取数审计/资源引用/明智排除/媒体闭环等 |
+| `pg-local.sh` | 本机 Postgres（**共享集群 55432 —— 不要用错端口停掉它**）|
+| `p0-extract-sheets.py` / `p0-contact-sheets.py` / `p0-analyze-sprites.py` | P0 素材提取/对照图/属性分析 |
+
+---
+
+## 六、阻塞条件与解除方式
+
+### B1 整屏视觉还原
+
+**缺什么（具体）**：普通文字帧、回复选择帧（G1/G2）等参考帧；见 `reference-frame-gaps.md`
+的逐项记录（P0 阶段做的缺口审计）。
+
+**为什么不能做**：当前执行模型**没有图像输入能力**（这一点在本会话中被反复确认）。
+按任务书 §8.1 的要求，缺参考帧时只能标"参考未补齐"，**不得声称视觉完成**。
+
+**已经做过的铺垫**（接手可直接用）：
+- 参考库里 563 个 sprite 已逐个提取，做了对照图（contact sheets）与尺寸/颜色属性分析；
+- 图标映射表 `docs/design-references/icon-mapping.md`（含 P5R 按钮字形逐个识别）；
+- 12 个头像候选的"身份 + 许可"双门核对清单 `avatar-verification-checklist.md`
+  —— 且已有先例：**并行的第二位 worker 的模型能读图**，按这份清单完成了头像核对
+  （`P2-original-avatars-result.md`）。
+
+**解除方式（二选一）**：
+1. 提供 G1/G2 等参考帧 **+ 具备图像输入能力的执行环境**；
+2. 让一位**能读图的协作方**把每屏还原意见写成**文字反馈**（"某屏某处应如何"），
+   我按文字指令改 —— 先例同上。
+
+### B4 IM 图片消息
+
+**现状**：`Message` 模型只有 `text` + `cards`，没有图片字段（这是数据模型事实，非实现遗漏）。
+
+**解除方式（需产品决策）**：
+1. 扩消息 API/DB 支持图片（工作量大，超出任务书边界）；或
+2. 把需求改为"内容卡片带预览图"（贴近现有 `cards` 能力，改动小）。
+
+---
+
+## 七、接手后的第一步（建议顺序）
+
+1. `git status` 确认工作区干净；`git log --oneline -5` 确认 HEAD 是你预期的提交。
+2. `tools/verify-all.sh --fast` 跑一遍（1 分钟），确认基础链路是绿的。
+3. 读 `docs/agent-deliveries/P6-final-report.md` 的结论与验证矩阵。
+4. 若要做视觉：先读 `reference-frame-gaps.md` + `avatar-verification-checklist.md`，
+   并按 §六 的方式准备"读图"能力 —— **没有读图能力前不要开始视觉还原**，
+   否则只能产出"猜测式"改动，反而破坏可验证性。
+5. 若要做图片消息：先拍板 §六 B4 的两种方案之一。
+
+---
+
+## 八、踩坑清单（都是本会话真实踩过并留了记录的）
+
+1. **Chrome 对 `matrix()/matrix3d()` 的序列化会破坏命中测试**：斜屏滑杆曾是"能渲染不能拖"，
+   修法是"单层 2D 变换链 + 变换感知的指针数学"（`features/phone/` + 对应单测）。
+2. **滚动记忆的三个根因**（很容易只修一个就以为好了）：容器找错（真实容器是 `.pw-appbody`，
+   不是 `.pw-screen`）、卸载时 DOM 已被摘除（`connected=false`）、保存监听器覆盖了恢复值。
+3. **jsdom 测不出真实滚动**：涉及真实滚动的断言必须在隔离全栈里用浏览器验证。
+4. **移动端"不能滚"要量 `scrollHeight/clientHeight` 定位**，不要凭截图猜；全屏模式下滚动的是
+   `.pw-appbody`，不是窗口，`scrollIntoView` 也可能无祖先可滚。
+5. **共享 `.next` / 共享测试库会互相踩**：一律用 `verify-isolated.sh` / `e2e-stack.sh`。
+6. **别用错端口停共享 Postgres**：`pg-local.sh stop` 必须带 `PGDATA` 与 `PL_PG_PORT`，
+   否则会停掉 55432 的共享集群（本会话发生过一次，已重启恢复）。
+7. **E2E 会受环境时序影响**：源码比构建新时 `e2e-stack.sh` 会自动重建；
+   若仍失败，先手工复跑一次再判断是不是代码问题。
+
+---
+
+## 九、证据在哪
+
+- **测试/审计数字**：`P6-acceptance-ledger.md`（逐条）、`P6-final-report.md`（汇总）。
+- **截图**：`/Users/学习/blog/.dsh/screenshots/`（130 张，51MB，**未入库**）——
+  含各阶段桌面/手机/320/390 视口与 P0 素材对照图。
+- **P0 分析产物**：`/Users/学习/blog/.dsh/p0-analysis/`（未入库）。
+- **运行日志**：`/tmp/vf-*.log`、`/tmp/e2e-*.log`（**易失**，重要结论已写进上面两份文档）。
+
+---
+
+## 十、这个包的内容
+
+```
+HANDOFF.md                      ← 本文件
+docs/agent-deliveries/*.md      ← 35 份交付文档（结论/台账/审计/各阶段历史）
+tools/*.py, tools/*.sh          ← 37 个验证与生成脚本
+tools/acceptance/*.py           ← 验收检查脚本
+MANIFEST.txt                    ← 文件清单与打包说明
+```
+
+**未包含**（有意）：源代码（在仓库里）、`.dsh/` 下的截图与分析产物（体积大、未入库）、
+以及任何凭据（本包内无密钥/密码）。
