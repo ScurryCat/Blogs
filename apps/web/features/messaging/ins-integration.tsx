@@ -51,7 +51,10 @@ export function InsMessagesApp({ characterId = null, ...props }: InsMessagesAppP
     return {
       ...MESSAGES_TAB,
       // 同一个页签、同一套界面，只是内容换成某一段会话。
-      render: () => <ConversationScreen characterId={characterId} linkSource="phone-link" />,
+      // key 让会话组件按角色重挂：草稿、控制器状态都不会串到另一个人身上。
+      render: () => (
+        <ConversationScreen key={characterId} characterId={characterId} linkSource="phone-link" />
+      ),
     };
   }, [characterId]);
 

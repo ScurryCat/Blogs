@@ -212,6 +212,33 @@ describe("useConversation 的加载流程", () => {
     ui.unmount();
   });
 
+  it("离开会话再回来草稿还在；换角色不串（§3.3 输入草稿）", async () => {
+    const responses = () => [
+      { match: "/messaging/session", method: "POST" as const, body: SESSION_BODY },
+      { match: "/messaging/conversations", method: "POST" as const, body: conversationBody() },
+    ];
+
+    window.sessionStorage.clear();
+    stub = stubFetch(responses());
+    const first = await mount("futaba", { draft: "写了一半" });
+    expect(first.ui.container.querySelector('[data-testid="draft"]')?.textContent).toBe("写了一半");
+    first.ui.unmount();
+    stub.restore();
+
+    // 重新进入同一个角色：草稿从存储里读回来
+    stub = stubFetch(responses());
+    const second = await mount("futaba");
+    expect(second.ui.container.querySelector('[data-testid="draft"]')?.textContent).toBe("写了一半");
+    second.ui.unmount();
+    stub.restore();
+
+    // 另一个角色看不到别人的草稿
+    stub = stubFetch(responses());
+    const other = await mount("morgana");
+    expect(other.ui.container.querySelector('[data-testid="draft"]')?.textContent).toBe("");
+    other.ui.unmount();
+  });
+
   it("会话读取失败时给出错误状态与重试，不伪装成空会话", async () => {
     stub = stubFetch([
       { match: "/messaging/session", method: "POST", body: SESSION_BODY },

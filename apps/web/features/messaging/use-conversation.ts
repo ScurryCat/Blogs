@@ -17,6 +17,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { readDraft, writeDraft } from "./drafts";
 
 import { ApiClientError, ApiTransportError } from "@/lib/api/client";
 
@@ -90,7 +91,15 @@ export function useConversation(characterId: string | null): ConversationControl
   const [error, setError] = useState<string | null>(null);
   const [localNotice, setLocalNotice] = useState<ChatNotice | null>(null);
   const [pending, setPending] = useState<PendingAction>("none");
-  const [draft, setDraft] = useState("");
+  // 草稿按角色持久化：离开会话再回来不能变成空框（任务书 §3.3 输入草稿）。
+  const [draft, setDraftState] = useState(() => readDraft(characterId));
+  const setDraft = useCallback(
+    (value: string) => {
+      setDraftState(value);
+      writeDraft(characterId, value);
+    },
+    [characterId],
+  );
   const [reloadToken, setReloadToken] = useState(0);
 
   const requestRef = useRef<AbortController | null>(null);
@@ -267,7 +276,7 @@ export function useConversation(characterId: string | null): ConversationControl
         setDraft("");
       }
     });
-  }, [apply, draft, run]);
+  }, [apply, draft, run, setDraft]);
 
   const choose = useCallback(
     (choiceId: string) => {
