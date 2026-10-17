@@ -435,3 +435,437 @@
 .danger {
   color: #a00;
 }
+
+/* ==========================================================================
+   异世界导航视觉还原 v1（2026-10-17，第二轮 §4.7）
+
+   参考（本地参考库，离线只读）：
+   - 站点既有红黑白 / 撕纸 / 斜切语言（旧站快照 `styles/legacy/base.css`、手记存档、
+     COOP 卡牌、殿堂展框同一套观感），保证站内一致；
+   - P5「导航 / 认知定位」的界面气质：黑底红场、白框仪表、输入像仪表读数。
+   本地参考库**没有**异世界导航的整屏帧，也没有 §2.3 的经典红眼图标原图（G3 仍缺），
+   因此本轮只做「关键词输入构图 + 已发现殿堂列表」的视觉还原，不伪造原版图标。
+
+   同时修复本模块的历史问题：整套样式按**浅色主题**写死（卡片 rgba(255,255,255,.72)、
+   `.lead` #555、输入框白底），在深色站点上是对比度很差的灰白块。
+   ========================================================================== */
+
+.wrap {
+  container-type: inline-size;
+  color: var(--paper, #f4f1ea);
+}
+
+.bar {
+  border-bottom: 3px solid #d40000;
+  padding-bottom: 12px;
+}
+
+.title {
+  margin: 4px 0 8px;
+  font: 400 clamp(24px, 3.4vw, 38px)/1.05 var(--f-disp, sans-serif);
+  letter-spacing: 0.02em;
+  text-shadow: 3px 3px 0 #d40000;
+}
+
+.lead {
+  color: rgba(244, 241, 234, 0.74);
+}
+
+/* 导航方式页签：黑底白框撕纸，当前项红底。 */
+.tab {
+  border: 2px solid var(--paper, #f4f1ea);
+  background: #0a0a0b;
+  color: var(--paper, #f4f1ea);
+  font: 400 13px/1 var(--f-hat, sans-serif);
+  letter-spacing: 0.1em;
+  padding: 9px 14px;
+  transform: skewX(-8deg);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
+}
+
+.tab[aria-current="true"] {
+  background: #d40000;
+  border-color: var(--paper, #f4f1ea);
+  color: var(--paper, #f4f1ea);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.6);
+}
+
+.tab:hover,
+.tab:focus-visible {
+  background: var(--paper, #f4f1ea);
+  color: #0a0a0b;
+}
+
+.tab[aria-current="true"]:hover {
+  background: #d40000;
+  color: var(--paper, #f4f1ea);
+}
+
+/* 已发现殿堂：黑底白框「目标卡」，悬停抬升。 */
+.grid {
+  gap: 18px;
+}
+
+.card {
+  border: 3px solid var(--paper, #f4f1ea);
+  background: #0a0a0b;
+  color: var(--paper, #f4f1ea);
+  box-shadow: 8px 8px 0 #d40000;
+  transform: rotate(-0.4deg);
+  transition: transform 0.16s ease-out, box-shadow 0.16s ease-out;
+}
+
+.grid > .card:nth-child(2n) {
+  transform: rotate(0.4deg);
+}
+
+.card:hover,
+.card:focus-within {
+  transform: rotate(0deg) translateY(-2px);
+  box-shadow: 11px 11px 0 #d40000;
+}
+
+.cardTitle {
+  font: 400 clamp(18px, 2vw, 22px)/1.25 var(--f-disp, sans-serif);
+  letter-spacing: 0.02em;
+  color: var(--paper, #f4f1ea);
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.7);
+}
+
+.cardMeta {
+  color: rgba(244, 241, 234, 0.66);
+  opacity: 1;
+}
+
+/* 关键词牌：标签红色小块 + 值白框小牌。 */
+.keywordChip {
+  border: 1px solid rgba(244, 241, 234, 0.55);
+  padding: 2px 8px;
+  color: var(--paper, #f4f1ea);
+}
+
+.keywordChip b {
+  color: #ff5a63;
+  opacity: 1;
+}
+
+/* 按钮：红底白框硬阴影；幽灵按钮白框。 */
+.button {
+  background: #d40000;
+  border: 2px solid var(--paper, #f4f1ea);
+  color: var(--paper, #f4f1ea);
+  font: 400 13px/1 var(--f-hat, sans-serif);
+  letter-spacing: 0.08em;
+  padding: 10px 16px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.55);
+}
+
+.button:hover:not([disabled]),
+.button:focus-visible:not([disabled]) {
+  background: var(--paper, #f4f1ea);
+  color: #0a0a0b;
+}
+
+.buttonGhost {
+  background: transparent;
+  border-color: rgba(244, 241, 234, 0.6);
+  color: var(--paper, #f4f1ea);
+}
+
+.buttonGhost:hover:not([disabled]) {
+  background: rgba(244, 241, 234, 0.12);
+  color: var(--paper, #f4f1ea);
+}
+
+.buttonDanger {
+  background: transparent;
+  border-color: #ff5a63;
+  color: #ff5a63;
+}
+
+.linkButton {
+  color: var(--paper, #f4f1ea);
+}
+
+/* 认知定位表单：一块黑底白框的「导航仪表」。 */
+.form {
+  position: relative;
+  max-width: 620px;
+  gap: 18px;
+  padding: 20px 22px 22px;
+  border: 3px solid var(--paper, #f4f1ea);
+  background: #0a0a0b;
+  box-shadow: 10px 10px 0 #d40000;
+  counter-reset: metanav-field;
+}
+
+.field {
+  counter-increment: metanav-field;
+  display: grid;
+  grid-template-columns: 3.4em minmax(0, 1fr);
+  gap: 4px 12px;
+  align-items: start;
+}
+
+/* 字段编号：白框小牌，像仪表刻度（纯装饰，不参与读屏顺序）。 */
+.field::before {
+  content: counter(metanav-field, decimal-leading-zero);
+  grid-row: 1 / span 3;
+  display: grid;
+  place-items: center;
+  width: 3.4em;
+  height: 3.4em;
+  border: 2px solid var(--paper, #f4f1ea);
+  background: #141416;
+  color: var(--paper, #f4f1ea);
+  font: 400 20px/1 var(--f-disp, sans-serif);
+  letter-spacing: 0.02em;
+  box-shadow: 3px 3px 0 #d40000;
+  transform: skewX(-6deg);
+}
+
+.label {
+  grid-column: 2;
+  justify-self: start;
+  padding: 2px 10px;
+  background: var(--paper, #f4f1ea);
+  color: #0a0a0b;
+  font: 400 13px/1.5 var(--f-hat, sans-serif);
+  letter-spacing: 0.12em;
+  transform: skewX(-8deg);
+}
+
+.hint {
+  grid-column: 2;
+  color: rgba(244, 241, 234, 0.62);
+  opacity: 1;
+}
+
+.input {
+  grid-column: 2;
+  font: inherit;
+  font-size: 15px;
+  padding: 10px 12px;
+  border: 2px solid var(--paper, #f4f1ea);
+  background: #141416;
+  color: var(--paper, #f4f1ea);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.55);
+}
+
+.input::placeholder {
+  color: rgba(244, 241, 234, 0.4);
+}
+
+.input:focus-visible {
+  outline: 3px solid #d40000;
+  outline-offset: 1px;
+}
+
+.input[aria-invalid="true"] {
+  border-color: #ff5a63;
+  box-shadow: 3px 3px 0 #ff5a63;
+}
+
+.fieldError {
+  grid-column: 2;
+  color: #ff8a90;
+}
+
+.candidates {
+  gap: 6px;
+}
+
+.candidates .buttonGhost,
+.candidates button {
+  border-width: 1px;
+}
+
+/* 定位结果：像导航仪打出的结果条。 */
+.result {
+  border: 3px solid var(--paper, #f4f1ea);
+  background: #0a0a0b;
+  color: var(--paper, #f4f1ea);
+  padding: 16px;
+  box-shadow: 8px 8px 0 #d40000;
+  gap: 10px;
+}
+
+.results {
+  gap: 14px;
+}
+
+.badge {
+  border: 2px solid var(--paper, #f4f1ea);
+  background: #d40000;
+  color: var(--paper, #f4f1ea);
+  font: 400 11px/1.5 var(--f-hat, sans-serif);
+  letter-spacing: 0.12em;
+  padding: 1px 8px;
+  transform: skewX(-8deg);
+}
+
+.excerpt {
+  color: rgba(244, 241, 234, 0.82);
+  opacity: 1;
+}
+
+/* 普通搜索 / 印象空间共用的结果与列表语言。 */
+.notice {
+  border-left: 5px solid #d40000;
+  background: rgba(212, 0, 0, 0.14);
+  color: var(--paper, #f4f1ea);
+}
+
+.noticeInfo {
+  border-left-color: var(--paper, #f4f1ea);
+  background: rgba(244, 241, 234, 0.07);
+}
+
+.empty {
+  border: 2px dashed rgba(244, 241, 234, 0.45);
+  background: rgba(244, 241, 234, 0.04);
+  color: var(--paper, #f4f1ea);
+}
+
+.paths {
+  gap: 12px;
+}
+
+.path {
+  border-bottom: 1px dashed rgba(244, 241, 234, 0.28);
+}
+
+.pathLabel {
+  color: var(--paper, #f4f1ea);
+}
+
+.pathHint {
+  color: rgba(244, 241, 234, 0.64);
+  opacity: 1;
+}
+
+.chapters {
+  gap: 12px;
+}
+
+.chapter {
+  border-left: 4px solid #d40000;
+  background: rgba(244, 241, 234, 0.05);
+  padding: 10px 12px;
+}
+
+.chapterNo {
+  color: #ff5a63;
+  opacity: 1;
+}
+
+.chapterTitle {
+  color: var(--paper, #f4f1ea);
+  font-size: 16px;
+}
+
+.recommend {
+  border: 2px solid var(--paper, #f4f1ea);
+  background: #d40000;
+  color: var(--paper, #f4f1ea);
+  padding: 1px 8px;
+  transform: skewX(-8deg);
+}
+
+.footprint {
+  border-top: 3px solid #d40000;
+  margin-top: 26px;
+  padding-top: 16px;
+}
+
+.footprintList {
+  gap: 10px;
+}
+
+.footprintItem {
+  border: 2px solid rgba(244, 241, 234, 0.6);
+  background: #0a0a0b;
+  color: var(--paper, #f4f1ea);
+  padding: 8px 12px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
+}
+
+.footprintTime {
+  color: rgba(244, 241, 234, 0.6);
+  opacity: 1;
+}
+
+/* 管理端：同页面深色底，输入框显式深色文字，避免白底浅字。 */
+.adminFields .input,
+.input,
+select.input,
+textarea.input {
+  color: var(--paper, #f4f1ea);
+}
+
+.preview {
+  border: 2px dashed rgba(244, 241, 234, 0.45);
+  background: rgba(244, 241, 234, 0.05);
+  color: var(--paper, #f4f1ea);
+}
+
+.postRow {
+  border-bottom: 1px dashed rgba(244, 241, 234, 0.25);
+}
+
+.adminRow {
+  border: 1px solid rgba(244, 241, 234, 0.3);
+  background: rgba(244, 241, 234, 0.04);
+}
+
+.statusPublished {
+  color: #7ee2a8;
+}
+
+.statusDraft {
+  color: #ffd27a;
+}
+
+.previewDraft,
+.danger {
+  color: #ff8a90;
+}
+
+/* 手机宿主 / 窄屏：表单铺满、卡片单列、角度收敛。 */
+@container (max-width: 680px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .card,
+  .grid > .card:nth-child(2n) {
+    transform: none;
+    box-shadow: 5px 5px 0 #d40000;
+  }
+
+  .form {
+    max-width: 100%;
+    padding: 14px;
+    box-shadow: 5px 5px 0 #d40000;
+  }
+
+  .field {
+    grid-template-columns: 2.6em minmax(0, 1fr);
+    gap: 4px 8px;
+  }
+
+  .field::before {
+    width: 2.6em;
+    height: 2.6em;
+    font-size: 16px;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+
+  .footprintItem {
+    width: 100%;
+  }
+}
