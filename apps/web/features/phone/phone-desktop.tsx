@@ -108,10 +108,18 @@ function AppTile({ app }: { app: PhoneAppManifest }): ReactNode {
   );
 }
 
-export function PhoneDesktop(): ReactNode {
+export function PhoneDesktop({
+  page,
+  onPageChange,
+}: {
+  /** 当前桌面页（由 PhoneHost 持有）：进入 App 再返回时不应回到第一页。 */
+  page: number;
+  onPageChange: (next: number) => void;
+}): ReactNode {
   const { apps } = usePhone();
   const [now, setNow] = useState<Date | null>(null);
-  const [page, setPage] = useState(0);
+  // 页码由 PhoneHost 持有 —— 组件在「进入 App」时会卸载，
+  // 放在这里会被重置回第一页（任务书 §3.3「返回保留适用状态」）。
   const swipe = useRef<{ x: number; y: number } | null>(null);
 
   // 固定排列之外、但已登记的应用追加到末页：**注册表仍是「存在」的唯一来源**，
@@ -174,7 +182,7 @@ export function PhoneDesktop(): ReactNode {
           // 触控滑动是**补充**：横向位移显著大于纵向才算换页手势，
           // 避免与屏幕纵向滚动冲突（任务书 §2.2 / §3.2）。
           if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 2) {
-            setPage((current) => Math.min(pageCount - 1, Math.max(0, current + (dx < 0 ? 1 : -1))));
+            onPageChange(Math.min(pageCount - 1, Math.max(0, current + (dx < 0 ? 1 : -1))));
           }
         }}
       >
@@ -188,7 +196,7 @@ export function PhoneDesktop(): ReactNode {
           type="button"
           aria-label="上一页"
           disabled={current === 0}
-          onClick={() => setPage((current) => Math.max(0, current - 1))}
+          onClick={() => onPageChange(Math.max(0, current - 1))}
         >
           ‹
         </button>
@@ -205,7 +213,7 @@ export function PhoneDesktop(): ReactNode {
           type="button"
           aria-label="下一页"
           disabled={current === pageCount - 1}
-          onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))}
+          onClick={() => onPageChange(Math.min(pageCount - 1, current + 1))}
         >
           ›
         </button>

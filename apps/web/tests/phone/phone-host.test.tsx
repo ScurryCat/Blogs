@@ -209,6 +209,48 @@ describe("手机桌面", () => {
     expect(view.container.querySelector(".pw-music")).not.toBeNull();
   });
 
+  it("进入 App 再返回桌面，保持原来的桌面页（不是总回到第一页）", async () => {
+    // 需要**两页都非空**才测得出：固定布局第一页取 ins、第二页取 palace。
+    const page1: PhoneAppManifest = { ...TEST_APP, id: "ins", name: "动态", order: 10 };
+    const page2: PhoneAppManifest = {
+      ...TEST_APP,
+      id: "palace",
+      name: "情报",
+      order: 20,
+      canonical_path: "/apps/palace",
+    };
+    const registry = () => createPhoneRegistry([page1, page2]);
+    const view = mount(registry());
+    await advance();
+    click(view.container.querySelector(".pw-tab"));
+    await commit(view, registry());
+
+    const ids = () =>
+      [...view.container.querySelectorAll(".pw-app")].map((tile) => tile.getAttribute("data-app-id"));
+    const pageNum = () => view.container.querySelector(".pw-page-num")?.textContent?.trim();
+
+    expect(ids()).toEqual(["ins"]);
+    click(view.container.querySelector('.pw-page-btn[aria-label="下一页"]'));
+    await commit(view, registry());
+    expect(pageNum()).toContain("2 / 2");
+    expect(ids()).toEqual(["palace"]);
+
+    // 进入应用（桌面组件会卸载），再返回
+    click(view.container.querySelector('[data-app-id="palace"]'));
+    await commit(view, registry());
+    expect(view.container.querySelector(".pw-appview")).not.toBeNull();
+
+    // 用 Escape 回桌面：测试环境里 `.pw-back` 走的是 history.back()，jsdom 不会自动
+    // 触发 popstate，状态不会变；Escape 的语义同样是「应用内先回应用层」（既有用例已钉住）。
+    key(document, "Escape");
+    await commit(view, registry());
+    expect(view.container.querySelector(".pw-appview")).toBeNull();
+
+    // 页码由宿主持有，返回后仍停在第二页
+    expect(pageNum()).toContain("2 / 2");
+    expect(ids()).toEqual(["palace"]);
+  });
+
   it("注册表里新增应用就出现在桌面（宿主不加分支）", async () => {
     const registry = createPhoneRegistry([TEST_APP, OTHER_APP]);
     const view = mount(registry);

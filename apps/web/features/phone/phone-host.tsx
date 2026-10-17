@@ -11,7 +11,7 @@
  * - 打开时给背景加 `inert`，关闭时还原；焦点在打开时进手机、关闭时回到小图标。
  */
 
-import { useCallback, useEffect, useRef, type KeyboardEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
 import { PhoneAppView } from "./phone-app-view";
 import { PhoneDesktop } from "./phone-desktop";
@@ -37,6 +37,9 @@ export function PhoneHost(): ReactNode {
   const launcherRef = useRef<HTMLButtonElement | null>(null);
   const phoneRef = useRef<HTMLDivElement | null>(null);
   const wasOpen = useRef(false);
+  // 桌面页码放在宿主里：PhoneDesktop 在进入 App 时会卸载，
+  // 页码若放在它内部，返回桌面会被重置回第一页。
+  const [desktopPage, setDesktopPage] = useState(0);
 
   const onDesktop = !state || state.phone === "home";
   const manifest = state && state.phone !== "home" ? registry.find(state.phone) : undefined;
@@ -162,7 +165,7 @@ export function PhoneHost(): ReactNode {
           />
           <div className="pw-screen">
             {onDesktop || !manifest ? (
-              <PhoneDesktop />
+              <PhoneDesktop page={desktopPage} onPageChange={setDesktopPage} />
             ) : (
               <div className="pw-appview">
                 <header className="pw-appbar">
