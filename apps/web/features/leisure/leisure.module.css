@@ -694,3 +694,29 @@
     font-size: 13px;
   }
 }
+
+
+/* 减少动态效果：道具行不做悬停位移动画。 */
+@media (prefers-reduced-motion: reduce) {
+  .wrap .card {
+    transition: none;
+  }
+
+  .wrap .card:hover,
+  .wrap .card:focus-within {
+    transform: none;
+  }
+}
+
+/* 触控目标 ≥44px（第二轮 §8.2）：页签 / 下拉 / 按钮此前约 33–43px。 */
+.wrap .tab,
+.wrap .button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wrap .select {
+  min-height: 44px;
+}

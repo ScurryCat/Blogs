@@ -869,3 +869,35 @@ textarea.input {
     width: 100%;
   }
 }
+
+
+/* 减少动态效果：殿堂目标卡不做悬停位移动画。 */
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+
+  .card:hover,
+  .card:focus-within {
+    transform: none;
+  }
+}
+
+/* 触控目标 ≥44px（第二轮 §8.2「触控目标尺寸」；本模块此前标签/输入/按钮约 36–40px）。
+   纯尺寸调整，不改配色与布局语义。 */
+.tab,
+.button,
+.select,
+.input,
+.candidates button,
+.footprintItem {
+  min-height: 44px;
+}
+
+.tab,
+.button,
+.candidates button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

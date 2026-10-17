@@ -590,3 +590,31 @@
     display: none;
   }
 }
+
+
+/* 减少动态效果：阿卡那卡牌不做悬停位移动画。 */
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+
+  .card:hover,
+  .card:focus-within {
+    transform: none;
+  }
+}
+
+/* 触控目标 ≥44px（第二轮 §8.2）：标签筛选 / 外链 / 展开按钮此前约 32–40px。 */
+.chip,
+.chip-link,
+.card .external,
+.card .toggle {
+  min-height: 44px;
+}
+
+.card .external,
+.card .toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

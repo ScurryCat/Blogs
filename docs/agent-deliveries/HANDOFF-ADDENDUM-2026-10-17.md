@@ -76,7 +76,7 @@
 
 ## 六、给打包整合者的建议
 
-- 把 `docs/agent-deliveries/P2-*`、`P3-*`、`P4-*`（共 15 份：P2×1 + P3×8 + P4×6）与本文件加入交接包 `docs/agent-deliveries/`。
+- 把 `docs/agent-deliveries/P2-*`、`P3-*`、`P4-*`（共 16 份：P2×1 + P3×8 + P4×7）与本文件加入交接包 `docs/agent-deliveries/`。
 - HANDOFF 首段的「最后完整结果」建议替换为最近一次 `--e2e`/`--e2e --mobile` 的真实输出；
   状态数字按 §三更新。
 - B1 段落的措辞建议改为：「由具备图像输入能力的协作方完成参考帧审计与 9 界面 v1 元件级还原；

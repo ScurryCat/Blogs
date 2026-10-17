@@ -1249,3 +1249,12 @@
     max-height: 44vh;
   }
 }
+
+
+/* 减少动态效果：角色列表悬停不做位移（反红与描边变化保留）。 */
+@media (prefers-reduced-motion: reduce) {
+  .msg-role:hover,
+  .msg-role:focus-visible {
+    transform: none;
+  }
+}

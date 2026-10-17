@@ -764,3 +764,16 @@
     box-shadow: 5px 5px 0 var(--pls-red);
   }
 }
+
+
+/* 减少动态效果：展框不做悬停位移/动画。 */
+@media (prefers-reduced-motion: reduce) {
+  .pls-card {
+    transition: none;
+  }
+
+  .pls-card:hover,
+  .pls-card:focus-visible {
+    transform: none;
+  }
+}

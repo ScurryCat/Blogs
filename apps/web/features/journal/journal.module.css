@@ -1194,3 +1194,35 @@
     font-size: 16px;
   }
 }
+
+
+/* 减少动态效果：日历格不做位移动画/位移（静态描边与反白仍保留）。 */
+@media (prefers-reduced-motion: reduce) {
+  .calendarPane .day,
+  .calendarPane .dayHasEntry:hover,
+  .calendarPane .dayHasEntry:focus-visible,
+  .calendarPane .daySelected,
+  .calendarPane .daySelected:hover,
+  .calendarPane .daySelected:focus-visible {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* 触控目标 ≥44px（第二轮 §8.2）：页签 / 主要按钮此前约 37–43px。 */
+.tab,
+.button {
+  min-height: 44px;
+}
+
+.tab,
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 触控目标 ≥44px：年份筛选下拉（此前 42px）。 */
+.select {
+  min-height: 44px;
+}

@@ -1100,3 +1100,18 @@
   height: 18px;
   accent-color: var(--ins-red);
 }
+
+/* 触控目标 ≥44px（第二轮 §8.2）：
+   - 手机 INS 页签（动态/收藏/消息/相册）此前约 28–34px；
+   - 标签筛选 chip 34px、按钮 40px。 */
+.ins-tab {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ins-chip,
+.ins-btn {
+  min-height: 44px;
+}

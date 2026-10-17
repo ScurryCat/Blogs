@@ -37,6 +37,16 @@ import "./globals.css";
 // 放在根布局保证所有入口一致；该表本身由 messaging-css.test.ts 断言只含 `.msg-` 命名空间。
 import "@/features/messaging/messaging.css";
 
+// 同理（2026-10-17 视觉复核实测）：以下三张样式表原先只被各自的独立页面 import，
+// 但它们的界面也会在**手机宿主**（首页 `/?phone=…`）里渲染：
+//   - ins.css：手机 INS 的页签/动态卡（deep link 下 `.ins-tab` 背景是浏览器默认灰 `rgb(239,239,239)`）
+//   - gallery.css：手机 INS 的相册页签（与 /gallery 共用同一批组件）
+//   - showcase.css：手机「我的殿堂」作品卡（deep link 下 `.pls-card` 背景透明、按钮 28px 高）
+// 三张表的类名分别带 `.ins-` / `.plg-` / `.pls-` 前缀（文件头有说明），放根布局不会污染全站。
+import "@/features/ins/ins.css";
+import "@/features/gallery/gallery.css";
+import "@/features/showcase/showcase.css";
+
 import { SiteFooter } from "@/components/ui/site-footer";
 import { SiteHeader } from "@/components/ui/site-header";
 import { site } from "@/features/legacy/config";

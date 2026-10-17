@@ -629,3 +629,31 @@ textarea.pme-input {
     transform: none;
   }
 }
+
+
+/* 减少动态效果：档案卡不做悬停位移动画（静态品红描边保留）。 */
+@media (prefers-reduced-motion: reduce) {
+  .pme-card {
+    transition: none;
+  }
+
+  .pme-card:hover,
+  .pme-card:focus-visible {
+    transform: none;
+  }
+}
+
+/* 触控目标 ≥44px（第二轮 §8.2）：筛选号牌 / 按钮 / 关联入口此前约 39–40px。 */
+.pme-chip,
+.pme-button,
+.pme-links a {
+  min-height: 44px;
+}
+
+.pme-chip,
+.pme-button,
+.pme-links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

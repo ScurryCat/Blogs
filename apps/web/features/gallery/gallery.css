@@ -845,3 +845,19 @@
     transform: none;
   }
 }
+
+
+/* 减少动态效果：拍立得 / 相册卡不做悬停位移与过渡动画。 */
+@media (prefers-reduced-motion: reduce) {
+  .photo-tile,
+  .plg-album-card {
+    transition: none;
+  }
+
+  .photo-tile:hover,
+  .photo-tile:focus-within,
+  .plg-album-card:hover,
+  .plg-album-card:focus-visible {
+    transform: none;
+  }
+}

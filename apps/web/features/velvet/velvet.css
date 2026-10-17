@@ -699,3 +699,32 @@
     font-size: 27px;
   }
 }
+
+
+/* 减少动态效果：登记簿卡片不做悬停位移动画（静态冷色描边保留）。 */
+@media (prefers-reduced-motion: reduce) {
+  .plv-card {
+    transition: none;
+  }
+
+  .plv-card:hover,
+  .plv-card:focus-visible {
+    transform: none;
+  }
+}
+
+/* 触控目标 ≥44px（第二轮 §8.2）：页签 / 按钮 / 下拉 / 证据链入口此前约 39px。 */
+.plv-tab,
+.plv-button,
+.plv-select,
+.plv-evidence-list a {
+  min-height: 44px;
+}
+
+.plv-tab,
+.plv-button,
+.plv-evidence-list a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
