@@ -103,6 +103,14 @@
    已补 **WebKit 引擎 + iPhone 视口**冒烟证据（24/24：首页/手机/IM/图库灯箱/触控点按），
    但明确**不等于真机**，见 `P4-mobile-engine-evidence.md`。
 
+## 五之二、视觉对照证据（2026-10-18）
+
+- `tools/capture-visual-comparison.py`：真实浏览器截图 11 个站点界面，与 17 张参考帧并排对照
+  （`.dsh/screenshots/visual-comparison/`，本地产物）。
+- 逐项结论见 `P4-visual-comparison-evidence.md`：13 项语言级部分对照、2 项未实现
+  （图片消息、校内楼层图）、2 项无对应整屏（普通对话）。
+- **整屏逐像素还原仍未通过**：本证据只回答「参考可用 + 现状差距」。
+
 ## 六、给打包整合者的建议
 
 - 把 `docs/agent-deliveries/P2-*`、`P3-*`、`P4-*`（共 16 份：P2×1 + P3×8 + P4×7）与本文件加入交接包 `docs/agent-deliveries/`。

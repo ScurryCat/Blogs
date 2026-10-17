@@ -1,0 +1,51 @@
+# 视觉对照证据：17 张参考帧 ↔ 站点实际界面
+
+> 验收报告 §5.1：「补存档 / IM 等完整参考和视觉对照证据」。
+> 本文件用**真实浏览器截图**把参考帧与站点现状并排对照，
+> **不宣称整屏还原验收通过**；每项都如实标注「已对照（部分）/ 未实现 / 不适用」。
+> 日期：2026-10-18 ｜ 站点：`http://127.0.0.1:3100`（生产构建，访客视角）
+
+## 1. 采集方式
+
+```bash
+python3 tools/capture-visual-comparison.py http://127.0.0.1:3100
+# 输出：.dsh/screenshots/visual-comparison/
+#   site-<界面>.png      站点截图（1440×900）
+#   comparison-{1..3}.png 参考帧 | 站点界面 并排对照图
+```
+
+参考帧来自外部精选库 `persona-curated/hud/`（17 张，见 `reference-frame-sources.md`）。
+对照图为本地产物（不进包）；本文件记录逐项结论，验收者可按命令复现。
+
+## 2. 逐项对照结论
+
+| # | 参考帧 | 站点界面 | 对照结论 | 状态 |
+| --- | --- | --- | --- | --- |
+| 1 | `p5-phone-home-fullframe`（P5 手机主屏） | `/?phone=home` 手机桌面 | 站点为红黑应用磁贴网格 + 手机壳；对照帧为 P5 App 网格：**结构语言有（磁贴网格/顶部状态），整屏细节未复刻** | 已对照（部分） |
+| 2 | `p5r-street-hud-fullframe`（日期/IM 通知/小地图） | `/?phone=home` + 站点 HUD | 站点 HUD 有日期/时间与手机入口；**无小地图、无地点 toast、无 IM 角标通知** | 已对照（部分） |
+| 3 | `p5r-im-groupchat-fullframe`（IM 群聊） | `/?phone=ins` IM feed | 站点 IM 为应用内列表 + 红黑白语言；**P5 IM 手机外框/多气泡群聊布局未复刻** | 已对照（部分） |
+| 4 | `p5r-im-photo-fullframe`（图片消息） | `/?phone=ins` IM feed | **站点不支持图片消息**（B4 待产品拍板） | 未实现 |
+| 5 | `p5r-dialogue-choice-fullframe`（回复选择） | `/?phone=ins&screen=conversation&item=futaba` | 站点剧本会话有回复选项（交互结构存在）；**P5 对话框/选项整屏视觉未复刻**（站点是 IM 气泡语言） | 已对照（部分） |
+| 6 | `p5-load-save-fullframe`（Load 存档槽） | `/apps/journal` 手记 | 站点手记为存档式列表 + SAVE DATA 卡；**存档槽整屏视觉未复刻** | 已对照（部分） |
+| 7 | `p5-calendar-fullframe`（日历） | `/apps/journal` 手记日历屏 | 站点有日历屏（月历/日期格）；**P5 日历整屏字体与布局未复刻** | 已对照（部分） |
+| 8 | `p5-status-fullframe`（五维状态） | `/about` 人物档案 | 站点有五维雷达/属性；**P5 五维星图布局未复刻** | 已对照（部分） |
+| 9 | `p5-map-school-fullframe`（校内楼层图） | `/map` 东京漫游 | 站点为东京城市地图；**无校内楼层图**（对象不同） | 不适用/未实现 |
+| 10 | `p5-tokyo-map-fullframe`（东京城市地图） | `/map` 东京漫游 | 站点地图为黑白插画城市图 + 地点针；对照帧语言相近，**日期覆盖层/剪影未复刻** | 已对照（部分） |
+| 11 | `p5r-velvet-room-fullframe`（天鹅绒房间内景） | `/velvet` 天鹅绒房间·技能全书 | 站点为蓝黑主题 + 技能全书；**内景构图/角色位未复刻** | 已对照（部分） |
+| 12 | `p5-mementos-fullframe`（印象空间） | `/apps/metanav/mementos` 问题记录 | 站点为暗紫品红档案列表；**Mementos 轨道/HUD 未复刻** | 已对照（部分） |
+| 13 | `p5r-coop-confidant-fullframe`（Confidant 升阶） | `/apps/coop` 协助者·友链 | 站点为友链卡片；**COOP 好感度/Arcana 升阶界面未实现**（语义不同） | 已对照（部分） |
+| 14 | `p5-palace-treasure-fullframe`（宫殿宝库） | `/showcase` 我的殿堂 | 站点为作品展示页；**宝库/殿堂内景构图未复刻** | 已对照（部分） |
+| 15 | `p5-leisure-batting-fullframe`（打击练习场） | `/apps/leisure` 放课后 | 站点为追番/游戏列表；**迷你游戏 HUD 未实现** | 已对照（部分） |
+| 16 | `p5r-dialogue-normal-fullframe`（普通对话，Kamoshida） | — | 站点无游戏对话整屏；IM 会话属不同语言 | 不适用 |
+| 17 | `p5r-dialogue-maruki-fullframe`（普通对话，Maruki） | — | 同上 | 不适用 |
+
+汇总：17 帧中 **站点有对应界面 14 项**（13 项语言级部分对照 + 1 项对象不适用），
+**2 项明确未实现**（图片消息、楼层图），2 项无对应整屏（普通对话）。
+
+## 3. 诚实结论
+
+- 本证据回答的是「**参考帧已可用、站点现状是什么、差在哪**」；
+  **整屏逐像素还原验收仍未通过**——多数界面只到「视觉语言级」或「结构对照」，
+  没有逐屏尺寸/间距/字体对照通过的证据。
+- 明确未实现/待决策：**图片消息（B4）**；明确缺对象：校内楼层图、游戏对话框整屏。
+- 下一步（若继续）：按本表优先做 1–7 项的整屏对照修形，或先落 B4 图片消息。

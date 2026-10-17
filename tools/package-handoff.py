@@ -58,6 +58,7 @@ TOOL_WHITELIST = [
     "audit-failure-states.py",
     "seed-demo-content.py",
     "verify-home-refresh.py",
+    "capture-visual-comparison.py",
     "verify-demo-content.py",
     "package-handoff.py",
 ]
@@ -88,6 +89,9 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 > 可追溯非官方 12；未核实 2=IM 两帧）。整屏参考帧缺口已收口。
 > **移动引擎证据（2026-10-18）**：WebKit + iPhone 视口 24/24（首页/手机/IM/图库灯箱/触控点按），
 > 但**不等于真机**；软键盘/中文输入法/真实触控仍需真机（`P4-mobile-engine-evidence.md`）。
+> **视觉对照证据（2026-10-18）**：`tools/capture-visual-comparison.py` 把 17 张参考帧与
+> 站点 11 个界面并排对照，逐项结论见 `P4-visual-comparison-evidence.md`
+> （13 项语言级部分对照 / 2 项未实现（图片消息、楼层图）/ 2 项无对应整屏；**整屏还原仍未通过**）。
 > 仍未关闭：真实设备（触控/软键盘/移动 Safari）、IM 图片消息（待产品拍板）。
 > **管理端 INS 收录 UI 真实浏览器全流程已补齐**：`tools/e2e-ins-album-links-ui.py` 9/9 通过
 > （登录→建相册草稿→建动态→上传→收录→保存→发布→公开页可见）；期间修复了 2 个真实 UI 阻断缺陷：

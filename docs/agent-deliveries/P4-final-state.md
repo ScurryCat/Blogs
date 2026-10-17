@@ -47,6 +47,10 @@
     `verify-reference-frames.py` **17/17** 通过；来源核实见 `reference-frame-sources.md`
     （官方 3 张：PlayStation CDN 1 + Steam 官方截图 2；可追溯非官方 12；未核实 2）。
     整屏参考帧缺口已收口；剩余为真实设备与 IM 图片消息。
+  - **视觉对照证据（2026-10-18）**：`tools/capture-visual-comparison.py` 把 17 张参考帧与
+    站点 11 个界面并排对照；结论见 `P4-visual-comparison-evidence.md`
+    （13 项语言级部分对照 / 2 项未实现（图片消息、楼层图）/ 2 项无对应整屏；
+    **整屏逐像素还原仍未通过**）。
   - **完整验收仍不通过**：整屏视觉对照（部分）、真机、IM 图片消息仍未收口。
 - **验证基建**：`audit-contrast.py` / `audit-structure.py` / `audit-failure-states.py` /
   `verify-home-refresh.py` / `verify-demo-content.py` / `seed-demo-content.py` /
