@@ -29,7 +29,7 @@
 
 | # | App | 入口 | 实际去向 | 手机内是否有对应 screen |
 | --- | --- | --- | --- | --- |
-| P1 | INS | 标签 chip | `/apps/ins?tag=<tag>` | ✗ 无（`screens` 只有 `feed/detail/saved`）|
+| ~~P1~~ | INS | 标签 chip | ~~`/apps/ins?tag=<tag>`~~ → **已改为手机内 `screen=tagged&item=<标签>`** ✅ 第 46 轮完成 | ✅ 有 `tagged` |
 | P2 | INS | 消息 → 角色 | `/apps/ins/messages/<id>` | ✗ 无 |
 | ~~P3~~ | 手记 | 「读取手记」 | ~~`/apps/journal/<id>`~~ → **已改为手机内 `screen=reading`** ✅ 第 43 轮完成 | ✅ 有 `reading` |
 | ~~P4~~ | 导航 | 殿堂详情 | ~~`/apps/metanav/palaces/<slug>`~~ → **已改为手机内 `screen=palace`** ✅ 第 44 轮完成 | ✅ 有 `palace` |
@@ -61,6 +61,22 @@
 **收益**：四处 UX 不一致一次解决；且为以后「任何应用内详情」立下统一做法。
 **风险**：改动 4 个 App + 宿主 + 测试；需要真实浏览器回归（本会话已有 E2E 能力：见
 `tools/e2e-phone-scroll.py` 的隔离栈搭法）。
+
+## 三·补三：P1 已落地（第 46 轮）
+
+INS 的标签筛选在手机内改为换屏 `screen=tagged&item=<标签名>`：`FeedView` 新增可选
+`onSelectTag`，手机里渲染成按钮并走宿主换屏（独立页仍渲染站内链接）。
+端到端实测（`tools/e2e-ins-tag.py`）：
+
+```
+URL：/?phone=ins&screen=tagged&item=<标签>
+状态：手机开=True 应用层=True feed=True　标签 chips：['全部']（按钮）
+判定：✓ 标签筛选在手机内，手机未关闭
+```
+
+**遗留（未做）**：手机里的**标签列表本身**不显示（`availableTags` 只在独立页由服务端传入，
+手机路径一直没传）。这是**既有缺口**，与本次「点击后是否离开手机」是两件事；
+要补的话可从已加载动态的 `tags` 派生，或在手机侧取一次标签列表。
 
 ## 三·补二：P4 已落地（第 44 轮）
 

@@ -162,7 +162,7 @@ describe("InsShell 页签组合", () => {
 
 describe("InsPhoneView", () => {
   it("screens 枚举与规格一致（不含 messages）", () => {
-    expect([...INS_APP_SCREENS]).toEqual(["feed", "detail", "saved"]);
+    expect([...INS_APP_SCREENS]).toEqual(["feed", "detail", "saved", "tagged"]);
     expect(INS_APP_SCREENS).not.toContain("messages");
   });
 

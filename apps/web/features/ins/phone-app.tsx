@@ -28,7 +28,7 @@ import { InsPhoneView } from "./phone-view";
  * 但消息功能在手机上就进不去 —— 不是坏体验，是缺功能。
  */
 /** INS 自己实现的屏幕（原来的 `screens` 导出）。 */
-const INS_APP_SCREENS = ["feed", "detail", "saved"] as const;
+const INS_APP_SCREENS = ["feed", "detail", "saved", "tagged"] as const;
 
 function InsPhoneRoot(props: PhoneViewProps) {
   if ((MESSAGING_SCREENS as readonly string[]).includes(props.screen)) {

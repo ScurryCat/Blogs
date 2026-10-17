@@ -176,15 +176,16 @@ if [ "${DO_E2E:-0}" -eq 1 ]; then
     check_e2e e2e-im-draft.py "IM 草稿持久化"
     check_e2e e2e-journal-reading.py "手记正文留在手机内（§3.3 P3）"
     check_e2e e2e-metanav-palace.py "殿堂正文留在手机内（§3.3 P4）"
+    check_e2e e2e-ins-tag.py "INS 标签筛选留在手机内（§3.3 P1）"
     tools/e2e-stack.sh down >/dev/null 2>&1
-    record "真实浏览器端到端 ×4" "$e2e_ok" "隔离全栈（up→测→down）"
+    record "真实浏览器端到端 ×5" "$e2e_ok" "隔离全栈（up→测→down）"
   else
     echo "  ⚠ 隔离全栈没起来，见 /tmp/vf-e2e-stack.log"
     tools/e2e-stack.sh down >/dev/null 2>&1
-    record "真实浏览器端到端 ×4" 1 "隔离全栈起不来"
+    record "真实浏览器端到端 ×5" 1 "隔离全栈起不来"
   fi
 else
-  record "真实浏览器端到端 ×4" skip "（未加 --e2e）"
+  record "真实浏览器端到端 ×5" skip "（未加 --e2e）"
   echo
   echo "7/7 端到端：已跳过（加 --e2e 启用）"
 fi

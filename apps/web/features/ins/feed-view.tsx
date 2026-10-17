@@ -25,6 +25,8 @@ import { excerptOf, type Moment } from "./types";
 import { useMomentFeed } from "./use-feed";
 
 export interface FeedViewProps {
+  /** 手机内传入：标签切换走宿主换屏；不传则渲染站内链接（独立页）。 */
+  onSelectTag?: (tag: string | null) => void;
   /** 当前标签筛选（来自 URL 查询参数）。 */
   tag: string | null;
   /** 可用的标签（来自已加载动态的并集）。 */
@@ -42,6 +44,7 @@ export function FeedView({
   initial,
   initialCursor = null,
   initialError = null,
+  onSelectTag,
 }: FeedViewProps): ReactNode {
   const [preview, setPreview] = useState<{ momentId: string; index: number } | null>(null);
   const lastTrigger = useRef<HTMLElement | null>(null);
@@ -75,19 +78,43 @@ export function FeedView({
   return (
     <section className="ins-feed-wrap" aria-label="图文动态" ref={wrapRef}>
       <nav className="ins-filters" aria-label="标签筛选">
-        <SiteLink source="phone-link" className={`ins-chip${tag ? "" : " on"}`} href="/apps/ins" aria-current={tag ? undefined : "page"}>
-          全部
-        </SiteLink>
-        {availableTags.map((name) => (
-          <SiteLink source="phone-link"
-            key={name}
-            className={`ins-chip${tag === name ? " on" : ""}`}
-            href={`/apps/ins?tag=${encodeURIComponent(name)}`}
-            aria-current={tag === name ? "page" : undefined}
+        {onSelectTag ? (
+          // 手机里：标签是应用内状态，换屏而不是跳站内路由（否则手机会被关闭）
+          <button
+            type="button"
+            className={`ins-chip${tag ? "" : " on"}`}
+            aria-current={tag ? undefined : "page"}
+            onClick={() => onSelectTag(null)}
           >
-            #{name}
+            全部
+          </button>
+        ) : (
+          <SiteLink source="phone-link" className={`ins-chip${tag ? "" : " on"}`} href="/apps/ins" aria-current={tag ? undefined : "page"}>
+            全部
           </SiteLink>
-        ))}
+        )}
+        {availableTags.map((name) =>
+          onSelectTag ? (
+            <button
+              key={name}
+              type="button"
+              className={`ins-chip${tag === name ? " on" : ""}`}
+              aria-current={tag === name ? "page" : undefined}
+              onClick={() => onSelectTag(name)}
+            >
+              #{name}
+            </button>
+          ) : (
+            <SiteLink source="phone-link"
+              key={name}
+              className={`ins-chip${tag === name ? " on" : ""}`}
+              href={`/apps/ins?tag=${encodeURIComponent(name)}`}
+              aria-current={tag === name ? "page" : undefined}
+            >
+              #{name}
+            </SiteLink>
+          ),
+        )}
       </nav>
 
       {feed.phase === "loading" && !feed.items.length ? (

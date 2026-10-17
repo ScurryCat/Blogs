@@ -31,7 +31,8 @@ import { INS_SAVED_TAB, type InsTabContribution } from "./composition";
 import { isMomentId } from "./types";
 
 /** 与 `phone-app.tsx` 的 `screens` 保持一致；顺序即默认屏优先顺序。 */
-export const INS_APP_SCREENS = ["feed", "detail", "saved"] as const;
+// `tagged` = 手机内按标签筛选（`item` 是标签名）；独立页仍走 /apps/ins?tag=
+export const INS_APP_SCREENS = ["feed", "detail", "saved", "tagged"] as const;
 
 /**
  * 手机里的「消息」页签。
@@ -106,7 +107,17 @@ export function InsPhoneView({ screen, item, mode, host }: PhoneViewProps): Reac
   return (
     <InsShell
       tabContributions={[...(gallery.available ? [galleryTabContribution(true)] : []), messagesTab]}
-      renderFeed={() => <FeedView tag={null} />}
+      renderFeed={() => {
+        // 手机里标签筛选是应用内状态：screen=tagged + item=<标签名>；点标签走宿主换屏，
+        // 不跳 /apps/ins?tag=…（那会关闭手机）。
+        const activeTag = screen === "tagged" ? item : null;
+        return (
+          <FeedView
+            tag={activeTag}
+            onSelectTag={(next) => host.navigateScreen(next ? "tagged" : "feed", next)}
+          />
+        );
+      }}
       headerExtra={
         <p className="ins-phone-hint" role="note">
           {mode === "expanded"
