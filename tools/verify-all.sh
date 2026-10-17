@@ -8,6 +8,7 @@
 #   tools/verify-all.sh --fast          # 只跑快的：静态审计 + typecheck/lint/单测（约 40 秒）
 #   tools/verify-all.sh --no-browser    # 跳过需要浏览器与隔离构建的段
 #   tools/verify-all.sh --no-backend    # 跳过后端整树
+#   tools/verify-all.sh --e2e           # 额外跑真实浏览器端到端（需起隔离全栈，约 3 分钟）
 #
 # 前置条件：
 #   - 段 3 用独立 Postgres 集群，自动起停，不碰共享集群；
@@ -26,11 +27,13 @@ PG_BIN="/opt/homebrew/opt/postgresql@18/bin"
 FAST=0
 DO_BACKEND=1
 DO_BROWSER=1
+DO_E2E=0
 for arg in "$@"; do
   case "$arg" in
     --fast) FAST=1; DO_BACKEND=0; DO_BROWSER=0 ;;
     --no-backend) DO_BACKEND=0 ;;
     --no-browser) DO_BROWSER=0 ;;
+    --e2e) DO_E2E=1 ;;
     --help|-h) sed -n '2,20p' "$0"; exit 0 ;;
     *) echo "未知参数：$arg（用 --help 看用法）"; exit 2 ;;
   esac
@@ -154,6 +157,34 @@ else
   record "业务流验收脚本 ×4" skip "（本轮跳过）"
   echo
   echo "6/6：已跳过"
+fi
+
+# ── 7 (--e2e) 真实浏览器端到端 ──────────────────────────────
+if [ "${DO_E2E:-0}" -eq 1 ]; then
+  run_section "7/7 真实浏览器端到端（隔离全栈：独立集群 + 隔离 API + 隔离前端 + 种子）"
+  if tools/e2e-stack.sh up >/tmp/vf-e2e-stack.log 2>&1; then
+    e2e_ok=0
+    check_e2e() { # $1=脚本 $2=名称
+      if python3 "$REPO/tools/$1" http://127.0.0.1:3130 >"/tmp/vf-$1.log" 2>&1; then
+        printf "  %-28s PASS\n" "$2"
+      else
+        printf "  %-28s FAIL（见 /tmp/vf-%s.log）\n" "$2" "$1"
+        e2e_ok=1
+      fi
+    }
+    check_e2e e2e-phone-scroll.py "手机滚动位置恢复"
+    check_e2e e2e-im-draft.py "IM 草稿持久化"
+    tools/e2e-stack.sh down >/dev/null 2>&1
+    record "真实浏览器端到端 ×2" "$e2e_ok" "隔离全栈（up→测→down）"
+  else
+    echo "  ⚠ 隔离全栈没起来，见 /tmp/vf-e2e-stack.log"
+    tools/e2e-stack.sh down >/dev/null 2>&1
+    record "真实浏览器端到端 ×2" 1 "隔离全栈起不来"
+  fi
+else
+  record "真实浏览器端到端 ×2" skip "（未加 --e2e）"
+  echo
+  echo "7/7 端到端：已跳过（加 --e2e 启用）"
 fi
 
 # ── 汇总 ───────────────────────────────────────────────────
