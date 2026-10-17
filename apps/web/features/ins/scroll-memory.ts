@@ -98,7 +98,7 @@ export function useFeedScrollRestore(
       }
     });
     return () => cancelAnimationFrame(raf);
-  }, [key, options.consume, options.enabled, ready]);
+  }, [key, options.consume, options.enabled, options.containerRef, ready]);
 
   // 卸载前记下当前位置，供「详情 → 返回」使用。
   // **容器在 effect 建立时就解析**：React 会在卸载清理之前把 ref 置空，
