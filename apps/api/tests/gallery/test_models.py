@@ -191,3 +191,102 @@ def test_kind_labels_are_defined_for_every_kind() -> None:
     from app.modules.gallery.models import ALBUM_KINDS, KIND_LABELS
 
     assert set(ALBUM_KINDS) == set(KIND_LABELS)
+
+
+# --- 收录来源表（N3）的数据库约束 ------------------------------------------
+
+
+def test_independent_source_is_unique_per_album_and_media(t06_session) -> None:
+    """部分唯一索引：同一「相册 + 媒体」最多一条独立来源。"""
+    from app.modules.gallery.models import album_media_sources
+
+    owner = make_admin(t06_session, username="source-owner")
+    album = make_album(t06_session, slug=unique_slug("source"))
+    media = make_media(t06_session, owner)
+    attach_photos(t06_session, album, [(media.id, 0, "说明", None)])
+    with pytest.raises(IntegrityError):
+        t06_session.execute(
+            album_media_sources.insert().values(
+                album_id=album.id, media_id=media.id, moment_id=None
+            )
+        )
+
+
+def test_moment_source_triple_is_unique(t06_session) -> None:
+    """`(moment_id, album_id, media_id)` 唯一：同一动态不能把同一张图重复收录两次。"""
+    from app.modules.gallery.models import album_media_sources
+    from tests.moments.helpers import make_moment
+
+    owner = make_admin(t06_session, username="triple-owner")
+    album = make_album(t06_session, slug=unique_slug("triple"))
+    media = make_media(t06_session, owner)
+    moment = make_moment(t06_session, owner, status="draft")
+    attach_photos(t06_session, album, [(media.id, 0, "说明", None)], independent=False)
+    t06_session.execute(
+        album_media_sources.insert().values(
+            album_id=album.id, media_id=media.id, moment_id=moment.id
+        )
+    )
+    with pytest.raises(IntegrityError):
+        t06_session.execute(
+            album_media_sources.insert().values(
+                album_id=album.id, media_id=media.id, moment_id=moment.id
+            )
+        )
+
+
+def test_media_referenced_only_by_source_cannot_be_physically_deleted(t06_session) -> None:
+    """媒体被收录来源引用时同样被 RESTRICT 拦住（与 album_media 的约束一致）。"""
+    from app.modules.gallery.models import album_media_sources
+    from tests.moments.helpers import make_moment
+
+    owner = make_admin(t06_session, username="restrict-source-owner")
+    album = make_album(t06_session, slug=unique_slug("restrict-source"))
+    media = make_media(t06_session, owner)
+    moment = make_moment(t06_session, owner, status="draft")
+    attach_photos(t06_session, album, [(media.id, 0, "说明", None)])
+    t06_session.execute(
+        album_media_sources.insert().values(
+            album_id=album.id, media_id=media.id, moment_id=moment.id
+        )
+    )
+    t06_session.flush()
+    with pytest.raises(IntegrityError):
+        t06_session.execute(text("delete from media where id = :id"), {"id": media.id})
+
+
+def test_deleting_album_or_moment_cascades_sources(t06_session) -> None:
+    """硬删除相册 / 动态会级联清理来源。"""
+    from app.modules.gallery.models import album_media_sources
+    from tests.moments.helpers import make_moment
+
+    owner = make_admin(t06_session, username="cascade-source-owner")
+    album = make_album(t06_session, slug=unique_slug("cascade-source"))
+    media = make_media(t06_session, owner)
+    attach_photos(t06_session, album, [(media.id, 0, "说明", None)], independent=False)
+    moment = make_moment(t06_session, owner, status="draft")
+    t06_session.execute(
+        album_media_sources.insert().values(
+            album_id=album.id, media_id=media.id, moment_id=moment.id
+        )
+    )
+    t06_session.flush()
+
+    t06_session.execute(text("delete from moments where id = :id"), {"id": moment.id})
+    t06_session.flush()
+    remaining = t06_session.execute(
+        text("select count(*) from album_media_sources where album_id = :id"),
+        {"id": album.id},
+    ).scalars().one()
+    assert remaining == 0, "删除动态应级联删除它的收录来源"
+
+    # 相册硬删除 → 来源级联清空（album_media 同样被 CASCADE）。
+    t06_session.execute(text("delete from albums where id = :id"), {"id": album.id})
+    t06_session.flush()
+    assert (
+        t06_session.execute(
+            text("select count(*) from album_media_sources where album_id = :id"),
+            {"id": album.id},
+        ).scalars().one()
+        == 0
+    )

@@ -1,9 +1,20 @@
 """相册与照片关系模型（07 §5「记忆画廊」、07 §8 的 `albums` / `album_media` 行）。
 
-    albums        id / 唯一 slug / title / description / kind / position / status /
-                  published_at / created_at / updated_at / deleted_at / version
-    album_media   album_id / media_id / position / alt / caption / taken_on
-                  复合主键 → 同一相册同一媒体唯一；唯一约束 → 同一相册 position 唯一
+    albums              id / 唯一 slug / title / description / kind / position / status /
+                        published_at / created_at / updated_at / deleted_at / version
+    album_media         album_id / media_id / position / alt / caption / taken_on
+                        复合主键 → 同一相册同一媒体唯一；唯一约束 → 同一相册 position 唯一
+    album_media_sources id / album_id / media_id / moment_id / created_at
+                        **收录来源**：moment_id IS NULL = 独立相册收录；
+                        moment_id 非空 = 动态收录（三元组唯一）
+
+`album_media` 是**显示关系**（怎么排、怎么写说明）；`album_media_sources` 是**收录来源**
+（凭什么有公开资格）。两者分开的原因（第三轮任务书 §4.4 / §4.5）：
+
+  - 配置存在 ≠ 公开资格：动态草稿 / 撤回时收录配置保留（供重发恢复），但不贡献公开资格；
+  - 同一「相册 + 媒体」允许 1 条独立来源 + 多条动态来源；
+  - 相册侧的排序 / 说明继续属于 `album_media`，不因其他动态收录同图而被覆盖；
+  - 迁移前已存在的相册图片一律回填为独立来源，不能按「恰好被动态引用」推断。
 
 字段与设计文档的对应（07 §5 / 07 §8）：
 
@@ -177,6 +188,64 @@ album_media = Table(
 )
 
 
+# 收录来源表（第三轮任务书 §4.4 / §4.5 / §4.6）。
+#
+# 为什么需要一张独立表，而不是给 album_media 加一个 `source` 列：
+#   - 同一「相册 + 媒体」可以同时有独立来源 + 多条动态来源，一个标量列表达不了；
+#   - 动态草稿 / 撤回时**保留配置但不贡献公开资格**，所以「配置」与「当前是否公开」
+#     必须能分开判断：这里存配置，公开资格由 source 行 + moments 当前状态在 SQL 里联合决定；
+#   - 迁移可以把历史相册图片无损回填成独立来源（见迁移脚本）。
+#
+# 数据库约束：
+#   - `uq_album_media_sources_moment_triple`：同一「动态 + 相册 + 媒体」只有一条；
+#   - `uq_album_media_sources_independent`（部分唯一索引，moment_id IS NULL）：
+#     同一「相册 + 媒体」最多一条独立来源；
+#   - 外键：albums / moments 硬删除级联清理；media 硬删除 RESTRICT（与 album_media 一致，
+#     媒体是否可删仍要先检查引用）。
+album_media_sources = Table(
+    "album_media_sources",
+    Base.metadata,
+    Column("id", Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4),
+    Column(
+        "album_id",
+        Uuid(as_uuid=True),
+        ForeignKey("albums.id", ondelete="CASCADE"),
+        nullable=False,
+    ),
+    Column(
+        "media_id",
+        Uuid(as_uuid=True),
+        ForeignKey("media.id", ondelete="RESTRICT"),
+        nullable=False,
+    ),
+    Column(
+        "moment_id",
+        Uuid(as_uuid=True),
+        ForeignKey("moments.id", ondelete="CASCADE"),
+        nullable=True,
+    ),
+    Column("created_at", DateTime(timezone=True), nullable=False, default=utcnow),
+    UniqueConstraint(
+        "moment_id",
+        "album_id",
+        "media_id",
+        name="uq_album_media_sources_moment_triple",
+    ),
+    # 独立来源唯一：部分唯一索引（NULL 在普通 UNIQUE 里互不相等，无法表达）。
+    Index(
+        "uq_album_media_sources_independent",
+        "album_id",
+        "media_id",
+        unique=True,
+        postgresql_where=sql_text("moment_id IS NULL"),
+    ),
+    # 公开条件按 (album_id, media_id) 找来源（独立 / 动态都要命中）。
+    Index("ix_album_media_sources_album_id_media_id", "album_id", "media_id"),
+    # 媒体权限检查 / 媒体删除前的反向查询。
+    Index("ix_album_media_sources_media_id", "media_id"),
+)
+
+
 __all__ = [
     "ALBUM_KINDS",
     "ALBUM_STATUSES",
@@ -194,4 +263,5 @@ __all__ = [
     "STATUS_PUBLISHED",
     "Album",
     "album_media",
+    "album_media_sources",
 ]

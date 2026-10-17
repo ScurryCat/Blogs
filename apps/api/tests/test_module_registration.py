@@ -90,6 +90,7 @@ EXPECTED_TABLES = (
     "ai_requests",
     "ai_visitor_days",
     "album_media",
+    "album_media_sources",
     "albums",
     "audit_events",
     "auth_rate_limits",

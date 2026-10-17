@@ -61,14 +61,27 @@ class PhotoOut(BaseModel):
     variants: list[MediaVariantOut]
 
 
+class PhotoSourceOut(BaseModel):
+    """一张相册照片的收录来源（管理端回执用；公开 DTO 不暴露来源）。
+
+    - `independent`：相册管理端显式收录（迁移回填的旧图片也是这一种）；
+    - `moment`：由某条动态的「同时收录到相册」带来；`moment_id` 给出动态 ID。
+      **配置存在不等于公开资格**：动态草稿 / 撤回时这一条仍然存在，但不贡献公开资格。
+    """
+
+    kind: Literal["independent", "moment"]
+    moment_id: uuid.UUID | None = None
+
+
 class PhotoAdminOut(PhotoOut):
-    """管理回执：额外给出媒体状态，让表单能提示「这张图还不能发布」。"""
+    """管理回执：额外给出媒体状态与收录来源，让表单能提示「这张图还不能发布」/「来自动态」。"""
 
     media_status: str = "ready"
     media_deleted: bool = False
     album_id: uuid.UUID | None = None
     album_slug: str | None = None
     album_title: str | None = None
+    sources: list[PhotoSourceOut] = Field(default_factory=list)
 
 
 class AlbumSummaryOut(BaseModel):
@@ -244,6 +257,7 @@ def photo_admin_payload(
     caption: str,
     taken_on: date | None,
     album: Album | None = None,
+    sources: list[PhotoSourceOut] | None = None,
 ) -> PhotoAdminOut:
     public = photo_payload(media, position=position, alt=alt, caption=caption, taken_on=taken_on)
     return PhotoAdminOut(
@@ -253,6 +267,7 @@ def photo_admin_payload(
         album_id=album.id if album else None,
         album_slug=album.slug if album else None,
         album_title=album.title if album else None,
+        sources=list(sources or []),
     )
 
 
@@ -335,6 +350,7 @@ __all__ = [
     "PhotoItemOut",
     "PhotoListOut",
     "PhotoOut",
+    "PhotoSourceOut",
     "SLUG_PATTERN",
     "WallAlbumOut",
     "album_admin_out",

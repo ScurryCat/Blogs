@@ -18,11 +18,19 @@
   POST   /admin/albums/{id}/unpublish   撤回回到 draft
   DELETE /admin/albums/{id}             软删除（204）
   DELETE /admin/albums/{id}/photos/{media_id}
-                                        **单处撤回**：只移除相册这一处引用（204）
+                                        **单处撤回**：移除相册这一处显示关系 + 该图来源 +
+                                        该图的全部动态收录配置（204）；相关动态 version +1
 
 要点：
 
   - **公开地址用 slug，管理地址用 UUID**（与 projects 一致）。
+  - 公开投影按任务书 §4.6 的统一公开条件过滤：相册公开、媒体 ready、且「存在独立来源
+    或指向当前相册＋媒体且动态当前公开的动态来源」。相册列表的数量 / 封面、详情照片、
+    照片墙、分页 total、年份筛选、媒体权限检查共用同一段 SQL（`gallery.sources`）。
+  - 全局照片墙按 `media_id` 去重（任务书 §4.1）：同一张图只出现一次，主要归属为
+    `(albums.position ASC, albums.id ASC)` 最前的公开有效相册；查询 / 分页 / total 一致。
+  - 管理响应新增 `photos[].sources`（`independent` / `moment`），让编辑界面能说明
+    「这张图来自哪条动态」；公开 DTO 不暴露来源。
   - `/gallery/photos` 的 `scope=album` 必须同时给 `album`；给了 `month` 没给 `year`
     是字段错误 422，不静默忽略。
   - `/gallery/photos/years` 必须注册在 `/{album...}` 之前，否则会被当成一个 slug

@@ -23,7 +23,7 @@ import uuid
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.core.text import codepoint_length
 from app.modules.media.models import Media
@@ -37,6 +37,10 @@ from app.modules.moments.models import (
 )
 from app.modules.tags.models import Tag
 from app.modules.tags.schemas import TagPublicOut, tag_public_out
+
+# 单条动态最多 9 张图（IMAGES_MAX）：album_links 里一个相册的 media_ids 超过它一定是
+# 无效输入；相册数量没有业务上限，给一个防御性的数组上限即可。
+ALBUM_LINKS_MAX = 200
 
 # --- 写入 -----------------------------------------------------------------
 
@@ -71,12 +75,44 @@ class MomentImageIn(BaseModel):
     alt: str = Field(min_length=1, max_length=200)
 
 
-class MomentCreateIn(MomentTagListMixin):
+class MomentAlbumLinkIn(BaseModel):
+    """「同时收录到相册」的一条选择：目标相册 + 本条动态里的图片。
+
+    语义（任务书 §4.3）：传 `album_links` 时是**完整选择**；`[]` 表示清空；
+    不传表示保留原配置（但服务端会清掉已不属于该动态的图片配置）。
+    `media_ids` 必须是「本条动态当前图片」的子集；非法相册 / 媒体由服务端返回 409。
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    album_id: uuid.UUID
+    media_ids: list[uuid.UUID] = Field(default_factory=list, max_length=IMAGES_MAX)
+
+
+class MomentAlbumLinksMixin(BaseModel):
+    """`album_links` 的共用校验：同一相册不能在一个请求里出现两次。"""
+
+    @model_validator(mode="after")
+    def _album_links_unique_albums(self) -> "MomentAlbumLinksMixin":
+        links = getattr(self, "album_links", None)
+        if links is None:
+            return self
+        album_ids = [link.album_id for link in links]
+        if len(set(album_ids)) != len(album_ids):
+            raise ValueError("album_links 中同一相册不能重复出现")
+        return self
+
+
+class MomentCreateIn(MomentTagListMixin, MomentAlbumLinksMixin):
     """新建草稿。草稿可以暂时没有图片、替代文本也可以发布前补齐（03 §5）。"""
 
     text: str = Field(default="", max_length=TEXT_MAX_CODEPOINTS)
     images: list[MomentImageIn] = Field(default_factory=list, max_length=IMAGES_MAX)
     tags: list[str] = Field(default_factory=list, max_length=TAGS_MAX)
+    # 草稿阶段也可以先配置收录；动态发布前不贡献公开资格。
+    album_links: list[MomentAlbumLinkIn] = Field(
+        default_factory=list, max_length=ALBUM_LINKS_MAX
+    )
 
     @model_validator(mode="after")
     def _positions_contiguous(self) -> "MomentCreateIn":
@@ -84,12 +120,19 @@ class MomentCreateIn(MomentTagListMixin):
         return self
 
 
-class MomentUpdateIn(MomentTagListMixin):
-    """更新。所有字段可选；传入 `images` 时**完整替换**有序关系（05 §7）。"""
+class MomentUpdateIn(MomentTagListMixin, MomentAlbumLinksMixin):
+    """更新。所有字段可选；传入 `images` 时**完整替换**有序关系（05 §7）。
+
+    `album_links` 的「不传」与「传 []」语义不同（任务书 §4.3）：
+    不传 = 保留原收录配置；[] = 清空该动态全部收录选择。
+    """
 
     text: str | None = Field(default=None, max_length=TEXT_MAX_CODEPOINTS)
     images: list[MomentImageIn] | None = Field(default=None, max_length=IMAGES_MAX)
     tags: list[str] | None = Field(default=None, max_length=TAGS_MAX)
+    album_links: list[MomentAlbumLinkIn] | None = Field(
+        default=None, max_length=ALBUM_LINKS_MAX
+    )
 
     @model_validator(mode="after")
     def _positions_contiguous(self) -> "MomentUpdateIn":
@@ -147,12 +190,24 @@ class MomentImageAdminOut(BaseModel):
     alt: str
 
 
+class MomentAlbumLinkOut(BaseModel):
+    """管理回执里的当前收录选择：`{album_id, media_ids[]}`。
+
+    相册按 `(position ASC, id ASC)`；`media_ids` 按动态图片 position 升序。
+    草稿 / 撤回状态下也照实返回（配置存在 ≠ 公开资格）。
+    """
+
+    album_id: uuid.UUID
+    media_ids: list[uuid.UUID]
+
+
 class MomentAdminOut(MomentOut):
     status: Literal["draft", "published"]
     version: int
     created_at: datetime
     updated_at: datetime
     images_admin: list[MomentImageAdminOut]
+    album_links: list[MomentAlbumLinkOut] = Field(default_factory=list)
 
 
 class MomentAdminListOut(BaseModel):
@@ -194,6 +249,7 @@ def moment_admin_out(
     *,
     tags: list[Tag] | None = None,
     images: list[tuple[Media, int, str]] | None = None,
+    album_links: list[MomentAlbumLinkOut] | None = None,
 ) -> MomentAdminOut:
     base = moment_out(moment, tags=tags, images=images)
     return MomentAdminOut(
@@ -206,6 +262,7 @@ def moment_admin_out(
             MomentImageAdminOut(media_id=media.id, position=position, alt=alt)
             for media, position, alt in (images or [])
         ],
+        album_links=list(album_links or []),
     )
 
 

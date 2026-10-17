@@ -9,8 +9,10 @@
 
   GET    /admin/moments                 管理列表（草稿与已发布都在）
   GET    /admin/moments/{id}            读取草稿 / 预览数据，响应带 `version` 与 `ETag`
-  POST   /admin/moments                 新建草稿（201）
-  PATCH  /admin/moments/{id}            更新；传 images 时完整替换有序关系
+  POST   /admin/moments                 新建草稿（201）；可选 album_links 预配置收录
+  PATCH  /admin/moments/{id}            更新；传 images 时完整替换有序关系；
+                                        可选 album_links（不传=保留并清理失效项，
+                                        [] = 清空，非空 = 完整替换）
   POST   /admin/moments/{id}/publish    发布（门槛：1–9 张 ready 图片）
   POST   /admin/moments/{id}/unpublish  撤回回到 draft
   DELETE /admin/moments/{id}            软删除（204）
@@ -19,6 +21,9 @@
   - 动态 ID 强制 UUID：格式不对与「不存在」同形 404（不给 UUID 探测信号）。
   - 公开响应不因站主登录就顺便返回草稿（05 §7）：公开端点只用 `MomentOut`。
   - `If-Match` 缺失 428、版本不符 412，由 `app.core.preconditions` 统一处理。
+  - 收录选择（`album_links`）在管理响应里以 `album_links: [{album_id, media_ids[]}]`
+    返回，草稿 / 撤回状态也照实返回。写收录会同步相册显示关系与来源，并在**实际改变**
+    相关相册时 bump 相册 version（任务书 §4.3 / §4.7）。公开响应不含收录选择。
 """
 
 from __future__ import annotations
@@ -40,6 +45,7 @@ from app.modules.moments.models import MOMENT_STATUSES, Moment
 from app.modules.moments.schemas import (
     MomentAdminListOut,
     MomentAdminOut,
+    MomentAlbumLinkOut,
     MomentCreateIn,
     MomentListOut,
     MomentOut,
@@ -113,7 +119,12 @@ def _admin_payload(session: Session, moment: Moment) -> MomentAdminOut:
         for media_id, position, alt in refs
         if media_id in media_by_id
     ]
-    return moment_admin_out(moment, tags=tags, images=images)
+    # 收录选择：草稿 / 撤回状态也照实返回（配置存在 ≠ 公开资格，前端要能继续编辑）。
+    album_links = [
+        MomentAlbumLinkOut(album_id=link["album_id"], media_ids=link["media_ids"])
+        for link in service.album_links_for_moments(session, [moment.id]).get(moment.id, [])
+    ]
+    return moment_admin_out(moment, tags=tags, images=images, album_links=album_links)
 
 
 def _load_or_404(session: Session, moment_id: str) -> Moment:
@@ -233,6 +244,7 @@ def create_moment(
         text=payload.text,
         images=payload.images,
         tags=payload.tags,
+        album_links=payload.album_links,
     )
     _audit(session, action=AUDIT_CREATE, moment=moment, context=context, request=request)
     response.headers["ETag"] = f'"{moment.version}"'

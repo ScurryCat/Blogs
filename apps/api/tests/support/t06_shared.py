@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from app.modules.auth.models import AdminUser
 from app.modules.gallery.models import STATUS_DRAFT as ALBUM_DRAFT
 from app.modules.gallery.models import STATUS_PUBLISHED as ALBUM_PUBLISHED
-from app.modules.gallery.models import Album, album_media
+from app.modules.gallery.models import Album, album_media, album_media_sources
 from app.modules.projects.models import STATUS_DRAFT, STATUS_PUBLISHED, Project, project_media
 from tests.auth.helpers import ORIGIN, login_ok, make_admin, read_session  # noqa: F401
 from tests.media.helpers import make_media_row
@@ -156,8 +156,15 @@ def attach_photos(
     session: Session,
     album: Album,
     photos: list[tuple[uuid.UUID, int, str, date | None]],
+    *,
+    independent: bool = True,
 ) -> None:
-    """直接挂照片关系。元组是 `(media_id, position, caption, taken_on)`。"""
+    """直接挂照片关系。元组是 `(media_id, position, caption, taken_on)`。
+
+    `independent=True`（默认）同时补一条**独立收录来源** —— 对应「相册管理端显式加入」
+    与「迁移前已存在的相册图片回填」两种真实状态。第三轮起 `album_media` 只是显示关系，
+    没有来源的照片对公众不可见，读取用例必须显式说明来源。
+    """
     for media_id, position, caption, taken_on in photos:
         session.execute(
             album_media.insert().values(
@@ -169,6 +176,14 @@ def attach_photos(
                 taken_on=taken_on,
             )
         )
+        if independent:
+            session.execute(
+                album_media_sources.insert().values(
+                    album_id=album.id,
+                    media_id=media_id,
+                    moment_id=None,
+                )
+            )
     session.flush()
 
 

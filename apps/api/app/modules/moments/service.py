@@ -38,6 +38,7 @@ from app.core.pagination import (
 )
 from app.core.preconditions import require_version
 from app.core.text import normalize_tag_slug
+from app.modules.gallery import sources as gallery_sources
 from app.modules.media.models import STATUS_READY, Media
 from app.modules.moments.models import (
     IMAGES_MAX,
@@ -355,6 +356,45 @@ def _commit(session: Session) -> None:
         raise conflict("数据约束冲突，请检查图片顺序与标签", {"body": [type(exc).__name__]}) from None
 
 
+# --- 收录选择（album_links）------------------------------------------------
+
+
+def _album_link_mappings(links: list) -> list[dict]:
+    """把 `MomentAlbumLinkIn` 模型或 `model_dump()` 结果统一成 dict 列表。
+
+    与 `_as_image_input` 同样的原因：router 用 `model_dump(exclude_unset=True)` 取
+    「只改了哪些字段」，service 收到的是 dict 而不是模型实例。
+    """
+    mappings: list[dict] = []
+    for link in links:
+        if hasattr(link, "model_dump"):
+            mappings.append(link.model_dump())
+        else:
+            mappings.append(dict(link))
+    return mappings
+
+
+def album_links_for_moments(
+    session: Session, moment_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, list[dict]]:
+    """管理回执用：`{moment_id: [{album_id, media_ids[…]}]}`（只含未删除相册）。"""
+    return gallery_sources.album_links_for_moments(session, moment_ids)
+
+
+def _prospective_image_alts(
+    session: Session, moment: Moment | None, images: list | None
+) -> dict[uuid.UUID, str]:
+    """校验 album_links 时用的「这条动态之后会有哪些图片」映射（不写库）。"""
+    if images is not None:
+        return {
+            _as_image_input(image).media_id: _as_image_input(image).alt.strip()
+            for image in images
+        }
+    if moment is None:
+        return {}
+    return gallery_sources.moment_media_alts(session, moment.id)
+
+
 # --- 管理写入 -------------------------------------------------------------
 
 
@@ -365,10 +405,21 @@ def create_moment(
     text: str = "",
     images: list[MomentImageIn] | None = None,
     tags: list[str] | None = None,
+    album_links: list | None = None,
 ) -> Moment:
-    """新建草稿。创建成功返回已经提交的草稿（version=1）。"""
+    """新建草稿。创建成功返回已经提交的草稿（version=1）。
+
+    `album_links` 在创建草稿时即写入收录配置（任务书 §4.2：草稿阶段可先配置，
+    动态发布后才具备公开资格）；非法目标在**任何写入之前**就返回 409。
+    """
     image_list = list(images or [])
     _load_ready_media(session, image_list)
+    link_mappings = _album_link_mappings(album_links or [])
+    normalized_links = gallery_sources.validate_moment_album_links(
+        session,
+        links=link_mappings,
+        image_alts=_prospective_image_alts(session, None, image_list),
+    )
 
     moment = Moment(
         author_id=author_id,
@@ -382,6 +433,13 @@ def create_moment(
         _replace_images(session, moment, image_list)
     if tags:
         _replace_tags(session, moment, tags)
+    affected_albums = gallery_sources.replace_moment_album_links(
+        session,
+        moment=moment,
+        normalized_links=normalized_links,
+        image_alts=_prospective_image_alts(session, None, image_list),
+    )
+    gallery_sources.bump_album_versions(session, affected_albums)
     _commit(session)
     return moment
 
@@ -393,15 +451,30 @@ def update_moment(
     patch: dict,
     if_match: str | None,
 ) -> Moment:
-    """按 `If-Match` 更新文字 / 图片 / 标签。传入 `images` 时完整替换关系。
+    """按 `If-Match` 更新文字 / 图片 / 标签 / 收录选择。
 
-    冲突（412）时**不做任何修改**：调用方负责保留未保存输入（05 §7）。
+    - 传 `album_links` 时是**完整选择**（`[]` 清空）；不传则保留原配置、但清除已不属于
+      该动态的图片配置（任务书 §4.3）；
+    - 非法媒体 / 相册 / 不属于当前动态的图片在**改动任何状态之前**返回 409；
+    - 实际改变了相册来源时，相关相册 version +1（防止旧相册表单覆盖新收录）；
+    - 冲突（412）时**不做任何修改**：调用方负责保留未保存输入（05 §7）。
     """
     require_version(moment.version, if_match)
 
     images = patch.get("images")
+    album_links_present = "album_links" in patch
+    album_links_value = patch.get("album_links")
     if images is not None:
         _load_ready_media(session, images)
+
+    # 先校验（不写库）：album_links 的目标相册 / 媒体必须对「更新后的动态」成立。
+    normalized_links = None
+    if album_links_present and album_links_value is not None:
+        normalized_links = gallery_sources.validate_moment_album_links(
+            session,
+            links=_album_link_mappings(album_links_value),
+            image_alts=_prospective_image_alts(session, moment, images),
+        )
 
     if "text" in patch:
         moment.text = _validate_text(patch["text"]) or ""
@@ -409,8 +482,30 @@ def update_moment(
         _replace_images(session, moment, images)
     if patch.get("tags") is not None:
         _replace_tags(session, moment, patch["tags"])
+    session.flush()
+
+    affected_albums: set[uuid.UUID] = set()
+    if normalized_links is not None:
+        affected_albums = gallery_sources.replace_moment_album_links(
+            session,
+            moment=moment,
+            normalized_links=normalized_links,
+            image_alts=gallery_sources.moment_media_alts(session, moment.id),
+        )
+    elif images is not None:
+        # 不传 album_links：原选择保留，但已从动态删掉的图片配置必须清掉。
+        keep_media_ids = [
+            media_id
+            for media_id, _position, _alt in image_refs_for_moments(
+                session, [moment.id]
+            ).get(moment.id, [])
+        ]
+        affected_albums = gallery_sources.prune_moment_album_links(
+            session, moment=moment, keep_media_ids=keep_media_ids
+        )
 
     moment.bump_version()
+    gallery_sources.bump_album_versions(session, affected_albums)
     _commit(session)
     return moment
 
@@ -459,12 +554,19 @@ def unpublish_moment(session: Session, moment: Moment, *, if_match: str | None) 
 
 
 def soft_delete_moment(session: Session, moment: Moment, *, if_match: str | None) -> None:
-    """软删除。文件不物理删除（可能还有相册等公开引用），由清理任务按引用与保留期处理。"""
+    """软删除。文件不物理删除（可能还有相册等公开引用），由清理任务按引用与保留期处理。
+
+    同时删除该动态的全部收录配置（任务书 §4.5「删除动态：取消它带来的展示来源，
+    处理关联记录」），并清理因此失去最后一个来源的相册显示关系；相关相册 version +1。
+    其他动态来源 / 独立来源 / 底层媒体保持不变。
+    """
     require_version(moment.version, if_match)
+    affected_albums = gallery_sources.clear_moment_album_links(session, moment=moment)
     moment.deleted_at = utcnow()
     moment.status = STATUS_DRAFT
     moment.published_at = None
     moment.bump_version()
+    gallery_sources.bump_album_versions(session, affected_albums)
     _commit(session)
 
 
