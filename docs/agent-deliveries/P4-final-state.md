@@ -1,4 +1,4 @@
-# P4 最终状态一页纸（交接速览 · 更新至首页刷新轮）
+# P4 最终状态一页纸（交接速览 · 更新至验收 v2 返工轮）
 
 > 一页纸回答：「现在做到哪、怎么验、还差什么、下一步找谁」。
 > 日期：2026-10-17 ｜ 分支 `main` ｜ 详细内容见同名目录下各交付单。
@@ -6,7 +6,7 @@
 
 ## 1. 现在做到哪
 
-- **功能/回归**：`tools/verify-all.sh --e2e` **7/7 段全绿**（静态审计、前端 931 单测、
+- **功能/回归**：`tools/verify-all.sh --e2e` **7/7 段全绿**（静态审计、前端 929 单测、
   后端 942/0、T02 52/52、多视口 11、业务流 4/4、端到端 6/6）。
 - **B1 视觉还原（本会话增量）**：参考帧审计完成；**9 个界面**完成元件级视觉还原 v1
   （IM / 手记日历 / COOP / 放课后 / 我的殿堂 / 生活图库 / 异世界导航 / 天鹅绒 / 印象空间），
@@ -28,14 +28,24 @@
   品牌红面板黑字，需设计决策）；焦点可见性 13 页 0 缺失；结构可及性 15 页 0 硬问题；
   失败态 15/15 页如实显示。
 - **B4 IM 图片消息**：决策提案就绪（推荐方案 A：扩展 cards 图片卡，零迁移），待产品拍板。
+- **交接验收 v2 返工（2026-10-17 晚，见 `P4-acceptance-v2-fixes.md`）**：
+  - **F1 已修复**：统一素材入口迁移为默认只进 `persona-curated/`，旧库降级「离线档案」；
+    `verify-reference-entry.py` 11 项通过。
+  - **F2 关键缺口已落地**：桌面实际渲染分支接入 2 枚已审核原版图标
+    （metanav 经典红眼 / ins 原版消息标识），其余 8 个 App 明确标为「适配设计」；
+    来源/证据/哈希见 `original-app-icons.md`。
+  - **F3 已修复**：INS 收录相册改 cursor 全量分页 + 列表外已选相册详情补取（404 才算删除），
+    补 3 个回归用例。
+  - **完整验收仍不通过**：整屏视觉对照、真机、管理端收录 UI 真流程、IM 图片消息仍未收口。
 - **验证基建**：`audit-contrast.py` / `audit-structure.py` / `audit-failure-states.py` /
   `verify-home-refresh.py` / `verify-demo-content.py` / `seed-demo-content.py` /
-  `package-handoff.py`；验证脚本统一做本地代理绕过。
+  `verify-reference-entry.py` / `verify-phone-icons.py` / `package-handoff.py`；
+  验证脚本统一做本地代理绕过。
 
 ## 2. 怎么验（三条命令 + 两个专项）
 
 ```sh
-bash tools/verify-all.sh --fast           # ~1 分钟：静态审计 + typecheck/lint/单测（931）
+bash tools/verify-all.sh --fast           # ~1 分钟：静态审计 + typecheck/lint/单测（929）
 bash tools/verify-all.sh --e2e            # ~15 分钟：+ 后端 + T02 + 多视口 + 业务流 + 端到端（桌面）
 bash tools/verify-all.sh --e2e --mobile   # ~20 分钟：端到端再跑手机全屏 390×844
 
@@ -53,9 +63,9 @@ python3 tools/verify-demo-content.py http://127.0.0.1:3100 --api http://127.0.0.
 | 缺口 | 卡在哪 | 需要谁 |
 | --- | --- | --- |
 | **首页排版（可选后续）** | 已还原为原本布局；若要重排，等站主给方向后单独做 | 站主 |
-| **整屏视觉还原**（§8.1 逐屏验收） | 本地参考库缺 G2/G3 与各界面整屏帧；本会话无外网 | 能提供可核实出处参考帧的人 |
+| **整屏视觉还原**（§8.1 逐屏验收） | 本地参考库缺 G2 回复选择整帧与各界面整屏帧；G3 红眼图标已以清理版落地（见 `original-app-icons.md`） | 能提供可核实出处参考帧的人 |
 | **B4 图片消息** | 需产品决策（A/B/C，见 `P4-im-image-messages-proposal.md`） | 产品/站主 |
-| **P4 原版应用图标** | 本地无原版素材；当前 AI 位图 + 一套自绘 SVG 可切换 | 可核实出处素材 |
+| **P4 原版应用图标（部分完成）** | `metanav` / `ins` 已接入已审核原版（清理版，来源/证据见 `original-app-icons.md`）；其余 8 个 App 仍为适配设计（AI 位图/自绘 SVG） | 其余 App 的官方素材 |
 | **真机验证** | 无设备（触控/软键盘/移动 Safari） | 有 iPhone/Android 的人 |
 | **品牌红面板黑字对比度** | 4.23:1（AA 需 4.5），需设计折中 | 设计/站主 |
 

@@ -19,8 +19,13 @@
   `cover/platinum.jpg`（原位替换为安全适配封面）、`band-halftone.jpg`。
 - `crowd/**` 人群过场**完整保留**：12 张 original 精灵哈希与
   `crowd/original/provenance.json` 逐一比对 **12/12 一致**；禁止按 `crow` 子串批量删除。
-- 外部精选库 `persona-curated/` **未落地**（工作区外写入受限，Lead 裁决改走仓库内清单替代方案），
-  见 `persona-curated-plan.md` 第 4 节；旧参考库保持离线只读、未移动未删除。
+- 外部精选库 `persona-curated/` **已落地**（2026-10-17 12:48 一次性授权建立，9 个已复核资源），
+  统一入口已于 2026-10-17 23:35 迁移为「默认只进精选库、旧库按需手动打开」，
+  见 `persona-curated-plan.md` §5/§6 与 `../../assets/reference/README.md`。旧参考库保持离线只读、未移动未删除。
+- **验收 F2 返工（2026-10-17）**：桌面默认图标改为已审核原版
+  `app/original/metanav-original.png`（经典红眼）与 `app/original/ins-original.png`（原版消息标识）；
+  其余 App 仍为适配设计。来源/哈希/画面核对见 `original-app-icons.md`，清单见
+  `persona-assets-manifest.csv` 的 `app-icon-original` 两行。
 
 ## 1. 网站公开目录总览
 

@@ -18,17 +18,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { PhoneMusicCard } from "./phone-music-card";
 import { APP_ICONS } from "./app-icons";
-
-/**
- * 应用图标用哪一版：
- *   `"raster"` = 生成的位图（`public/assets/legacy/img/app/<id>.png`，AI 出图后切好、抠黑底）
- *   `"svg"`    = 自绘矢量（`./app-icons`）
- *
- * **两版都保留，切换只改这一行** —— 位图那版笔触更「厚」、有手绘感；矢量那版在任意缩放下都锐利、
- * 且不新增位图资产。定下来之后删掉没选的那版即可（位图版删 `public/assets/legacy/img/app/`，
- * 矢量版删 `./app-icons.tsx`）。
- */
-const ICON_STYLE: "raster" | "svg" = "raster";
+import { originalAppIcon } from "./app-original-icons";
 import { usePhone } from "./phone-provider";
 import type { PhoneAppManifest } from "./types";
 import { useAudioOrDefault, useSoundEnabled } from "@/features/runtime/audio/audio-service";
@@ -75,8 +65,9 @@ function SoundSwitch(): ReactNode {
 function AppTile({ app }: { app: PhoneAppManifest }): ReactNode {
   const { host } = usePhone();
   const glyph = LEGACY_GLYPHS[app.id];
-  // 优先用自绘的 SVG 应用图标（一套语言、无许可问题）；
-  // 没有对应条目时才回退到角色头像 / 旧站文字符号。
+  // 图标顺序：① 已审核原版图标（metanav 红眼 / ins 消息标识）；
+  // ② 自绘矢量；③ 第二轮 AI 位图 / 注册表回退（其余 app 属「适配设计」，逐项标记见文档）。
+  const originalIcon = originalAppIcon(app.id);
   const icon = APP_ICONS[app.id];
   const rasterIcon = `/assets/legacy/img/app/${app.id}.png`;
   const activate = () => {
@@ -89,9 +80,19 @@ function AppTile({ app }: { app: PhoneAppManifest }): ReactNode {
   };
   return (
     <button className="pw-app" type="button" onClick={activate} data-app-id={app.id}>
-      {ICON_STYLE === "raster" && rasterIcon ? (
+      {originalIcon ? (
         // eslint-disable-next-line @next/next/no-img-element -- 已审核的静态资源，尺寸固定。
-        <img className="g-img" src={rasterIcon} alt="" width={34} height={34} />
+        <img
+          className="g-img"
+          src={originalIcon}
+          alt=""
+          width={34}
+          height={34}
+          data-app-icon="original"
+        />
+      ) : rasterIcon ? (
+        // eslint-disable-next-line @next/next/no-img-element -- 已审核的静态资源，尺寸固定。
+        <img className="g-img" src={rasterIcon} alt="" width={34} height={34} data-app-icon="adapted" />
       ) : icon ? (
         icon
       ) : glyph ? (

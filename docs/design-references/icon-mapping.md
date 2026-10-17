@@ -23,18 +23,26 @@
 
 | 应用 ID | 显示名称 | 用途 | 原版对应 | 原图路径（参考库内） | 游戏版本 | 来源页面 | 处理方式 | 前端使用路径（预计） | 原版/适配 | 许可核实 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `ins` | 动态 | 图文动态主入口 | 原版 SNS 消息标识 | `persona5-spriters/p5r/hud/132782-im-assets-cn-jp.png`（已提取 82 个元件） | P5R / PS4 / CN-JP | [Spriters Resource 132782](https://www.spriters-resource.com/playstation_4/persona5royal/asset/132782/) | 候选元件见 `p5r-im-assets-report.json` | `apps/web/public/assets/img/app/ins.png`（待定） | 原版 | **未核实** |
-| `im`（ins 内） | 消息 | 站内消息入口 | 原版消息标识（与 INS 区分含义） | 同上表 | P5R / PS4 | 同上 | 同上 | 同上 | 原版 | 未核实 |
+| `ins` | 动态 | 图文动态主入口 | 原版消息标识（IM） | **已接入**：`apps/web/public/assets/legacy/img/app/original/ins-original.png`（清理版 512×512） | P5R / PS4 / CN-JP | IM 界面参考 + 清理版来源见 `original-app-icons.md` §2.2 | 裁内容→居中 512×512 黑底方图（非 AI 重绘） | `/assets/legacy/img/app/original/ins-original.png`（桌面默认渲染） | **原版（清理版）** | **未核实** |
+| `im`（ins 内） | 消息 | 站内消息入口 | 原版消息标识（与 INS 区分含义） | 共用 `original/ins-original.png` | P5R / PS4 | 见 `original-app-icons.md` §2.2 | 同上 | `/assets/legacy/img/app/original/ins-original.png` | **原版（清理版）** | 未核实 |
 | `journal` | 手记 | 日记/日历 | 原作日历界面 | `persona5-spriters/p5/hud/92120-calendar-jpn.png`（**未提取**，3592×4103） | P5 / PS3 / JPN | [Spriters Resource 92120](https://www.spriters-resource.com/playstation_3/persona5/asset/92120/) | 待提取 | 待定 | 组合/适配 | 未核实 |
 | `leisure` | 放课后 | 追番与游戏 | 无直接对应原版 App | 视觉参考：`p5/hud/92711-minigames-jpn.png`、`92712-shops.png`（**未提取**） | P5 / PS3 | [92171](https://www.spriters-resource.com/playstation_3/persona5/asset/92711/)、[92712](https://www.spriters-resource.com/playstation_3/persona5/asset/92712/) | 借用书籍/游戏选择界面构图 | 待定 | **适配设计** | 未核实 |
 | `coop` | 协助者 | 友链通讯录 | 旧站既有「两人并肩」配对图标（非游戏内独立素材） | 站内 `apps/web/public/assets/legacy/img/app/coop.png`（旧站迁移，128×128） | 未核实（旧站图标） | 旧站 `assets/img/app/`（T02 迁入） | **已替换**：原 `icon/crow.webp`（角色 Crow/明智吾郎头像，已移除）→ 现用 `app/coop.png`；画面实看为两人形线图标，无角色/文字 | `apps/web/public/assets/legacy/img/app/coop.png`（manifest 回退值；桌面 raster 也用它） | **适配**（旧站既有） | **未核实** |
 | `mementos` | 印象空间 | 问题记录（异世界导航内层） | 旧站既有导航星形图标（非游戏内独立素材） | 站内 `apps/web/public/assets/legacy/img/icon/mementos.webp`（由 `app/metanav.png` 转格式） | 未核实（原图 P5R 图标） | 旧站 `assets/img/app/metanav.png`（T02 迁入） | **N6 适配**：PNG 128×128 RGBA → 无损 WebP，非 AI 重绘；原图哈希 `ca581583…`，产物 `d0de74b6…` | `/assets/legacy/img/icon/mementos.webp` | **适配** | **未核实** |
-| `metanav` | 异世界导航 | 关键词导航 | **经典红眼图标（红眼、星形瞳孔、黑色外刺）** | **本地库未确认独立原图 ✗** | 待定位 | [Megaten Wiki](https://megatenwiki.com/wiki/Metaverse_Navigator) | 需继续定位可追溯原图 | 待定 | 原版（**缺素材**） | 未核实 |
+| `metanav` | 异世界导航 | 关键词导航 | **经典红眼图标（红眼、星形瞳孔、黑色外刺）** | **已接入**：`apps/web/public/assets/legacy/img/app/original/metanav-original.png`（清理版 512×512；原版画面证据=P5 动画截图） | P5（非 P5R/P5X 变体） | 来源与证据见 `original-app-icons.md` §2.1 | 1024×1024 → 512×512 PNG（非 AI 重绘） | `/assets/legacy/img/app/original/metanav-original.png`（桌面默认渲染） | **原版（清理版）** | 未核实 |
 | `showcase` | 我的殿堂 | 作品与相册 | 无直接对应原版 App | 视觉参考：`p5r/hud/132783-photos-im.png`（IM 照片集，3846×2053） | P5R / PS4 | [Spriters Resource 132783](https://www.spriters-resource.com/playstation_4/persona5royal/asset/132783/) | 展览/收藏语汇，**适配** | 待定 | 适配设计 | 未核实 |
 | `palace` | 情报 | 专题索引 | 无直接对应原版 App | 待选参考 | — | — | 卷宗语汇，适配 | 待定 | 适配设计 | 未核实 |
 | `tokyo` | 地图 | 东京地图 | 原作地图 | `persona5-spriters/p5/miscellaneous/92510-maps.zip`（**已解包** `rmap_*.png`） | P5 / PS3 | [Spriters Resource 92510](https://www.spriters-resource.com/playstation_3/persona5/asset/92510/) | 地图针为适配符号 | 待定 | 组合/适配 | 未核实 |
 | `cast` | 天气 | 天气预报 | 原作天气预报界面 | `persona-dist/projects/Persona5-Weather-Forecast/dist/images/`（**fan 复刻**，sprites 齐全） | fan 复刻（非游戏内） | 本地 | 借用 weather-card/数值 sprites | 待定 | **适配设计** | 未核实 |
 | `profile` | 档案 | 个人档案 | 无直接对应原版 App | 待选参考 | — | — | 证件/档案语汇，适配 | 待定 | 适配设计 | 未核实 |
+
+### 2.1 原版图标接入（验收 F2 返工 · 2026-10-17）
+
+`metanav`（经典红眼）与 `ins/im`（原版消息标识）已接入桌面**实际渲染分支**：
+`features/phone/app-original-icons.ts` 映射 → `phone-desktop.tsx` 优先渲染
+`<img data-app-icon="original">`；没有原版条目的其余 8 个 App 仍走适配设计（`data-app-icon="adapted"`），
+逐项标记不冒充原版。来源、版本、画面核对、哈希、裁切与「原版/适配」分界见
+`docs/design-references/original-app-icons.md`。
 
 共享元件（不属于某个应用，但给全部界面用）：
 

@@ -33,6 +33,8 @@ MANIFEST_FILES = [
     # 第一版漏了这个文件，等于漏掉了三个 App 的图标审计。
     "features/phone/registry.ts",
     "features/phone/legacy-apps.ts",
+    # 验收 F2 返工：已审核原版图标映射（不按 manifest 的 `icon:` 字段声明，需单独扫描）。
+    "features/phone/app-original-icons.ts",
 ]
 
 # 已移除 / 排除的资源（N6 removed 清单里的文件名），代码不得再引用
@@ -58,7 +60,26 @@ def collect_icons() -> dict[str, list[str]]:
             if not value.startswith("/assets/"):
                 continue
             found.setdefault(value, []).append(rel)
+        # 原版图标映射表：`ins: "/assets/..."` 形式（没有 `icon:` 前缀）
+        if rel.endswith("app-original-icons.ts"):
+            for value in re.findall(r':\s*"(/assets/[^"]+)"', text):
+                found.setdefault(value, []).append(rel)
     return found
+
+
+def check_original_render_path() -> list[str]:
+    """验收 F2：原版图标必须进入桌面的实际渲染分支，并有适配/原版标记。"""
+    failures: list[str] = []
+    desktop = (WEB / "features" / "phone" / "phone-desktop.tsx").read_text(encoding="utf-8")
+    mapping = (WEB / "features" / "phone" / "app-original-icons.ts").read_text(encoding="utf-8")
+    if "originalAppIcon" not in desktop:
+        failures.append("phone-desktop.tsx 未引用 originalAppIcon（原版图标未接入渲染分支）")
+    if 'data-app-icon="original"' not in desktop:
+        failures.append("phone-desktop.tsx 缺少 data-app-icon=\"original\" 标记（无法区分原版/适配）")
+    for app_id in ("metanav", "ins"):
+        if f"{app_id}:" not in mapping:
+            failures.append(f"app-original-icons.ts 缺少 {app_id} 的原版图标映射")
+    return failures
 
 
 def canonical_paths() -> dict[str, list[str]]:
@@ -98,6 +119,8 @@ def main() -> int:
     print(f"== 扫描到 {len(icons)} 个图标引用（来自 {len(MANIFEST_FILES)} 个 manifest）==")
 
     failures: list[str] = []
+    failures.extend(check_original_render_path())
+
     for public_path, owners in sorted(icons.items()):
         name = Path(public_path).name
         # 1) 已移除资源不得被引用

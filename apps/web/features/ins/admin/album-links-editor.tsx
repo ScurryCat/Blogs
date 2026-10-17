@@ -19,7 +19,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
-import { fetchAdminAlbums } from "@/features/gallery/api";
+import { ApiClientError } from "@/lib/api/client";
+import { fetchAdminAlbum, fetchAdminAlbums } from "@/features/gallery/api";
 import type { AdminAlbum } from "@/features/gallery/types";
 
 import {
@@ -64,7 +65,16 @@ export function AlbumLinksEditor({
   const [phase, setPhase] = useState<"loading" | "ready" | "failed">("loading");
   const [listError, setListError] = useState<string | null>(null);
   const [pickedAlbumId, setPickedAlbumId] = useState("");
+  const [query, setQuery] = useState("");
+  /** 已选但不在当前列表页里的相册详情（分页外补取）。 */
+  const [details, setDetails] = useState<ReadonlyMap<string, AdminAlbum>>(new Map());
+  /** 补取详情明确 404 的相册 —— 只有这种才可以说「已不可用/已删除」。 */
+  const [missingIds, setMissingIds] = useState<ReadonlySet<string>>(new Set());
+  /** 补取详情失败（非 404）的相册：如实显示读取失败，不能当删除。 */
+  const [detailErrors, setDetailErrors] = useState<ReadonlyMap<string, string>>(new Map());
   const controllerRef = useRef<AbortController | null>(null);
+  const detailControllerRef = useRef<AbortController | null>(null);
+  const attemptedDetails = useRef<Set<string>>(new Set());
 
   const loadAlbums = useCallback(async () => {
     controllerRef.current?.abort();
@@ -72,11 +82,24 @@ export function AlbumLinksEditor({
     controllerRef.current = controller;
     setPhase("loading");
     setListError(null);
+    // 手动刷新：清掉上一次的补取结果，按新数据重新判断「缺失」。
+    attemptedDetails.current = new Set();
+    setMissingIds(new Set());
+    setDetailErrors(new Map());
+    setDetails(new Map());
     try {
       // 管理列表包含草稿：允许「先收录到草稿相册，待其公开后自动展示」（任务书 §4.2）。
-      const page = await fetchAdminAlbums({ limit: 50 }, controller.signal);
-      if (controller.signal.aborted) return;
-      setAlbums(page.items);
+      // 列表是 cursor 分页的：不能只读第一页（否则第 51 个之后的相册会被误判为不可用）。
+      const collected: AdminAlbum[] = [];
+      let cursor: string | null = null;
+      for (let page = 0; page < 40; page += 1) {
+        const result = await fetchAdminAlbums({ limit: 50, cursor }, controller.signal);
+        if (controller.signal.aborted) return;
+        collected.push(...result.items);
+        cursor = result.next_cursor;
+        if (!cursor) break;
+      }
+      setAlbums(collected);
       setPhase("ready");
     } catch (error) {
       if (controller.signal.aborted) return;
@@ -85,6 +108,12 @@ export function AlbumLinksEditor({
       setListError(describeError(error));
     }
   }, [describeError]);
+
+  const refresh = useCallback(() => {
+    // 同时取消补取详情的在途请求，避免旧结果覆盖新列表。
+    detailControllerRef.current?.abort();
+    void loadAlbums();
+  }, [loadAlbums]);
 
   useEffect(() => {
     // 挂载后读一次相册列表；setState 都在 await 之后，不是级联渲染。
@@ -96,8 +125,46 @@ export function AlbumLinksEditor({
   const albumById = useMemo(() => {
     const map = new Map<string, AdminAlbum>();
     for (const album of albums) map.set(album.id, album);
+    for (const album of details.values()) map.set(album.id, album);
     return map;
-  }, [albums]);
+  }, [albums, details]);
+
+  /**
+   * 已选目标里没有出现在列表页的相册：单独补取管理详情。
+   * 列表页只代表「这一页没返回」，不等于已删除 —— 只有详情 404 才判 missing。
+   */
+  useEffect(() => {
+    const pending = links
+      .map((link) => link.album_id)
+      .filter((albumId) => !albumById.has(albumId) && !attemptedDetails.current.has(albumId));
+    if (pending.length === 0) return;
+
+    for (const albumId of pending) attemptedDetails.current.add(albumId);
+    const controller = new AbortController();
+    detailControllerRef.current = controller;
+
+    for (const albumId of pending) {
+      void fetchAdminAlbum(albumId, controller.signal)
+        .then((album) => {
+          if (controller.signal.aborted) return;
+          setDetails((previous) => new Map(previous).set(albumId, album));
+        })
+        .catch((error: unknown) => {
+          if (controller.signal.aborted) return;
+          if (error instanceof DOMException && error.name === "AbortError") return;
+          if (error instanceof ApiClientError && error.status === 404) {
+            setMissingIds((previous) => new Set(previous).add(albumId));
+            return;
+          }
+          setDetailErrors((previous) => new Map(previous).set(albumId, describeError(error)));
+        });
+    }
+    // 刻意不在依赖变化时 abort：列表加载会更新 albumById，若在此时取消在途详情请求，
+    // 「404 / 读取失败」的结论就永远不会落地（测试也钉住了这一点）。
+    // 卸载与手动刷新通过 detailControllerRef 取消。
+  }, [albumById, describeError, links]);
+
+  useEffect(() => () => detailControllerRef.current?.abort(), []);
 
   const linkByAlbumId = useMemo(() => {
     const map = new Map<string, MomentAlbumLink>();
@@ -106,10 +173,17 @@ export function AlbumLinksEditor({
   }, [links]);
 
   // 只列还没被选中的相册（同一相册在一个动态里只允许一条选择）。
-  const availableAlbums = useMemo(
-    () => albums.filter((album) => !linkByAlbumId.has(album.id)),
-    [albums, linkByAlbumId],
-  );
+  const availableAlbums = useMemo(() => {
+    const keyword = query.trim().toLowerCase();
+    return albums
+      .filter((album) => !linkByAlbumId.has(album.id))
+      .filter(
+        (album) =>
+          keyword.length === 0 ||
+          album.title.toLowerCase().includes(keyword) ||
+          album.slug.toLowerCase().includes(keyword),
+      );
+  }, [albums, linkByAlbumId, query]);
 
   const updateLink = useCallback(
     (albumId: string, mediaIds: string[]) => {
@@ -168,6 +242,17 @@ export function AlbumLinksEditor({
       ) : null}
 
       <div className="ins-admin-albums-tools">
+        <label className="ins-admin-field ins-admin-albums-search">
+          <span>搜索相册（标题 / slug）</span>
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="输入关键词过滤"
+            disabled={disabled || phase !== "ready"}
+            data-album-search=""
+          />
+        </label>
         <label className="ins-admin-field ins-admin-albums-pick">
           <span>选择已有相册</span>
           <select
@@ -195,7 +280,7 @@ export function AlbumLinksEditor({
         >
           添加相册
         </button>
-        <button type="button" className="ins-btn" onClick={() => void loadAlbums()} disabled={disabled}>
+        <button type="button" className="ins-btn" onClick={refresh} disabled={disabled}>
           刷新相册列表
         </button>
         {/* 新标签页打开**现有**相册管理流程：本页草稿（文字 / 图片 / 收录选择）不受影响。 */}
@@ -222,7 +307,7 @@ export function AlbumLinksEditor({
       {phase === "failed" && listError ? (
         <p className="ins-admin-notice" role="alert" data-album-list-error="">
           {listError}
-          <button type="button" className="ins-btn" onClick={() => void loadAlbums()} disabled={disabled}>
+          <button type="button" className="ins-btn" onClick={refresh} disabled={disabled}>
             重试
           </button>
         </p>
@@ -246,7 +331,8 @@ export function AlbumLinksEditor({
         <ul className="ins-admin-album-list">
           {links.map((link) => {
             const album = albumById.get(link.album_id);
-            const missing = !album && phase === "ready";
+            const missing = !album && phase === "ready" && missingIds.has(link.album_id);
+            const detailError = detailErrors.get(link.album_id) ?? null;
             return (
               <li
                 key={link.album_id}
@@ -260,7 +346,9 @@ export function AlbumLinksEditor({
                       ? "相册已不可用（可能已删除）：保存会被服务端拒绝，请先移除。"
                       : album
                         ? albumPublicHint(album)
-                        : "正在读取相册状态…"}
+                        : detailError
+                          ? `相册状态读取失败：${detailError}。可点「刷新相册列表」重试；这不代表相册已删除。`
+                          : "正在读取相册状态…"}
                   </span>
                   <button
                     type="button"
