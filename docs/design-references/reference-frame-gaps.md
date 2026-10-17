@@ -152,5 +152,6 @@
   現在のステータス 白色栏目牌、撕裂字体）；T09 已建立的冷色主题只在 `.plv-room` 子树内生效。
 - **缺**：天鹅绒房间整屏帧；印象空间整屏帧。
 - 结论：天鹅绒做**登记簿/冷色号牌**级视觉细化 v1（2026-10-17，见
-  `P3-velvet-phone-registration-result.md`）；印象空间视觉细化留待下一轮。
+  `P3-velvet-phone-registration-result.md`）；印象空间做**问题档案（暗紫品红）**级视觉
+  细化 v1（2026-10-17，见 `P3-mementos-visual-result.md`）。
   两者**整屏还原仍标未完成**。

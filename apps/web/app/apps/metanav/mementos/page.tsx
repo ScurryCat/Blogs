@@ -31,6 +31,7 @@ import {
   type WorkStatus,
 } from "@/features/exploration/types";
 import "@/features/exploration/exploration.css";
+import { AppPageShell } from "@/components/ui/app-page-shell";
 
 export const metadata: Metadata = {
   title: "印象空间 · 问题记录",
@@ -68,9 +69,9 @@ export default async function MementosPage({ searchParams }: PageProps): Promise
 
   if (!serverReadingEnabled()) {
     return (
-      <section className="shell">
+      <AppPageShell>
         <MementosLoader />
-      </section>
+      </AppPageShell>
     );
   }
 
@@ -97,7 +98,7 @@ export default async function MementosPage({ searchParams }: PageProps): Promise
   }
 
   return (
-    <section className="shell">
+    <AppPageShell>
       <MementosView
         initialRecords={records}
         initialCursor={cursor}
@@ -105,6 +106,6 @@ export default async function MementosPage({ searchParams }: PageProps): Promise
         loadError={loadError}
         workStatus={workStatus}
       />
-    </section>
+    </AppPageShell>
   );
 }

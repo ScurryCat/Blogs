@@ -21,6 +21,7 @@ import { SkillReading } from "@/features/velvet/skill-reading";
 import { SkillReadingLoader } from "@/features/velvet/skill-reading-loader";
 import type { SkillDetail } from "@/features/velvet/types";
 import "@/features/velvet/velvet.css";
+import { AppPageShell } from "@/components/ui/app-page-shell";
 
 // 公开状态随时可能变化：不做构建期预渲染，也不缓存。
 export const dynamic = "force-dynamic";
@@ -59,9 +60,9 @@ export default async function SkillPage({ params }: PageProps): Promise<ReactNod
 
   if (!serverReadingEnabled()) {
     return (
-      <section className="shell">
+      <AppPageShell>
         <SkillReadingLoader slug={decoded} />
-      </section>
+      </AppPageShell>
     );
   }
 
@@ -79,17 +80,17 @@ export default async function SkillPage({ params }: PageProps): Promise<ReactNod
     // 其它错误（服务不可用、网关问题）不伪装成「不存在」：交给浏览器同源读取，
     // 由加载器显示明确的「暂时读不到」状态。
     return (
-      <section className="shell">
+      <AppPageShell>
         <SkillReadingLoader slug={decoded} />
-      </section>
+      </AppPageShell>
     );
   }
 
   if (!skill) notFound();
 
   return (
-    <section className="shell">
+    <AppPageShell>
       <SkillReading skill={skill} />
-    </section>
+    </AppPageShell>
   );
 }

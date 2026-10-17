@@ -21,6 +21,7 @@ import { serverApiList, serverApiRequest } from "@/lib/api/server";
 import { PalaceReading } from "@/features/metanav/palace-reading";
 import { PalaceReadingLoader } from "@/features/metanav/palace-reading-loader";
 import type { PalaceDetail, PalaceSummary } from "@/features/metanav/types";
+import { AppPageShell } from "@/components/ui/app-page-shell";
 
 // 公开状态随时可能变化：不做构建期预渲染，也不缓存。
 export const dynamic = "force-dynamic";
@@ -62,9 +63,9 @@ export default async function PalacePage({ params }: PageProps): Promise<ReactNo
 
   if (!serverReadingEnabled()) {
     return (
-      <section className="shell">
+      <AppPageShell>
         <PalaceReadingLoader slug={decoded} />
-      </section>
+      </AppPageShell>
     );
   }
 
@@ -82,16 +83,16 @@ export default async function PalacePage({ params }: PageProps): Promise<ReactNo
     // 其它错误（服务不可用、网关问题）不伪装成「不存在」：交给浏览器同源读取，
     // 由加载器显示明确的「导航暂时不可用」状态。
     return (
-      <section className="shell">
+      <AppPageShell>
         <PalaceReadingLoader slug={decoded} />
-      </section>
+      </AppPageShell>
     );
   }
 
   if (!reading) notFound();
   return (
-    <section className="shell">
+    <AppPageShell>
       <PalaceReading palace={reading.palace} related={reading.related} />
-    </section>
+    </AppPageShell>
   );
 }

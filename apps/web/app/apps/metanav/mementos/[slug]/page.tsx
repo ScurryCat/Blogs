@@ -21,6 +21,7 @@ import { MementosReadingLoader } from "@/features/exploration/mementos-reading-l
 import { fetchRecordOnServer } from "@/features/exploration/server-api";
 import type { RecordDetail } from "@/features/exploration/types";
 import "@/features/exploration/exploration.css";
+import { AppPageShell } from "@/components/ui/app-page-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -64,9 +65,9 @@ export default async function MementosRecordPage({
 
   if (!serverReadingEnabled()) {
     return (
-      <section className="shell">
+      <AppPageShell>
         <MementosReadingLoader slug={decoded} backWorkStatus={backWorkStatus} />
-      </section>
+      </AppPageShell>
     );
   }
 
@@ -82,17 +83,17 @@ export default async function MementosRecordPage({
   if (failure) {
     if (failure instanceof ApiClientError && failure.status === 404) notFound();
     return (
-      <section className="shell">
+      <AppPageShell>
         <MementosReadingLoader slug={decoded} backWorkStatus={backWorkStatus} />
-      </section>
+      </AppPageShell>
     );
   }
 
   if (!record) notFound();
 
   return (
-    <section className="shell">
+    <AppPageShell>
       <MementosReading record={record} backWorkStatus={backWorkStatus} />
-    </section>
+    </AppPageShell>
   );
 }
