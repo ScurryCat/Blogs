@@ -43,12 +43,16 @@ def main() -> int:
         tab.first.click()
         page.wait_for_timeout(3000)
 
+        # 先把角色入口滚进手机可视区再取坐标：IM 卡片有样式后列表更高，
+        # 首个角色可能部分被 `.pw-screen` 裁剪 —— 直接点「元素中心」会点在裁剪父级上，
+        # 看起来像「点了没反应」（真实踩到：角色入口 rect 底部超出屏幕 39px）。
         point = page.evaluate(
             """() => {
               const body = document.querySelector('.pw-appbody');
               if (!body) return null;
               for (const el of document.querySelectorAll('.pw-appbody li, .pw-appbody button, .pw-appbody a')) {
                 if (!(el.textContent || '').includes('双叶')) continue;
+                el.scrollIntoView({ block: 'center', inline: 'nearest' });
                 const r = el.getBoundingClientRect();
                 if (r.width > 5) return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) };
               }

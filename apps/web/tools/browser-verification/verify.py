@@ -382,9 +382,12 @@ def phone_host(browser, base: str) -> None:
     page.click('.pw-page-btn[aria-label="下一页"]')
     page.wait_for_timeout(300)
     tiles2 = page.eval_on_selector_all(".pw-app", "els => els.map(e => e.dataset.appId)")
+    # 第二页＝4 个站点链接 + 固定排列之外**已登记的应用**（宿主会追加到末页）；
+    # 目前追加的是天鹅绒(70) / 印象空间(80)（第二轮 §4.8）。这里断言完整清单，
+    # 仍守住「不塞占位 App」：清单里的每一项都必须是注册表里的真实应用/站点入口。
     check(
         "第二页显示情报/地图/天气/档案（不塞占位）",
-        tiles2 == ["palace", "tokyo", "cast", "profile"],
+        tiles2 == ["palace", "tokyo", "cast", "profile", "velvet", "mementos"],
         str(tiles2),
     )
     check("第二页时下一页禁用", page.is_disabled('.pw-page-btn[aria-label="下一页"]'))
