@@ -1,0 +1,208 @@
+#!/usr/bin/env python3
+"""重新打包交接包（v2）：把当前仓库的**文档 + 工具**打成一个可直接接手的 zip。
+
+为什么需要：第一版交接包（`docs/handoff-package-2026-10-17.zip`，HEAD 6320861）打包后，
+会话又完成了 13 轮视觉还原/缺陷修复/验收复跑，文档与工具都变了；接手者应该拿到
+**当前状态**的自包含包，而不是在旧包基础上再翻 git 历史。
+
+与原包保持同样的内容口径（便于对照）：
+  - 包含：HANDOFF.md（更新版）+ MANIFEST + SHA256SUMS + docs/agent-deliveries/ +
+    docs/design-references/ + tools/（原包同款的脚本白名单 + 新增的视觉复核种子脚本）
+  - 不包含：源代码（在仓库里）、`.dsh/` 截图与分析产物（工作区外/未入库）、任何凭据。
+
+用法：
+    python3 tools/package-handoff.py                 # 写到默认位置
+    python3 tools/package-handoff.py --check         # 只检查包内容与源文件是否一致
+    python3 tools/package-handoff.py --out <path>
+
+退出码：0 = 成功（并打印包大小/文件数/HEAD）；非 0 = 缺文件或写失败。
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import subprocess
+import sys
+import zipfile
+from datetime import datetime, timezone
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parent.parent
+DEFAULT_OUT = REPO / "docs" / "handoff-package-2026-10-17-v2.zip"
+PACKAGE_DIR = "handoff"
+
+# 作业类脚本之外的小工具目录：与原包一致，属工作流辅助，不随交接包分发。
+TOOL_WHITELIST = [
+    "acceptance",
+    "e2e-im-draft.py",
+    "e2e-ins-conversation.py",
+    "e2e-ins-tag.py",
+    "e2e-journal-reading.py",
+    "e2e-metanav-palace.py",
+    "e2e-phone-scroll.py",
+    "e2e-seed-journal.py",
+    "e2e-seed-palaces.py",
+    "e2e-seed-previews.py",
+    "e2e-stack.sh",
+    "p0-analyze-sprites.py",
+    "p0-contact-sheets.py",
+    "p0-extract-sheets.py",
+    "pg-local.sh",
+    "verify-all.sh",
+    "verify-backend-isolated.sh",
+    "verify-isolated.sh",
+]
+
+UPDATE_BANNER = """<!-- PACKAGE-V2 -->
+> ## ⚠️ 这个包是 v2（打包后更新的版本）
+>
+> 第一版包对应 HEAD `6320861`；本包对应 **HEAD `{head}`**，包含此后的 13 轮工作：
+> **B1 视觉还原（9 界面元件级 v1 + 8 类缺陷修复）**、手机桌面应用补登记、
+> 全量验收复跑（`--e2e` / `--e2e --mobile` 全绿）等。
+> **请先读 `docs/agent-deliveries/HANDOFF-ADDENDUM-2026-10-17.md`**（状态增量与未完成项），
+> 再读本文其余部分（原文保留，便于对照第一版口径）。
+> 重要：B1 **整屏还原仍不可判定**（缺参考帧），不要把元件级 v1 读成整屏验收通过。
+<!-- /PACKAGE-V2 -->
+
+"""
+
+
+def run(*args: str) -> str:
+    return subprocess.run(args, cwd=REPO, check=True, capture_output=True, text=True).stdout
+
+
+def git_head() -> str:
+    return run("git", "rev-parse", "--short", "HEAD").strip()
+
+
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(65536), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def collect() -> list[tuple[Path, str]]:
+    """返回 (源文件路径, 包内相对路径) 列表（已排序、已去重）。"""
+
+    entries: list[tuple[Path, str]] = []
+
+    def add(source: Path, arcname: str) -> None:
+        if not source.is_file():
+            raise SystemExit(f"✗ 缺文件：{source}")
+        entries.append((source, arcname))
+
+    for doc in sorted((REPO / "docs" / "agent-deliveries").glob("*.md")):
+        add(doc, f"docs/agent-deliveries/{doc.name}")
+    for doc in sorted((REPO / "docs" / "design-references").glob("*.md")):
+        add(doc, f"docs/design-references/{doc.name}")
+
+    for item in TOOL_WHITELIST:
+        target = REPO / "tools" / item
+        if target.is_dir():
+            for child in sorted(target.rglob("*")):
+                if child.is_file() and "__pycache__" not in child.parts:
+                    add(child, f"tools/{child.relative_to(REPO / 'tools').as_posix()}")
+        else:
+            add(target, f"tools/{item}")
+
+    return entries
+
+
+def build(out: Path) -> tuple[int, int, str]:
+    head = git_head()
+    entries = collect()
+    handoff_src = (REPO / "docs" / "agent-deliveries" / "HANDOFF.md").read_text(encoding="utf-8")
+    handoff_v2 = UPDATE_BANNER.format(head=head) + handoff_src
+
+    now = datetime.now(timezone.utc).astimezone()
+    stamp = now.strftime("%Y-%m-%d %H:%M:%S %z")
+
+    manifest_lines = ["./HANDOFF.md", "./MANIFEST.txt", "./SHA256SUMS"]
+    manifest_lines += [f"./{arcname}" for _, arcname in entries]
+    manifest = "\n".join(manifest_lines) + "\n"
+    manifest += (
+        "\n--- 说明 ---\n"
+        "交接包 · 怪盗手机 P5 第二轮 UI（v2，打包后更新版）\n"
+        f"打包时间 {stamp}；代码状态 HEAD {head}（分支 main，未推送）\n"
+        "内容：HANDOFF.md（v2 更新横幅 + 原文）+ MANIFEST.txt + SHA256SUMS + "
+        "docs/agent-deliveries/ + docs/design-references/ + tools/\n"
+        "未包含（有意）：源代码（在仓库里）、.dsh/ 下的截图与分析产物（工作区外，未入库）、任何凭据。\n"
+        f"文件数：{len(entries) + 3}（含 HANDOFF/MANIFEST/SHA256SUMS）\n"
+    )
+
+    sums = []
+    for source, arcname in entries:
+        sums.append(f"{file_sha256(source)}  {arcname}")
+    sums.append(f"{hashlib.sha256(handoff_v2.encode('utf-8')).hexdigest()}  HANDOFF.md")
+    sums_text = "\n".join(sorted(sums)) + "\n"
+
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(out, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+        archive.writestr(f"{PACKAGE_DIR}/HANDOFF.md", handoff_v2)
+        archive.writestr(f"{PACKAGE_DIR}/MANIFEST.txt", manifest)
+        archive.writestr(f"{PACKAGE_DIR}/SHA256SUMS", sums_text)
+        for source, arcname in entries:
+            archive.write(source, f"{PACKAGE_DIR}/{arcname}")
+    return len(entries) + 3, out.stat().st_size, head
+
+
+def check(out: Path) -> int:
+    if not out.is_file():
+        print(f"✗ 包不存在：{out}")
+        return 1
+    head = git_head()
+    with zipfile.ZipFile(out) as archive:
+        names = set(archive.namelist())
+        required = {
+            f"{PACKAGE_DIR}/HANDOFF.md",
+            f"{PACKAGE_DIR}/MANIFEST.txt",
+            f"{PACKAGE_DIR}/SHA256SUMS",
+        }
+        missing = required - names
+        if missing:
+            print(f"✗ 缺少必需文件：{sorted(missing)}")
+            return 1
+        manifest = archive.read(f"{PACKAGE_DIR}/MANIFEST.txt").decode("utf-8")
+        listed = {
+            line.strip()[2:]
+            for line in manifest.splitlines()
+            if line.startswith("./")
+        }
+        actual = {name[len(PACKAGE_DIR) + 1 :] for name in names if name.startswith(PACKAGE_DIR + "/")}
+        # MANIFEST 列出的路径应全部在包里（HANDOFF/MANIFEST/SHA256SUMS 特判）
+        allowed_missing = {"HANDOFF.md", "MANIFEST.txt", "SHA256SUMS"}
+        absent = {path for path in listed if path not in actual and path not in allowed_missing}
+        if absent:
+            print(f"✗ MANIFEST 列出但包里没有：{sorted(absent)}")
+            return 1
+        head_line = next((line for line in manifest.splitlines() if line.startswith("打包时间")), "")
+        if head not in head_line:
+            print(f"✗ MANIFEST 的 HEAD 与当前仓库不一致（期望 {head}）：{head_line}")
+            return 1
+        handoff = archive.read(f"{PACKAGE_DIR}/HANDOFF.md").decode("utf-8")
+        if "PACKAGE-V2" not in handoff:
+            print("✗ HANDOFF.md 缺少 v2 更新横幅")
+            return 1
+    print(f"✓ 包校验通过：{len(actual)} 个文件，HEAD {head}")
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--out", default=str(DEFAULT_OUT))
+    parser.add_argument("--check", action="store_true")
+    args = parser.parse_args()
+    out = Path(args.out).resolve()
+    if args.check:
+        return check(out)
+    count, size, head = build(out)
+    print(f"✓ 交接包 v2 已生成：{out}")
+    print(f"  文件数 {count}；大小 {size / 1024:.0f} KiB；HEAD {head}")
+    return check(out)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
