@@ -116,7 +116,8 @@ if [ "$DO_BROWSER" -eq 1 ]; then
   # ── 5/6 响应式（复用 4/6 起的隔离站 3120）─────────────────
   run_section "5/6 多视口 × 缩放档（对隔离站 3120）"
   if python3 tools/acceptance/verify-viewports.py http://127.0.0.1:3120 >/tmp/vf-viewports.log 2>&1; then
-    vp=0; vp_line="$(grep -cE '✓' /tmp/vf-viewports.log | xargs -I{} echo '{} 个 ✓')"
+    # 只数真正的视口结果行（`1440x900  100% …` / `320  …`），别把「（无 ✓）」也算进去
+    vp=0; vp_line="$(grep -cE '^  ([0-9]+x[0-9]+|320|390) ' /tmp/vf-viewports.log | xargs -I{} echo '{} 项')"
   else
     vp=1; vp_line="有失败，见 /tmp/vf-viewports.log"
   fi
