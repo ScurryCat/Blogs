@@ -126,3 +126,140 @@
   line-height: 1.7;
   opacity: 0.7;
 }
+
+/* ==========================================================================
+   勒布朗近况 · 深色站点视觉修复（2026-10-17，第二轮收尾视觉巡检）
+
+   问题：本模块整套样式按**浅色主题**写死（卡片 rgba(255,255,255,.72) 白底、
+   正文 #444、边框黑色系），却渲染在深色站点上 —— 实际是「浅灰卡片 + 灰字」，
+   对比度很低（首页「勒布朗」近况区 + 勒布朗独立视图都受影响）。
+   修复：改成站点一贯的黑底 / 纸白 / 红色硬阴影 / 撕纸标题语言；不改任何数据与文案。
+   ========================================================================== */
+
+.wrap {
+  container-type: inline-size;
+  color: var(--paper, #f4f1ea);
+}
+
+.title {
+  font: 400 clamp(26px, 3.6vw, 40px)/1.05 var(--f-disp, sans-serif);
+  letter-spacing: 0.02em;
+  text-shadow: 3px 3px 0 #d40000;
+}
+
+.status {
+  color: rgba(244, 241, 234, 0.86);
+  border-left-width: 4px;
+}
+
+.grid {
+  gap: 16px;
+}
+
+.card {
+  border: 2px solid var(--paper, #f4f1ea);
+  background: #0a0a0b;
+  box-shadow: 5px 5px 0 #d40000;
+  padding: 16px 18px;
+}
+
+.card:hover,
+.card:focus-within {
+  box-shadow: 8px 8px 0 #d40000;
+}
+
+.cardTitle {
+  display: inline-block;
+  justify-self: start;
+  padding: 2px 9px;
+  background: #d40000;
+  color: var(--paper, #f4f1ea);
+  font: 400 12px/1.5 var(--f-hat, sans-serif);
+  letter-spacing: 0.14em;
+  transform: skewX(-8deg);
+}
+
+.entryTitle {
+  font: 400 clamp(18px, 2vw, 22px)/1.25 var(--f-disp, sans-serif);
+  color: var(--paper, #f4f1ea);
+}
+
+.meta {
+  color: rgba(244, 241, 234, 0.62);
+  opacity: 1;
+}
+
+.excerpt {
+  color: rgba(244, 241, 234, 0.82);
+}
+
+.degraded {
+  border-left: 4px solid #d4a000;
+  background: rgba(212, 160, 0, 0.14);
+  color: rgba(244, 241, 234, 0.88);
+}
+
+.button {
+  border: 2px solid var(--paper, #f4f1ea);
+  background: #d40000;
+  color: var(--paper, #f4f1ea);
+  font: 400 13px/1 var(--f-hat, sans-serif);
+  letter-spacing: 0.08em;
+  padding: 9px 14px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.55);
+}
+
+.button:hover,
+.button:focus-visible {
+  background: var(--paper, #f4f1ea);
+  color: #0a0a0b;
+}
+
+.buttonGhost {
+  background: transparent;
+  color: var(--paper, #f4f1ea);
+  border-color: rgba(244, 241, 234, 0.55);
+  box-shadow: none;
+}
+
+.buttonGhost:hover,
+.buttonGhost:focus-visible {
+  background: rgba(244, 241, 234, 0.12);
+  color: var(--paper, #f4f1ea);
+}
+
+.links {
+  border-top: 2px solid rgba(244, 241, 234, 0.25);
+}
+
+.links a {
+  color: var(--paper, #f4f1ea);
+  border-bottom: 2px solid #d40000;
+  text-decoration: none;
+}
+
+.links a:hover,
+.links a:focus-visible {
+  background: #d40000;
+  color: var(--paper, #f4f1ea);
+}
+
+.footnote {
+  color: rgba(244, 241, 234, 0.58);
+  opacity: 1;
+}
+
+@container (max-width: 640px) {
+  .card {
+    padding: 12px 14px;
+    box-shadow: 4px 4px 0 #d40000;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .entryTitle {
+    font-size: 19px;
+  }
+}
