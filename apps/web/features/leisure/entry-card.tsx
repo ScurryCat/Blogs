@@ -74,6 +74,10 @@ export function EntryCard({ entry }: { entry: LeisureEntry }): ReactNode {
         <h3 className={styles.cardTitle}>{entry.title}</h3>
 
         <ul className={styles.chips}>
+          {/* 类型牌：追番 / 游戏（P5 商店列表的分类标签语言）。 */}
+          <li className={`${styles.chip} ${styles.kindChip}`} data-leisure-kind={entry.kind}>
+            {entry.kind === "anime" ? "追番" : "游戏"}
+          </li>
           <li className={`${styles.chip} ${styles.progressChip}`}>{entry.progress_label}</li>
           {entry.anime?.season ? <li className={styles.chip}>{entry.anime.season}</li> : null}
           {entry.anime?.airing ? <li className={styles.chip}>连载中</li> : null}

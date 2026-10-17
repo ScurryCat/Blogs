@@ -354,3 +354,343 @@
   display: grid;
   gap: 8px;
 }
+
+/* ==========================================================================
+   放课后视觉还原 v1（2026-10-17，第二轮 §4.4）
+
+   参考（本地参考库，离线只读）：
+   - `persona5-spriters/p5/hud/92712-shops.png`（39 个精灵）：商店/道具选择界面的
+     NEW 徽标、价格白药丸、購入/やめる/打つ 按钮、所持数、半額贴纸、星级、价格数字。
+   - `persona5-spriters/p5/hud/92198-weapon-shop.png`：商品列表 + 右侧详情 + 操作按钮构图。
+   - 画册 p205–224 的道具 UI 元件页（批量取景，未逐件核对，只借构图语言）。
+
+   本轮还原的是「**书籍/游戏道具选择界面**」的构图语言：
+   白框黑底卡片、封面方形图标位、撕纸标题、状态/进度白牌、价格样式的评分牌、
+   选择态硬阴影与轻微旋转。原有「无封面/未评分/总数未知」的展示语义完全不变。
+   ========================================================================== */
+
+.wrap {
+  container-type: inline-size;
+  color: var(--paper, #f4f1ea);
+}
+
+.wrap .lead {
+  color: rgba(244, 241, 234, 0.74);
+}
+
+/* 页签：黑底白框撕纸牌；当前页签红底。 */
+.wrap .tab {
+  border: 2px solid var(--paper, #f4f1ea);
+  background: var(--black, #0a0a0b);
+  color: var(--paper, #f4f1ea);
+  font: 400 14px/1 var(--f-hat, sans-serif);
+  letter-spacing: 0.1em;
+  padding: 9px 16px;
+  transform: skewX(-8deg);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
+}
+
+.wrap .tab[aria-current="true"] {
+  background: #d40000;
+  border-color: var(--paper, #f4f1ea);
+  color: var(--paper, #f4f1ea);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.6);
+}
+
+.wrap .tab:hover,
+.wrap .tab:focus-visible {
+  background: var(--paper, #f4f1ea);
+  color: var(--black, #0a0a0b);
+}
+
+.wrap .tab[aria-current="true"]:hover {
+  background: #d40000;
+  color: var(--paper, #f4f1ea);
+}
+
+/* 筛选条：黑底白框下拉 + 白色计数牌。 */
+.wrap .label {
+  font: 400 11px/1 var(--f-hat, sans-serif);
+  letter-spacing: 0.16em;
+  color: rgba(244, 241, 234, 0.72);
+}
+
+.wrap .select {
+  border: 2px solid var(--paper, #f4f1ea);
+  background: var(--black, #0a0a0b);
+  color: var(--paper, #f4f1ea);
+  padding: 8px 12px;
+  font: 400 14px/1.2 var(--f-cjk, sans-serif);
+  border-radius: 0;
+}
+
+.wrap .select:focus-visible {
+  outline: 2px solid #d40000;
+  outline-offset: 2px;
+}
+
+.wrap .filters .hint {
+  padding: 6px 10px;
+  border: 1px solid rgba(244, 241, 234, 0.4);
+  color: rgba(244, 241, 234, 0.8);
+}
+
+/* 记录列表：商店道具行（封面方形图标位 + 右侧信息），单列。 */
+.wrap .grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  max-width: 1020px;
+}
+
+.wrap .card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 176px minmax(0, 1fr);
+  grid-template-rows: 1fr;
+  gap: 0;
+  border: 3px solid var(--paper, #f4f1ea);
+  background: var(--black, #0a0a0b);
+  color: var(--paper, #f4f1ea);
+  box-shadow: 8px 8px 0 #d40000;
+  transform: rotate(-0.35deg);
+  transition: transform 0.16s var(--ease, ease-out), box-shadow 0.16s;
+}
+
+.wrap .grid > li:nth-child(2n) .card {
+  transform: rotate(0.35deg);
+}
+
+.wrap .card:hover,
+.wrap .card:focus-within {
+  transform: rotate(0deg) translateY(-2px);
+  box-shadow: 11px 11px 0 #d40000;
+}
+
+/* 封面/无封面：方形「道具图标位」；无封面用红黑斜纹 + 撕纸白字，不画整块空框。 */
+.wrap .cover {
+  width: 100%;
+  height: 100%;
+  min-height: 168px;
+  aspect-ratio: auto;
+  max-height: none;
+  object-fit: cover;
+  border-right: 3px solid var(--paper, #f4f1ea);
+  background: #141416;
+}
+
+.wrap .coverEmpty {
+  width: 100%;
+  min-height: 168px;
+  height: 100%;
+  border-right: 3px solid var(--paper, #f4f1ea);
+  border-bottom: 0;
+  background:
+    repeating-linear-gradient(-45deg, rgba(212, 0, 0, 0.55) 0 14px, transparent 14px 28px),
+    var(--black, #0a0a0b);
+  color: var(--paper, #f4f1ea);
+  font: 400 13px/1 var(--f-hat, sans-serif);
+  letter-spacing: 0.22em;
+  text-shadow: 2px 2px 0 #d40000;
+}
+
+.wrap .cardBody {
+  gap: 9px;
+  padding: 16px 18px 16px;
+  align-content: start;
+}
+
+.wrap .cardTitle {
+  font: 400 clamp(19px, 2.2vw, 26px)/1.2 var(--f-disp, sans-serif);
+  letter-spacing: 0.02em;
+  color: var(--paper, #f4f1ea);
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.7);
+  overflow-wrap: anywhere;
+}
+
+.wrap .card:hover .cardTitle,
+.wrap .card:focus-within .cardTitle {
+  text-shadow: 3px 3px 0 #d40000;
+}
+
+/* 状态牌：白框小牌；进度牌＝红底白字；类型牌＝白底黑字（追番）/ 黑底白字描边（游戏）。 */
+.wrap .chip {
+  border: 1px solid rgba(244, 241, 234, 0.55);
+  color: rgba(244, 241, 234, 0.92);
+  padding: 2px 9px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+
+.wrap .kindChip {
+  background: var(--paper, #f4f1ea);
+  border-color: var(--paper, #f4f1ea);
+  color: var(--black, #0a0a0b);
+  font-weight: 700;
+  transform: skewX(-8deg);
+}
+
+.wrap .kindChip[data-leisure-kind="game"] {
+  background: transparent;
+  color: var(--paper, #f4f1ea);
+  transform: skewX(8deg);
+}
+
+.wrap .progressChip {
+  background: #d40000;
+  border-color: #d40000;
+  color: var(--paper, #f4f1ea);
+  font-weight: 700;
+}
+
+/* 评分：价格牌样式（白底黑字、数字用展示字体）；未评分保持「未评分」文字。 */
+.wrap .rating {
+  display: inline-block;
+  justify-self: start;
+  margin: 0;
+  padding: 4px 12px;
+  background: var(--paper, #f4f1ea);
+  color: var(--black, #0a0a0b);
+  font: 400 18px/1.2 var(--f-disp, sans-serif);
+  letter-spacing: 0.04em;
+  transform: skewX(-6deg);
+  box-shadow: 3px 3px 0 #d40000;
+}
+
+.wrap .ratingNone {
+  display: inline-block;
+  justify-self: start;
+  margin: 0;
+  padding: 3px 10px;
+  border: 1px dashed rgba(244, 241, 234, 0.5);
+  color: rgba(244, 241, 234, 0.72);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+
+/* 进度条：黑底白框 + 红色填充（P5 仪表条）；总数未知时不画条（组件逻辑不变）。 */
+.wrap .meterBar {
+  height: 10px;
+  background: #141416;
+  border: 1px solid var(--paper, #f4f1ea);
+}
+
+.wrap .meterFill {
+  background: #d40000;
+}
+
+.wrap .meter .hint,
+.wrap .hint {
+  color: rgba(244, 241, 234, 0.66);
+}
+
+.wrap .notes {
+  color: rgba(244, 241, 234, 0.88);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.wrap .spoiler {
+  border-left: 4px solid #d4a000;
+  background: rgba(212, 160, 0, 0.12);
+  color: var(--paper, #f4f1ea);
+}
+
+.wrap .linkButton {
+  color: var(--paper, #f4f1ea);
+}
+
+.wrap .empty,
+.wrap .notice {
+  border: 2px dashed rgba(244, 241, 234, 0.4);
+  background: rgba(244, 241, 234, 0.05);
+  color: var(--paper, #f4f1ea);
+}
+
+.wrap .notice {
+  border-style: solid;
+  border-left: 5px solid #d40000;
+}
+
+.wrap .noticeInfo {
+  border-left-color: var(--paper, #f4f1ea);
+}
+
+.wrap .button {
+  background: #d40000;
+  border: 2px solid var(--paper, #f4f1ea);
+  color: var(--paper, #f4f1ea);
+  font: 400 13px/1 var(--f-hat, sans-serif);
+  letter-spacing: 0.08em;
+  padding: 9px 14px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.55);
+}
+
+.wrap .button:hover:not([disabled]) {
+  background: var(--paper, #f4f1ea);
+  color: var(--black, #0a0a0b);
+}
+
+/* 管理端同样落在深色站点上：输入框必须显式给深色文字，否则白底白字看不见。 */
+.select,
+.input,
+.textarea {
+  color: var(--black, #0a0a0b);
+  border-color: rgba(244, 241, 234, 0.5);
+}
+
+.adminRow {
+  border-color: rgba(244, 241, 234, 0.3);
+  background: rgba(244, 241, 234, 0.04);
+}
+
+.adminList {
+  color: var(--paper, #f4f1ea);
+}
+
+.statusPublished {
+  color: #7ee2a8;
+}
+
+.statusDraft {
+  color: #ffd27a;
+}
+
+.preview {
+  border-color: rgba(244, 241, 234, 0.45);
+  background: rgba(244, 241, 234, 0.05);
+}
+
+/* 手机宿主面板 ~430px：封面变成顶部横条，信息在下；角度收敛。 */
+@container (max-width: 640px) {
+  .wrap .grid {
+    gap: 14px;
+  }
+
+  .wrap .card {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    transform: none;
+    box-shadow: 5px 5px 0 #d40000;
+  }
+
+  .wrap .cover,
+  .wrap .coverEmpty {
+    min-height: 132px;
+    max-height: 168px;
+    border-right: 0;
+    border-bottom: 3px solid var(--paper, #f4f1ea);
+  }
+
+  .wrap .cardBody {
+    padding: 12px 14px 14px;
+  }
+
+  .wrap .cardTitle {
+    font-size: 20px;
+  }
+
+  .wrap .tab {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}
