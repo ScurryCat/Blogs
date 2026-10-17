@@ -156,7 +156,7 @@
   细化 v1（2026-10-17，见 `P3-mementos-visual-result.md`）。
   两者**整屏还原仍标未完成**。
 
-## 7. 2026-10-18 补帧记录（验收 v2 §5.1 / §7.3）
+## 7. 2026-10-18 补帧记录（验收 v2 §5.1 / §7.3，共 12 张完整帧）
 
 > 执行方式：Yandex 图片检索定位候选 → 下载 → 人眼逐帧核对 → dHash 与本地帧交叉比对 →
 > 写入外部精选库 `persona-curated/hud/` → 仓库脚本复验哈希。
@@ -171,5 +171,16 @@
 | `p5r-im-photo-fullframe.jpg` | IM 完整屏（含图片消息） | 本地导入 `p5r-sns--4aa5330b1fe6.jpg`（G4 口径：原始 URL 未核实） | 1920×1080 / `4aa5330b…` | 手机 + IM 列表 + 图片消息 + 气泡；无明智 |
 | `p5r-street-hud-fullframe.jpg` | 手机 HUD 完整帧 | 本地导入 `screenshot-07`（原始 URL 未核实；文件名内嵌 SHA-256 前缀 `c56d8e14…`） | 1920×1080 / `c56d8e14…` | 日期/天气 + IM 通知图标（红 IM + 角标 3）+ 小地图 + 地点 toast；无明智 |
 
-复验脚本：`python3 tools/acceptance/verify-reference-frames.py`（6/6 帧存在、哈希/尺寸/索引/来源一致；
-参考库不存在时 SKIP）。仍缺：**存档/读取整屏帧**（只有 `92140` 元件表）、殿堂/天鹅绒/印象空间/COOP/放课后的整屏帧。
+### 7.2 第二批：P5 完整帧（Game UI Database 归档页 id=72，2026-10-18）
+
+| 帧（`persona-curated/hud/`） | 用途 | 来源 | 规格 / SHA-256 | 画面复核 |
+| --- | --- | --- | --- | --- |
+| `p5-load-save-fullframe.jpg` | **存档/读取整屏帧** | `https://www.gameuidatabase.com/uploads/Persona-511142020-081633-99804.jpg` | 1920×1080 / `65f9e7ff…` | Load 标题 + 存档槽 No.1–No.5 + 进度/难度/游玩时间；无明智 |
+| `p5-phone-home-fullframe.jpg` | 手机主屏完整帧 | `https://www.gameuidatabase.com/uploads/Persona504202020-044600.jpg` | 1920×1080 / `25549fa5…` | P5 手机 App 网格（红眼导航/IM/地图/相机）+ 对话提示；无明智 |
+| `p5-calendar-fullframe.jpg` | 日历整屏帧（手记参考） | `https://www.gameuidatabase.com/uploads/Persona-511142020-082022-80721.jpg` | 1920×1080 / `eb1bbf4d…` | 月历 + TODAY + Day/Night Job；无明智 |
+| `p5-status-fullframe.jpg` | 五维状态整屏帧（人物档案参考） | `https://www.gameuidatabase.com/uploads/Persona-511142020-082022-55919.jpg` | 1920×1080 / `7a613ba1…` | LV/HP/SP + 五维属性；无明智 |
+| `p5-map-school-fullframe.jpg` | 校内地图整屏帧 | `https://www.gameuidatabase.com/uploads/Persona-511142020-082124-80802.jpg` | 1920×1080 / `1c9e0717…` | Shujin Academy 1F 平面图 + 图例；无明智 |
+| `p5-tokyo-map-fullframe.jpg` | 东京地图整屏帧 | `https://www.gameuidatabase.com/uploads/Persona504202020-044456.jpg` | 1920×1080 / `b5036e93…` | 东京城市地图 + 日期覆盖 + Joker 剪影；无明智 |
+
+复验脚本：`python3 tools/acceptance/verify-reference-frames.py`（**12/12** 帧存在、哈希/尺寸/索引/来源一致；
+参考库不存在时 SKIP）。**存档/读取整屏帧已补齐**；仍缺：殿堂/天鹅绒/印象空间/COOP/放课后等界面整屏帧。

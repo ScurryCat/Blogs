@@ -51,6 +51,37 @@ EXPECTED = {
         (1920, 1080),
         "手机 HUD 完整帧（含 IM 通知）",
     ),
+    # --- 2026-10-18 第二批：P5 完整帧（Game UI Database 归档页） ---
+    "hud/p5-load-save-fullframe.jpg": (
+        "65f9e7fff69aa68b2af087f01d5478e4302e5153b2d966bf78680212359e5409",
+        (1920, 1080),
+        "存档/读取整屏帧（P5 Load Game 存档槽）",
+    ),
+    "hud/p5-phone-home-fullframe.jpg": (
+        "25549fa56b7e9948e5cae19971494737a4b80add6fa5942fff66f11f02db2220",
+        (1920, 1080),
+        "手机主屏完整帧（P5 App 网格/红眼图标）",
+    ),
+    "hud/p5-calendar-fullframe.jpg": (
+        "eb1bbf4d103c99912e25bc0ec129cd1192c93bfd9bdc474ad5006fe782c51183",
+        (1920, 1080),
+        "日历整屏帧（手记参考）",
+    ),
+    "hud/p5-status-fullframe.jpg": (
+        "7a613ba13a9f7750482dd6d368e0114691ff36900c51e8ccdcec15dce8229e91",
+        (1920, 1080),
+        "五维状态整屏帧（人物档案参考）",
+    ),
+    "hud/p5-map-school-fullframe.jpg": (
+        "1c9e07173b5309d6a3f3a844c94be37d769131987cd81d5653c6c0c250dd7d35",
+        (1920, 1080),
+        "校内地图整屏帧（地图/殿堂参考）",
+    ),
+    "hud/p5-tokyo-map-fullframe.jpg": (
+        "b5036e9387f34e5f518350a01d67bf386d84b6810052bc640649ab6cab9268b4",
+        (1920, 1080),
+        "东京地图整屏帧（东京漫游参考）",
+    ),
 }
 
 failures: list[str] = []

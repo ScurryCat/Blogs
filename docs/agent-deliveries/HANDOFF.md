@@ -244,9 +244,10 @@ MANIFEST.txt                    ← 文件清单与打包说明
   - **管理端 INS 收录 UI 真实浏览器全流程**已补齐：`tools/e2e-ins-album-links-ui.py` 9/9；
     期间修复管理列表 limit>30 的 422、画廊写接口 CSRF body 字段的 422/500。
   - 返工记录：`docs/agent-deliveries/P4-acceptance-v2-fixes.md`。
-- **参考帧补齐（2026-10-18）**：外部精选库新增 6 张完整帧（G2 回复选择 / G1 普通对话 ×2 /
-  IM 完整屏 ×2 / 手机 HUD），`verify-reference-frames.py` 6/6；**仍缺存档/读取整屏帧**与
-  殿堂/天鹅绒/印象空间/COOP/放课后等界面整屏帧（详见 `P4-reference-frames-round3.md`）。
+- **参考帧补齐（2026-10-18，两批 12 张）**：P5R 6（G2 回复选择 / G1 普通对话 ×2 /
+  IM 完整屏 ×2 / 手机 HUD）+ P5 6（**存档/读取** / 手机主屏 / 日历 / 五维状态 / 校内地图 /
+  东京地图），`verify-reference-frames.py` **12/12**；仍缺殿堂/天鹅绒/印象空间/COOP/放课后等
+  界面整屏帧（详见 `P4-reference-frames-round3.md`）。
 - **仍未关闭**：整屏视觉对照（部分）、真机（触控/软键盘/中文输入法/移动 Safari）、
   IM 图片消息（待产品拍板）。
 - 在这些缺口收口前，保持「功能阶段通过，完整验收未通过」的状态。
