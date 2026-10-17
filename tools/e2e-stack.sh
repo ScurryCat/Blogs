@@ -123,9 +123,18 @@ PY
       > "$WORK/api.log" 2>&1 & echo $! > "$API_PID" )
   wait_http "$(api_url)/api/v1/posts" 40 || { say "✗ API 没就绪，见 $WORK/api.log"; exit 1; }
 
-  say "5/6 种子手记（15 条公开）"
+  say "5/6 种子数据（手记 + 文章 + 殿堂）"
+  # 文章：殿堂发布要求「至少一篇公开文章」
+  ( cd "$REPO/apps/api" && \
+    DATABASE_URL="postgresql+psycopg://pl@127.0.0.1:${PL_PG_PORT}/pl_e2e" \
+    SECRET_KEY="e2e-stack-secret-0123456789abcdef0123" \
+    uv run python -m app.commands.import_legacy --apply \
+      --source "$REPO/assets/js/posts.js" --repo-root "$REPO" >/dev/null 2>&1 ) \
+    && say "文章已导入" || say "⚠ 文章导入失败"
   python3 "$REPO/tools/e2e-seed-journal.py" "$(api_url)" "$OWNER_PASSWORD" 15 >/dev/null 2>&1 \
-    && say "种子完成" || say "⚠ 种子失败（看 tools/e2e-seed-journal.py 输出）"
+    && say "手记已种" || say "⚠ 手记种子失败"
+  python3 "$REPO/tools/e2e-seed-palaces.py" "$(api_url)" "$OWNER_PASSWORD" >/dev/null 2>&1 \
+    && say "殿堂已种" || say "⚠ 殿堂种子失败"
 
   say "6/6 起隔离前端（${WEB_PORT}）"
   lsof -ti "tcp:${WEB_PORT}" 2>/dev/null | xargs -r kill 2>/dev/null

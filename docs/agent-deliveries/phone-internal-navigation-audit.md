@@ -69,8 +69,16 @@
 **殿堂阅读的 canonical 页面与 `metaverse-entry` 来源在独立页保持不变。**
 
 测试：导航 46 项全过（含 5 处断言从「发 metaverse-entry」改为「换屏到 palace」）。
-**端到端未做**：本地/隔离库没有殿堂数据（种子脚本只造手记），无法在浏览器里点进殿堂；
-后续要么补殿堂种子，要么在验收环境准备数据。
+**端到端已完成（第 45 轮补上）**：新增殿堂种子（`tools/e2e-seed-palaces.py`，需先导入文章
+——发布要求「至少一篇公开文章」），端到端实测：
+
+```
+URL：/?phone=metanav&screen=palace&item=velvet-door
+状态：手机开=True 应用层=True palace屏=1
+判定：✓ 殿堂正文在手机内打开，手机未关闭
+```
+
+`tools/e2e-metanav-palace.py` 已接入 `verify-all.sh --e2e`（现在是 4 项端到端）。
 
 ## 三·补：P3 已落地（第 43 轮）
 
