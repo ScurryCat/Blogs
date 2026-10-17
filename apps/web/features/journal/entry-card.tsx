@@ -13,7 +13,7 @@
  * 不产生 `div` 套在 `<a>` 里的非法结构，也不会出现「链接里再套链接」。
  */
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import { SiteLink } from "@/features/runtime/navigation/site-link";
 
@@ -29,6 +29,8 @@ export function EntryCard({
   /** 手机宿主里用 `host.openContent`（来源 `phone-link`）；独立页不传，用默认来源。 */
   onOpen?: (entry: JournalEntrySummary) => void;
 }): ReactNode {
+  // 缩略图加载失败（资源被撤回 / 变体过期）时显示文字占位，不留破图。
+  const [failed, setFailed] = useState<ReadonlySet<string>>(() => new Set());
   const parts = parseCalendarDate(entry.entry_date);
   const thumbs = entry.images
     .map((image) => ({ image, url: imageUrl(image) }))
@@ -75,8 +77,18 @@ export function EntryCard({
         <ul className={styles.thumbs} aria-label="这篇手记的图片">
           {thumbs.slice(0, 3).map(({ image, url }) => (
             <li key={image.media_id}>
-              {/* eslint-disable-next-line @next/next/no-img-element -- 变体地址由 API 给出，首版不共享缓存，不用 next/image。 */}
-              <img className={styles.thumb} src={url} alt={image.alt} loading="lazy" />
+              {failed.has(image.media_id) ? (
+                <span className={styles.thumbFailed}>图片加载失败</span>
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element -- 变体地址由 API 给出，首版不共享缓存，不用 next/image。
+                <img
+                  className={styles.thumb}
+                  src={url}
+                  alt={image.alt}
+                  loading="lazy"
+                  onError={() => setFailed((prev) => new Set(prev).add(image.media_id))}
+                />
+              )}
             </li>
           ))}
         </ul>

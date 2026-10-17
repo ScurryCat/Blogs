@@ -33,6 +33,7 @@ function bestCoverUrl(entry: LeisureEntry): string | null {
 
 export function EntryCard({ entry }: { entry: LeisureEntry }): ReactNode {
   const [revealed, setRevealed] = useState(false);
+  const [coverFailed, setCoverFailed] = useState(false);
   const coverUrl = bestCoverUrl(entry);
   const href = reviewHref(entry.review);
   const spoiler = entry.notes_have_spoilers && entry.notes;
@@ -53,13 +54,20 @@ export function EntryCard({ entry }: { entry: LeisureEntry }): ReactNode {
       }
       data-rated={entry.rating === null ? "unrated" : String(entry.rating)}
     >
-      {coverUrl ? (
+      {coverUrl && !coverFailed ? (
         // eslint-disable-next-line @next/next/no-img-element -- 变体地址由 API 给出。
-        <img className={styles.cover} src={coverUrl} alt={`${entry.title} 的封面`} loading="lazy" />
+        <img
+          className={styles.cover}
+          src={coverUrl}
+          alt={`${entry.title} 的封面`}
+          loading="lazy"
+          onError={() => setCoverFailed(true)}
+        />
       ) : (
-        <div className={styles.coverEmpty} aria-hidden="true">
-          NO COVER
-        </div>
+        // 封面缺失或加载失败都要有清楚的文字状态（任务书 §4.4）。
+        // 用纯文本而不是 role="img"：同页进度条已经用了 role="img"，
+        // 再加一个会让「进度条」相关的可访问性断言分不清（实测被测试抓到）。
+        <div className={styles.coverEmpty}>NO COVER</div>
       )}
 
       <div className={styles.cardBody}>

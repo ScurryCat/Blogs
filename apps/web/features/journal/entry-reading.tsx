@@ -10,7 +10,7 @@
  *  - 关联长文只显示**公开文章**（服务端已过滤），链接用 `SiteLink`（`top-nav`）。
  */
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import { parseContent } from "@/features/legacy/markdown";
 import { MarkdownView } from "@/features/legacy/markdown/view";
@@ -44,11 +44,13 @@ export function EntryReading({ entry }: { entry: JournalEntryDetail }): ReactNod
             const url = imageUrl(image);
             if (!url) return null;
             return (
-              <figure className={styles.figure} key={image.media_id}>
-                {/* eslint-disable-next-line @next/next/no-img-element -- 变体地址由 API 给出。 */}
-                <img src={url} alt={image.alt} width={image.width} height={image.height} />
-                {image.alt ? <figcaption>{image.alt}</figcaption> : null}
-              </figure>
+              <ReadingFigure
+                key={image.media_id}
+                url={url}
+                alt={image.alt}
+                width={image.width}
+                height={image.height}
+              />
             );
           })}
         </div>
@@ -71,5 +73,36 @@ export function EntryReading({ entry }: { entry: JournalEntryDetail }): ReactNod
         </p>
       ) : null}
     </article>
+  );
+}
+
+/**
+ * 正文图片：加载失败时显示可读占位（任务书 §4.3 / §8.3「图片失败要有可理解的显示」）。
+ * 独立组件持状态，一张失败不影响同页其他图片。
+ */
+function ReadingFigure({
+  url,
+  alt,
+  width,
+  height,
+}: {
+  url: string;
+  alt: string;
+  width: number;
+  height: number;
+}): ReactNode {
+  const [failed, setFailed] = useState(false);
+  return (
+    <figure className={styles.figure}>
+      {failed ? (
+        <p className={styles.figureFailed} role="status">
+          这张图片加载失败，可能已被撤回。
+        </p>
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element -- 变体地址由 API 给出。
+        <img src={url} alt={alt} width={width} height={height} onError={() => setFailed(true)} />
+      )}
+      {alt ? <figcaption>{alt}</figcaption> : null}
+    </figure>
   );
 }

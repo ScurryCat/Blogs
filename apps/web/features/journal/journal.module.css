@@ -30,9 +30,9 @@
 
 .lead {
   margin: 0;
-  max-width: 62ch;
+  max-width: 64ch;
   line-height: 1.7;
-  color: var(--ink-2, #555);
+  color: var(--dim, #9b968e);
 }
 
 .tabs {
@@ -67,13 +67,15 @@
   list-style: none;
 }
 
+/* 日历筛选结果沿用旧的存档卡（辅助定位用）；颜色跟随站点暗色主题。 */
 .card {
   display: grid;
   grid-template-columns: 5.2em 1fr;
   gap: 6px 14px;
   align-items: start;
-  border: 1px solid rgba(0, 0, 0, 0.16);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--line, rgba(244, 241, 234, 0.14));
+  background: rgba(244, 241, 234, 0.06);
+  color: var(--paper);
   padding: 14px 16px;
 }
 
@@ -138,7 +140,7 @@
 }
 
 .chip {
-  border: 1px solid rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(244, 241, 234, 0.3);
   padding: 1px 8px;
 }
 
@@ -151,7 +153,7 @@
   margin: 2px 0 0;
   font-size: 14px;
   line-height: 1.7;
-  color: var(--ink-2, #444);
+  color: var(--dim, #9b968e);
 }
 
 .thumbs {
@@ -180,15 +182,16 @@
 }
 
 .month {
-  border: 1px solid rgba(0, 0, 0, 0.16);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--line, rgba(244, 241, 234, 0.14));
+  background: rgba(244, 241, 234, 0.05);
   padding: 12px 14px;
 }
 
 .monthTitle {
   margin: 0 0 10px;
-  font-size: 15px;
-  letter-spacing: 0.1em;
+  font-family: var(--f-hat, sans-serif);
+  font-size: 16px;
+  letter-spacing: 0.12em;
 }
 
 .grid {
@@ -220,14 +223,14 @@
 
 /* 只有真的有公开记录的日期才有标记；空白日期不做任何装饰（验收 2）。 */
 .dayHasEntry {
-  border-color: #d40000;
-  background: rgba(212, 0, 0, 0.1);
+  border-color: var(--red, #e5191c);
+  background: rgba(229, 25, 28, 0.16);
   font-weight: 700;
   cursor: pointer;
 }
 
 .dayToday {
-  outline: 2px solid #111;
+  outline: 2px solid var(--paper, #f4f1ea);
   outline-offset: -2px;
 }
 
@@ -235,7 +238,7 @@
   display: block;
   font-size: 9px;
   line-height: 1;
-  color: #b00000;
+  color: var(--red, #e5191c);
 }
 
 /* --- 正文 ----------------------------------------------------------------- */
@@ -249,7 +252,7 @@
 .readingHead {
   display: grid;
   gap: 6px;
-  border-bottom: 2px solid #d40000;
+  border-bottom: 2px solid var(--red, #e5191c);
   padding-bottom: 10px;
 }
 
@@ -257,7 +260,7 @@
   margin: 0;
   font-size: 13px;
   letter-spacing: 0.12em;
-  color: #b00000;
+  color: var(--red, #e5191c);
 }
 
 .readingTitle {
@@ -310,12 +313,12 @@
 }
 
 .noticeInfo {
-  border-left-color: #333;
-  background: rgba(0, 0, 0, 0.05);
+  border-left-color: var(--dim, #9b968e);
+  background: rgba(244, 241, 234, 0.06);
 }
 
 .empty {
-  border: 1px dashed rgba(0, 0, 0, 0.3);
+  border: 1px dashed rgba(244, 241, 234, 0.3);
   padding: 18px;
   line-height: 1.7;
 }
@@ -404,9 +407,9 @@
 .select {
   font: inherit;
   padding: 9px 10px;
-  border: 1px solid rgba(0, 0, 0, 0.35);
-  background: rgba(255, 255, 255, 0.9);
-  color: inherit;
+  border: 1px solid rgba(244, 241, 234, 0.35);
+  background: rgba(10, 10, 11, 0.82);
+  color: var(--paper, #f4f1ea);
   width: 100%;
 }
 
@@ -482,4 +485,417 @@
   height: 56px;
   object-fit: cover;
   border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+/* 图片加载失败的文字占位（任务书 §4.3 / §8.3）：不留破图，也不留空白。 */
+.thumbFailed {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  padding: 4px;
+  color: var(--dim, #8b8b8b);
+  border: 1px dashed rgb(244 241 234 / 0.3);
+  font: 400 11px/1.3 var(--f-cjk, sans-serif);
+  text-align: center;
+}
+.figureFailed {
+  margin: 0;
+  padding: 18px 12px;
+  color: var(--dim, #8b8b8b);
+  border: 1px dashed rgb(244 241 234 / 0.3);
+  font: 400 13px/1.5 var(--f-cjk, sans-serif);
+  text-align: center;
+}
+
+/* =========================================================================
+ * 存档式列表（第三轮任务书 §3.2「游戏存档 / 读取界面」）
+ *
+ * 参考零件来源：assets/reference/persona5-spriters/p5/hud/92140-save-load.png
+ * （No.1–16 数字贴纸、SAVE DATA 字样、戻る/決定 提示、红黑斜切）。
+ * **完整游戏存档界面参考帧尚未取得**（见交付报告第 6 节），因此本段只算
+ * 「按零件表 + 数据/交互需求」的布局，不能标为视觉还原通过。
+ * ========================================================================= */
+
+.saveToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  margin-bottom: 6px;
+  border-bottom: 2px solid var(--paper, #f4f1ea);
+}
+
+.saveHeading {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+}
+
+.saveKicker {
+  font: 400 14px/1 var(--f-disp, sans-serif);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--red, #e5191c);
+}
+
+.saveTitle {
+  font: 900 18px/1.1 var(--f-cjk, sans-serif);
+  letter-spacing: 0.14em;
+}
+
+.saveLayout {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 400px);
+  align-items: start;
+  margin-top: 12px;
+}
+
+.saveListCol {
+  min-width: 0;
+}
+
+.saveList {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* --- 槽位行 --------------------------------------------------------------- */
+
+.slot {
+  display: grid;
+  grid-template-columns: auto 5.4em minmax(0, 1fr);
+  gap: 4px 14px;
+  align-items: center;
+  padding: 12px 16px 12px 12px;
+  background: rgba(244, 241, 234, 0.05);
+  border: 1px solid transparent;
+  border-left: 4px solid rgba(244, 241, 234, 0.28);
+  color: var(--paper, #f4f1ea);
+  cursor: pointer;
+  /* 右缘斜切：静态也不依赖动画，减少动态效果偏好下观感一致。 */
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 100%, 0 100%);
+  transition: background-color 0.14s, border-color 0.14s, color 0.14s;
+}
+
+.slot:hover {
+  background: rgba(244, 241, 234, 0.11);
+  border-left-color: var(--paper, #f4f1ea);
+}
+
+.slot:focus-visible {
+  outline: 3px solid var(--red, #e5191c);
+  outline-offset: 3px;
+}
+
+.slotSelected,
+.slotSelected:hover {
+  background: var(--paper, #f4f1ea);
+  border-left-color: var(--red, #e5191c);
+  color: var(--black, #0a0a0b);
+  filter: drop-shadow(6px 6px 0 rgba(229, 25, 28, 0.9));
+}
+
+.slotNo {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  padding: 3px 9px 2px;
+  background: var(--black, #0a0a0b);
+  color: var(--paper, #f4f1ea);
+  border: 2px solid var(--paper, #f4f1ea);
+  font: 400 19px/1 var(--f-hat, sans-serif);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  transform: skewX(-10deg);
+}
+
+.slotNoPrefix {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  opacity: 0.7;
+}
+
+.slotDateBox {
+  display: grid;
+  justify-items: start;
+  gap: 1px;
+  border-right: 2px solid var(--red, #e5191c);
+  padding-right: 12px;
+}
+
+.slotDay {
+  font: 400 30px/1 var(--f-disp, sans-serif);
+  letter-spacing: 0.01em;
+}
+
+.slotYm {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  opacity: 0.78;
+}
+
+.slotWeekday {
+  font-size: 11px;
+  opacity: 0.68;
+}
+
+.slotBody {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.slotTitle {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.4;
+  /* 长标题不截断成假信息：允许在任意位置换行。 */
+  overflow-wrap: anywhere;
+}
+
+.slotExcerpt {
+  font-size: 13px;
+  line-height: 1.6;
+  opacity: 0.72;
+  overflow-wrap: anywhere;
+}
+
+.slotMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.slotChip {
+  display: inline-block;
+  padding: 0 7px;
+  border: 1px solid currentColor;
+  font-size: 11px;
+  line-height: 1.7;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+}
+
+/* --- 选中预览 ------------------------------------------------------------- */
+
+.savePreviewCol {
+  min-width: 0;
+}
+
+.preview {
+  position: sticky;
+  top: calc(var(--hud, 66px) + 22px);
+  display: grid;
+  gap: 10px;
+  padding: 16px 16px 18px;
+  border: 2px solid var(--paper, #f4f1ea);
+  border-top: 6px solid var(--red, #e5191c);
+  background:
+    linear-gradient(160deg, rgba(244, 241, 234, 0.1), rgba(10, 10, 11, 0.92) 55%),
+    var(--black, #0a0a0b);
+  color: var(--paper, #f4f1ea);
+}
+
+.previewHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.previewKicker {
+  font: 400 14px/1 var(--f-disp, sans-serif);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--red, #e5191c);
+}
+
+.previewNo {
+  margin: 0;
+  font: 400 13px/1 var(--f-hat, sans-serif);
+  letter-spacing: 0.14em;
+}
+
+.previewDate {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+}
+
+.previewDay {
+  font: 400 64px/0.9 var(--f-disp, sans-serif);
+  letter-spacing: -0.01em;
+  text-shadow: 4px 4px 0 var(--red, #e5191c);
+}
+
+.previewYm {
+  font: 400 18px/1 var(--f-hat, sans-serif);
+  letter-spacing: 0.12em;
+}
+
+.previewWeekday {
+  padding: 2px 8px;
+  background: var(--paper, #f4f1ea);
+  color: var(--black, #0a0a0b);
+  font: 400 13px/1.5 var(--f-hat, sans-serif);
+  letter-spacing: 0.08em;
+  transform: skewX(-10deg);
+}
+
+.previewDateLine {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--dim, #9b968e);
+}
+
+.previewTitle {
+  margin: 0;
+  font-size: clamp(20px, 2.2vw, 28px);
+  line-height: 1.32;
+  overflow-wrap: anywhere;
+}
+
+.previewMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+
+.previewThumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.previewThumb {
+  width: 76px;
+  height: 76px;
+  object-fit: cover;
+  border: 1px solid rgba(244, 241, 234, 0.35);
+  background: rgba(244, 241, 234, 0.08);
+}
+
+.previewExcerpt {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--paper, #f4f1ea);
+  opacity: 0.82;
+  overflow-wrap: anywhere;
+}
+
+.previewActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.readButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 20px;
+  background: var(--red, #e5191c);
+  color: var(--paper, #f4f1ea);
+  border: 2px solid var(--black, #0a0a0b);
+  font: 700 15px/1.2 var(--f-cjk, sans-serif);
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  cursor: pointer;
+  transform: skewX(-8deg);
+  box-shadow: 4px 4px 0 rgba(10, 10, 11, 0.9);
+  transition: background-color 0.14s, color 0.14s, box-shadow 0.14s;
+}
+
+.readButton:hover,
+.readButton:focus-visible {
+  background: var(--paper, #f4f1ea);
+  color: var(--red, #e5191c);
+  box-shadow: 6px 6px 0 rgba(10, 10, 11, 0.9);
+}
+
+.hint kbd {
+  display: inline-block;
+  padding: 0 4px;
+  border: 1px solid rgba(244, 241, 234, 0.4);
+  font: 400 11px/1.6 var(--f-mono, monospace);
+}
+
+/* --- 窄屏 / 手机紧凑视图 --------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .saveLayout {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  /* 预览贴着视口底部：点选槽位后不必来回滚动。 */
+  .savePreviewCol {
+    position: sticky;
+    bottom: 8px;
+    z-index: 2;
+  }
+
+  .preview {
+    position: static;
+    max-height: 46vh;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 620px) {
+  .slot {
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 10px 12px 10px 10px;
+    gap: 6px 10px;
+  }
+
+  .slotDateBox {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 8px;
+    align-items: baseline;
+    border-right: 0;
+    padding-right: 0;
+  }
+
+  .slotDay {
+    font-size: 20px;
+  }
+
+  .slotBody {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .slotTitle {
+    font-size: 15px;
+  }
+
+  .previewDay {
+    font-size: 48px;
+  }
+
+  .preview {
+    max-height: 52vh;
+  }
 }
