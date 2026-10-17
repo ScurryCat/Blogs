@@ -85,8 +85,8 @@ export default async function PostPage({ params }: PageProps): Promise<ReactNode
               HOME
             </SiteLink>
             <span aria-hidden="true">/</span>
-            <SiteLink href="/#posts" source="top-nav">
-              PALACE INDEX
+            <SiteLink href="/posts" source="top-nav">
+              INTELLIGENCE ARCHIVE
             </SiteLink>
             <span aria-hidden="true">/</span>
             <span>{post.category}</span>

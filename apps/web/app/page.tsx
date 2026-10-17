@@ -1,29 +1,65 @@
 /**
  * 首页 `/`（旧站 `index.html` + `assets/js/home.js`）。
  *
- * 内容在服务端渲染（文章列表、归档、预告信），交互部分（暂停菜单、搜索筛选）是客户端组件。
- * `#latest` / `#posts` / `#archive` 三个锚点保留，旧链接 `index.html#posts` 因此仍有落点。
+ * 第三轮（N1）调整：首页保留现有主题框架，但**只做摘要**——
+ *  - 生活近况：`LeblancView`（手记 / 放课后 / 音乐，各自读取、各自失败）；
+ *  - 最新文章：`HomeLatestPosts`（`id="posts"`，旧 `/#posts` 的兼容落点，带 `/posts` 入口）；
+ *  - 精选作品：`HomeFeaturedWorks`（只展示 API 真实返回的作品；读不到时如实说明）；
+ *  - 归档入口：`HomeArchiveEntry`（`id="archive"`，旧 `/#archive` 的兼容落点）。
  *
- * 数据来源：`readPublishedPosts()` —— 默认是迁移基线（8 篇文章，slug 与正文原样）；
- * 配置 `API_INTERNAL_URL` 并设置 `PHANTOM_POSTS_SOURCE=api` 后改为读 FastAPI。
- * **API 打开后读取失败不会伪装成「没有文章」**：页面顶部明确提示数据未更新。
+ * 完整搜索、分类与归档集中在 `/posts`；`#latest` 锚点仍由 `CallingCard` 保留。
+ *
+ * 数据来源：文章走 `readPublishedPosts()`（默认迁移基线，显式打开 API 时读 FastAPI，
+ * 读取失败会提示而不伪装成「没有文章」）；作品走 `fetchProjectsOnServer()`，
+ * 同样如实处理失败。首页不再复制整份文章列表与归档。
  */
 
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { HomeHero } from "@/features/legacy/pages/home-hero";
-import { HomePalaceIndex } from "@/features/legacy/pages/home-index";
-import { ArchiveSection, CallingCard, HomeTicker } from "@/features/legacy/pages/home-static";
+import {
+  HOME_FEATURED_COUNT,
+  HomeArchiveEntry,
+  HomeFeaturedWorks,
+  HomeLatestPosts,
+} from "@/features/legacy/pages/home-index";
+import { CallingCard, HomeTicker } from "@/features/legacy/pages/home-static";
 import { LeblancView } from "@/features/leblanc/leblanc-view";
+import { ApiClientError, ApiTransportError } from "@/lib/api/client";
 import { readPublishedPosts } from "@/lib/api/posts";
+import { fetchProjectsOnServer } from "@/features/showcase/server-api";
+import type { ProjectSummary } from "@/features/showcase/types";
+
+import "@/features/navigation/navigation.css";
 
 export const metadata: Metadata = {
   title: "PHANTOM LOG · 怪盗手记",
 };
 
+/** 首页「精选作品」读取失败时给访客看的真实原因（不伪造作品、不吞错误）。 */
+function featuredFailureReason(error: unknown): string {
+  if (error instanceof ApiClientError) return `读取作品失败（HTTP ${error.status}）`;
+  if (error instanceof ApiTransportError) return "连不上接口服务，暂时无法读取作品";
+  if (error instanceof Error && error.message.includes("API_INTERNAL_URL")) {
+    return "接口服务尚未配置，暂时无法读取作品";
+  }
+  if (error instanceof Error && error.message) return `读取作品失败：${error.message}`;
+  return "读取作品失败";
+}
+
 export default async function HomePage(): Promise<ReactNode> {
   const read = await readPublishedPosts();
+
+  let featured: ProjectSummary[] = [];
+  let featuredError: string | null = null;
+  try {
+    const page = await fetchProjectsOnServer({ limit: HOME_FEATURED_COUNT });
+    featured = page.items;
+  } catch (error) {
+    featuredError = featuredFailureReason(error);
+  }
+
   return (
     <>
       {read.apiEnabled && read.degraded ? (
@@ -35,14 +71,14 @@ export default async function HomePage(): Promise<ReactNode> {
       <HomeTicker />
       <CallingCard post={read.items[0]} />
       {/*
-        勒布朗近况（T05 交付，T00 接线）。位置按 07 §3「先为现有首页增加勒布朗式的内容组织」
-        与 T05 交付单 §8.8 的建议：在 Hero/Ticker/CallingCard 之后、文章索引之前。
-        内部四块**各自读取、各自失败** —— 任一 API 故障不影响音乐与整页（验收第 5 条）。
-        独立入口 `/apps/leblanc` 保留：站主可直接分享「近况」页。
+        勒布朗近况（T05 交付，T00 接线）。位置按 07 §3「先为现有首页增加勒布朗式的内容组织」：
+        在 Hero/Ticker/CallingCard 之后、文章摘要之前。
+        内部各块**各自读取、各自失败** —— 任一 API 故障不影响音乐与整页（验收第 5 条）。
       */}
       <LeblancView />
-      <HomePalaceIndex items={read.items} />
-      <ArchiveSection items={read.items} />
+      <HomeLatestPosts items={read.items} />
+      <HomeFeaturedWorks projects={featured} error={featuredError} />
+      <HomeArchiveEntry items={read.items} />
     </>
   );
 }

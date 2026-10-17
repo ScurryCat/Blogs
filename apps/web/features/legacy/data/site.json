@@ -133,62 +133,7 @@
     "lat": 35.6764,
     "lon": 139.65
   },
-  "map": {
-    "2": {
-      "post": "tokyo-ten-days"
-    },
-    "4": {
-      "post": "css-p5-menu"
-    },
-    "6": {
-      "post": "a11y-checklist"
-    },
-    "7": {
-      "post": "desk-setup-2026"
-    },
-    "8": {
-      "href": "index.html#archive",
-      "en": "ARCHIVE",
-      "title": "归档",
-      "note": "老街和老文章，按年份排好。"
-    },
-    "9": {
-      "href": "weather.html",
-      "en": "FORECAST",
-      "title": "天气预报",
-      "note": "出门潜入之前，先看看明天会不会下雨。"
-    },
-    "10": {
-      "post": "phantom-blog-launch"
-    },
-    "12": {
-      "href": "index.html#posts",
-      "en": "PALACE",
-      "title": "宫殿索引 · 全部文章",
-      "note": "十字路口最热闹的地方，所有文章都在这里排队。"
-    },
-    "13": {
-      "post": "assets-and-credits"
-    },
-    "15": {
-      "post": "snow-country-notes"
-    },
-    "17": {
-      "post": "p5r-platinum"
-    },
-    "18": {
-      "href": "index.html",
-      "en": "HIDEOUT",
-      "title": "据点 · 首页",
-      "note": "勒布朗二楼的阁楼。所有行动都从这里出发。"
-    },
-    "19": {
-      "href": "about.html",
-      "en": "CONFIDANT",
-      "title": "关于我",
-      "note": "五维、友链、学习足迹，还有联络方式。"
-    }
-  },
+  "map": {},
   "about": {
     "bg": "assets/img/bg-leblanc.jpg",
     "art": "assets/img/joker-thief.webp",

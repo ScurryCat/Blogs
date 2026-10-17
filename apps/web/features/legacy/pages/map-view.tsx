@@ -7,6 +7,10 @@
  * 三个入口统一使用 `source="map-travel"`（车站人群），顶部导航仍是 Joker 帷幕，
  * 不因为「当前在地图页」就把所有入口都当人群（地图转场设计的硬性要求）。
  *
+ * **三个入口读同一份目的地配置**（任务书 §2.3）：`features/navigation/map-destinations.ts`
+ * → `features/legacy/map.ts` 的 `location.to`。这里不复制任何 id→href 映射；
+ * 只把 `to.intent`（上野 = 主动进入作品殿堂）原样透传给导航协调器。
+ *
  * 其余行为按原样保留：25 个地点（未配置目的地的显示为未开放、不进列表）、
  * 悬停 / Tab / 方向键选中、红色菱形 + 青色方框的抖动光标、右侧档案卡。
  *
@@ -27,6 +31,7 @@ import {
   openLocations,
   type MapLocation,
 } from "@/features/legacy/map";
+import type { NavigationIntent } from "@/features/phone/types";
 import { prefersReducedMotion } from "@/features/runtime/effects/crowd";
 import { navigationRequestFromClick } from "@/features/runtime/navigation/link-guard";
 import { useNavigation } from "@/features/runtime/navigation/coordinator";
@@ -40,11 +45,13 @@ import { SiteLink } from "@/features/runtime/navigation/site-link";
 function SvgSiteLink({
   href,
   source,
+  intent,
   children,
   ...rest
 }: {
   href: string;
   source: "map-travel";
+  intent?: NavigationIntent;
   children: ReactNode;
   className?: string;
   "data-id"?: number;
@@ -57,7 +64,7 @@ function SvgSiteLink({
   // 这里沿用 HTML 锚点的事件类型，判定函数只读 getAttribute / hasAttribute，两者同形。
   // 与 SiteLink 一样在捕获阶段拦截：见那里的说明（避免与 Next 的全局点击处理抢时机）。
   const onClickCapture = (event: MouseEvent<HTMLAnchorElement>) => {
-    const request = navigationRequestFromClick(event, event.currentTarget, href, source);
+    const request = navigationRequestFromClick(event, event.currentTarget, href, source, intent);
     if (!request) return;
     event.preventDefault();
     event.stopPropagation();
@@ -212,7 +219,7 @@ export function MapView(): ReactNode {
   }, [selected]);
 
   const renderLocation = (location: MapLocation): ReactNode => {
-    const sub = location.to ? (location.to.en ?? "POST") : "CLOSED";
+    const sub = location.to ? location.to.en : "CLOSED";
     const body = (
       <>
         <image
@@ -277,6 +284,7 @@ export function MapView(): ReactNode {
         className={`loc${selectedId === location.id ? " on" : ""}`}
         href={location.to.href}
         source="map-travel"
+        intent={location.to.intent}
         data-id={location.id}
         aria-label={`${location.kanji}：${location.to.title}`}
         key={location.id}
@@ -328,21 +336,19 @@ export function MapView(): ReactNode {
                 <b>{selected.kanji}</b>
                 <span>{selected.roma}</span>
               </p>
-              {destination.cover ? (
-                // eslint-disable-next-line @next/next/no-img-element -- 旧站封面资源。
-                <img src={destination.cover} alt="" loading="lazy" />
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element -- 旧站地图插画。
-                <img className="ill" src={locationImage(selected.id)} alt="" />
-              )}
-              <p className="kick">
-                {destination.en || "POST"}
-                {destination.date ? ` · ${destination.date}` : ""}
-              </p>
+              {/* 目的地不绑定文章封面：统一用地点插画，避免把旧文章数据带进新版地图。 */}
+              {/* eslint-disable-next-line @next/next/no-img-element -- 旧站地图插画。 */}
+              <img className="ill" src={locationImage(selected.id)} alt="" />
+              <p className="kick">{destination.en}</p>
               <h2>{destination.title}</h2>
-              <p className="mp-c-n">{destination.note || ""}</p>
-              {/* 右侧「出发」：同样是人群过场。 */}
-              <SiteLink className="btn red" href={destination.href} source="map-travel">
+              <p className="mp-c-n">{destination.note}</p>
+              {/* 右侧「出发」：同样是人群过场；上野额外带上殿堂意图。 */}
+              <SiteLink
+                className="btn red"
+                href={destination.href}
+                source="map-travel"
+                intent={destination.intent}
+              >
                 <span>出发 ▸</span>
               </SiteLink>
             </>
@@ -352,10 +358,11 @@ export function MapView(): ReactNode {
       <ul className="mp-list" aria-label="地点列表">
         {openLocations.map((location) => (
           <li key={location.id}>
-            {/* 下方地点列表：同样是人群过场。 */}
+            {/* 下方地点列表：同样是人群过场；意图与图标 / 出发读同一份目的地配置。 */}
             <SiteLink
               href={location.to?.href ?? "/map"}
               source="map-travel"
+              intent={location.to?.intent}
               data-id={location.id}
               onMouseEnter={() => select(location.id, false)}
             >

@@ -1,149 +1,201 @@
-"use client";
-
 /**
- * 宫殿索引（文章列表 + 搜索 + 标签筛选）—— 旧站 `assets/js/home.js` 的 `idx` 段迁移。
+ * 首页摘要：最新文章、精选作品与归档入口（任务书 §2.2）。
  *
- * 保留：`/` 聚焦搜索框、标签筛选、命中计数、空态、行内日历 / 塔罗编号 / 阅读时长。
- * 监听在卸载时移除（旧站靠 `PL.onLeave` 做同一件事）。
+ * 首页保留现有主题框架，但**不再复制完整索引**：
+ *  - 完整搜索、分类与归档集中到 `/posts`（`features/navigation/posts-view.tsx`）；
+ *  - 旧 `/#posts`、`/#archive` 仍有**有意义**的落点：本文件的 `id="posts"` /
+ *    `id="archive"` 两个摘要区块，各自带「进入情报档案 / 打开归档」的真实入口，
+ *    不出现悬空锚点；
+ *  - 「精选作品」只展示 API 真实返回的作品；没有数据或读不到时显示**真实空态**，
+ *    不生成占位项目、不编造成绩与数字。
+ *
+ * 本文件是服务端组件：数据由 `app/page.tsx` 读取后传入，组件本身不发请求。
  */
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import { type Post } from "@/features/legacy/posts";
-import { Calendar } from "@/features/legacy/text/calendar";
 import { SiteLink } from "@/features/runtime/navigation/site-link";
+import { projectImageAlt, projectImageUrl, truncateSummary } from "@/features/showcase/types";
+import type { ProjectSummary } from "@/features/showcase/types";
 
-function Tags({ tags }: { tags: readonly string[] }): ReactNode {
+import { PostRow } from "@/features/navigation/post-row";
+
+/** 首页最新文章条数（其余去 `/posts` 看）。 */
+export const HOME_LATEST_COUNT = 3;
+/** 首页精选作品条数。 */
+export const HOME_FEATURED_COUNT = 3;
+
+/**
+ * 最新文章摘要。
+ *
+ * `id="posts"` 是旧站 `index.html#posts` / `/#posts` 的兼容落点：
+ * 这里给出最新几篇与「进入情报档案」入口，而不是复制完整搜索页。
+ */
+export function HomeLatestPosts({
+  items,
+  limit = HOME_LATEST_COUNT,
+}: {
+  items: readonly Post[];
+  limit?: number;
+}): ReactNode {
+  const latest = items.slice(0, limit);
   return (
-    <span className="tags">
-      {tags.map((tag) => (
-        <span key={tag}>{tag}</span>
-      ))}
-    </span>
-  );
-}
-
-function Row({ post }: { post: Post }): ReactNode {
-  return (
-    <li className="row">
-      <SiteLink className="row-a" href={`/posts/${encodeURIComponent(post.slug)}`} source="top-nav">
-        <span className="row-no" aria-hidden="true">
-          {String(post.no).padStart(2, "0")}
-        </span>
-        <span className="row-date">
-          <Calendar date={post.date} slot={post.category} />
-        </span>
-        <span className="row-main">
-          <span className="row-cat">
-            {post.arc[0]} · {post.arc[1]} · {post.min} MIN
-          </span>
-          <span className="row-t">{post.title}</span>
-          <span className="row-ex">{post.ex}</span>
-          <Tags tags={post.tags} />
-        </span>
-        <span className="row-art" aria-hidden="true">
-          {/* eslint-disable-next-line @next/next/no-img-element -- 旧站封面资源。 */}
-          <img src={post.cover} alt="" loading="lazy" />
-        </span>
-      </SiteLink>
-    </li>
-  );
-}
-
-export function HomePalaceIndex({ items }: { items: readonly Post[] }): ReactNode {
-  const tags = useMemo(() => [...new Set(items.flatMap((post) => post.tags))], [items]);
-  const [tag, setTag] = useState("");
-  const [query, setQuery] = useState("");
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    const onSlash = (event: KeyboardEvent) => {
-      const element = document.activeElement;
-      if (event.key === "/" && !(element instanceof HTMLElement && /INPUT|TEXTAREA/.test(element.tagName))) {
-        event.preventDefault();
-        inputRef.current?.focus();
-      }
-    };
-    window.addEventListener("keydown", onSlash);
-    return () => window.removeEventListener("keydown", onSlash);
-  }, []);
-
-  const hits = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    return items.filter(
-      (post) =>
-        (!tag || post.tags.includes(tag)) &&
-        (!needle || `${post.title} ${post.tags.join(" ")} ${post.content}`.toLowerCase().includes(needle)),
-    );
-  }, [items, query, tag]);
-
-  return (
-    <section className="shell idx" id="posts" aria-labelledby="idx-h">
+    <section className="shell idx home-sec" id="posts" aria-labelledby="home-posts-h">
       <header className="sec-h">
         <span className="no">02</span>
-        <h2 id="idx-h">
-          <span className="en">Palace Index</span>
-          <span className="cn">文章</span>
+        <h2 id="home-posts-h">
+          <span className="en">Latest Posts</span>
+          <span className="cn">最新文章</span>
         </h2>
         <p className="aside" aria-live="polite">
-          <b id="hit">{hits.length}</b> / {items.length} TARGETS
+          <b>{latest.length}</b> / {items.length} POSTS
         </p>
       </header>
-      <div className="tools">
-        <label className="search">
-          <span className="sr-only">搜索文章</span>
-          <input
-            ref={inputRef}
-            id="q"
-            type="search"
-            placeholder="搜索标题 / 标签 / 正文"
-            autoComplete="off"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-          <kbd aria-hidden="true">/</kbd>
-        </label>
-        <div className="chips" role="group" aria-label="按标签筛选">
-          <button
-            className="chip"
-            type="button"
-            data-t=""
-            aria-pressed={tag === ""}
-            onClick={() => setTag("")}
-          >
-            <span>
-              全部<b>{items.length}</b>
-            </span>
-          </button>
-          {tags.map((item) => (
-            <button
-              className="chip"
-              type="button"
-              data-t={item}
-              aria-pressed={tag === item}
-              key={item}
-              onClick={() => setTag(item)}
-            >
-              <span>
-                {item}
-                <b>{items.filter((post) => post.tags.includes(item)).length}</b>
-              </span>
-            </button>
+      {latest.length > 0 ? (
+        <ol className="rows">
+          {latest.map((post) => (
+            <PostRow post={post} key={post.slug} />
           ))}
-        </div>
-      </div>
-      <ol className="rows" id="rows">
-        {hits.length ? (
-          hits.map((post) => <Row post={post} key={post.slug} />)
-        ) : (
-          <li className="empty">
-            {/* eslint-disable-next-line @next/next/no-img-element -- 旧站空态插图。 */}
-            <img src="/assets/legacy/img/morgana-thief.webp" alt="" loading="lazy" />
-            <b>一个目标都没找到</b>
-            <span>换个关键词，或者点「全部」。</span>
-          </li>
-        )}
-      </ol>
+        </ol>
+      ) : (
+        <p className="home-empty">还没有公开文章。</p>
+      )}
+      <p className="home-cta">
+        <SiteLink className="btn" href="/posts" source="top-nav">
+          <span>进入情报档案 ▸</span>
+        </SiteLink>
+        <span className="home-hint">完整搜索、分类与归档都在 `/posts`。</span>
+      </p>
+    </section>
+  );
+}
+
+/**
+ * 精选作品摘要。
+ *
+ * 没有「精选」标记字段，因此按 API 的公开列表顺序取前几件（真实内容）；
+ * `error` 非空时如实说明读不到，**不**伪造作品卡片。
+ */
+export function HomeFeaturedWorks({
+  projects,
+  error,
+  limit = HOME_FEATURED_COUNT,
+}: {
+  projects: readonly ProjectSummary[];
+  error?: string | null;
+  limit?: number;
+}): ReactNode {
+  const featured = projects.slice(0, limit);
+  return (
+    <section className="shell home-sec" id="featured-works" aria-labelledby="home-works-h">
+      <header className="sec-h">
+        <span className="no">04</span>
+        <h2 id="home-works-h">
+          <span className="en">Showcase</span>
+          <span className="cn">精选作品</span>
+        </h2>
+      </header>
+      {error ? (
+        <p className="home-empty" role="status">
+          作品暂时读不到：{error}。
+          <SiteLink href="/showcase" source="top-nav">
+            去我的殿堂看看
+          </SiteLink>
+        </p>
+      ) : featured.length === 0 ? (
+        <p className="home-empty">
+          还没有公开作品。
+          <SiteLink href="/showcase" source="top-nav">
+            去我的殿堂看看
+          </SiteLink>
+        </p>
+      ) : (
+        <ul className="n1-works">
+          {featured.map((project) => {
+            const cover = project.cover ? projectImageUrl(project.cover) : null;
+            return (
+              <li className="n1-work" key={project.id}>
+                <SiteLink
+                  className="n1-work-a"
+                  href={`/showcase/projects/${encodeURIComponent(project.slug)}`}
+                  source="top-nav"
+                  data-project={project.slug}
+                >
+                  {cover ? (
+                    /* eslint-disable-next-line @next/next/no-img-element -- 媒体字节只能从 /api/v1/media 取（每次请求校验公开引用），next/image 无法代取。 */
+                    <img
+                      className="n1-work-cover"
+                      src={cover}
+                      alt={project.cover ? projectImageAlt(project.cover) : ""}
+                      width={project.cover?.width ?? 640}
+                      height={project.cover?.height ?? 400}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    <span className="n1-work-noimg">这件作品还没有效果图</span>
+                  )}
+                  <span className="n1-work-title">{project.title}</span>
+                  {project.summary ? (
+                    <span className="n1-work-summary">{truncateSummary(project.summary)}</span>
+                  ) : null}
+                  {project.tech_stack.length > 0 ? (
+                    <span className="n1-work-tech">{project.tech_stack.join(" · ")}</span>
+                  ) : null}
+                </SiteLink>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <p className="home-cta">
+        <SiteLink className="btn" href="/showcase" source="top-nav" intent="enter-showcase">
+          <span>我的殿堂 ▸</span>
+        </SiteLink>
+        <span className="home-hint">每件作品只写真实用途、职责与取舍，不列虚构成绩。</span>
+      </p>
+    </section>
+  );
+}
+
+/**
+ * 归档入口（旧 `/#archive` 的兼容落点）。
+ *
+ * 这里不复制完整归档列表：按年份给出真实计数，并直达 `/posts?view=archive`。
+ */
+export function HomeArchiveEntry({ items }: { items: readonly Post[] }): ReactNode {
+  const years = [...new Set(items.map((post) => post.date.slice(0, 4)))];
+  return (
+    <section className="shell home-sec home-archive" id="archive" aria-labelledby="home-arc-h">
+      <header className="sec-h">
+        <span className="no">05</span>
+        <h2 id="home-arc-h">
+          <span className="en">Archive</span>
+          <span className="cn">归档</span>
+        </h2>
+      </header>
+      {years.length > 0 ? (
+        <ul className="n1-years" aria-label="按年份归档">
+          {years.map((year) => (
+            <li key={year}>
+              {/* 直达归档视图里的对应年份（`/posts?view=archive` 由服务端解析）。 */}
+              <SiteLink href={`/posts?view=archive#year-${year}`} source="top-nav">
+                <b>{year}</b>
+                <span>{items.filter((post) => post.date.startsWith(year)).length} 篇</span>
+              </SiteLink>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="home-empty">还没有可归档的文章。</p>
+      )}
+      <p className="home-cta">
+        <SiteLink className="btn red" href="/posts?view=archive" source="top-nav">
+          <span>打开归档 ▸</span>
+        </SiteLink>
+        <span className="home-hint">全部文章按年份排在情报档案的归档视图里。</span>
+      </p>
     </section>
   );
 }

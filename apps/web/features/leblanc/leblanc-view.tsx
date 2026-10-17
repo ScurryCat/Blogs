@@ -64,8 +64,15 @@ export function LeblancView(): ReactNode {
         <SiteLink href="/apps/journal" source="top-nav">
           看全部手记
         </SiteLink>
+        <SiteLink href="/apps/ins" source="top-nav">
+          看 INS 动态
+        </SiteLink>
         <SiteLink href="/apps/leisure" source="top-nav">
           看追番与游戏
+        </SiteLink>
+        {/* 生活图库由 N4 交付（第三轮统一图库）；这里只做生活汇总的入口，不复制图库实现。 */}
+        <SiteLink href="/gallery" source="top-nav">
+          逛生活图库
         </SiteLink>
         <SiteLink href="/guestbook" source="top-nav">
           去留言
@@ -76,6 +83,7 @@ export function LeblancView(): ReactNode {
       </nav>
 
       <p className={styles.footnote}>
+        这里只聚合摘要：手记、INS、放课后与图库的详情仍属于各自模块。
         这些入口是普通链接，键盘和屏幕阅读器都能直接用；装饰性的热点只是辅助，
         不需要精确点中场景里的小物件。
       </p>

@@ -149,7 +149,13 @@ export const site: SiteConfig = {
   me: [...raw.me],
   weather: { ...raw.weather },
   map: Object.fromEntries(
-    Object.entries(raw.map).map(([key, value]) => [key, { ...value }]),
+    // 第三轮起地图目的地由 `features/navigation/map-destinations.ts` **单点**配置
+    // （13 个开放地点 + 用途说明 + 必要的导航意图）。`site.json` 里旧的逐字段 map
+    // 已清空，避免残留绑定具体文章 slug 的旧入口；这里保留装配逻辑以便回退。
+    Object.entries(raw.map as Record<string, MapDestination>).map(([key, value]) => [
+      key,
+      { ...value },
+    ]),
   ),
   about: {
     ...raw.about,

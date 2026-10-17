@@ -1,0 +1,264 @@
+/* =====================================================================
+   PHANTOM LOG · 导航与内容架构（第三轮 N1）新增样式
+   ---------------------------------------------------------------------
+   * 只追加本文件，不改 app/globals.css 与 styles/legacy/*（迁移副本）。
+   * 页头五栏目 / 文章索引 / 首页摘要的样式都在这里；
+     旧 `.hud-nav a`、`.row`、`.arc`、`.chip`、`.btn` 等仍沿用迁移样式。
+   * 选择器用 `.hud .hud-nav`、`.sec-h h1` 这种更高优先级，避免与
+     legacy CSS 的加载顺序耦合。
+   ===================================================================== */
+
+/* ---------- 顶部五栏目：主栏目中文 + P5 副标题 ---------- */
+.hud .hud-nav a {
+  /* 五个中文主栏目比旧英文标签窄，保留旧间距即可；不换行保证 320px 不挤成两行。 */
+  white-space: nowrap;
+}
+.hud .hud-nav .nav-name {
+  font: 900 17px/1 var(--f-cjk);
+  letter-spacing: 0.14em;
+  transform: skewX(-6deg);
+}
+.hud .hud-nav .nav-sub {
+  /* 复用旧 `.hud-nav a i` 的 11px 小字，只补不换行。 */
+  white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+  .hud .hud-nav .nav-name {
+    font-size: 15px;
+    letter-spacing: 0.08em;
+  }
+}
+@media (max-width: 560px) {
+  .hud .hud-nav a {
+    padding: 8px 7px;
+  }
+  .hud .hud-nav .nav-name {
+    font-size: 14px;
+    letter-spacing: 0.06em;
+  }
+  /* 与旧 CSS 的 `.hud-nav a i { display: none }` 一致：窄屏只留主栏目名。 */
+  .hud .hud-nav .nav-sub {
+    display: none;
+  }
+}
+@media (max-width: 400px) {
+  .hud .hud-nav a {
+    padding: 7px 5px;
+  }
+  .hud .hud-nav .nav-name {
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+  }
+}
+
+/* ---------- 页面 h1 使用索引区标题样式（legacy `.sec-h` 只写了 h2） ---------- */
+.sec-h h1 {
+  position: relative;
+  margin: 0;
+  line-height: 0.88;
+}
+
+/* ---------- 旧锚点 / 归档年份的落点偏移（固定页头） ---------- */
+.home-sec,
+.sec-h,
+.arc-y {
+  scroll-margin-top: calc(var(--hud) + 18px);
+}
+
+/* ---------- /posts 文章索引 ---------- */
+.pv-lead {
+  max-width: 64ch;
+  margin: -8px 0 26px;
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--dim);
+}
+.pv-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 20px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.pv-tabs {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+.pv-tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 18px;
+  cursor: pointer;
+  font: 500 13px/1.2 var(--f-cjk);
+  letter-spacing: 0.1em;
+  color: var(--paper);
+  background: var(--ink);
+  border: 1.5px solid var(--line);
+  transform: skewX(-12deg);
+  transition: background-color 0.14s, border-color 0.14s, color 0.14s;
+}
+.pv-tab > span {
+  display: inline-block;
+  transform: skewX(12deg);
+}
+.pv-tab:hover,
+.pv-tab:focus-visible {
+  border-color: var(--paper);
+}
+.pv-tab[aria-pressed="true"] {
+  background: var(--red);
+  border-color: var(--red);
+  color: var(--black);
+}
+.pv-archive {
+  margin-top: 8px;
+}
+
+/* ---------- 首页摘要 ---------- */
+.home-sec {
+  margin-top: 130px;
+}
+.home-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  margin: 28px 0 0;
+}
+.home-hint {
+  font: 400 12px/1.7 var(--f-hat);
+  letter-spacing: 0.14em;
+  color: var(--dim);
+}
+.home-empty {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+  padding: 26px 0;
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--dim);
+}
+.home-empty a {
+  color: var(--red);
+  border-bottom: 1px solid currentColor;
+}
+
+/* 精选作品卡片（首页摘要；作品页 CARD 仍归 features/showcase） */
+.n1-works {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+  gap: 20px;
+}
+.n1-work-a {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  padding: 16px 18px 18px;
+  background: var(--ink);
+  border-left: 6px solid var(--red);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 20px) 100%, 0 100%);
+  transition: transform 0.2s var(--ease), background-color 0.2s;
+}
+.n1-work-a:hover,
+.n1-work-a:focus-visible {
+  transform: translateX(4px);
+  background: #17171a;
+}
+.n1-work-cover {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.1);
+  transition: filter 0.3s, transform 0.3s var(--ease);
+}
+.n1-work-a:hover .n1-work-cover,
+.n1-work-a:focus-visible .n1-work-cover {
+  filter: none;
+  transform: scale(1.02);
+}
+.n1-work-noimg {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 10;
+  font-size: 12px;
+  color: var(--dim);
+  border: 1px dashed var(--line);
+}
+.n1-work-title {
+  margin-top: 4px;
+  font: 900 clamp(18px, 2vw, 23px)/1.3 var(--f-cjk);
+}
+.n1-work-summary {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--dim);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.n1-work-tech {
+  margin-top: auto;
+  padding-top: 8px;
+  font: 400 11px/1.5 var(--f-hat);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+/* 归档年份入口 */
+.n1-years {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.n1-years a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 16px;
+  background: var(--ink);
+  border: 1.5px solid var(--line);
+  transform: skewX(-10deg);
+  transition: border-color 0.14s, background-color 0.14s;
+}
+.n1-years a > b,
+.n1-years a > span {
+  display: inline-block;
+  transform: skewX(10deg);
+}
+.n1-years b {
+  font: 400 22px/1 var(--f-disp);
+  color: var(--red);
+}
+.n1-years span {
+  font: 500 12px/1.4 var(--f-cjk);
+  color: var(--dim);
+}
+.n1-years a:hover,
+.n1-years a:focus-visible {
+  border-color: var(--paper);
+}
+
+@media (max-width: 700px) {
+  .home-sec {
+    margin-top: 96px;
+  }
+  .pv-tabs {
+    margin-left: 0;
+  }
+  .n1-work-a {
+    clip-path: none;
+  }
+}

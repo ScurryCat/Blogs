@@ -90,7 +90,7 @@ describe("文章基线", () => {
 describe("地图基线", () => {
   it("25 个地点，可前往的都有真实目的地", () => {
     expect(mapLocations).toHaveLength(25);
-    expect(openLocations.length).toBeGreaterThan(10);
+    expect(openLocations.length).toBe(13);
     for (const location of openLocations) {
       expect(location.to?.href.startsWith("/")).toBe(true);
       expect(location.to?.title).toBeTruthy();
@@ -103,19 +103,23 @@ describe("地图基线", () => {
     for (const location of closed) expect(location.to).toBeNull();
   });
 
-  it("默认选中据点（18），几何与旧站 viewBox 一致", () => {
+  it("默认选中据点（18，生活总览），几何与旧站 viewBox 一致", () => {
     expect(DEFAULT_LOCATION_ID).toBe(18);
     expect(MAP_VIEWBOX).toEqual({ width: 1500, height: 990 });
     const home = mapLocations.find((location) => location.id === 18);
-    expect(home?.to?.href).toBe("/");
+    expect(home?.to?.href).toBe("/apps/leblanc");
     expect(locationImage(10)).toBe("/assets/legacy/img/map/10_image.png");
     expect(locationLabel(10)).toBe("/assets/legacy/img/map/svg/10_label.svg");
   });
 
-  it("文章型目的地指向 canonical 文章路径，不用旧查询串", () => {
-    const postLocation = openLocations.find((location) => location.to?.href.startsWith("/posts/"));
-    expect(postLocation).toBeTruthy();
-    expect(postLocation?.to?.href).not.toContain("post.html");
+  it("目的地全部是新站路径，不再绑定具体文章 slug", () => {
+    for (const location of openLocations) {
+      expect(location.to?.href).not.toContain(".html");
+      // 第三轮地图目的地是栏目 / 实体页，不是某一篇文章的深链。
+      expect(location.to?.href).not.toMatch(/^\/posts\/[^?]+/);
+    }
+    // 旧站逐字段的 map 配置已移除（目的地只有一个来源：features/navigation/map-destinations.ts）。
+    expect(site.map).toEqual({});
   });
 });
 
@@ -148,18 +152,6 @@ describe("旧 URL → 新路由", () => {
     expect(legacyHrefToNext("https://example.com/x")).toBe("https://example.com/x");
     expect(legacyHrefToNext("/map")).toBe("/map");
     expect([...HOME_ANCHORS]).toEqual(["posts", "archive", "latest"]);
-  });
-
-  it("解析后的地图目的地全部是新站路径（不留旧 HTML 入口）", () => {
-    // 原始 site.json 刻意保留旧站写法（便于与旧站逐字段核对），
-    // 「转成新站路径」这件事发生在解析层：这里断言解析结果。
-    for (const location of openLocations) {
-      expect(location.to?.href).not.toContain(".html");
-      expect(location.to?.href.startsWith("/")).toBe(true);
-    }
-    for (const entry of Object.values(site.map)) {
-      if (entry.href) expect(legacyHrefToNext(entry.href)).not.toContain(".html");
-    }
   });
 });
 
