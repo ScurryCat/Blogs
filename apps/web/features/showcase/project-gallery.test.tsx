@@ -11,6 +11,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { act } from "react";
 
 import { ProjectGallery } from "./project-gallery";
 import { ProjectReading } from "./project-reading";
@@ -78,6 +79,26 @@ describe("ProjectGallery", () => {
     expect(container.querySelector("img")).toBeNull();
     // 「不生成奖项或虚构数字」：卡片里没有星数 / 用户数之类的字样。
     expect(container.textContent).not.toMatch(/\d+\s*(人|星|次使用|下载)/);
+    unmount();
+  });
+
+  it("效果图加载失败时给出文字状态，与「没有效果图」区分开", async () => {
+    stub = stubFetch([]);
+    const { container, unmount } = render(
+      <ProjectGallery initialProjects={[summary()]} initialCursor={null} maintenance={null} />,
+    );
+    const img = container.querySelector<HTMLImageElement>("img.pls-card-cover");
+    expect(img).not.toBeNull();
+
+    act(() => {
+      img!.dispatchEvent(new Event("error"));
+    });
+    await advance();
+
+    // 破图撤掉，换成文字；且不能和「还没有效果图」混为一谈（§8.3 空态/失败态不混）
+    expect(container.querySelector("img.pls-card-cover")).toBeNull();
+    expect(container.textContent).toContain("效果图加载失败");
+    expect(container.textContent).not.toContain("这件作品还没有效果图");
     unmount();
   });
 
