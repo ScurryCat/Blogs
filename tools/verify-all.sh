@@ -9,6 +9,7 @@
 #   tools/verify-all.sh --no-browser    # 跳过需要浏览器与隔离构建的段
 #   tools/verify-all.sh --no-backend    # 跳过后端整树
 #   tools/verify-all.sh --e2e           # 额外跑真实浏览器端到端（需起隔离全栈，约 3 分钟）
+#   tools/verify-all.sh --e2e --mobile  # 端到端再跑一遍手机全屏视口（390×844）
 #
 # 前置条件：
 #   - 段 3 用独立 Postgres 集群，自动起停，不碰共享集群；
@@ -28,12 +29,14 @@ FAST=0
 DO_BACKEND=1
 DO_BROWSER=1
 DO_E2E=0
+DO_MOBILE=0
 for arg in "$@"; do
   case "$arg" in
     --fast) FAST=1; DO_BACKEND=0; DO_BROWSER=0 ;;
     --no-backend) DO_BACKEND=0 ;;
     --no-browser) DO_BROWSER=0 ;;
     --e2e) DO_E2E=1 ;;
+    --mobile) DO_MOBILE=1 ;;
     --help|-h) sed -n '2,20p' "$0"; exit 0 ;;
     *) echo "未知参数：$arg（用 --help 看用法）"; exit 2 ;;
   esac
@@ -178,6 +181,17 @@ if [ "${DO_E2E:-0}" -eq 1 ]; then
     check_e2e e2e-metanav-palace.py "殿堂正文留在手机内（§3.3 P4）"
     check_e2e e2e-ins-tag.py "INS 标签筛选留在手机内（§3.3 P1）"
     check_e2e e2e-ins-conversation.py "INS 会话留在手机内（§3.3 P2）"
+    if [ "${DO_MOBILE:-0}" -eq 1 ]; then
+      echo "  —— 手机全屏视口（390×844）——"
+      export E2E_VIEWPORT=390x844
+      check_e2e e2e-phone-scroll.py "手机滚动位置恢复（移动）"
+      check_e2e e2e-im-draft.py "IM 草稿持久化（移动）"
+      check_e2e e2e-journal-reading.py "手记正文留在手机内（移动）"
+      check_e2e e2e-metanav-palace.py "殿堂正文留在手机内（移动）"
+      check_e2e e2e-ins-tag.py "INS 标签筛选留在手机内（移动）"
+      check_e2e e2e-ins-conversation.py "INS 会话留在手机内（移动）"
+      unset E2E_VIEWPORT
+    fi
     tools/e2e-stack.sh down >/dev/null 2>&1
     record "真实浏览器端到端 ×6" "$e2e_ok" "隔离全栈（up→测→down）"
   else
