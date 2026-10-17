@@ -6,6 +6,7 @@
 用法：python3 tools/e2e-ins-tag.py [BASE] [标签名]
 """
 
+import os
 import sys
 
 from playwright.sync_api import sync_playwright
@@ -14,10 +15,17 @@ BASE = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:3130"
 TAG = sys.argv[2] if len(sys.argv) > 2 else "端到端"
 
 
+
+def viewport() -> dict[str, int]:
+    """视口可由 E2E_VIEWPORT 覆盖（如 `E2E_VIEWPORT=390x844`），默认桌面。"""
+    raw = os.environ.get("E2E_VIEWPORT", "1440x900")
+    width, _, height = raw.partition("x")
+    return {"width": int(width), "height": int(height or 900)}
+
 def main() -> int:
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        page = browser.new_page(viewport=viewport())
         page.goto(f"{BASE}/?phone=ins&screen=tagged&item={TAG}", wait_until="load")
         page.wait_for_timeout(3500)
         if page.locator("#boot").count():

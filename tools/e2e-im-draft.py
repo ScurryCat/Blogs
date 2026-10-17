@@ -11,6 +11,7 @@ jsdom 只覆盖了 hook 的存取逻辑；这条测的是真实页面路径：�
 用法：python3 tools/e2e-im-draft.py [BASE] [character]
 """
 
+import os
 import sys
 
 from playwright.sync_api import sync_playwright
@@ -37,10 +38,17 @@ def expand_composer(page):
     return page.locator("textarea").count() > 0
 
 
+
+def viewport() -> dict[str, int]:
+    """视口可由 E2E_VIEWPORT 覆盖（如 `E2E_VIEWPORT=390x844`），默认桌面。"""
+    raw = os.environ.get("E2E_VIEWPORT", "1440x900")
+    width, _, height = raw.partition("x")
+    return {"width": int(width), "height": int(height or 900)}
+
 def main() -> int:
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        page = browser.new_page(viewport=viewport())
         open_conversation(page)
         if not expand_composer(page):
             print("✗ 展开后仍没有输入框")

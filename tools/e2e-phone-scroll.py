@@ -12,6 +12,7 @@
 """
 
 
+import os
 import sys
 
 from playwright.sync_api import sync_playwright
@@ -57,10 +58,17 @@ def visible_card_point(page):
     )
 
 
+
+def viewport() -> dict[str, int]:
+    """视口可由 E2E_VIEWPORT 覆盖（如 `E2E_VIEWPORT=390x844`），默认桌面。"""
+    raw = os.environ.get("E2E_VIEWPORT", "1440x900")
+    width, _, height = raw.partition("x")
+    return {"width": int(width), "height": int(height or 900)}
+
 def main() -> int:
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        page = browser.new_page(viewport=viewport())
         page.goto(BASE + "/?phone=journal", wait_until="load")
         page.wait_for_timeout(2500)
         if page.locator("#boot").count():
@@ -97,6 +105,7 @@ def main() -> int:
         if read.count() == 0:
             read = page.locator("button", has_text="读取")
         print(f"  「读取」按钮数：{read.count()}")
+        read.first.scroll_into_view_if_needed()
         read.first.click()
         page.wait_for_timeout(3000)
         detail_url = page.url
