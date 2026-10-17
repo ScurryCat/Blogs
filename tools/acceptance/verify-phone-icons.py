@@ -29,6 +29,9 @@ MANIFEST_FILES = [
     "features/ins/phone-manifest.tsx",
     "features/coop/phone-manifest.tsx",
     "features/showcase/phone-manifest.ts",
+    # registry.ts 里还有 journal / leisure / metanav 三个**内联** manifest ——
+    # 第一版漏了这个文件，等于漏掉了三个 App 的图标审计。
+    "features/phone/registry.ts",
     "features/phone/legacy-apps.ts",
 ]
 
@@ -56,6 +59,32 @@ def collect_icons() -> dict[str, list[str]]:
                 continue
             found.setdefault(value, []).append(rel)
     return found
+
+
+def canonical_paths() -> dict[str, list[str]]:
+    """返回 {canonical_path: [声明它的文件…]}。"""
+    found: dict[str, list[str]] = {}
+    for rel in MANIFEST_FILES:
+        text = (WEB / rel).read_text(encoding="utf-8")
+        for value in re.findall(r'canonical_path:\s*"([^"]+)"', text):
+            found.setdefault(value, []).append(rel)
+    return found
+
+
+def check_routes() -> list[str]:
+    failures: list[str] = []
+    paths = canonical_paths()
+    for path, owners in sorted(paths.items()):
+        # /apps/ins → apps/web/app/apps/ins/page.tsx；/posts → apps/web/app/posts/page.tsx
+        rel = path.strip("/")
+        route = (WEB / "app" / rel / "page.tsx") if rel else (WEB / "app" / "page.tsx")
+        if route.exists():
+            print(f"  ✓ {path:<28} → {route.relative_to(WEB)}")
+        else:
+            failures.append(
+                f"{path}：没有对应路由文件（{route.relative_to(REPO)} 不存在；被 {', '.join(owners)} 声明）"
+            )
+    return failures
 
 
 def main() -> int:
@@ -108,6 +137,11 @@ def main() -> int:
                 mentioned = True
     if not mentioned:
         print("  （无）")
+
+    # 6) 注册表里声明的 canonical_path 必须有真实路由，不能「注册了但页面不存在」
+    print("\n== canonical_path ↔ 路由 ==")
+    route_failures = check_routes()
+    failures.extend(route_failures)
 
     print("\n== 结果 ==")
     if failures:

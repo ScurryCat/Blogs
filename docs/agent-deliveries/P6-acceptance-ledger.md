@@ -30,7 +30,7 @@
 | §2.2 第一页 2×3 固定排列（INS/手记/放课后 · COOP/殿堂/导航） | ✅ | 提交 `dbedb6f`；T02 断言 `["ins","journal","leisure","coop","showcase","metanav"]` |
 | §2.2 第二页 情报/地图/天气/档案，不塞占位 | ✅ | 同上；断言 `["palace","tokyo","cast","profile"]` |
 | §2.2 左右切换 + 可辨识分页指示；滑动只作补充 | ✅ | 按钮 + 「1 / 2」+ 菱形指示；滑动阈值见 `phone-desktop.tsx` |
-| §2.3 原版图标 + 映射表 | 🟡 | 映射表 ✅（`icon-mapping.md` + 563 sprite + 对照图）；**引用侧审计 ✅**（第 27 轮：7 个 App 图标全部存在、在 CSV 素材清单内、SHA-256 一致、未引用已移除资源，见 `verify-phone-icons.py`）；头像原版化仍 ⛔（12 候选待身份+许可核对） |
+| §2.3 原版图标 + 映射表 | 🟡 | 映射表 ✅（`icon-mapping.md` + 563 sprite + 对照图）；**引用侧审计 ✅**（第 28 轮补全：**8 个图标**存在 / 在 CSV 清单内 / SHA-256 一致 / 未引用已移除资源；**12 条 `canonical_path` 全部有真实路由**）；头像原版化仍 ⛔（12 候选待身份+许可核对） |
 | §2.3 异世界导航红眼图标 | ⛔ | 本地库无独立原图，见 `reference-frame-gaps.md` G3 |
 | §2.4 中文无衬线 / 中文标题高字重 / 英文标题 P5 字体 | ✅（规范） | `typography-and-feedback.md`；`--f-cjk` 即 Noto Sans SC 栈 |
 | §2.4 依据参考确定构图（不套统一卡片模板） | ⬜ | **未做**（视觉还原，缺参考帧 + 本会话无图像输入） |
@@ -255,6 +255,23 @@ N6 的 `verify-no-akechi-assets.py` 检查的是「已排除资源不在磁盘�
 
 `exploration` 与 `coop` 的 manifest 注释里提到 `crow.webp` —— 那是**说明「原先用它、
 已按 §5 换成中性图标」**，不是引用；脚本把注释提及单列为「供人工核对」，不算失败。
+
+## 6.12 第 28 轮补充：审计扩到 registry.ts，并新增「注册表 ↔ 路由」检查
+
+第 27 轮的图标审计**有覆盖漏洞**：只扫了各 App 的 `phone-manifest.*`，漏掉 `features/phone/registry.ts`
+里**三个内联 manifest**（journal / leisure / metanav，图标分别为
+`morgana.webp` / `fox.webp` / `oracle.webp`）。本轮补上后：**8 个图标**（原 7 + 1）全部通过
+存在性 / 清单在内 / SHA-256 一致 / 无已移除资源。
+
+新增「注册表 ↔ 路由」检查：注册表里声明的 **12 条 `canonical_path`** 逐条映射到
+`apps/web/app/**/page.tsx`，**全部存在** ——
+
+`/about` `/apps/coop` `/apps/ins` `/apps/journal` `/apps/leisure` `/apps/metanav`
+`/apps/metanav/mementos` `/map` `/posts` `/showcase` `/velvet` `/weather`
+
+防的是「注册表里声明了入口，但页面根本没建」这类错配（在手机桌面上点了会 404）。
+
+复跑：`python3 tools/acceptance/verify-phone-icons.py`（退出码 0 即通过）。
 
 ## 7. 结论
 
