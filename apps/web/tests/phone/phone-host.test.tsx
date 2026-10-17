@@ -209,6 +209,25 @@ describe("手机桌面", () => {
     expect(view.container.querySelector(".pw-music")).not.toBeNull();
   });
 
+  it("换 App 时把宿主滚动区归零，不把上一个 App 的滚动位置带过来", async () => {
+    const registry = () => createPhoneRegistry([TEST_APP, OTHER_APP]);
+    const view = mount(registry());
+    await advance();
+    click(view.container.querySelector(".pw-tab"));
+    await commit(view, registry());
+
+    // `.pw-screen` 在 App 之间是同一个元素 —— 模拟在桌面/上一个 App 里滚到中间。
+    const screen = view.container.querySelector<HTMLElement>(".pw-screen");
+    expect(screen).not.toBeNull();
+    screen!.scrollTop = 240;
+
+    click(view.container.querySelector('[data-app-id="demo"]'));
+    await commit(view, registry());
+
+    expect(view.container.querySelector(".pw-appview")).not.toBeNull();
+    expect(screen!.scrollTop).toBe(0);
+  });
+
   it("进入 App 再返回桌面，保持原来的桌面页（不是总回到第一页）", async () => {
     // 需要**两页都非空**才测得出：固定布局第一页取 ins、第二页取 palace。
     const page1: PhoneAppManifest = { ...TEST_APP, id: "ins", name: "动态", order: 10 };

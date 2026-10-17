@@ -40,6 +40,8 @@ export function PhoneHost(): ReactNode {
   // 桌面页码放在宿主里：PhoneDesktop 在进入 App 时会卸载，
   // 页码若放在它内部，返回桌面会被重置回第一页。
   const [desktopPage, setDesktopPage] = useState(0);
+  // 宿主滚动区：换 App / 换屏要归零，否则上一个 App 的滚动位置会被带过来。
+  const screenRef = useRef<HTMLDivElement | null>(null);
 
   const onDesktop = !state || state.phone === "home";
   const manifest = state && state.phone !== "home" ? registry.find(state.phone) : undefined;
@@ -78,6 +80,19 @@ export function PhoneHost(): ReactNode {
     setBackgroundInert(false);
     return undefined;
   }, [open]);
+
+  // 换 App / 换屏 / 关手机时把宿主滚动区归零。
+  //
+  // `.pw-screen` 在 App 之间是**同一个元素**（宿主只换里面的内容），不重置会把上一个
+  // App 的滚动位置带到下一个 App —— 例如在 INS 滚到中间再打开手记，手记会直接停在中间。
+  // 同一视图内的返回（列表 → 详情 → 返回）不受影响：scroll-memory 会在随后的
+  // requestAnimationFrame 里恢复位置，晚于这次归零。
+  useEffect(() => {
+    const screen = screenRef.current;
+    if (!screen) return;
+    // 不用 scrollTo：jsdom 未实现，直接写 scrollTop 更稳。
+    screen.scrollTop = 0;
+  }, [state?.phone, state?.screen, state?.item, open]);
 
   // 关闭后把焦点还给边上的小图标。
   useEffect(() => {
@@ -163,7 +178,7 @@ export function PhoneHost(): ReactNode {
             width={880}
             height={715}
           />
-          <div className="pw-screen">
+          <div className="pw-screen" ref={screenRef}>
             {onDesktop || !manifest ? (
               <PhoneDesktop page={desktopPage} onPageChange={setDesktopPage} />
             ) : (
