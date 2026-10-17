@@ -45,9 +45,15 @@ export function FeedView({
 }: FeedViewProps): ReactNode {
   const [preview, setPreview] = useState<{ momentId: string; index: number } | null>(null);
   const lastTrigger = useRef<HTMLElement | null>(null);
+  // 列表根节点：滚动记忆据此判定容器（手机 .pw-screen / 独立页 window）。
+  const wrapRef = useRef<HTMLElement | null>(null);
   const feed = useMomentFeed(tag, { initial, initialCursor, initialError });
 
-  useFeedScrollRestore(scrollKey(tag), feed.loaded, { enabled: true, consume: true });
+  useFeedScrollRestore(scrollKey(tag), feed.loaded, {
+    enabled: true,
+    consume: true,
+    containerRef: wrapRef,
+  });
 
   const previewMoment = useMemo(
     () => (preview ? feed.items.find((moment) => moment.id === preview.momentId) ?? null : null),
@@ -67,7 +73,7 @@ export function FeedView({
   }, []);
 
   return (
-    <section className="ins-feed-wrap" aria-label="图文动态">
+    <section className="ins-feed-wrap" aria-label="图文动态" ref={wrapRef}>
       <nav className="ins-filters" aria-label="标签筛选">
         <Link className={`ins-chip${tag ? "" : " on"}`} href="/apps/ins" aria-current={tag ? undefined : "page"}>
           全部

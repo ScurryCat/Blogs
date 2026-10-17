@@ -9,10 +9,10 @@
  *  - 存储不可用时安静降级，不阻断阅读。
  */
 
-import { act, type ReactNode } from "react";
+import { act, useRef, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { scrollKey, useFeedScrollRestore } from "./scroll-memory";
+import { phoneScrollContainer, scrollContainerFor, scrollKey, useFeedScrollRestore } from "./scroll-memory";
 import { stubScrollTo } from "@/tests/helpers/browser";
 import { advance, render, resetDocument } from "@/tests/helpers/render";
 
@@ -159,5 +159,59 @@ describe("useFeedScrollRestore：存储不可用时安静降级", () => {
       Object.defineProperty(Storage.prototype, "getItem", original);
       Object.defineProperty(Storage.prototype, "setItem", originalSet);
     }
+  });
+});
+
+describe("滚动容器判定：手机里滚的是 .pw-screen，不是窗口", () => {
+  it("列表在 .pw-screen 内时，容器是那个元素；不在手机里时回退到 window", () => {
+    const screen = document.createElement("div");
+    screen.className = "pw-screen";
+    const list = document.createElement("section");
+    screen.appendChild(list);
+    document.body.appendChild(screen);
+
+    expect(phoneScrollContainer(list)).toBe(screen);
+    expect(scrollContainerFor(list)).toBe(screen);
+
+    const outside = document.createElement("section");
+    document.body.appendChild(outside);
+    expect(phoneScrollContainer(outside)).toBeNull();
+    // 在 jsdom 里 window 就是全局对象本身
+    expect(scrollContainerFor(outside)).toBe(window);
+  });
+});
+
+describe("useFeedScrollRestore：在手机滚动容器里工作", () => {
+  function PhoneProbe({ storageKey }: { storageKey: string }): ReactNode {
+    const listRef = useRef<HTMLDivElement | null>(null);
+    useFeedScrollRestore(storageKey, true, {
+      enabled: true,
+      consume: true,
+      containerRef: listRef,
+    });
+    return (
+      <div className="pw-screen">
+        <div ref={listRef} data-probe="" />
+      </div>
+    );
+  }
+
+  it("恢复写到容器的 scrollTop（窗口不动），卸载时也从容器读回", async () => {
+    const key = scrollKey(null);
+    window.sessionStorage.setItem(key, "640");
+    const view = mount(<PhoneProbe storageKey={key} />);
+    await advance();
+
+    const container = view.container.querySelector<HTMLElement>(".pw-screen")!;
+    // 恢复写的是容器，不是窗口
+    expect(container.scrollTop).toBe(640);
+    expect(scroll.calls).toEqual([]);
+
+    // 卸载时从容器读当前位置写回存储
+    container.scrollTop = 275;
+    act(() => {
+      view.unmount();
+    });
+    expect(window.sessionStorage.getItem(key)).toBe("275");
   });
 });
