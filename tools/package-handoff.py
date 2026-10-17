@@ -76,7 +76,8 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 >
 > **当前验收摘要（单一基线，勿再用历史正文数字拼凑）**：
 > 代码基线 = 包内 `{head}`；前端 **929** 单测、后端 **943**（`--e2e --mobile` 7/7 段全绿、端到端 12 项）。
-> 独立验收 v2 结论：**功能阶段通过，完整验收未通过**；验收报告点名的
+> 独立验收 v2 结论：**功能阶段通过，完整验收未通过**；逐项回应与证据见
+> `docs/agent-deliveries/acceptance-v2-response.md`；验收报告点名的
 > **F1 / F2 / F3 已返工**（详见 `docs/agent-deliveries/P4-acceptance-v2-fixes.md`）：
 > F1 默认素材入口迁移到 `persona-curated/`（旧库降级离线档案）；
 > F2 桌面接入 2 枚已审核原版图标（metanav 经典红眼 / ins 原版消息标识，其余 8 个仍标适配）；

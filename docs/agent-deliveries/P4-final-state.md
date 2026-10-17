@@ -4,6 +4,9 @@
 > 日期：2026-10-17 ｜ 分支 `main` ｜ 详细内容见同名目录下各交付单。
 > v2 交接包：`docs/handoff-package-2026-10-17-v2.zip`（文件数以包内 `MANIFEST.txt` 为准）
 
+> **对独立验收报告 v2 的逐项回应**：`docs/agent-deliveries/acceptance-v2-response.md`
+> （F1/F2/F3、§3 证据、§5 剩余项、§6 文档校正、§7 返工清单的当前状态与证据命令）。
+
 ## 1. 现在做到哪
 
 - **功能/回归**：`tools/verify-all.sh --e2e` **7/7 段全绿**（静态审计、前端 929 单测、

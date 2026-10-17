@@ -103,6 +103,11 @@
    已补 **WebKit 引擎 + iPhone 视口**冒烟证据（24/24：首页/手机/IM/图库灯箱/触控点按），
    但明确**不等于真机**，见 `P4-mobile-engine-evidence.md`。
 
+## 五之一、对独立验收报告 v2 的回应（2026-10-18）
+
+`docs/agent-deliveries/acceptance-v2-response.md`：按报告 F1/F2/F3、§3 证据表、§4 浏览器/环境、
+§5 剩余项、§6 文档校正、§7 返工清单逐条给出当前状态、证据命令与剩余外部输入。
+
 ## 五之二、视觉对照证据（2026-10-18）
 
 - `tools/capture-visual-comparison.py`：真实浏览器截图 11 个站点界面，与 17 张参考帧并排对照
