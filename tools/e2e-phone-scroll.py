@@ -65,6 +65,37 @@ def viewport() -> dict[str, int]:
     width, _, height = raw.partition("x")
     return {"width": int(width), "height": int(height or 900)}
 
+def click_read_button(page) -> None:
+    """点「读取手记」。移动布局里预览面板在长列表之后，必须先滚动容器再点。"""
+    point = page.evaluate(
+        """() => {
+          const btn = [...document.querySelectorAll('button')]
+            .find((b) => (b.textContent || '').includes('读取手记'));
+          if (!btn) return null;
+          // 桌面宽度下滚动的是 .pw-appbody，手机全屏模式下滚动的是窗口 ——
+          // scrollIntoView 会自己找可滚祖先，两种布局都适用。
+          btn.scrollIntoView({ block: "center" });
+          return true;
+        }"""
+    )
+    if not point:
+        raise RuntimeError("找不到「读取手记」按钮")
+    page.wait_for_timeout(700)
+    box = page.evaluate(
+        """() => {
+          const btn = [...document.querySelectorAll('button')]
+            .find((b) => (b.textContent || '').includes('读取手记'));
+          if (!btn) return null;
+          const r = btn.getBoundingClientRect();
+          return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2),
+                   ok: r.top >= 0 && r.bottom <= innerHeight && r.width > 5 };
+        }"""
+    )
+    if not box or not box["ok"]:
+        raise RuntimeError(f"「读取手记」不在视口内：{box}")
+    page.mouse.click(box["x"], box["y"])
+
+
 def main() -> int:
     with sync_playwright() as p:
         browser = p.chromium.launch()
@@ -105,8 +136,7 @@ def main() -> int:
         if read.count() == 0:
             read = page.locator("button", has_text="读取")
         print(f"  「读取」按钮数：{read.count()}")
-        read.first.scroll_into_view_if_needed()
-        read.first.click()
+        click_read_button(page)
         page.wait_for_timeout(3000)
         detail_url = page.url
         print(f"  进入正文：{detail_url}")

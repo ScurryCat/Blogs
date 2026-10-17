@@ -209,6 +209,28 @@ html.ov-lock body {
   }
 }
 
+/* ---------- 手机全屏模式：约束面板高度，让内部滚动生效 ----------
+   实测（390×844）：`.pw-wrap` 是 fixed 全屏容器（高 844），但它的网格项 `.pw` 会被
+   长内容撑到 2981px，`.pw-appbody` 的 scrollHeight 与 clientHeight 同为 2883 ——
+   **没有任何元素可滚**，于是手记这种长内容在手机宽度下完全读不到（点不到「读取手记」）。
+   这里把 `.pw` 约束在视口高度内，`.pw-screen` 的 overflow 才能接管滚动。
+   只在 ≤620px 生效，桌面端的斜屏尺寸分级不受影响。 */
+@media (max-width: 620px) {
+  .pw-wrap {
+    height: 100dvh;
+  }
+  .pw {
+    height: 100%;
+    min-height: 0;
+    max-height: 100dvh;
+  }
+  .pw-screen,
+  .pw-appview,
+  .pw-appbody {
+    min-height: 0;
+  }
+}
+
 /* ---------- 数据降级提示（01 §6） ----------
    只有「显式启用了 API 数据源、但读取失败」时才出现：
    不把服务错误伪装成「没有文章」，也不在正常状态打扰阅读。 */

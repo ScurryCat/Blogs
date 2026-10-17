@@ -142,9 +142,19 @@ URL：/?phone=metanav&screen=palace&item=velvet-door
 | 手机滚动位置恢复 | ⚠️ 脚本需适配（移动布局里"读取手记"在列表末尾，需滚动容器内定位）|
 | 手记正文留在手机内（P3）| ⚠️ 同上 |
 
-**结论**：手机内**导航类**行为在移动宽度下同样成立（4/4 通过）；另外两项失败是
-**E2E 脚本按桌面布局写的交互方式**在移动布局下点不到目标，**不是产品缺陷** ——
-移动宽度下的**布局**本身由 `verify-viewports.py`（320/390）覆盖并通过。
+**第 54 轮排查后修正了上一条结论** —— 那两项失败**不是脚本问题，是真实的产品缺陷**：
+
+390×844 下实测：`.pw-wrap` 是 `fixed` 全屏容器（高 844），但网格项 `.pw` 被长内容
+撑到 **2981px**，`.pw-appbody` 的 `scrollHeight` 与 `clientHeight` 同为 **2883**
+（外层 `overflow-y: hidden`）—— **整条链上没有任何元素可滚**。
+后果：手机宽度下**任何长内容都读不到**（手记列表滚不下去，点不到「读取手记」）。
+
+修复：在 `globals.css` 的 `≤620px` 段里把 `.pw` 约束为视口高度（`height:100%` +
+`max-height:100dvh`），并给 `.pw-screen/.pw-appview/.pw-appbody` 补 `min-height:0`，
+让 `.pw-screen` 的 `overflow-y: auto` 真正接管滚动。桌面端（斜屏尺寸分级）不受影响。
+
+修复后实测：`.pw-appbody` 变为 `scrollHeight 2883 / clientHeight 732`、可滚到 2151；
+`verify-viewports.py` 无失败；**六项端到端在 390×844 全过（6/6）**，桌面 1440×900 亦无回归。
 
 ## 四、为什么其余三处本轮不动手
 
