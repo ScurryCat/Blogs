@@ -1,5 +1,9 @@
 # P4 首页刷新 + 演示内容 + 移除底部音乐栏（用户验证反馈 4 项）
 
+> **2026-10-17 晚·站主追加指令**：**首页布局还原为原本的样子**，只保留「主角头像左侧栏目
+> 字体看不清」这一处修复；A/B/C/D 变体与 `?home` 切换**已撤回**（相关代码已删除）。
+> 底部播放栏移除、演示内容与手机 deep link **保持不变**。
+>
 > 来源：站主在本地验证当前版本时提出的 4 条反馈（2026-10-17 晚）。
 > 本交付单记录：每条反馈的根因、改动、验证证据、以及后续替换/回滚方式。
 > 分支 `main`（未 push 前会先跑完验收）。
@@ -24,31 +28,20 @@
 不变式：唯一 `<audio data-pl-music>` 仍由 `AudioProvider` 常驻，跨路由连续测试（T02）不受影响；
 音乐偏好（`pl-music`）沿用旧规则 —— 用户关过就保持静音。
 
-## 2. R2：首页主角头像左侧的栏目「看不清」
+## 2. R2：首页主角头像左侧的栏目「看不清」（只改字体颜色，布局还原）
 
-**根因（两个叠加）**：
-1. 我们此前做对比度修正时把 `.pm.on` 的文字改成了纸白色，并给 `::before` 加了深红底 ——
-   但当前项的可见背景是**红/纸/黑混合拼贴**，纸白字压在纸色拼贴上就几乎看不见（实测 computed color = 纸白）；
-2. 旧站 Hero 标题是 `clamp(76px, 11.5vw, 172px)`、Hero 固定约 1086px 高：
-   1024×768 有 3 项、1280×720 有 4 项、1440×900 有 2 项**被挤出首屏**；
-   加上底部播放栏遮挡，观感就是「栏目根本看不清」。
+**根因**：此前做对比度修正时，把 `.pm.on`（当前项）的文字改成了纸白色，并给 `::before` 加了深红底；
+但当前项的可见背景是**红/纸/黑混合拼贴**，纸白字压在纸色拼贴上几乎看不见（实测 computed color = 纸白）。
 
-**修复**：
-- `app/globals.css`：删掉 `.pm.on{color:paper}` 与 `.pm.on::before{red-deep}`；当前项文字还原黑字，
-  仅小号中文标签用深红（纸底 ≈7.5:1）；非当前项中文标签略提亮。
-- 新增 `app/home-refresh.css`：Hero 高度改为 `calc(100svh - hud)` 上限、收紧菜单字号/偏移/提示；
-  对 **短屏（≤860px 高）** 单独压缩标题（44–104px）、lead 与菜单项 —— 大屏不受影响。
-- 验证（`tools/verify-home-refresh.py`，真实浏览器）：
+**修复（仅字体，不动布局）**：
+- `app/globals.css`：删掉 `.pm.on{color:paper}` 与 `.pm.on::before{red-deep}` 两条覆盖，
+  当前项文字回到旧设计的黑字；中文标签改用深红（纸底 ≈7.5:1）。
+- 首页 Hero 的高度、字号、间距、区块顺序**全部还原为原本的样式**（不压缩、不改顺序）。
+- 原先为「首屏适配」新增的 `app/home-refresh.css` 与三套变体样式**已删除**。
 
-| 视口 | 栏目数 | 首屏外 | 与主角图重叠 | 横向溢出 |
-| --- | --- | --- | --- | --- |
-| 1024×768 | 5 | 0 | 0 | 0 |
-| 1280×720 | 5 | 0 | 0 | 0 |
-| 1440×900 | 5 | 0 | 0 | 0 |
-| 1728×1080 | 5 | 0 | 0 | 0 |
-| 320 / 390 | 5 | （正常滚动） | 0 | 0 |
-
-当前项实测：英文 `rgb(10,10,11)`（黑字）、中文 `rgb(159,12,18)`（深红）。
+验证（`tools/verify-home-refresh.py`，真实浏览器）：1440×900 / 1280×720 / 320×720 / 390×844
+下当前项英文为黑字（`rgb(10,10,11)`）、中文为深红（`rgb(159,12,18)`），无横向溢出；
+页面无 `data-home-variant` 标记（确认是原本布局）。
 
 ## 3. R3：9 个视觉还原界面的演示内容 + 手机 deep link
 
@@ -105,34 +98,26 @@ SEED_ADMIN_PASSWORD='...' python3 tools/seed-demo-content.py --clean
 无效 `phone` 会安全回退手机桌面（不白屏、不执行任意路径）。
 验收脚本：`tools/verify-demo-content.py`（数据层阈值 + 8 个独立界面 + 20 个 deep link 场景）。
 
-## 4. R4：首页三套排版（待你选择）
+## 4. R4：首页排版变体（已按站主指令撤回）
 
-默认仍是 **A（现状精修）**；三套并存，用 `?home=` 切换：
+曾实现 A（现状精修）/ B（杂志版）/ C（应用枢纽版）/ D（人物卡片版）四套并存排版，
+由 `?home=` 切换。**2026-10-17 晚站主指令：先还原原本首页布局，只修字体**，因此：
 
-| 变体 | URL | 排版 |
-| --- | --- | --- |
-| A 现状精修 | `/`（或 `/?home=a`） | 保留现有顺序，只修 Hero 可读性/首屏与节奏 |
-| B 杂志版 | `/?home=b` | Hero 紧凑（左文右图、菜单两列）+「最新文章 / 精选作品」两栏摘要 |
-| C 应用枢纽版 | `/?home=c` | Hero 短版（3 个 CTA）+ 9 个视觉还原应用入口网格 + 两栏摘要 |
-| D 精修·人物卡片版 | `/?home=d` | A 的区块顺序不变；主角卡片收小到约 1/3 屏宽、贴右缘、垂直居中，左侧留更多黑场 |
-
-三套都保留：Ticker、CallingCard（`id="latest"`）、LeblancView、最新文章（`id="posts"`）、
-精选作品、归档（`id="archive"`），保证旧锚点与数据失败态不变；移动端单列/网格 3→2 列。
-截图（1440×900 与 390×844）由 `tools/verify-home-refresh.py` 输出到
-`.dsh/screenshots/home-refresh/`（`home-{a,b,c,d}-{desktop,mobile}.png`）。
-
-**待办**：站主选定后，把所选变体设为默认并移除未选的切换参数（下一轮）。
+- 已删除：`app/home-refresh.css`、`features/legacy/pages/home-variant.ts`、
+  `home-app-links.ts`、`home-app-hub.tsx`、对应两个测试；
+- `app/page.tsx`、`features/legacy/pages/home-hero.tsx` 已 `git checkout` 回原本版本
+  （不再有 `?home` 参数、不再有 CTA/应用网格/变体分支）；
+- 如需再做首页排版，按站主指定的方向单独进行（不默认展开多套变体）。
 
 ## 5. 验证与改动文件
 
 新增脚本：`tools/seed-demo-content.py`、`tools/verify-home-refresh.py`、`tools/verify-demo-content.py`。
-改动文件：`app/page.tsx`、`app/home-refresh.css`（新增）、`app/globals.css`、
-`features/runtime/site-runtime.tsx`、`features/legacy/pages/home-hero.tsx`、
-`features/legacy/pages/home-index.tsx`（无改动但复用）、`features/legacy/pages/home-variant.ts`（新增）、
-`home-app-links.ts`（新增）、`home-app-hub.tsx`（新增）、`features/phone/phone-host.tsx`、
-`features/messaging` 后端剧本/角色、`app/modules/skills/seed.py`、种子脚本三个、
-`tools/acceptance/verify-viewports.py`、新增测试 `tests/navigation/home-variant.test.ts`、
-`tests/navigation/home-app-hub.test.tsx`。
+改动文件（最终口径）：`app/globals.css`（`.pm.on` 字体颜色）、
+`features/runtime/site-runtime.tsx`（移除迷你播放器）、`features/phone/phone-host.tsx`、
+`app/modules/skills/seed.py`、`features/messaging` 后端剧本/角色、种子脚本三个、
+`tools/acceptance/verify-viewports.py`、`tools/verify-home-refresh.py`（重写为原本布局回归）。
+`app/page.tsx`、`features/legacy/pages/home-hero.tsx` 已还原，`app/home-refresh.css` 与
+A/B/C/D 变体文件已删除。
 
 验证结果见本轮交付回复；全量验收：`bash tools/verify-all.sh --e2e`。
 
