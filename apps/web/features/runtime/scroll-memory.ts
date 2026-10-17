@@ -110,9 +110,11 @@ export function useScrollMemory(
     restored.current = true;
     const target = readScroll(key);
     if (target === null) return;
-    const container = scrollContainerFor(options.containerRef?.current ?? null);
     // 等一帧：图片与卡片的高度在首帧之后才稳定，过早滚动会被后续布局顶回去。
+    // **容器也必须在帧内解析**：首帧时列表内容刚插入，`.pw-appbody` 还没因内容变高
+    // 而可滚，太早解析会退化成不滚动的 `.pw-screen` —— 实测「恢复写了但没效果」。
     const raf = requestAnimationFrame(() => {
+      const container = scrollContainerFor(options.containerRef?.current ?? null);
       writeOffset(container, target);
       if (options.consume) {
         try {
