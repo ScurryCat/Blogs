@@ -122,7 +122,8 @@ export function FriendCard({
             type="button"
             className={styles.toggle}
             aria-expanded={expanded}
-            aria-controls={`coop-story-${link.id}`}
+            // 故事容器只在展开时渲染；收起态不要声明指向不存在 id 的 aria-controls。
+            aria-controls={expanded ? `coop-story-${link.id}` : undefined}
             onClick={() => onToggle(link.id)}
           >
             {expanded ? "收起相识故事" : "展开相识故事"}

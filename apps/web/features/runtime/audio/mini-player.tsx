@@ -142,7 +142,8 @@ export function MiniPlayer(): ReactNode {
           className="mini-open"
           type="button"
           aria-expanded={expanded}
-          aria-controls="mini-panel"
+          // 面板只在展开时渲染：收起态声明 aria-controls 会指向不存在的 id（无效 ARIA 引用）。
+          aria-controls={expanded ? "mini-panel" : undefined}
           onClick={() => setExpanded((value) => !value)}
         >
           <span className="mini-note" aria-hidden="true">
