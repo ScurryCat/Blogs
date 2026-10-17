@@ -79,6 +79,11 @@ const noopDriver = {
   jokerWait: () => 0,
   playWipe: () => undefined,
   stopWipe: () => undefined,
+  hasIsekai: () => false,
+  isekaiReady: () => false,
+  playIsekai: () => false,
+  stopIsekai: () => undefined,
+  isekaiWait: () => 1_500,
 };
 
 let restoreMedia: () => void;

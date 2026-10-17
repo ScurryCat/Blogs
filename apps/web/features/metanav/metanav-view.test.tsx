@@ -227,6 +227,11 @@ describe("独立页：真实 SiteLink 与共享协调器", () => {
           jokerWait: () => 1180,
           playWipe: () => undefined,
           stopWipe: () => undefined,
+          hasIsekai: () => false,
+          isekaiReady: () => false,
+          playIsekai: () => false,
+          stopIsekai: () => undefined,
+          isekaiWait: () => 1_500,
         }}
         adapter={{ push: pushMock, assign: assignMock, pathname: "/apps/metanav" }}
       >

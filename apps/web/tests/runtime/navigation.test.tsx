@@ -44,6 +44,11 @@ function driver(overrides: Partial<TransitionDriver> = {}): TransitionDriver {
     jokerWait: () => 1180,
     playWipe: () => undefined,
     stopWipe: () => undefined,
+    hasIsekai: () => false,
+    isekaiReady: () => false,
+    playIsekai: () => false,
+    stopIsekai: () => undefined,
+    isekaiWait: () => 1_500,
   };
   return { ...base, ...overrides };
 }

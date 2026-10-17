@@ -34,20 +34,34 @@ import {
   type ReactNode,
 } from "react";
 
-import type { NavigationRequest, NavigationSource } from "@/features/phone/types";
+import type {
+  NavigationIntent,
+  NavigationRequest,
+  NavigationSource,
+  PhoneUrlState,
+} from "@/features/phone/types";
+import { parsePhoneState } from "@/features/phone/url-state";
 import { CROWD_WAIT_MS } from "@/features/runtime/effects/crowd";
 import { prefersReducedMotion } from "@/features/runtime/effects/crowd";
+import { showcaseEntryIntent } from "@/features/runtime/navigation/showcase-boundary";
 
 /** 最终看门狗：沿用旧站 15 秒迁移基线。 */
 export const NAVIGATION_WATCHDOG_MS = 15_000;
 /** CSS 斜切兜底时长（旧站 440ms）。 */
 export const WIPE_WAIT_MS = 440;
+/** 异世界短过场默认目标 1.5 秒（任务书 §6.3：每次 1–2 秒，不能用整段 9/11 秒视频等待）。 */
+export const ISEKAI_WAIT_MS = 1_500;
+/** 短版时长合法区间：短于 1 秒会闪、长于 2 秒违背「短过场」要求。 */
+export const ISEKAI_MIN_MS = 1_000;
+export const ISEKAI_MAX_MS = 2_000;
 
-export type TransitionKind = "crowd" | "joker" | "wipe" | "none";
+export type TransitionKind = "crowd" | "joker" | "wipe" | "isekai" | "none";
 
 export interface TransitionDebug {
   navigating: boolean;
   source: NavigationSource | null;
+  /** 本次导航的显式/推导意图；普通导航为 null。 */
+  intent: NavigationIntent | null;
   kind: TransitionKind;
   token: number;
   pendingPath: string | null;
@@ -68,6 +82,16 @@ export interface TransitionDriver {
   jokerWait(): number;
   playWipe(): void;
   stopWipe(): void;
+  /**
+   * 异世界短过场（任务书 §6.3）。素材未就绪 / 解码失败时 `isekaiReady()` 返回 false，
+   * 协调器按优先级退回斜切兜底并继续进入，不留下黑屏遮罩。
+   */
+  hasIsekai(): boolean;
+  isekaiReady(): boolean;
+  playIsekai(): boolean;
+  stopIsekai(): void;
+  /** 短版实际时长（毫秒）；协调器会夹到 1–2 秒区间。 */
+  isekaiWait(): number;
 }
 
 export interface NavigationCoordinator {
@@ -75,14 +99,42 @@ export interface NavigationCoordinator {
   navigate(request: NavigationRequest): void;
   /** 不带过场的 URL 更新（手机 `phone` / `screen` / `item`），保持 href 与历史正确。 */
   updateUrl(destination: string, options?: { replace?: boolean }): void;
+  /**
+   * 手机目标提交信号：目标 App / screen / item 已提交到 URL（`pathname` 可能没变）。
+   * 手机宿主在手机状态落定后调用；只有与本次导航的期望目标一致时才结束过场。
+   * 页面路由导航不需要调用它 —— 那边由 `usePathname()` 变化结束。
+   */
+  commitPhoneTarget(state: PhoneUrlState | null): void;
+  /**
+   * 跳过当前过场：立即提交本次导航的目标地址，视觉在完成信号后统一收起。
+   * 没有进行中的导航时是 no-op。任务书 §6.3「提供可用的跳过操作」。
+   */
+  skip(): void;
   navigating(): boolean;
   debug(): TransitionDebug;
 }
 
 const NavigationContext = createContext<NavigationCoordinator | null>(null);
 
-/** 纯函数：来源 → 效果优先级（可单测，不依赖 DOM）。 */
-export function effectPlan(source: NavigationSource, driver: Pick<TransitionDriver, "crowdReady" | "hasCrowd" | "hasJoker" | "jokerReady">): TransitionKind[] {
+/**
+ * 纯函数：来源 + 意图 → 效果优先级（可单测，不依赖 DOM）。
+ *
+ * 任务书 §6.2 的效果优先级：
+ *  1. 减少动态效果 → 由调用方直接提交（不经过这里）；
+ *  2. 明确主动进入殿堂 → 异世界短版（素材未就绪时斜切兜底，**绝不串播**人群/Joker）；
+ *  3. 其余 → 既有来源规则。
+ */
+export function effectPlan(
+  source: NavigationSource,
+  driver: Pick<
+    TransitionDriver,
+    "crowdReady" | "hasCrowd" | "hasJoker" | "jokerReady" | "hasIsekai" | "isekaiReady"
+  >,
+  intent?: NavigationIntent,
+): TransitionKind[] {
+  if (intent === "enter-showcase") {
+    return driver.hasIsekai() && driver.isekaiReady() ? ["isekai", "wipe"] : ["wipe"];
+  }
   switch (source) {
     case "map-travel":
       // 人群优先；素材缺失或被减动效时退回 Joker 帷幕，**绝不改用文章的潜入动画**。
@@ -105,6 +157,11 @@ export function waitForEffect(kind: TransitionKind, driver: TransitionDriver): n
   if (kind === "crowd") return driver.crowdWait() || CROWD_WAIT_MS;
   if (kind === "joker") return driver.jokerWait();
   if (kind === "wipe") return WIPE_WAIT_MS;
+  if (kind === "isekai") {
+    const reported = driver.isekaiWait();
+    if (!Number.isFinite(reported) || reported <= 0) return ISEKAI_WAIT_MS;
+    return Math.min(ISEKAI_MAX_MS, Math.max(ISEKAI_MIN_MS, reported));
+  }
   return 0;
 }
 
@@ -129,14 +186,26 @@ export function NavigationProvider({
 
   const tokenRef = useRef(0);
   const navigatingRef = useRef(false);
-  const pendingRef = useRef<{ token: number; path: string; kind: TransitionKind } | null>(null);
+  const pendingRef = useRef<{
+    token: number;
+    path: string;
+    search: string;
+    /** 本次导航要提交的完整站内地址（跳过时立即提交它）。 */
+    destination: string;
+    kind: TransitionKind;
+    /** 手机目标导航的期望状态（pathname 不变，靠宿主提交信号结束）；普通导航为 null。 */
+    phone: PhoneUrlState | null;
+  } | null>(null);
   const pushTimerRef = useRef(0);
   const watchdogRef = useRef(0);
   const tailTimerRef = useRef(0);
+  /** 提交后核对地址用的轮询计时器（查询串变化不会触发 usePathname，见 verifyCommit）。 */
+  const verifyTimerRef = useRef(0);
   const cancelsRef = useRef(0);
   const debugRef = useRef<TransitionDebug>({
     navigating: false,
     source: null,
+    intent: null,
     kind: "none",
     token: 0,
     pendingPath: null,
@@ -153,6 +222,7 @@ export function NavigationProvider({
     const active = driverRef.current;
     active.stopCrowd();
     active.stopJoker();
+    active.stopIsekai();
     active.stopWipe();
   }, []);
 
@@ -162,9 +232,11 @@ export function NavigationProvider({
     window.clearTimeout(pushTimerRef.current);
     window.clearTimeout(watchdogRef.current);
     window.clearTimeout(tailTimerRef.current);
+    window.clearTimeout(verifyTimerRef.current);
     pushTimerRef.current = 0;
     watchdogRef.current = 0;
     tailTimerRef.current = 0;
+    verifyTimerRef.current = 0;
     navigatingRef.current = false;
     pendingRef.current = null;
     clearLayers();
@@ -184,16 +256,63 @@ export function NavigationProvider({
     debugRef.current = { ...debugRef.current, navigating: false, pendingPath: null };
     window.clearTimeout(watchdogRef.current);
     watchdogRef.current = 0;
+    window.clearTimeout(verifyTimerRef.current);
+    verifyTimerRef.current = 0;
     tailTimerRef.current = window.setTimeout(() => {
       clearLayers();
     }, 80);
   }, [clearLayers]);
 
-  // 完成信号：目标路由提交（pathname 变化），不是 await router.push()。
+  // 完成信号一：目标路由提交（pathname 变化），不是 await router.push()。
   useEffect(() => {
     const pending = pendingRef.current;
     if (pending && pending.path === pathname) finish();
   }, [pathname, finish]);
+
+  // 完成信号二：手机目标 App / screen / item 提交完成（pathname 可能不变）。
+  const commitPhoneTarget = useCallback(
+    (state: PhoneUrlState | null) => {
+      const pending = pendingRef.current;
+      if (!pending || !pending.phone) return;
+      if (
+        state &&
+        state.phone === pending.phone.phone &&
+        state.screen === pending.phone.screen &&
+        state.item === pending.phone.item
+      ) {
+        finish();
+      }
+    },
+    [finish],
+  );
+
+  /**
+   * 提交后核对地址：`usePathname()` 只在路径变化时驱动完成信号，
+   * 而 `/posts?view=archive` 这类**只改查询串**的提交不会让它变化。
+   * 这里在 push 之后按令牌做有限次核对（不做无限轮询），地址一致即收尾；
+   * 手机目标仍以 `commitPhoneTarget` 为主，两者结果一致、幂等。
+   */
+  const verifyCommit = useCallback(
+    (token: number) => {
+      window.clearTimeout(verifyTimerRef.current);
+      let attempts = 0;
+      const check = () => {
+        verifyTimerRef.current = 0;
+        if (token !== tokenRef.current) return;
+        const pending = pendingRef.current;
+        if (!pending) return;
+        const current = `${window.location.pathname}${window.location.search}`;
+        if (current === pending.destination.replace(/#.*$/, "")) {
+          finish();
+          return;
+        }
+        attempts += 1;
+        if (attempts < 20) verifyTimerRef.current = window.setTimeout(check, 100);
+      };
+      check();
+    },
+    [finish],
+  );
 
   // 后退 / 前进与 bfcache 还原：取消旧任务，不重播过场。
   useEffect(() => {
@@ -209,6 +328,7 @@ export function NavigationProvider({
       window.clearTimeout(pushTimerRef.current);
       window.clearTimeout(watchdogRef.current);
       window.clearTimeout(tailTimerRef.current);
+      window.clearTimeout(verifyTimerRef.current);
       clearLayers();
     };
   }, [cancel, clearLayers]);
@@ -250,8 +370,18 @@ export function NavigationProvider({
         return;
       }
 
+      // 意图：调用方显式声明优先；缺省时按「当前是否已在殿堂内部」自动判定边界，
+      // 覆盖首页卡片、作品详情等不一定能逐条标注来源的外部入口。
+      const originPhoneApp = parsePhoneState(window.location.search)?.phone ?? null;
+      const intent: NavigationIntent | null =
+        request.intent ??
+        showcaseEntryIntent(destination, {
+          pathname: window.location.pathname,
+          phoneApp: originPhoneApp,
+        });
+
       if (prefersReducedMotion()) {
-        // 减少动态效果：直接导航，不遮屏、不延时。
+        // 减少动态效果：直接导航，不遮屏、不延时（意图也不改变这条）。
         doPush(target.pathname + target.search + target.hash, false);
         return;
       }
@@ -260,7 +390,7 @@ export function NavigationProvider({
       if (navigatingRef.current) return;
 
       const active = driverRef.current;
-      const plan = effectPlan(source, active);
+      const plan = effectPlan(source, active, intent ?? undefined);
       let kind: TransitionKind = "none";
       for (const candidate of plan) {
         if (candidate === "crowd" && active.playCrowd()) {
@@ -269,6 +399,10 @@ export function NavigationProvider({
         }
         if (candidate === "joker" && active.playJoker()) {
           kind = "joker";
+          break;
+        }
+        if (candidate === "isekai" && active.playIsekai()) {
+          kind = "isekai";
           break;
         }
         if (candidate === "wipe") {
@@ -285,10 +419,18 @@ export function NavigationProvider({
       tokenRef.current += 1;
       const token = tokenRef.current;
       navigatingRef.current = true;
-      pendingRef.current = { token, path: target.pathname, kind };
+      pendingRef.current = {
+        token,
+        path: target.pathname,
+        search: target.search.replace(/^\?/, ""),
+        destination: target.pathname + target.search + target.hash,
+        kind,
+        phone: parsePhoneState(target.search),
+      };
       debugRef.current = {
         navigating: true,
         source,
+        intent,
         kind,
         token,
         pendingPath: target.pathname,
@@ -300,6 +442,7 @@ export function NavigationProvider({
       pushTimerRef.current = window.setTimeout(() => {
         if (token !== tokenRef.current) return;
         doPush(target.pathname + target.search + target.hash, false);
+        verifyCommit(token);
       }, wait);
 
       // 15 秒最终看门狗：清遮罩 + 整页降级，绝不永久黑屏。
@@ -310,17 +453,31 @@ export function NavigationProvider({
         (adapter?.assign ?? ((url: string) => window.location.assign(url)))(target.href);
       }, NAVIGATION_WATCHDOG_MS);
     },
-    [adapter, cancel, doPush],
+    [adapter, cancel, doPush, verifyCommit],
   );
+
+  /** 跳过：立即提交目标地址；视觉在完成信号后的统一退场里收起，不留下黑屏遮罩。 */
+  const skip = useCallback(() => {
+    const pending = pendingRef.current;
+    if (!pending) return;
+    window.clearTimeout(pushTimerRef.current);
+    pushTimerRef.current = 0;
+    // 先停掉短版视觉，避免「视频还在播、页面已经换了」。
+    driverRef.current.stopIsekai();
+    doPush(pending.destination, false);
+    verifyCommit(pending.token);
+  }, [doPush, verifyCommit]);
 
   const value = useMemo<NavigationCoordinator>(
     () => ({
       navigate,
       updateUrl,
+      commitPhoneTarget,
+      skip,
       navigating: () => navigatingRef.current,
       debug: () => debugRef.current,
     }),
-    [navigate, updateUrl],
+    [commitPhoneTarget, navigate, skip, updateUrl],
   );
 
   return <NavigationContext.Provider value={value}>{children}</NavigationContext.Provider>;
@@ -331,10 +488,13 @@ const FALLBACK: NavigationCoordinator = {
     if (typeof window !== "undefined") window.location.assign(request.destination);
   },
   updateUrl: () => undefined,
+  commitPhoneTarget: () => undefined,
+  skip: () => undefined,
   navigating: () => false,
   debug: () => ({
     navigating: false,
     source: null,
+    intent: null,
     kind: "none",
     token: 0,
     pendingPath: null,

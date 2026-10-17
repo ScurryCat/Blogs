@@ -11,7 +11,11 @@
  * 但两者必须走**完全一致**的判定 —— 否则地图图标、出发与顶部导航会出现行为差异。
  */
 
-import type { NavigationRequest, NavigationSource } from "@/features/phone/types";
+import type {
+  NavigationIntent,
+  NavigationRequest,
+  NavigationSource,
+} from "@/features/phone/types";
 
 /** 点击事件里与「是否接管」有关的最小字段。 */
 export interface ClickContext {
@@ -34,6 +38,7 @@ export function navigationRequestFromClick(
   anchor: AnchorContext,
   href: string,
   source: NavigationSource,
+  intent?: NavigationIntent,
 ): NavigationRequest | null {
   if (event.defaultPrevented) return null;
   if (event.button !== 0) return null;
@@ -48,5 +53,7 @@ export function navigationRequestFromClick(
   }
   if (url.origin !== window.location.origin) return null;
 
-  return { destination: `${url.pathname}${url.search}${url.hash}`, source };
+  return intent
+    ? { destination: `${url.pathname}${url.search}${url.hash}`, source, intent }
+    : { destination: `${url.pathname}${url.search}${url.hash}`, source };
 }

@@ -11,7 +11,7 @@
 
 import type { AnchorHTMLAttributes, MouseEvent, ReactNode, Ref } from "react";
 
-import type { NavigationSource } from "@/features/phone/types";
+import type { NavigationIntent, NavigationSource } from "@/features/phone/types";
 import { navigationRequestFromClick } from "@/features/runtime/navigation/link-guard";
 import { useNavigation } from "@/features/runtime/navigation/coordinator";
 
@@ -19,12 +19,25 @@ export interface SiteLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   href: string;
   /** 语义来源：决定过场效果，不按当前页面猜。 */
   source: NavigationSource;
+  /**
+   * 可选的导航意图（目前只有 `enter-showcase`）：表示这是**主动跨入作品殿堂边界**。
+   * 只是提高效果优先级，不改变 href、历史与高亮；来源规则仍然保留。
+   */
+  intent?: NavigationIntent;
   /** React 19 起 `ref` 就是普通 prop，不再需要 forwardRef。 */
   ref?: Ref<HTMLAnchorElement>;
   children?: ReactNode;
 }
 
-export function SiteLink({ href, source, onClick, children, ref, ...rest }: SiteLinkProps): ReactNode {
+export function SiteLink({
+  href,
+  source,
+  intent,
+  onClick,
+  children,
+  ref,
+  ...rest
+}: SiteLinkProps): ReactNode {
   const navigation = useNavigation();
 
   /**
@@ -35,7 +48,13 @@ export function SiteLink({ href, source, onClick, children, ref, ...rest }: Site
    */
   const handleClickCapture = (event: MouseEvent<HTMLAnchorElement>) => {
     onClick?.(event);
-    const request = navigationRequestFromClick(event, event.currentTarget, href, source);
+    const request = navigationRequestFromClick(
+      event,
+      event.currentTarget,
+      href,
+      source,
+      intent,
+    );
     if (!request) return;
     event.preventDefault();
     event.stopPropagation();

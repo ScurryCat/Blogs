@@ -21,6 +21,16 @@ export type NavigationSource =
   | "phone-link"
   | "metaverse-entry";
 
+/**
+ * 导航意图：在当前来源规则之外，表达「主动跨入某条内容边界」。
+ *
+ * 本轮只有一项 —— 主动进入「我的殿堂」（作品）。**不是来源的替代**：
+ * `source` 仍保留原语义（顶部导航 / 地图旅行 / 手机链接），意图只用来提高效果优先级，
+ * 不改变 href、不改变历史、不改变子页面归属计算。效果优先级见 `coordinator.tsx`：
+ * 减少动态效果 → 直接提交；明确主动进入殿堂 → 异世界短版；其余 → 既有来源规则。
+ */
+export type NavigationIntent = "enter-showcase";
+
 /** 宿主展示模式。展开后进入 canonical 路由，恢复同一条内容。 */
 export type PhoneDisplayMode = "compact" | "expanded";
 
@@ -34,11 +44,13 @@ export interface PhoneUrlState {
   item: string | null;
 }
 
-/** 供应用发起导航的请求：只有目的地与来源两个字段。 */
+/** 供应用发起导航的请求：目的地、来源，以及可选的导航意图。 */
 export interface NavigationRequest {
   /** 站内目的地（相对路径）。不接受外部 URL 或任意路径。 */
   destination: string;
   source: NavigationSource;
+  /** 可选的「主动跨入内容边界」意图；缺省时完全沿用来源规则。 */
+  intent?: NavigationIntent;
 }
 
 /**
