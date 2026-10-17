@@ -44,7 +44,9 @@
     P5 6（**存档/读取**、手机主屏、日历、五维状态、校内地图、东京地图）+
     5（天鹅绒房间、印象空间、COOP 协助者、殿堂宝物、放课后打击练习场）；
     来源/哈希/画面复核见 `reference-frame-gaps.md` §7 与 `P4-reference-frames-round3.md`；
-    `verify-reference-frames.py` **17/17** 通过。整屏参考帧缺口已收口；剩余为真实设备与 IM 图片消息。
+    `verify-reference-frames.py` **17/17** 通过；来源核实见 `reference-frame-sources.md`
+    （官方 3 张：PlayStation CDN 1 + Steam 官方截图 2；可追溯非官方 12；未核实 2）。
+    整屏参考帧缺口已收口；剩余为真实设备与 IM 图片消息。
   - **完整验收仍不通过**：整屏视觉对照（部分）、真机、IM 图片消息仍未收口。
 - **验证基建**：`audit-contrast.py` / `audit-structure.py` / `audit-failure-states.py` /
   `verify-home-refresh.py` / `verify-demo-content.py` / `seed-demo-content.py` /
@@ -77,7 +79,7 @@ python3 tools/verify-demo-content.py http://127.0.0.1:3100 --api http://127.0.0.
 | **B4 图片消息** | 需产品决策（A/B/C，见 `P4-im-image-messages-proposal.md`） | 产品/站主 |
 | **P4 原版应用图标（部分完成）** | `metanav` / `ins` 已接入已审核原版（清理版，来源/证据见 `original-app-icons.md`）；其余 8 个 App 仍为适配设计（AI 位图/自绘 SVG） | 其余 App 的官方素材 |
 | ~~管理端收录 UI 真流程~~ | **已补齐**（`e2e-ins-album-links-ui.py` 9/9，浏览器截图） | — |
-| **真机验证** | 无设备（触控/软键盘/移动 Safari） | 有 iPhone/Android 的人 |
+| **真机验证（部分证据）** | 无设备；已补 **WebKit 引擎 + iPhone 视口 24/24**（`P4-mobile-engine-evidence.md`），**不等于真机**；软键盘/中文输入法/真实触控仍需真机 | 有 iPhone/Android 的人 |
 | **品牌红面板黑字对比度** | 4.23:1（AA 需 4.5），需设计折中 | 设计/站主 |
 
 ## 4. 下一步建议

@@ -60,7 +60,8 @@
     （登录→相册→动态→上传→收录→保存→发布→公开页），截图见 `.dsh/screenshots/ins-admin/`。
 13. **参考帧补齐（2026-10-18，三批 17 张）**：P5R 6 + P5 6（含存档/读取、手机主屏、日历、
     五维、校内/东京地图）+ 5 张界面帧（天鹅绒/印象空间/COOP/殿堂/放课后），
-    `verify-reference-frames.py` 17/17；整屏参考帧缺口已收口。
+    `verify-reference-frames.py` 17/17；来源核实见 `reference-frame-sources.md`
+    （官方 3 张：PS CDN 1 + Steam 官方截图 2；可追溯非官方 12；未核实 2=IM 两帧）。
 
 ## 三、状态数字更新（替换 HANDOFF §三 的对应描述）
 
@@ -99,6 +100,8 @@
    见 `original-app-icons.md`）；其余 8 个 App 仍是适配设计（AI 位图/自绘 SVG），未冒充原版；
    官方原始 sprites 仍不在本地参考库。
 4. **真机**：触控 / 软键盘 / 中文输入法 / 移动 Safari 未验证（无设备）。
+   已补 **WebKit 引擎 + iPhone 视口**冒烟证据（24/24：首页/手机/IM/图库灯箱/触控点按），
+   但明确**不等于真机**，见 `P4-mobile-engine-evidence.md`。
 
 ## 六、给打包整合者的建议
 

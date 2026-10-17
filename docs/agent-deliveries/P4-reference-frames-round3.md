@@ -71,8 +71,17 @@ P5 原版完整帧（全部 1920×1080，逐帧实看无明智吾郎）：
 
 来源/哈希见 `reference-frame-gaps.md` §7.3；`verify-reference-frames.py` 扩展为 **17/17**。
 
+## 4.2 来源核实（2026-10-18）
+
+- 新增 `docs/design-references/reference-frame-sources.md`：17 帧逐张来源/状态/核实方式。
+- 用 Steam 官方商店数据（P5R appdetails `1687950`，9 张）做 dHash 交叉核对：
+  **6 组 dHash=0 同帧**；精选库中 `p5r-dialogue-maruki-fullframe` 与
+  `p5r-street-hud-fullframe` 的来源已升级为 **Steam 官方截图 URL**；
+  `p5r-dialogue-normal-fullframe`（PlayStation 官方 CDN）与 Steam s04 同帧（dHash=1）。
+- 汇总：官方 3 张、可追溯非官方 12 张、未核实 2 张（P5R IM 两帧；与 9 张官方截图最小 dHash 24）。
+
 ## 5. 仍未关闭（不冒充完成）
 
 1. **真实触控 / 软键盘 / 移动 Safari** 与 **IM 图片消息（B4）** 仍待解决（非参考帧问题）；
-2. 回复选择帧为 P5R 英文 UI；部分帧来源 URL 未核实（G4 同口径，已在记录中标注）；
+2. 回复选择帧为 P5R 英文 UI；P5R IM 两帧来源仍未核实（G4 口径，已在来源记录标注）；
 3. 所有帧许可状态「未核实」，仅本地开发参考，不进入网站构建或公开分发。

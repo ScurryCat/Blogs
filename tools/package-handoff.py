@@ -83,8 +83,12 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 > **参考帧补齐（2026-10-18，三批 17 张）**：P5R 6（G2 回复选择 / G1 普通对话 ×2 /
 > IM 完整屏 ×2 / 手机 HUD）+ P5 6（存档/读取 / 手机主屏 / 日历 / 五维状态 / 校内地图 / 东京地图）
 > + 5（天鹅绒房间 / 印象空间 / COOP / 殿堂 / 放课后），
-> `tools/acceptance/verify-reference-frames.py` **17/17**；整屏参考帧缺口已收口。
-> 仍未关闭：整屏视觉对照（部分）、真机（触控/软键盘/移动 Safari）、IM 图片消息（待产品拍板）。
+> `tools/acceptance/verify-reference-frames.py` **17/17**；来源核实见
+> `docs/design-references/reference-frame-sources.md`（官方 3：PS CDN 1 + Steam 2；
+> 可追溯非官方 12；未核实 2=IM 两帧）。整屏参考帧缺口已收口。
+> **移动引擎证据（2026-10-18）**：WebKit + iPhone 视口 24/24（首页/手机/IM/图库灯箱/触控点按），
+> 但**不等于真机**；软键盘/中文输入法/真实触控仍需真机（`P4-mobile-engine-evidence.md`）。
+> 仍未关闭：真实设备（触控/软键盘/移动 Safari）、IM 图片消息（待产品拍板）。
 > **管理端 INS 收录 UI 真实浏览器全流程已补齐**：`tools/e2e-ins-album-links-ui.py` 9/9 通过
 > （登录→建相册草稿→建动态→上传→收录→保存→发布→公开页可见）；期间修复了 2 个真实 UI 阻断缺陷：
 > 管理列表 limit=50 超后端上限 30 的 422、画廊写接口 CSRF body 字段导致的 422/500。

@@ -194,4 +194,8 @@
 
 复验脚本：`python3 tools/acceptance/verify-reference-frames.py`（**17/17** 帧存在、哈希/尺寸/索引/来源一致；
 参考库不存在时 SKIP）。**存档/读取 + 天鹅绒/印象空间/COOP/殿堂/放课后整屏帧均已补齐**；
-仍缺：真实设备渲染证据、IM 图片消息协议（B4）；部分帧来源 URL 未核实（已在来源记录标注）。
+仍缺：真实设备渲染证据、IM 图片消息协议（B4）。
+
+**来源核实（2026-10-18）**：见 `reference-frame-sources.md` —— 17 帧中 **官方 3 张**
+（PlayStation CDN 1 + Steam 官方商店截图 2，dHash 0/1 同帧核对）、可追溯非官方 12 张、
+未核实 2 张（P5R IM 帧，G4 口径保留未核实）。
