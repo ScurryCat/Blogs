@@ -21,6 +21,7 @@
 | 客户端取数审计 | **0 失败** | 同上（脚本内已接 T02 一起跑） |
 | 多视口 × 缩放档 | **11 / 11**（3 视口 × 3 缩放 + 320/390） | `tools/acceptance/verify-viewports.py` |
 | 4 个业务验收脚本 | **全部退出码 0** | `tools/acceptance/verify-{ins-media-loop,media-multiref,album-moment-retract,restore-revokes-sessions}.py` |
+| **一键验收** | **退出码 0，六段全 PASS** | **`tools/verify-all.sh`**（上面各项的合体；`--fast` 约 40 秒）|
 | 迁移链 | 10 迁移 / 36 表 / 可回滚 / 单头 `b7c3e9a1d2f4` | 第 8 轮隔离库验证 |
 | 契约同步 | 通过 | `pytest apps/api/tests/test_openapi_contract.py` |
 
@@ -64,6 +65,9 @@ INS 站内链接绕过导航协调器。
 | `tools/verify-backend-isolated.sh [端口]` | 在 /tmp 起独立 Postgres 集群跑后端整树，跑完自动停并清理。避免共享测试库撞名 |
 | `tools/acceptance/verify-viewports.py [BASE]` | 多视口 × 缩放档 / 触控目标 / 出界测量 |
 | `tools/acceptance/verify-*.py`（4 个业务脚本） | 媒体闭环 / 多引用 / 相册撤回 / 恢复撤销会话 |
+| **`tools/verify-all.sh`** | **一键跑完上面全部并汇总**（`--fast` 只跑静态审计 + 前端） |
+| `tools/acceptance/verify-phone-icons.py` | 图标存在性 / 素材清单 / SHA-256 / canonical_path ↔ 路由 |
+| `tools/acceptance/verify-asset-refs.py` | 静态资源引用断链（生产代码 0 断链） |
 
 ## 七、给 Lead 的判定建议
 
