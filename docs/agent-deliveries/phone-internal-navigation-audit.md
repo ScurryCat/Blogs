@@ -30,7 +30,7 @@
 | # | App | 入口 | 实际去向 | 手机内是否有对应 screen |
 | --- | --- | --- | --- | --- |
 | ~~P1~~ | INS | 标签 chip | ~~`/apps/ins?tag=<tag>`~~ → **已改为手机内 `screen=tagged&item=<标签>`** ✅ 第 46 轮完成 | ✅ 有 `tagged` |
-| P2 | INS | 消息 → 角色 | `/apps/ins/messages/<id>` | ✗ 无 |
+| ~~P2~~ | INS | 消息 → 角色 | ~~`/apps/ins/messages/<id>`~~ → **已改为手机内 `screen=conversation`** ✅ 第 49 轮完成 | ✅ 有 `conversation` |
 | ~~P3~~ | 手记 | 「读取手记」 | ~~`/apps/journal/<id>`~~ → **已改为手机内 `screen=reading`** ✅ 第 43 轮完成 | ✅ 有 `reading` |
 | ~~P4~~ | 导航 | 殿堂详情 | ~~`/apps/metanav/palaces/<slug>`~~ → **已改为手机内 `screen=palace`** ✅ 第 44 轮完成 | ✅ 有 `palace` |
 
@@ -61,6 +61,27 @@
 **收益**：四处 UX 不一致一次解决；且为以后「任何应用内详情」立下统一做法。
 **风险**：改动 4 个 App + 宿主 + 测试；需要真实浏览器回归（本会话已有 E2E 能力：见
 `tools/e2e-phone-scroll.py` 的隔离栈搭法）。
+
+## 三·补四：P2 已落地（第 49 轮）—— **四处全部完成**
+
+手机里点角色后 URL 变成 `?phone=home`（回退桌面），根因有两层，都在
+`features/ins/phone-manifest.tsx`：
+
+1. **loader 返回的是 `InsPhoneView`**，而不是 `phone-app` 里的分派根 `InsPhoneRoot` ——
+   消息屏永远不会交给 T08 的实现渲染；
+2. **screens 只列了 INS 自己的屏幕**（feed/detail/saved/tagged），不含 `messages`/`conversation`，
+   宿主因此判定 `screen=conversation` 非法并回退。
+
+修法：loader 改用 `InsPhoneRoot` + 用 `phone-app` 导出的合并 `screens`。
+端到端实测（`tools/e2e-ins-conversation.py`）：
+
+```
+URL：/?phone=ins&screen=conversation&item=futaba
+状态：手机开=True 应用层=True
+判定：✓ 会话在手机内，手机未关闭
+```
+
+**至此专项审计的 P1–P4 全部完成，且每一项都有真实浏览器端到端证据。**
 
 ## 三·补三：P1 已落地（第 46 轮）
 

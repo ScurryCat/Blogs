@@ -20,7 +20,7 @@
 
 import type { PhoneAppManifest, PhoneAppModule } from "@/features/phone/types";
 
-import { InsPhoneView, INS_APP_SCREENS } from "./phone-view";
+import InsPhoneRoot, { screens as INS_PHONE_SCREENS } from "./phone-app";
 
 export const INS_APP_ID = "ins";
 
@@ -32,9 +32,12 @@ export const INS_MANIFEST: PhoneAppManifest = {
   order: 10,
   kind: "embedded",
   canonical_path: "/apps/ins",
+  // 必须用 phone-app 里的分派根：消息屏由 T08 的实现渲染，其余屏由 INS 自己渲染。
+  // 之前这里写的是 InsPhoneView、screens 也只有 INS 自己的三个 —— 于是手机里点角色后
+  // `screen=conversation` 不被识别，宿主回退桌面（表现为「离开手机」）。
   loader: async (): Promise<PhoneAppModule> => ({
-    default: InsPhoneView,
-    screens: INS_APP_SCREENS,
+    default: InsPhoneRoot,
+    screens: INS_PHONE_SCREENS,
   }),
   feature_flag: null,
   state_version: 1,
