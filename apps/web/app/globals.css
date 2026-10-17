@@ -1011,6 +1011,18 @@ html.ov-lock body {
   background: var(--red-deep, #9f0c12);
 }
 
+/* ---------- 15.3 桌面缩放下手机滑杆的命中区域 ----------
+   手机外壳在桌面上是等比缩放的：13px 高的滑杆缩到 ≈6px，鼠标很难点中。
+   620px 以下的外壳已经用 `.pw-bar::before` 把热区撑到 46px（legacy phone.css），
+   这里只补桌面档，避免覆盖移动端的既有实现。 */
+@media (min-width: 621px) {
+  .pw-bar::before {
+    content: "";
+    position: absolute;
+    inset: -12px 0;
+  }
+}
+
 /* ---------- 16. 「我的殿堂」异世界短过场（第三轮 N5 · 任务书 §6.3）----------
    容器结构与旧站 `.clip`（VP9+alpha 抠像视频 + 纯色底衬）同思路，但独立成 `.isekai`：
    底衬用本站主题红，alpha 视频只负责红/黑墨迹层。这样即使浏览器不解码 alpha，

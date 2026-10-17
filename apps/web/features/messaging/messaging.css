@@ -971,7 +971,8 @@
 }
 
 .msg-input::placeholder {
-  color: #8d8781;
+  /* 纸白底上的提示文字：#8d8781 只有 ≈3.1:1，加深到 ≈5:1。 */
+  color: #6b665f;
 }
 
 .msg-input[aria-invalid="true"] {
