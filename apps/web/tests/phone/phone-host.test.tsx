@@ -209,6 +209,23 @@ describe("手机桌面", () => {
     expect(view.container.querySelector(".pw-music")).not.toBeNull();
   });
 
+  it("进入应用后焦点留在应用视图内（不会掉到 body）", async () => {
+    const registry = () => createPhoneRegistry([TEST_APP, OTHER_APP]);
+    const view = mount(registry());
+    await advance();
+    click(view.container.querySelector(".pw-tab"));
+    await commit(view, registry());
+
+    // 手机上点磁贴：磁贴本身会随桌面一起卸载
+    click(view.container.querySelector('[data-app-id="demo"]'));
+    await commit(view, registry());
+    expect(view.container.querySelector(".pw-appview")).not.toBeNull();
+
+    const active = document.activeElement;
+    expect(active).not.toBe(document.body);
+    expect(view.container.contains(active)).toBe(true);
+  });
+
   it("换 App 时把宿主滚动区归零，不把上一个 App 的滚动位置带过来", async () => {
     const registry = () => createPhoneRegistry([TEST_APP, OTHER_APP]);
     const view = mount(registry());
