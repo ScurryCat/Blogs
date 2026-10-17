@@ -648,3 +648,604 @@
   border-left: 2px solid var(--msg-line);
   padding-left: 8px;
 }
+
+/* ==========================================================================
+   IM 视觉还原 v1（2026-10-17，第二轮 §4.2）
+
+   参考（本地参考库，离线只读）：
+   - 完整 IM 屏：`persona-dist/media/image/P5R/p5r-sns--4aa5330b1fe6.jpg`
+     （红底 + 黑色撕裂面板 + 白字、图标 IM 字样、头像做拍立得叠贴、
+      照片消息用倾斜白边相框、底部 Scroll/Next 提示）
+   - 元件表：`persona5-spriters/p5r/hud/132782-im-assets-cn-jp.png`
+     （原版黑白头像、送信/戻る/決定等按钮字形）
+   - 头像：`persona5-spriters/p5/hud/92141-profile-pictures.png`（已接入，见 §4.4）
+
+   这一版还原的是**视觉语言**（红底/黑板/白字/斜切/拍立得头像/选择条），
+   不是逐像素整屏还原 —— 普通文字与回复选择的完整参考帧仍缺（G1/G2），
+   因此不声称整屏视觉验收通过（见 docs/design-references/reference-frame-gaps.md）。
+   ========================================================================== */
+
+.msg-app {
+  --msg-red: #e5191c;
+  --msg-red-deep: #a90d12;
+  --msg-ink: #101014;
+  --msg-paper: #f4f1ea;
+  --msg-line: rgba(244, 241, 234, 0.34);
+  --msg-muted: rgba(244, 241, 234, 0.74);
+
+  background-color: var(--msg-red-deep);
+  background-image: var(--dots);
+  color: var(--msg-paper);
+  border: 3px solid var(--msg-ink);
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.42);
+  border-radius: 0;
+}
+
+/* IM 字样标签：黑底白字 + 红色块，作为应用标识（原版 SNS 左上角 IM logo 的语言）。 */
+.msg-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+  padding: 7px 10px 5px;
+  background: var(--msg-ink);
+  color: var(--msg-paper);
+  font: 400 24px/1 var(--f-disp);
+  letter-spacing: 0.04em;
+  transform: rotate(-4deg);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35);
+}
+
+.msg-logo::before {
+  content: "";
+  width: 7px;
+  height: 22px;
+  background: var(--msg-red);
+}
+
+.msg-list-head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.msg-list-head-note {
+  font: 400 12px/1 var(--f-hat);
+  letter-spacing: 0.22em;
+  color: var(--msg-muted);
+  text-transform: uppercase;
+}
+
+/* 会话头：黑底白框斜切面板（参考帧里聊天标题就是一块倾斜黑板）。 */
+.msg-thread-bar {
+  position: relative;
+  background: var(--msg-ink);
+  color: var(--msg-paper);
+  border: 2px solid var(--msg-paper);
+  border-radius: 0;
+  transform: rotate(-1.1deg);
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.4);
+  padding: 12px 14px;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+}
+
+.msg-thread-bar > * {
+  transform: none;
+}
+
+.msg-thread-name {
+  font: 400 22px/1.1 var(--f-disp);
+  letter-spacing: 0.03em;
+  color: var(--msg-paper);
+}
+
+.msg-thread-handle {
+  color: var(--msg-muted);
+  letter-spacing: 0.04em;
+}
+
+.msg-thread-tags .msg-tag {
+  border-color: rgba(244, 241, 234, 0.45);
+  color: var(--msg-paper);
+}
+
+.msg-tag-fan {
+  border-color: var(--msg-red);
+  color: #ffd9da;
+  background: rgba(229, 25, 28, 0.35);
+}
+
+/* 头像 = 拍立得裁切：白框 + 硬阴影 + 固定小角度倾斜（参考帧的头像叠贴）。 */
+.msg-avatar,
+.msg-role-avatar {
+  background: var(--msg-paper);
+  border: 3px solid var(--msg-paper);
+  border-radius: 0;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
+  transform: rotate(-6deg);
+  overflow: hidden;
+}
+
+.msg-avatar-out {
+  transform: rotate(6deg);
+}
+
+.msg-avatar {
+  width: 44px;
+  height: 44px;
+}
+
+.msg-avatar-lg {
+  width: 56px;
+  height: 56px;
+}
+
+.msg-role-avatar {
+  width: 62px;
+  height: 62px;
+  transform: rotate(-5deg);
+}
+
+.msg-avatar img,
+.msg-role-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 消息块：黑底白字倾斜面板；我方消息反白。 */
+.msg-list {
+  padding: 4px 2px 0;
+}
+
+.msg-bubble {
+  background: var(--msg-ink);
+  color: var(--msg-paper);
+  border: 2px solid var(--msg-paper);
+  border-radius: 0;
+  transform: rotate(-0.6deg);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.38);
+  padding: 10px 14px;
+}
+
+.msg-bubble-in {
+  border-left: 6px solid var(--msg-red);
+}
+
+.msg-bubble-out {
+  background: var(--msg-paper);
+  color: var(--msg-ink);
+  border-color: var(--msg-ink);
+  border-right: 6px solid var(--msg-red);
+  transform: rotate(0.6deg);
+}
+
+.msg-row:nth-child(2n) .msg-bubble {
+  transform: rotate(0.35deg);
+}
+
+.msg-row-out:nth-child(2n) .msg-bubble {
+  transform: rotate(-0.35deg);
+}
+
+.msg-sender,
+.msg-time,
+.msg-meta {
+  color: var(--msg-muted);
+}
+
+.msg-sender-name {
+  color: var(--msg-paper);
+}
+
+.msg-row-out .msg-sender {
+  color: var(--msg-muted);
+}
+
+.msg-row-out .msg-sender-name {
+  color: var(--msg-paper);
+}
+
+.msg-text {
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.msg-note {
+  color: var(--msg-muted);
+  border-color: var(--msg-line);
+}
+
+.msg-ai-badge {
+  color: var(--msg-muted);
+}
+
+.msg-ai-mark {
+  background: var(--msg-red);
+  color: var(--msg-paper);
+}
+
+/* 选项：黑底白字条 + 红色箭头；选中/悬停反白（原版选项的选中反色）。 */
+.msg-choices {
+  border-top: 2px solid var(--msg-line);
+}
+
+.msg-choices-hint,
+.msg-composer-label,
+.msg-counter,
+.msg-phone-hint {
+  color: var(--msg-muted);
+}
+
+.msg-choice,
+.msg-btn {
+  background: var(--msg-ink);
+  color: var(--msg-paper);
+  border: 2px solid var(--msg-paper);
+  border-radius: 0;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35);
+}
+
+.msg-choice {
+  transform: skewX(-3deg);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.msg-choice::before {
+  content: "▶";
+  color: var(--msg-red);
+  font-size: 11px;
+}
+
+.msg-choice:hover:not(:disabled),
+.msg-choice:focus-visible:not(:disabled),
+.msg-btn:hover:not(:disabled),
+.msg-btn:focus-visible:not(:disabled) {
+  background: var(--msg-paper);
+  color: var(--msg-ink);
+  border-color: var(--msg-ink);
+}
+
+.msg-btn:disabled,
+.msg-choice:disabled {
+  opacity: 0.45;
+}
+
+.msg-btn-quiet {
+  background: transparent;
+  color: var(--msg-paper);
+  border-color: rgba(244, 241, 234, 0.6);
+  min-height: 32px;
+  padding: 4px 8px;
+  font-size: 12px;
+  box-shadow: none;
+}
+
+.msg-btn-quiet:hover:not(:disabled),
+.msg-btn-quiet:focus-visible:not(:disabled) {
+  background: var(--msg-red);
+  border-color: var(--msg-red);
+  color: var(--msg-paper);
+}
+
+.msg-choice-resume {
+  border-color: var(--msg-red);
+  color: #ffd9da;
+}
+
+.msg-btn-send {
+  background: var(--msg-red);
+  border-color: var(--msg-paper);
+  color: var(--msg-paper);
+  min-width: 96px;
+  font: 400 15px/1 var(--f-hat);
+  letter-spacing: 0.1em;
+  text-align: center;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.45);
+}
+
+.msg-btn-send:hover:not(:disabled),
+.msg-btn-send:focus-visible:not(:disabled) {
+  background: var(--msg-paper);
+  color: var(--msg-red-deep);
+  border-color: var(--msg-ink);
+}
+
+.msg-btn-say {
+  border-style: dashed;
+}
+
+/* 输入区：深色面板 + 纸白输入框。 */
+.msg-composer {
+  border-top: 2px solid var(--msg-line);
+}
+
+.msg-input {
+  background: var(--msg-paper);
+  color: var(--msg-ink);
+  border: 2px solid var(--msg-ink);
+  border-radius: 0;
+}
+
+.msg-input::placeholder {
+  color: #8d8781;
+}
+
+.msg-input[aria-invalid="true"] {
+  border-color: var(--msg-red);
+}
+
+/* 角色列表：红底 + 黑板白框卡 + 拍立得头像。 */
+.msg-role-list {
+  gap: 14px;
+}
+
+.msg-role-intro,
+.msg-role-footnote {
+  color: var(--msg-muted);
+}
+
+.msg-roles {
+  gap: 12px;
+}
+
+.msg-role {
+  background: var(--msg-ink);
+  color: var(--msg-paper);
+  border: 2px solid var(--msg-paper);
+  border-radius: 0;
+  transform: rotate(-0.5deg);
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.4);
+  padding: 12px 16px;
+}
+
+.msg-role:nth-child(2n) {
+  transform: rotate(0.5deg);
+}
+
+.msg-role:hover,
+.msg-role:focus-visible {
+  background: var(--msg-red-deep);
+  border-color: var(--msg-paper);
+  box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.5);
+  transform: rotate(0deg) translateY(-2px);
+}
+
+.msg-role:focus-visible {
+  outline: 2px solid var(--msg-paper);
+  outline-offset: 3px;
+}
+
+.msg-role-name {
+  font: 400 21px/1.15 var(--f-disp);
+  letter-spacing: 0.03em;
+  color: var(--msg-paper);
+}
+
+.msg-role-tagline {
+  color: #ffd9da;
+  letter-spacing: 0.05em;
+}
+
+.msg-role-preview {
+  color: var(--msg-muted);
+}
+
+.msg-role-meta {
+  color: rgba(244, 241, 234, 0.56);
+}
+
+.msg-role-chevron {
+  color: var(--msg-red);
+}
+
+.msg-inline-link {
+  color: #ffd9da;
+}
+
+/* 状态与提示：深色底上的可读版本。 */
+.msg-state {
+  border: 2px dashed var(--msg-line);
+  background: rgba(0, 0, 0, 0.24);
+  color: var(--msg-paper);
+}
+
+.msg-state h2 {
+  color: var(--msg-paper);
+}
+
+.msg-state-kicker {
+  color: #ffd9da;
+}
+
+.msg-notice {
+  background: var(--msg-ink);
+  color: var(--msg-paper);
+  border-left: 5px solid var(--msg-red);
+}
+
+.msg-notice-warn {
+  border-left-color: #ffd400;
+}
+
+.msg-paused {
+  color: #ffd9da;
+  border-left-color: var(--msg-red);
+}
+
+/* 内容卡片：纸白卡 + 黑框（消息里的站点内容引用）。 */
+.msg-card {
+  background: var(--msg-paper);
+  color: var(--msg-ink);
+  border: 2px solid var(--msg-ink);
+  border-radius: 0;
+}
+
+.msg-card:hover,
+.msg-card:focus-visible {
+  background: var(--msg-ink);
+  color: var(--msg-paper);
+}
+
+.msg-card-kind {
+  color: var(--msg-red);
+}
+
+/* 管理页同样落在红底上：列表与标题改为白字。 */
+.msg-admin {
+  color: var(--msg-paper);
+}
+
+.msg-admin h1,
+.msg-admin h2 {
+  color: var(--msg-paper);
+}
+
+.msg-admin h2 {
+  border-bottom-color: var(--msg-line);
+}
+
+.msg-admin-list {
+  color: var(--msg-paper);
+}
+
+.msg-admin-list li {
+  border-left-color: var(--msg-line);
+}
+
+/* 390 / 320：红色底 + 斜切在窄屏上收敛角度，保证正文可读与不横向溢出。 */
+@media (max-width: 480px) {
+  .msg-app {
+    border-width: 2px;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.4);
+  }
+
+  .msg-thread-bar {
+    transform: rotate(-0.6deg);
+    grid-template-columns: auto auto minmax(0, 1fr);
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .msg-thread-actions,
+  .msg-thread-bar .msg-details {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .msg-avatar,
+  .msg-role-avatar {
+    transform: rotate(-4deg);
+  }
+
+  .msg-avatar {
+    width: 38px;
+    height: 38px;
+  }
+
+  .msg-avatar-lg {
+    width: 48px;
+    height: 48px;
+  }
+
+  .msg-role-avatar {
+    width: 52px;
+    height: 52px;
+  }
+
+  .msg-role {
+    transform: none;
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .msg-role-name {
+    font-size: 19px;
+  }
+
+  .msg-bubble {
+    transform: none;
+  }
+
+  .msg-choice {
+    transform: none;
+  }
+}
+
+/* 手机宿主里的 IM 面板只有 ~430px 宽（浏览器视口仍是桌面宽度），
+   所以窄屏收敛用**容器查询**而不是 viewport 媒体查询。 */
+.msg-app {
+  container-type: inline-size;
+}
+
+@container (max-width: 560px) {
+  .msg-thread-bar {
+    grid-template-columns: auto auto minmax(0, 1fr);
+    transform: rotate(-0.6deg);
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .msg-thread-bar .msg-details {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+
+  .msg-thread-name {
+    font-size: 19px;
+  }
+
+  .msg-logo {
+    font-size: 19px;
+    padding: 5px 8px 4px;
+  }
+
+  .msg-logo::before {
+    height: 17px;
+    width: 6px;
+  }
+
+  .msg-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .msg-avatar-lg {
+    width: 46px;
+    height: 46px;
+  }
+
+  .msg-role-avatar {
+    width: 50px;
+    height: 50px;
+  }
+
+  .msg-list-head-note {
+    display: none;
+  }
+
+  .msg-role {
+    padding: 10px 12px;
+    gap: 10px;
+    transform: none;
+  }
+
+  .msg-role-name {
+    font-size: 19px;
+  }
+
+  .msg-bubble {
+    transform: none;
+  }
+
+  .msg-choice {
+    transform: none;
+  }
+
+  .msg-list {
+    max-height: 44vh;
+  }
+}

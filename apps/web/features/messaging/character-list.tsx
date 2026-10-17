@@ -107,6 +107,13 @@ export function CharacterList({ linkSource = "phone-link", onOpen }: CharacterLi
 
   return (
     <div className="msg-role-list">
+      <div className="msg-list-head">
+        {/* IM 应用标识：与会话页一致，黑底白字 + 红色块。 */}
+        <span className="msg-logo" aria-hidden="true">
+          IM
+        </span>
+        <span className="msg-list-head-note">Character messages</span>
+      </div>
       <p className="msg-role-intro">
         这里是游戏角色的非官方同人会话：预设剧情由本站写好，自由聊天由 AI 生成。
         名单里只有游戏角色；真实朋友的入口在 COOP 应用里，不混在这里。

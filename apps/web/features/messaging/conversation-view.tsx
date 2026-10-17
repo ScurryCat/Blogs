@@ -128,6 +128,10 @@ export function ConversationView({
   return (
     <div className="msg-app">
       <header className="msg-thread-bar">
+        {/* IM 应用标识：原版 SNS / IM 的「IM」字样（参考帧里的左上角 logo 语言）。 */}
+        <span className="msg-logo" aria-hidden="true">
+          IM
+        </span>
         <span className="msg-avatar msg-avatar-lg" aria-hidden="true">
           {/* eslint-disable-next-line @next/next/no-img-element -- 固定尺寸的装饰性头像，沿用旧站资源。 */}
           <img src={avatar} alt={avatarAlt} width={48} height={48} />

@@ -31,6 +31,11 @@ import "../styles/legacy/about.css";
 import "../styles/legacy/weather.css";
 import "../styles/legacy/guestbook.css";
 import "./globals.css";
+// IM 的样式表必须在**手机宿主**里也生效（手机内 INS → 消息/会话），
+// 而 messaging.css 原先只被独立路由页面 import —— 手机里那段界面因此完全没有样式
+// （2026-10-17 视觉复核实测：.msg-role 背景是浏览器默认灰、.msg-logo 无边距）。
+// 放在根布局保证所有入口一致；该表本身由 messaging-css.test.ts 断言只含 `.msg-` 命名空间。
+import "@/features/messaging/messaging.css";
 
 import { SiteFooter } from "@/components/ui/site-footer";
 import { SiteHeader } from "@/components/ui/site-header";
