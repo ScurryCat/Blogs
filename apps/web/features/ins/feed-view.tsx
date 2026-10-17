@@ -15,7 +15,7 @@
  *  - 卸载与切换时取消进行中的读取（验收 §1）。
  */
 
-import Link from "next/link";
+import { SiteLink } from "@/features/runtime/navigation/site-link";
 import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { ImagePreview } from "./image-preview";
@@ -75,18 +75,18 @@ export function FeedView({
   return (
     <section className="ins-feed-wrap" aria-label="图文动态" ref={wrapRef}>
       <nav className="ins-filters" aria-label="标签筛选">
-        <Link className={`ins-chip${tag ? "" : " on"}`} href="/apps/ins" aria-current={tag ? undefined : "page"}>
+        <SiteLink source="phone-link" className={`ins-chip${tag ? "" : " on"}`} href="/apps/ins" aria-current={tag ? undefined : "page"}>
           全部
-        </Link>
+        </SiteLink>
         {availableTags.map((name) => (
-          <Link
+          <SiteLink source="phone-link"
             key={name}
             className={`ins-chip${tag === name ? " on" : ""}`}
             href={`/apps/ins?tag=${encodeURIComponent(name)}`}
             aria-current={tag === name ? "page" : undefined}
           >
             #{name}
-          </Link>
+          </SiteLink>
         ))}
       </nav>
 
@@ -109,9 +109,9 @@ export function FeedView({
               : "还没有公开的图文动态。站主发布后会出现在这里。"}
           </p>
           {tag ? (
-            <Link className="ins-btn" href="/apps/ins">
+            <SiteLink source="phone-link" className="ins-btn" href="/apps/ins">
               看全部动态
-            </Link>
+            </SiteLink>
           ) : null}
         </div>
       ) : (

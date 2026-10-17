@@ -11,7 +11,7 @@
  *  - 图片预览复用同一个前景层组件，键盘可关、可翻页，不重建音乐。
  */
 
-import Link from "next/link";
+import { SiteLink } from "@/features/runtime/navigation/site-link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
@@ -158,9 +158,9 @@ export function DetailView({
         <h2>这条动态已经撤回或不可访问</h2>
         <p>它可能被站主撤回、删除，或链接里的编号不正确。</p>
         {hideBackLink ? null : (
-          <Link className="ins-btn" href="/apps/ins">
+          <SiteLink source="phone-link" className="ins-btn" href="/apps/ins">
             回到图文动态
-          </Link>
+          </SiteLink>
         )}
       </section>
     );
@@ -185,9 +185,9 @@ export function DetailView({
             重新读取
           </button>
           {hideBackLink ? null : (
-            <Link className="ins-btn" href="/apps/ins">
+            <SiteLink source="phone-link" className="ins-btn" href="/apps/ins">
               回到图文动态
-            </Link>
+            </SiteLink>
           )}
         </div>
       </section>
@@ -202,9 +202,9 @@ export function DetailView({
     <article className="ins-detail" data-moment-id={moment.id}>
       {hideBackLink ? null : (
         <nav className="ins-detail-nav">
-          <Link className="ins-btn" href="/apps/ins">
+          <SiteLink source="phone-link" className="ins-btn" href="/apps/ins">
             返回列表
-          </Link>
+          </SiteLink>
         </nav>
       )}
 
@@ -224,9 +224,9 @@ export function DetailView({
         <ul className="ins-tags" aria-label="标签">
           {moment.tags.map((tag) => (
             <li key={tag.id}>
-              <Link className="ins-tag" href={`/apps/ins?tag=${encodeURIComponent(tag.name)}`}>
+              <SiteLink source="phone-link" className="ins-tag" href={`/apps/ins?tag=${encodeURIComponent(tag.name)}`}>
                 #{tag.name}
-              </Link>
+              </SiteLink>
             </li>
           ))}
         </ul>

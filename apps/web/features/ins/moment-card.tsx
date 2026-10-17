@@ -12,7 +12,7 @@
  *  - 图片失败显示可读提示，不留空白。
  */
 
-import Link from "next/link";
+import { SiteLink } from "@/features/runtime/navigation/site-link";
 import { useState, type ReactNode } from "react";
 
 import { FavoriteButton } from "./favorite-button";
@@ -92,18 +92,18 @@ export function MomentCard({ moment, onOpenPreview }: MomentCardProps): ReactNod
         <ul className="ins-tags" aria-label="标签">
           {moment.tags.map((tag) => (
             <li key={tag.id}>
-              <Link className="ins-tag" href={`/apps/ins?tag=${encodeURIComponent(tag.name)}`}>
+              <SiteLink source="phone-link" className="ins-tag" href={`/apps/ins?tag=${encodeURIComponent(tag.name)}`}>
                 #{tag.name}
-              </Link>
+              </SiteLink>
             </li>
           ))}
         </ul>
       ) : null}
 
       <footer className="ins-card-act">
-        <Link className="ins-btn" href={detailPath}>
+        <SiteLink source="phone-link" className="ins-btn" href={detailPath}>
           查看详情
-        </Link>
+        </SiteLink>
         <FavoriteButton
           moment={moment}
           excerpt={excerpt}

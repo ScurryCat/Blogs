@@ -12,7 +12,7 @@
  *  - 存储不可用时仍然可以阅读（本页显示明确说明），只是收藏不会持久化。
  */
 
-import Link from "next/link";
+import { SiteLink } from "@/features/runtime/navigation/site-link";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { ApiClientError, ApiTransportError } from "@/lib/api/client";
@@ -95,9 +95,9 @@ export function SavedView(): ReactNode {
         <div className="ins-state" role="status">
           <p className="ins-state-kicker">EMPTY</p>
           <p>还没有收藏。在动态卡片上点「收藏」，只会记录在这台设备上。</p>
-          <Link className="ins-btn" href="/apps/ins">
+          <SiteLink source="phone-link" className="ins-btn" href="/apps/ins">
             去看动态
-          </Link>
+          </SiteLink>
         </div>
       ) : (
         <ul className="ins-saved-list">
@@ -106,12 +106,12 @@ export function SavedView(): ReactNode {
             return (
               <li key={entry.id} className={`ins-saved-item is-${state?.status ?? "checking"}`}>
                 {state?.status === "available" ? (
-                  <Link className="ins-saved-link" href={`/apps/ins/${entry.id}`}>
+                  <SiteLink source="phone-link" className="ins-saved-link" href={`/apps/ins/${entry.id}`}>
                     <span className="ins-saved-text">{entry.excerpt || "（无文字）"}</span>
                     <span className="ins-saved-time">
                       {formatPublishedAt(state.moment.published_at)}
                     </span>
-                  </Link>
+                  </SiteLink>
                 ) : (
                   <span className="ins-saved-text">
                     {entry.excerpt || "（无文字）"}
