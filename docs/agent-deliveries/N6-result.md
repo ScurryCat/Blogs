@@ -162,7 +162,10 @@
 
 ## 8. 未完成项、已知限制、需要的权限或外部条件、恢复/回退说明
 
-1. **外部精选库 `persona-curated/` 未落地**（主要缺口）。原因：目标路径
+1. ~~**外部精选库 `persona-curated/` 未落地**~~ → **集成阶段已补：2026-10-17 12:48 由 N0 一次性
+   授权建立（9 个复核资源、哈希 9/9 校验通过），见本报告附录 C 与
+   `docs/design-references/persona-curated-plan.md` §6。N6 在 workspace-write 沙箱下未落地的
+   部分已完成。** 以下为当时的原始记录（保留以说明原因与影响）。原因：目标路径
    `/Users/v/Documents/ChatGPT/Blog开发/assets/reference/persona-curated/` 在工作区外，
    当前文件沙箱 `workspace-write`，写入会被拒；按 Lead 裁决改走「仓库内三份清单 + 精选方案 +
    复验脚本」替代方案，**未反复重试写入**。
@@ -259,3 +262,21 @@ grep -c "明智" /Users/学习/blog/Blogs/apps/web/features/legacy/data/posts.js
 
 > 判定口径：第 1/2 节两个脚本退出码为 0 即「资源复核通过」；截图与浏览器行为仍需 N7 按
 > 任务书 §8.4 另行判定，**测试通过不自动等于视觉/真机通过**。
+
+---
+
+## 附录 C · 集成阶段补充（N0 执行，2026-10-17 12:48）
+
+N6 §8 未完成项 1（外部精选库 `persona-curated/` 未落地）已由集成负责人在最终集成阶段补做：
+
+- 目标目录：`/Users/v/Documents/ChatGPT/Blog开发/assets/reference/persona-curated/`（工作区外，
+  一次性 `danger-full-access` 审批通过；脚本存档 `Blogs/.dsh/build-curated-library.py`）。
+- 内容：`README.md` / `INDEX.md` / `provenance/`（hashes.json、sources.json、三份清单副本）
+  / `hud/` 6 个界面参考帧 / `media/image/crowd-92512.zip` / `media/video/` 2 个过场候选原样。
+- 校验：9/9 SHA-256 与 `provenance/hashes.json` 一致（重新计算）；逐字节复制、未重编码；
+  许可状态统一记「未核实」；旧库与原始采集包未移动、未删除。
+- 影响：任务书 §5.1「默认参考入口只展示新库」现已成立（新库 README 声明旧库为离线档案，
+  旧库本体未改；网站构建仍不读取任何参考库）。
+- 回退：删除 `persona-curated/` 整目录即可，不影响仓库与旧库。
+
+判定口径不变：N6 的两份复验脚本仍是「网站公开目录 / 构建输入 / 实际下载无明智」的唯一可执行判据。

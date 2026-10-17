@@ -2,9 +2,9 @@
 
 > 第三轮 P5 内容架构 v3 · 任务书 §5.1 / §5.4 · **N6 素材负责人**
 > 复核日期：2026-10-17。
-> 结论先行：**外部新库未落地**（原因：目标路径在工作区外，当前文件沙箱为 workspace-write，
-> 写入会被拒；按 Lead 裁决改走「仓库内三份清单 + 本方案 + 复验脚本」替代方案，未反复重试写入）。
-> 本条**不影响**主验收项：网站公开目录 / 构建输入 / 实际下载文件均已无明智素材。
+> 结论先行：~~外部新库未落地~~ → **已于 2026-10-17 12:48 由集成负责人一次性授权建立**
+>（N6 在 workspace-write 沙箱下未重试写入；最终由 N0 在最终集成阶段以单次审批执行本方案 §4 步骤）。
+> 落地记录见 §6；旧库仍离线只读、未移动未删除；网站公开目录 / 构建输入 / 实际下载文件均无明智素材。
 
 ## 1. 现状：旧库（离线只读，未移动、未删除）
 
@@ -81,7 +81,38 @@
 
 | 要求 | 本轮状态 | 影响 / 后续 |
 | --- | --- | --- |
-| 新库 `persona-curated/` 建立、只收录复核资源 | **未完成**（权限） | 参考入口仍为旧库；由 Lead 在最终阶段评估一次性授权 |
-| 旧库转离线、默认入口只展示新库 | **未完成**（依赖新库） | 旧库目前未被构建读取，网站无影响；迁移后可收口 |
+| 新库 `persona-curated/` 建立、只收录复核资源 | **已完成**（§6，2026-10-17 12:48） | 9 个已复核资源，逐字节复制，哈希 9/9 校验通过 |
+| 旧库转离线、默认入口只展示新库 | **已完成**（新库 README 声明旧库为离线档案；旧库本体未改） | 旧库未被构建读取，网站无影响 |
 | 网站公开目录/构建/下载无明智 | **已完成**（见允许/排除/移除清单与复验脚本） | 主验收项通过 |
 | 资源许可与来源记录 | **已完成**（清单内逐项记录「未核实」口径） | 无 |
+
+## 6. 落地记录（2026-10-17 12:48，集成负责人 N0）
+
+一次性授权执行（脚本存档：`Blogs/.dsh/build-curated-library.py`，可整目录删除回退）：
+
+```text
+目标：/Users/v/Documents/ChatGPT/Blog开发/assets/reference/persona-curated/
+结构：README.md / INDEX.md / provenance/ / hud/ / media/image/ / media/video/
+文件：9 个（37,695,628 字节），逐字节复制、未重编码、未 AI 重绘
+校验：provenance/hashes.json 内 9/9 SHA-256 重新计算一致
+```
+
+| 库内路径 | 来源 | 画面复核 | 许可 |
+| --- | --- | --- | --- |
+| `hud/p5-save-load-92140.png` | Spriters Resource #92140 | 存档/读取 HUD 元件表；无明智 | 未核实 |
+| `hud/p5-menu-portraits-92142.png` | Spriters Resource #92142 | 仅 Joker 剪影；无明智 | 未核实 |
+| `hud/p5r-dialogue-portraits-131675.png` | Spriters Resource #131675 | Joker 表情零件；无明智 | 未核实 |
+| `hud/p5-loading-91920.png` | Spriters Resource #91920 | 载入画面；无明智 | 未核实 |
+| `hud/p5-network-92798.png` | Spriters Resource #92798 | 网络界面；无明智 | 未核实 |
+| `hud/p5-calendar-92120.png` | Spriters Resource #92120 | 日历界面；无明智 | 未核实 |
+| `media/image/crowd-92512.zip` | Spriters Resource #92512 | 路人剪影；无明智 | 未核实 |
+| `media/video/isekai-enter-928a1e4d9e3f.mp4` | persona-dist media/video | 343 帧全片扫描：纯绿幕墨迹，无角色 | 未核实 |
+| `media/video/isekai-transition-original.mp4` | persona-dist ae-projects | 543 帧全片扫描：纯绿幕墨迹，无角色（N5 短版输入） | 未核实 |
+
+`provenance/` 同时复制仓库三份清单（allowlist / excluded-audit / removed / asset-manifest.csv）+
+`hashes.json`（库内路径→SHA-256、源文件哈希）+ `sources.json`（来源文件/页面、游戏版本、处理方式、
+许可状态）。排除审计为纯文字，不嵌入角色图片。**旧库 `persona5-spriters/`、`persona-dist/` 与原始
+采集包未移动、未删除**；新库不进入网站构建、不随仓库公开分发。
+
+> 说明：`persona-curated/` 在仓库工作区外，因此该目录本身不在 Git 中；仓库内可复现的对应物是
+> `docs/design-references/persona-assets-*.md|csv` 三份清单 + 本方案 + `.dsh/build-curated-library.py`。
