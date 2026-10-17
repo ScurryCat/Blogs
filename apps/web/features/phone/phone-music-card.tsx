@@ -80,7 +80,7 @@ function ScrubBar({
 }
 
 /** 由三个标记的视觉位置求指针在条内的局部坐标（x 横向、y 纵向，均以条自身为单位）。 */
-function localPointOf(
+export function localPointOf(
   left: DOMRect,
   right: DOMRect,
   top: DOMRect,
