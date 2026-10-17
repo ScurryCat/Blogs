@@ -285,7 +285,10 @@ def map_transitions(browser, base: str) -> None:
     # 顶部导航：Joker 帷幕（不能因为在地图页就用人群）
     open_page(page, "/map", base)
     page.wait_for_function("() => window.__PHANTOM_DEBUG__().crowd.ready === true", timeout=15000)
-    page.click('.hud-nav a[data-k="weather"]')
+    # 第三轮改版后顶部导航不再有「天气」项（/weather 路由仍在，但不从顶部导航进入）。
+    # 这条断言的本意是「从地图页点顶部导航必须用 Joker 帷幕，不能因为在地图页就播人群」，
+    # 目标页只是附带条件，用中性的「文章」入口即可。
+    page.click('.hud-nav a[data-k="posts"]')
     page.wait_for_timeout(200)
     state = page.evaluate("() => window.__PHANTOM_DEBUG__()")
     check(
@@ -294,7 +297,7 @@ def map_transitions(browser, base: str) -> None:
         json.dumps(state["transition"], ensure_ascii=False),
     )
     page.wait_for_timeout(1500)
-    check("顶部导航到达正确目的地", page.url.endswith("/weather"), page.url)
+    check("顶部导航到达正确目的地", page.url.endswith("/posts"), page.url)
     page.close()
 
     # 减少动态效果：直接导航，不播人群
