@@ -14,6 +14,13 @@
 # 退出码：0 = 全部通过；非 0 = 有失败（会打印失败项）。
 set -uo pipefail
 
+# 本机若开了系统代理（例如 Clash 的 127.0.0.1:7890），Python 3.13 的 urllib 在 macOS 上
+# **不会采用系统代理的 ExceptionsList**：验收脚本直连 127.0.0.1 也会被送进代理，
+# 表现为 502 / 超时（2026-10-17 实测：curl 200、python urllib 502）。
+# 统一绕过本机地址，保证 acceptance / T02 / e2e 的本地 HTTP 直连。
+export no_proxy="127.0.0.1,localhost,::1${no_proxy:+,$no_proxy}"
+export NO_PROXY="$no_proxy"
+
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 PORT="${1:-3120}"
 WORK="/tmp/pl-isolated-verify"
