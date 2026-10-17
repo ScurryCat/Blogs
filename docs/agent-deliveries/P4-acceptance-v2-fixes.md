@@ -12,7 +12,7 @@
 | **F1**（P1）默认素材入口仍指向旧库 | 未通过 | 统一入口 index/README 改为默认只进 `persona-curated/`；旧库降级为「离线档案（按需手动打开）」并保留入口备份；新增复验脚本 | ✅ 已修复（外部库迁移 + 脚本通过） |
 | **F2**（P1）桌面仍默认 AI 位图 / 原版图标未落地 | 未通过 | 接入 2 个已审核原版图标（metanav 经典红眼、ins 原版消息标识）到桌面实际渲染分支；其余 8 个 App 明确标为「适配设计」；补来源/哈希/画面核对/审计 | ✅ 关键缺口已落地（官方原始 sprites 仍不在本地库，见 §F2 边界） |
 | **F3**（P2）INS 收录只读第一批 50 个相册 | 未通过 | 相册列表 cursor 全量分页；列表外的已选相册单独补取管理详情；404 才算删除，其它错误如实显示「读取失败」；补 3 个回归测试 | ✅ 已修复 + 回归通过 |
-| 交接文档数字/状态校正 | 需校正 | P4-final-state / HANDOFF / curated-plan / allowlist 的数字与状态按当前代码基线更新（前端 929 用例；后端 942；默认入口迁移改为真实完成） | ✅ 已更新 |
+| 交接文档数字/状态校正 | 需校正 | P4-final-state / HANDOFF / curated-plan / allowlist 的数字与状态按当前代码基线更新（前端 929 用例；后端 943；默认入口迁移改为真实完成） | ✅ 已更新 |
 
 ## F1 · 统一素材入口迁移
 
@@ -54,6 +54,27 @@
   「列表分页 + 列表外已选相册详情补取」「详情读取失败非 404 不判删除」两个用例；
   原「已删除相册」用例改为显式详情 404。11/11 通过。
 
+## F3 后续：管理端 INS 收录 UI 真实浏览器流程（补验收 §5.4 证据）
+
+复验 F3 时在真实浏览器（3100 生产构建 + 8100 API）走完整流程，暴露出 2 个此前未被自动化覆盖的
+**真实 UI 阻断缺陷**，本轮一并修复：
+
+1. **管理列表 limit 超上限**：后端 `MAX_LIMIT = 30`，而 `/admin/albums`、`/admin/projects`、
+   AlbumLinksEditor 都请求 `limit: 50` → GET 422，管理页直接报「提交的内容不合法」。
+   → 三处改 `limit: 30`；分页仍按 `next_cursor` 继续取。
+2. **画廊写接口 CSRF body 字段**：共享前端把 `csrf_token` 放 JSON body（`app/core/csrf.py` 的
+   body 通道），但 `AlbumCreateIn/AlbumUpdateIn` 是 `extra="forbid"` 且未声明该字段 → 新建/更新
+   相册 422；补上显式字段后 router 又把 `csrf_token` 传给 service → 500。
+   → schema 声明 `csrf_token: str | None`（忽略不落库）；router `model_dump(exclude={"csrf_token"})`。
+   新增后端回归 `test_create_accepts_csrf_token_in_json_body`（只用 body token，不带 CSRF 头）。
+   契约同步：`contracts/openapi.json` 重新导出、`apps/web/lib/api/generated/schema.ts` 重新生成
+   （均为新增可选 `csrf_token` 字段的加法变更），OpenAPI 契约测试恢复通过。
+
+**浏览器全流程证据**：新增 `tools/e2e-ins-album-links-ui.py`，实跑 **9/9** 通过：
+站主登录 → 新建相册草稿 → 新建动态草稿 → 上传图片 + 替代文本 → 刷新相册列表 →
+选择新相册 → 添加并勾选图片 → 保存草稿 → 发布 → 公开 `/apps/ins` 页面可见新动态。
+截图：`.dsh/screenshots/ins-admin/01..06-*.png`（本地产物，不随包分发）。
+
 ## 交接文档数字与状态校正
 
 - `P4-final-state.md`：前端单测数改为当前实际值（929）；原版图标缺口状态改为「metanav/ins 已接入，
@@ -66,9 +87,9 @@
 
 ## 回归结果（本次返工后）
 
-- `bash tools/verify-all.sh --e2e --mobile` → **7/7 段全绿**：
-  静态审计（图标/路由/资源/明智资源）PASS；前端 typecheck/lint/单测 **929**；后端 **942**；
-  T02 **52/52**；多视口 11；业务流 4/4；端到端 **12 项**（桌面 6 + 移动 6）。
+- `bash tools/verify-all.sh --e2e --mobile` → **7/7 段全绿**（最近一次跑于 2026-10-18）：
+  静态审计（图标/路由/资源/明智资源，含 F1 入口与 F2 图标映射）PASS；前端 typecheck/lint/单测
+  **929**；后端 **943**；T02 **52/52**；多视口 11；业务流 4/4；端到端 **12 项**（桌面 6 + 移动 6）。
 - F1 专项：`python3 tools/acceptance/verify-reference-entry.py` → 11 项通过。
 - F2 专项：`python3 tools/acceptance/verify-phone-icons.py` → 10 个图标存在/在清单/哈希一致，
   且桌面渲染分支引用 `originalAppIcon` + `data-app-icon="original"`。

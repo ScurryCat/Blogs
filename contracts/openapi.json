@@ -153,6 +153,18 @@
       "AlbumCreateIn": {
         "additionalProperties": false,
         "properties": {
+          "csrf_token": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Csrf Token"
+          },
           "description": {
             "default": "",
             "maxLength": 1000,
@@ -415,6 +427,18 @@
         "additionalProperties": false,
         "description": "PATCH：只改出现过的字段。`slug` 不可改（公开 URL 稳定优先）。",
         "properties": {
+          "csrf_token": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Csrf Token"
+          },
           "description": {
             "anyOf": [
               {

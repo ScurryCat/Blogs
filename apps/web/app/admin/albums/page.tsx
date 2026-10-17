@@ -30,7 +30,7 @@ export default function AdminAlbumsPage(): ReactNode {
   const load = useCallback(
     async (signal?: AbortSignal) => {
       try {
-        const page = await fetchAdminAlbums({ limit: 50 }, signal);
+        const page = await fetchAdminAlbums({ limit: 30 }, signal);
         setAlbums(page.items);
         setListError(null);
       } catch (error) {

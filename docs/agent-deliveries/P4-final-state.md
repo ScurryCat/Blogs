@@ -7,7 +7,7 @@
 ## 1. 现在做到哪
 
 - **功能/回归**：`tools/verify-all.sh --e2e` **7/7 段全绿**（静态审计、前端 929 单测、
-  后端 942/0、T02 52/52、多视口 11、业务流 4/4、端到端 6/6）。
+  后端 943/0、T02 52/52、多视口 11、业务流 4/4、端到端 12 项：桌面 6 + 移动 6）。
 - **B1 视觉还原（本会话增量）**：参考帧审计完成；**9 个界面**完成元件级视觉还原 v1
   （IM / 手记日历 / COOP / 放课后 / 我的殿堂 / 生活图库 / 异世界导航 / 天鹅绒 / 印象空间），
   主站 13 路由巡检；整屏级还原仍缺参考帧（见 §3）。
@@ -36,10 +36,14 @@
     来源/证据/哈希见 `original-app-icons.md`。
   - **F3 已修复**：INS 收录相册改 cursor 全量分页 + 列表外已选相册详情补取（404 才算删除），
     补 3 个回归用例。
-  - **完整验收仍不通过**：整屏视觉对照、真机、管理端收录 UI 真流程、IM 图片消息仍未收口。
+  - **管理端 INS 收录 UI 真实浏览器流程已补齐**（`tools/e2e-ins-album-links-ui.py` 9/9）：
+    登录→建相册草稿→建动态→上传→收录→保存→发布→公开页可见；期间修复管理列表 limit>30 的 422、
+    画廊写接口 CSRF body 字段的 422/500 两个真实阻断缺陷（后端回归 +1）。
+  - **完整验收仍不通过**：整屏视觉对照、真机、IM 图片消息仍未收口。
 - **验证基建**：`audit-contrast.py` / `audit-structure.py` / `audit-failure-states.py` /
   `verify-home-refresh.py` / `verify-demo-content.py` / `seed-demo-content.py` /
-  `verify-reference-entry.py` / `verify-phone-icons.py` / `package-handoff.py`；
+  `verify-reference-entry.py` / `verify-phone-icons.py` / `e2e-ins-album-links-ui.py` /
+  `package-handoff.py`；
   验证脚本统一做本地代理绕过。
 
 ## 2. 怎么验（三条命令 + 两个专项）
@@ -66,6 +70,7 @@ python3 tools/verify-demo-content.py http://127.0.0.1:3100 --api http://127.0.0.
 | **整屏视觉还原**（§8.1 逐屏验收） | 本地参考库缺 G2 回复选择整帧与各界面整屏帧；G3 红眼图标已以清理版落地（见 `original-app-icons.md`） | 能提供可核实出处参考帧的人 |
 | **B4 图片消息** | 需产品决策（A/B/C，见 `P4-im-image-messages-proposal.md`） | 产品/站主 |
 | **P4 原版应用图标（部分完成）** | `metanav` / `ins` 已接入已审核原版（清理版，来源/证据见 `original-app-icons.md`）；其余 8 个 App 仍为适配设计（AI 位图/自绘 SVG） | 其余 App 的官方素材 |
+| ~~管理端收录 UI 真流程~~ | **已补齐**（`e2e-ins-album-links-ui.py` 9/9，浏览器截图） | — |
 | **真机验证** | 无设备（触控/软键盘/移动 Safari） | 有 iPhone/Android 的人 |
 | **品牌红面板黑字对比度** | 4.23:1（AA 需 4.5），需设计折中 | 设计/站主 |
 

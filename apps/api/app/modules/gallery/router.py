@@ -352,7 +352,9 @@ def create_album(
     # 用普通 `model_dump()` 会把「调用方没给 position」变成「调用方要求 position=0」，
     # 于是每本新相册都落在 0 上（真实浏览器联调会看到管理列表顺序全乱）。
     # 排除未设置的字段后，`service.create_album(position=None)` 才会按同类型最大值 +1。
-    album = service.create_album(session, **payload.model_dump(exclude_unset=True))
+    album = service.create_album(
+        session, **payload.model_dump(exclude_unset=True, exclude={"csrf_token"})
+    )
     _audit(session, action=AUDIT_CREATE, album=album, context=context, request=request)
     response.headers["ETag"] = f'"{album.version}"'
     return _admin_payload(session, album)
@@ -374,7 +376,7 @@ def update_album(
     session: Session = Depends(get_session),
 ) -> AlbumAdminOut:
     album = _load_or_404(session, album_id)
-    patch = payload.model_dump(exclude_unset=True)
+    patch = payload.model_dump(exclude_unset=True, exclude={"csrf_token"})
     service.update_album(session, album, patch=patch, if_match=if_match)
     _audit(session, action=AUDIT_UPDATE, album=album, context=context, request=request)
     response.headers["ETag"] = f'"{album.version}"'

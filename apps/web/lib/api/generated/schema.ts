@@ -1687,6 +1687,8 @@ export interface components {
         };
         /** AlbumCreateIn */
         AlbumCreateIn: {
+            /** Csrf Token */
+            csrf_token?: string | null;
             /**
              * Description
              * @default
@@ -1798,6 +1800,8 @@ export interface components {
          * @description PATCH：只改出现过的字段。`slug` 不可改（公开 URL 稳定优先）。
          */
         AlbumUpdateIn: {
+            /** Csrf Token */
+            csrf_token?: string | null;
             /** Description */
             description?: string | null;
             /** Kind */
@@ -2868,6 +2872,8 @@ export interface components {
         };
         /** MomentAdminOut */
         MomentAdminOut: {
+            /** Album Links */
+            album_links?: components["schemas"]["MomentAlbumLinkOut"][];
             /**
              * Created At
              * Format: date-time
@@ -2902,10 +2908,45 @@ export interface components {
             version: number;
         };
         /**
+         * MomentAlbumLinkIn
+         * @description 「同时收录到相册」的一条选择：目标相册 + 本条动态里的图片。
+         *
+         *     语义（任务书 §4.3）：传 `album_links` 时是**完整选择**；`[]` 表示清空；
+         *     不传表示保留原配置（但服务端会清掉已不属于该动态的图片配置）。
+         *     `media_ids` 必须是「本条动态当前图片」的子集；非法相册 / 媒体由服务端返回 409。
+         */
+        MomentAlbumLinkIn: {
+            /**
+             * Album Id
+             * Format: uuid
+             */
+            album_id: string;
+            /** Media Ids */
+            media_ids?: string[];
+        };
+        /**
+         * MomentAlbumLinkOut
+         * @description 管理回执里的当前收录选择：`{album_id, media_ids[]}`。
+         *
+         *     相册按 `(position ASC, id ASC)`；`media_ids` 按动态图片 position 升序。
+         *     草稿 / 撤回状态下也照实返回（配置存在 ≠ 公开资格）。
+         */
+        MomentAlbumLinkOut: {
+            /**
+             * Album Id
+             * Format: uuid
+             */
+            album_id: string;
+            /** Media Ids */
+            media_ids: string[];
+        };
+        /**
          * MomentCreateIn
          * @description 新建草稿。草稿可以暂时没有图片、替代文本也可以发布前补齐（03 §5）。
          */
         MomentCreateIn: {
+            /** Album Links */
+            album_links?: components["schemas"]["MomentAlbumLinkIn"][];
             /** Images */
             images?: components["schemas"]["MomentImageIn"][];
             /** Tags */
@@ -2993,8 +3034,13 @@ export interface components {
         /**
          * MomentUpdateIn
          * @description 更新。所有字段可选；传入 `images` 时**完整替换**有序关系（05 §7）。
+         *
+         *     `album_links` 的「不传」与「传 []」语义不同（任务书 §4.3）：
+         *     不传 = 保留原收录配置；[] = 清空该动态全部收录选择。
          */
         MomentUpdateIn: {
+            /** Album Links */
+            album_links?: components["schemas"]["MomentAlbumLinkIn"][] | null;
             /** Images */
             images?: components["schemas"]["MomentImageIn"][] | null;
             /** Tags */
@@ -3277,7 +3323,7 @@ export interface components {
         };
         /**
          * PhotoAdminOut
-         * @description 管理回执：额外给出媒体状态，让表单能提示「这张图还不能发布」。
+         * @description 管理回执：额外给出媒体状态与收录来源，让表单能提示「这张图还不能发布」/「来自动态」。
          */
         PhotoAdminOut: {
             /** Album Id */
@@ -3309,6 +3355,8 @@ export interface components {
             media_status: string;
             /** Position */
             position: number;
+            /** Sources */
+            sources?: components["schemas"]["PhotoSourceOut"][];
             /** Taken On */
             taken_on: string | null;
             /** Variants */
@@ -3364,6 +3412,23 @@ export interface components {
             variants: components["schemas"]["MediaVariantOut"][];
             /** Width */
             width: number;
+        };
+        /**
+         * PhotoSourceOut
+         * @description 一张相册照片的收录来源（管理端回执用；公开 DTO 不暴露来源）。
+         *
+         *     - `independent`：相册管理端显式收录（迁移回填的旧图片也是这一种）；
+         *     - `moment`：由某条动态的「同时收录到相册」带来；`moment_id` 给出动态 ID。
+         *       **配置存在不等于公开资格**：动态草稿 / 撤回时这一条仍然存在，但不贡献公开资格。
+         */
+        PhotoSourceOut: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "independent" | "moment";
+            /** Moment Id */
+            moment_id?: string | null;
         };
         /** PostDetailOut */
         PostDetailOut: {

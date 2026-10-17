@@ -214,11 +214,36 @@ runtime/          SiteLink、路由切换（不重载文档）、滚动记忆 sc
 
 ```
 HANDOFF.md                      ← 本文件
-docs/agent-deliveries/*.md      ← 35 份交付文档（结论/台账/审计/各阶段历史）
-tools/*.py, tools/*.sh          ← 37 个验证与生成脚本
+docs/agent-deliveries/*.md      ← 交付文档（数量以 MANIFEST.txt 为准）
+tools/*.py, tools/*.sh          ← 验证与生成脚本（数量以 MANIFEST.txt 为准）
 tools/acceptance/*.py           ← 验收检查脚本
 MANIFEST.txt                    ← 文件清单与打包说明
 ```
 
 **未包含**（有意）：源代码（在仓库里）、`.dsh/` 下的截图与分析产物（体积大、未入库）、
 以及任何凭据（本包内无密钥/密码）。
+
+---
+
+## 十一、当前验收摘要（2026-10-18，覆盖上文历史数字）
+
+> 上文是**历史正文**（初版打包前后），保留不改；接手时请以本节 + 包顶横幅为准，
+> 不要再自行拼凑旧段落里的 924 / 931 等历史数字。
+
+- **基线**：代码以包内 `git` 提交为准（见包顶横幅 `HEAD`）。
+- **回归数字**：前端 **929** 单测；后端 **943** 用例；`bash tools/verify-all.sh --e2e --mobile`
+  → **7/7 段全绿**（静态审计、typecheck/lint/单测、后端、T02 52/52、多视口 11、业务流 4/4、
+  端到端 12 项：桌面 6 + 移动 6）。
+- **独立验收 v2**（`docs/acceptance/2026-10-17-handoff-v2-acceptance.md`）结论：
+  **功能阶段通过，完整验收未通过**。已按报告完成：
+  - **F1** 统一素材入口迁移：默认只进 `persona-curated/` 精选库，旧库降级「离线档案」
+    （`tools/acceptance/verify-reference-entry.py` 11 项通过）；
+  - **F2** 原版图标：metanav 经典红眼 + ins 原版消息标识接入桌面实际渲染分支；
+    其余 8 个 App 标为适配设计（见 `docs/design-references/original-app-icons.md`）；
+  - **F3** INS 收录相册：cursor 全量分页 + 列表外已选相册详情补取（仅 404 判删除）。
+  - **管理端 INS 收录 UI 真实浏览器全流程**已补齐：`tools/e2e-ins-album-links-ui.py` 9/9；
+    期间修复管理列表 limit>30 的 422、画廊写接口 CSRF body 字段的 422/500。
+  - 返工记录：`docs/agent-deliveries/P4-acceptance-v2-fixes.md`。
+- **仍未关闭**：整屏视觉对照（缺 G2 回复选择整帧与各界面整屏参考帧；红眼图标已落地）、
+  真机（触控/软键盘/中文输入法/移动 Safari）、IM 图片消息（待产品拍板）。
+- 在这些缺口收口前，保持「功能阶段通过，完整验收未通过」的状态。

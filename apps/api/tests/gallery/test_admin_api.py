@@ -23,6 +23,7 @@ from app.modules.projects import wiring as projects_wiring
 from tests.core.t01_db import assert_error
 from tests.projects.helpers import (
     ADMIN_ALBUMS_PATH,
+    ORIGIN,
     ALBUMS_PATH,
     admin_client,
     anonymous_client,
@@ -86,6 +87,32 @@ def test_create_is_a_draft_with_etag(t06_session, t06_settings) -> None:
         assert response.headers["etag"] == '"1"'
         assert body["photos"][0]["taken_on"] == "2026-10-16"
         assert body["photos"][0]["media_status"] == "ready"
+
+
+def test_create_accepts_csrf_token_in_json_body(t06_session, t06_settings) -> None:
+    """共享前端把 CSRF token 放在 JSON body（`csrf.py` 的 body 通道）。
+
+    回归：`AlbumCreateIn` 曾用 `extra="forbid"` 且未声明 `csrf_token` 字段，
+    导致浏览器里「新建相册」永远 422（管理端 UI 完全不可用）。这里只用 body 里的
+    token（不带 X-CSRF-Token 头）验证创建成功。
+    """
+    with admin_client(t06_settings, t06_session, *t06_routers()) as (client, owner, csrf):
+        media = make_media(t06_session, owner)
+        response = client.post(
+            ADMIN_ALBUMS_PATH,
+            json={
+                "slug": "body-csrf",
+                "title": "body 里的 CSRF",
+                "csrf_token": csrf,
+                "photos": photo_payload([media.id], taken_on=["2026-10-16"]),
+            },
+            headers={"Origin": ORIGIN},
+        )
+        assert response.status_code == 201, response.text
+        body = response.json()
+        assert body["slug"] == "body-csrf"
+        assert body["status"] == "draft"
+        assert "csrf_token" not in body
 
 
 def test_default_position_increments_within_kind_and_explicit_position_wins(

@@ -31,7 +31,7 @@ export default function AdminProjectsPage(): ReactNode {
   const load = useCallback(
     async (signal?: AbortSignal) => {
       try {
-        const page = await fetchAdminProjects({ limit: 50 }, signal);
+        const page = await fetchAdminProjects({ limit: 30 }, signal);
         setProjects(page.items);
         setListError(null);
       } catch (error) {

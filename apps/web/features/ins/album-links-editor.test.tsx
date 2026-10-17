@@ -146,7 +146,7 @@ afterEach(() => {
 describe("AlbumLinksEditor", () => {
   it("从管理端点读相册列表（含草稿），并区分「已公开 / 草稿」", async () => {
     stub = stubFetch([
-      { match: "/api/v1/admin/albums?limit=50", body: { items: [PUBLISHED_ALBUM, DRAFT_ALBUM], next_cursor: null } },
+      { match: "/api/v1/admin/albums?limit=30", body: { items: [PUBLISHED_ALBUM, DRAFT_ALBUM], next_cursor: null } },
     ]);
     const view = render(<Harness />);
     await advance(40);
@@ -164,7 +164,7 @@ describe("AlbumLinksEditor", () => {
 
   it("添加相册 → 逐张勾选图片 → 移除相册（选择随 onChange 提交完整状态）", async () => {
     stub = stubFetch([
-      { match: "/api/v1/admin/albums?limit=50", body: { items: [PUBLISHED_ALBUM], next_cursor: null } },
+      { match: "/api/v1/admin/albums?limit=30", body: { items: [PUBLISHED_ALBUM], next_cursor: null } },
     ]);
     const view = render(<Harness />);
     await advance(40);
@@ -197,7 +197,7 @@ describe("AlbumLinksEditor", () => {
 
   it("同一张图可以收录到多个相册", async () => {
     stub = stubFetch([
-      { match: "/api/v1/admin/albums?limit=50", body: { items: [PUBLISHED_ALBUM, DRAFT_ALBUM], next_cursor: null } },
+      { match: "/api/v1/admin/albums?limit=30", body: { items: [PUBLISHED_ALBUM, DRAFT_ALBUM], next_cursor: null } },
     ]);
     const view = render(<Harness />);
     await advance(40);
@@ -226,7 +226,7 @@ describe("AlbumLinksEditor", () => {
     expect(albumPublicHint({ status: "published" })).toContain("本条动态发布后");
 
     stub = stubFetch([
-      { match: "/api/v1/admin/albums?limit=50", body: { items: [PUBLISHED_ALBUM, DRAFT_ALBUM], next_cursor: null } },
+      { match: "/api/v1/admin/albums?limit=30", body: { items: [PUBLISHED_ALBUM, DRAFT_ALBUM], next_cursor: null } },
     ]);
     const view = render(<Harness />);
     await advance(40);
@@ -247,7 +247,7 @@ describe("AlbumLinksEditor", () => {
   it("服务端返回的已删除相册：显示不可用提示并可移除（不静默丢配置）", async () => {
     const missingId = "33333333-3333-4333-8333-333333333333";
     stub = stubFetch([
-      { match: "/api/v1/admin/albums?limit=50", body: { items: [PUBLISHED_ALBUM], next_cursor: null } },
+      { match: "/api/v1/admin/albums?limit=30", body: { items: [PUBLISHED_ALBUM], next_cursor: null } },
       {
         match: `/api/v1/admin/albums/${missingId}`,
         status: 404,
@@ -278,7 +278,7 @@ describe("AlbumLinksEditor", () => {
     });
     stub = stubFetch([
       {
-        match: "/api/v1/admin/albums?limit=50",
+        match: "/api/v1/admin/albums?limit=30",
         body: { items: [PUBLISHED_ALBUM], next_cursor: "cursor-2" },
       },
       {
@@ -308,7 +308,7 @@ describe("AlbumLinksEditor", () => {
   it("已选相册详情读取失败（非 404）：如实显示读取失败，不当作已删除", async () => {
     const brokenId = "55555555-5555-4555-8555-555555555555";
     stub = stubFetch([
-      { match: "/api/v1/admin/albums?limit=50", body: { items: [PUBLISHED_ALBUM], next_cursor: null } },
+      { match: "/api/v1/admin/albums?limit=30", body: { items: [PUBLISHED_ALBUM], next_cursor: null } },
       {
         match: `/api/v1/admin/albums/${brokenId}`,
         status: 500,
@@ -325,7 +325,7 @@ describe("AlbumLinksEditor", () => {
 
   it("新建相册打开现有相册管理页（新标签页，当前动态草稿不受影响）", async () => {
     stub = stubFetch([
-      { match: "/api/v1/admin/albums?limit=50", body: { items: [], next_cursor: null } },
+      { match: "/api/v1/admin/albums?limit=30", body: { items: [], next_cursor: null } },
     ]);
     const view = render(<Harness />);
     await advance(40);
@@ -357,7 +357,7 @@ describe("AlbumLinksEditor", () => {
 
   it("动态还没有图片时给出提示，且不渲染无法勾选的复选框", async () => {
     stub = stubFetch([
-      { match: "/api/v1/admin/albums?limit=50", body: { items: [PUBLISHED_ALBUM], next_cursor: null } },
+      { match: "/api/v1/admin/albums?limit=30", body: { items: [PUBLISHED_ALBUM], next_cursor: null } },
     ]);
     const view = render(<Harness images={[]} />);
     await advance(40);
@@ -370,7 +370,7 @@ describe("AlbumLinksEditor", () => {
 
   it("busy 时所有操作被禁用（避免保存途中改选择）", async () => {
     stub = stubFetch([
-      { match: "/api/v1/admin/albums?limit=50", body: { items: [PUBLISHED_ALBUM], next_cursor: null } },
+      { match: "/api/v1/admin/albums?limit=30", body: { items: [PUBLISHED_ALBUM], next_cursor: null } },
     ]);
     const view = render(<Harness disabled />);
     await advance(40);

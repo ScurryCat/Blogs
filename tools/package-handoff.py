@@ -37,6 +37,7 @@ TOOL_WHITELIST = [
     "acceptance",
     "e2e-im-draft.py",
     "e2e-ins-conversation.py",
+    "e2e-ins-album-links-ui.py",
     "e2e-ins-tag.py",
     "e2e-journal-reading.py",
     "e2e-metanav-palace.py",
@@ -73,14 +74,17 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 > 9 个视觉还原界面的演示内容与手机 deep link 已在本地分享库中。
 >
 > **当前验收摘要（单一基线，勿再用历史正文数字拼凑）**：
-> 代码基线 = 包内 `{head}`；前端 **929** 单测、后端 **942**（`--e2e` 7/7 段全绿、端到端 12 项）。
+> 代码基线 = 包内 `{head}`；前端 **929** 单测、后端 **943**（`--e2e --mobile` 7/7 段全绿、端到端 12 项）。
 > 独立验收 v2 结论：**功能阶段通过，完整验收未通过**；验收报告点名的
 > **F1 / F2 / F3 已返工**（详见 `docs/agent-deliveries/P4-acceptance-v2-fixes.md`）：
 > F1 默认素材入口迁移到 `persona-curated/`（旧库降级离线档案）；
 > F2 桌面接入 2 枚已审核原版图标（metanav 经典红眼 / ins 原版消息标识，其余 8 个仍标适配）；
 > F3 INS 收录相册改 cursor 全量分页 + 列表外已选相册详情补取（仅 404 判删除）。
 > 仍未关闭：整屏视觉对照（缺 G2/整屏参考帧）、真机（触控/软键盘/移动 Safari）、
-> 管理端收录 UI 真实浏览器全流程、IM 图片消息（待产品拍板）。
+> IM 图片消息（待产品拍板）。
+> **管理端 INS 收录 UI 真实浏览器全流程已补齐**：`tools/e2e-ins-album-links-ui.py` 9/9 通过
+> （登录→建相册草稿→建动态→上传→收录→保存→发布→公开页可见）；期间修复了 2 个真实 UI 阻断缺陷：
+> 管理列表 limit=50 超后端上限 30 的 422、画廊写接口 CSRF body 字段导致的 422/500。
 > **请先读 `docs/agent-deliveries/HANDOFF-ADDENDUM-2026-10-17.md`**（状态增量与未完成项），
 > 再读 `docs/agent-deliveries/P4-final-state.md`（一页纸速览）与本文其余部分。
 > 重要：B1 **整屏还原仍不可判定**（缺 G2/G3 与各界面整屏参考帧），不要把元件级 v1

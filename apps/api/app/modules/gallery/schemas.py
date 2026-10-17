@@ -168,6 +168,9 @@ class AlbumPhotoIn(BaseModel):
 class AlbumCreateIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    # 共享前端把 CSRF token 放 JSON body（`app/core/csrf.py` 的 body 通道）；
+    # 这里显式声明并忽略，避免 `extra="forbid"` 把合法写请求判成 422。
+    csrf_token: str | None = Field(default=None, max_length=256)
     slug: str = Field(min_length=1, max_length=200, pattern=SLUG_PATTERN)
     title: str = Field(min_length=1, max_length=TITLE_MAX_LENGTH)
     description: str = Field(default="", max_length=DESCRIPTION_MAX_LENGTH)
@@ -194,6 +197,7 @@ class AlbumUpdateIn(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    csrf_token: str | None = Field(default=None, max_length=256)
     title: str | None = Field(default=None, min_length=1, max_length=TITLE_MAX_LENGTH)
     description: str | None = Field(default=None, max_length=DESCRIPTION_MAX_LENGTH)
     kind: AlbumKind | None = None

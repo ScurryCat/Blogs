@@ -93,7 +93,7 @@ export function AlbumLinksEditor({
       const collected: AdminAlbum[] = [];
       let cursor: string | null = null;
       for (let page = 0; page < 40; page += 1) {
-        const result = await fetchAdminAlbums({ limit: 50, cursor }, controller.signal);
+        const result = await fetchAdminAlbums({ limit: 30, cursor }, controller.signal);
         if (controller.signal.aborted) return;
         collected.push(...result.items);
         cursor = result.next_cursor;
