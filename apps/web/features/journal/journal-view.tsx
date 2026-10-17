@@ -1,18 +1,21 @@
 "use client";
 
 /**
- * 手记主视图（07 §3）：列表 / 日历两种浏览方式，同一份数据。
+ * 手记主视图（第三轮任务书 §3）：**默认是游戏存档式列表**，日历降为辅助定位。
  *
  * 手机内置应用与独立页渲染的是**同一个** `JournalView`，只是宿主不同
- * （见 `phone-app.tsx` / `standalone.tsx`）。
+ * （见 `phone-app.tsx` / `standalone.tsx`）；手机紧凑视图的宽度与字号由 CSS 处理，
+ * 业务逻辑不复制第二套。
  *
  * 硬规则：
  *  - 列表与日历都用公开端点，因此天然看不到草稿与私密记录（服务端条件，不是前端过滤）；
+ *  - 只有真实公开记录才有存档槽与编号，**不补空存档、不造等级 / 地点 / 游玩时长**；
  *  - 日历只标记真正有公开记录的日期；空日期不做任何装饰（验收 2）；
- *  - 默认落在**有内容的浏览方式**上，而不是一个需要先猜的空屏：有公开记录就是列表。
+ *  - 日期按 `entry_date` 字符串渲染，不经过 `new Date(iso)` 的时区换算（不会错一天）；
+ *  - 屏幕、年份筛选与选中槽位都记在本机状态里，切屏 / 从正文返回时恢复。
  */
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import { getCalendar, listAllEntries } from "./api";
 import { CalendarPanel } from "./calendar-panel";
@@ -20,6 +23,8 @@ import { EntryCard } from "./entry-card";
 import { useLoader, type JournalHost } from "./host";
 import styles from "./journal.module.css";
 import { formatMonthLabel, isJournalScreen } from "./paths";
+import { SaveScreen } from "./save-screen";
+import { lastYear, rememberScreen, rememberYear } from "./state";
 import type { JournalCalendar, JournalEntrySummary } from "./types";
 
 const DEFAULT_SCREENS = ["list", "calendar"] as const;
@@ -36,17 +41,30 @@ export function JournalView({
 }): ReactNode {
   const allowed = screens.length ? screens : DEFAULT_SCREENS;
   const active = isJournalScreen(screen) && allowed.includes(screen) ? screen : allowed[0];
+  // 日历与存档列表共用的「日期定位」：从日历选中的某一天。
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  // 年份筛选提升到这一层：切到日历再回来时保持筛选（返回位置的一部分）。
+  const [year, setYear] = useState<string>(() => lastYear(host.state) ?? "");
+
+  const changeScreen = (next: string) => {
+    rememberScreen(host.state, next);
+    host.changeScreen(next);
+  };
+
+  const changeYear = (next: string) => {
+    setYear(next);
+    rememberYear(host.state, next);
+  };
 
   return (
-    <div className={styles.wrap} data-journal-screen={active}>
+    <div className={styles.wrap} data-journal-screen={active} data-journal-mode={host.mode}>
       <header className={styles.bar}>
         <div>
           <p className="kick">{"// Journal"}</p>
           <h2 className={styles.title}>手记</h2>
           <p className={styles.lead}>
-            按日期记下这一天：心情、地点、一段话，可以配几张照片。列表与日历读的是同一份记录，
-            只有已发布且设为公开的手记会出现在这里。
+            以游戏存档的方式翻手记：编号只是列表顺序，选中后先看预览，再「读取手记」进入完整正文。
+            只有已发布且设为公开的手记会出现在这里；草稿与私密记录不会露出条数或占位。
           </p>
         </div>
         <nav className={styles.tabs} aria-label="浏览方式">
@@ -56,102 +74,33 @@ export function JournalView({
               type="button"
               className={styles.tab}
               aria-current={item === active ? "true" : undefined}
-              onClick={() => host.changeScreen(item)}
+              onClick={() => changeScreen(item)}
             >
-              {item === "list" ? "存档卡列表" : "日历"}
+              {item === "list" ? "存档列表" : "日历"}
             </button>
           ))}
         </nav>
       </header>
 
       {active === "calendar" ? (
-        <CalendarScreen host={host} selectedDay={selectedDay} onSelectDay={setSelectedDay} />
+        <CalendarScreen
+          host={host}
+          selectedDay={selectedDay}
+          onSelectDay={setSelectedDay}
+          onBackToList={() => changeScreen("list")}
+        />
       ) : (
-        <ListScreen host={host} />
+        <SaveScreen
+          host={host}
+          year={year}
+          onYearChange={changeYear}
+          onLocateDay={(day) => {
+            setSelectedDay(day);
+            changeScreen("calendar");
+          }}
+        />
       )}
     </div>
-  );
-}
-
-function ListScreen({ host }: { host: JournalHost }): ReactNode {
-  const { state, reload } = useLoader((signal) => listAllEntries({}, signal), ["list"]);
-  const [year, setYear] = useState<string>("");
-
-  const items = useMemo(() => (state.status === "ready" ? state.data : []), [state]);
-  const years = useMemo(
-    () => [...new Set(items.map((item) => item.entry_date.slice(0, 4)))].sort().reverse(),
-    [items],
-  );
-  const filtered = year ? items.filter((item) => item.entry_date.startsWith(year)) : items;
-  const grouped = groupByMonth(filtered);
-
-  return (
-    <>
-      {state.status === "loading" ? (
-        <p className={styles.empty} role="status">
-          正在读取手记…
-        </p>
-      ) : null}
-
-      {state.status === "failed" ? (
-        <div className={styles.empty} role="alert">
-          <p>{state.failure.message}</p>
-          <button className={styles.button} type="button" onClick={reload}>
-            重新读取
-          </button>
-        </div>
-      ) : null}
-
-      {state.status === "ready" && !items.length ? (
-        <p className={styles.empty}>
-          还没有公开的手记。站主可以在 <code>/admin/journal</code> 写下第一篇 ——
-          新建的默认是草稿且仅自己可见，要发布并设为公开后才会出现在这里。
-        </p>
-      ) : null}
-
-      {items.length ? (
-        <div className={styles.actions}>
-          <label className={styles.label} htmlFor="journal-year">
-            年份
-          </label>
-          <select
-            id="journal-year"
-            className={styles.select}
-            value={year}
-            onChange={(event) => setYear(event.target.value)}
-            style={{ maxWidth: "10em" }}
-          >
-            <option value="">全部</option>
-            {years.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-          <span className={styles.hint}>共 {filtered.length} 篇</span>
-        </div>
-      ) : null}
-
-      {grouped.map(([month, entries]) => (
-        <section key={month} aria-label={formatMonthLabel(month)}>
-          <h3 className={styles.monthTitle}>{formatMonthLabel(month)}</h3>
-          <ul className={styles.cards}>
-            {entries.map((entry) => (
-              <EntryCard
-                key={entry.id}
-                entry={entry}
-                onOpen={(target) =>
-                  host.openContent({
-                    destination: `/apps/journal/${encodeURIComponent(target.id)}`,
-                    source: "phone-link",
-                  })
-                }
-              />
-            ))}
-          </ul>
-        </section>
-      ))}
-    </>
   );
 }
 
@@ -159,10 +108,12 @@ function CalendarScreen({
   host,
   selectedDay,
   onSelectDay,
+  onBackToList,
 }: {
   host: JournalHost;
   selectedDay: string | null;
   onSelectDay: (day: string | null) => void;
+  onBackToList: () => void;
 }): ReactNode {
   const { state, reload } = useLoader(
     (signal) => Promise.all([getCalendar({}, signal), listAllEntries({}, signal)]),
@@ -194,6 +145,12 @@ function CalendarScreen({
 
   return (
     <>
+      <div className={styles.actions}>
+        <button className={`${styles.button} ${styles.buttonGhost}`} type="button" onClick={onBackToList}>
+          返回存档列表
+        </button>
+        <span className={styles.hint}>日历只用来定位日期；读取仍在存档列表或下方条目里。</span>
+      </div>
       <CalendarPanel
         calendar={calendar}
         onPickDay={(day) => onSelectDay(day === selectedDay ? null : day)}
@@ -228,15 +185,4 @@ function CalendarScreen({
       ) : null}
     </>
   );
-}
-
-function groupByMonth(items: readonly JournalEntrySummary[]): [string, JournalEntrySummary[]][] {
-  const groups = new Map<string, JournalEntrySummary[]>();
-  for (const item of items) {
-    const month = item.entry_date.slice(0, 7);
-    const bucket = groups.get(month);
-    if (bucket) bucket.push(item);
-    else groups.set(month, [item]);
-  }
-  return [...groups.entries()];
 }

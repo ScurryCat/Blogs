@@ -61,3 +61,29 @@ export function lastScreen(state: StateAdapter): string | null {
   const value = state.get<string | null>(JOURNAL_APP_ID, "screen", null);
   return typeof value === "string" ? value : null;
 }
+
+/**
+ * 存档式列表的「返回位置」（任务书 §3.2：保留返回位置）。
+ *
+ * 记录的是**当前选中的那篇手记 ID**，不是显示编号 —— 编号只是列表顺序，
+ * 会随筛选变化，不能作为恢复依据。读取正文时写一次，回到列表时按 ID 恢复选中
+ * （记录已不在公开列表里时自然回退到第一篇）。
+ */
+export function rememberEntry(state: StateAdapter, entryId: string): boolean {
+  return state.set(JOURNAL_APP_ID, "entry", entryId).persisted;
+}
+
+export function lastEntry(state: StateAdapter): string | null {
+  const value = state.get<string | null>(JOURNAL_APP_ID, "entry", null);
+  return typeof value === "string" ? value : null;
+}
+
+/** 年份筛选也记一份：从正文返回时保持当时的筛选，不突然跳回全部。 */
+export function rememberYear(state: StateAdapter, year: string): boolean {
+  return state.set(JOURNAL_APP_ID, "year", year).persisted;
+}
+
+export function lastYear(state: StateAdapter): string | null {
+  const value = state.get<string | null>(JOURNAL_APP_ID, "year", null);
+  return typeof value === "string" ? value : null;
+}

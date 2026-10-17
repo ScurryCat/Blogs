@@ -17,6 +17,7 @@ import type { ReactNode } from "react";
 
 import { EntryReading } from "@/features/journal/entry-reading";
 import { EntryReadingLoader } from "@/features/journal/entry-reading-loader";
+import { JournalPageShell } from "@/features/journal/page-shell";
 import type { JournalEntryDetail } from "@/features/journal/types";
 import { ApiClientError } from "@/lib/api/client";
 import { serverApiRequest } from "@/lib/api/server";
@@ -53,9 +54,9 @@ export default async function JournalEntryPage({ params }: PageProps): Promise<R
 
   if (!serverReadingEnabled()) {
     return (
-      <section className="shell">
+      <JournalPageShell>
         <EntryReadingLoader entryId={decoded} />
-      </section>
+      </JournalPageShell>
     );
   }
 
@@ -72,16 +73,16 @@ export default async function JournalEntryPage({ params }: PageProps): Promise<R
     if (failure instanceof ApiClientError && failure.status === 404) notFound();
     // 其它错误（服务不可用、网关问题）不伪装成「不存在」：交给浏览器同源读取。
     return (
-      <section className="shell">
+      <JournalPageShell>
         <EntryReadingLoader entryId={decoded} />
-      </section>
+      </JournalPageShell>
     );
   }
 
   if (!entry) notFound();
   return (
-    <section className="shell">
+    <JournalPageShell>
       <EntryReading entry={entry} />
-    </section>
+    </JournalPageShell>
   );
 }

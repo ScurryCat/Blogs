@@ -9,6 +9,7 @@
 import type { Metadata } from "next";
 import { Suspense, type ReactNode } from "react";
 
+import { JournalPageShell } from "@/features/journal/page-shell";
 import { JournalStandalone } from "@/features/journal/standalone";
 
 export const metadata: Metadata = {
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 
 export default function JournalPage(): ReactNode {
   return (
-    <section className="shell">
+    <JournalPageShell>
       {/*
         视图通过 `useSearchParams()` 读 `screen`，因此必须有 Suspense 边界，
         否则整页会被强制变成动态渲染（Next 的 CSR bailout）。
@@ -32,6 +33,6 @@ export default function JournalPage(): ReactNode {
       >
         <JournalStandalone />
       </Suspense>
-    </section>
+    </JournalPageShell>
   );
 }

@@ -11,6 +11,31 @@
 
 .wrap {
   display: block;
+  /* 手机紧凑视图与 390px 独立页都靠容器宽度判断布局（媒体查询看不到手机面板的宽度）。 */
+  container-type: inline-size;
+  container-name: journal;
+}
+
+/* 手机宿主里永远单列：该面板宽度小于媒体查询视口，但用户确实需要紧凑布局。 */
+[data-journal-mode="phone"] .saveLayout {
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+/* 手机面板空间小：页头说明在独立页看即可，紧凑视图直接进列表。 */
+[data-journal-mode="phone"] .lead {
+  display: none;
+}
+
+[data-journal-mode="phone"] .bar {
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+/* 独立页外壳：站点顶部导航是 fixed，独立页需要统一留白（只用于手记页面）。 */
+.page {
+  padding-top: calc(var(--hud, 66px) + 26px);
+  padding-bottom: 64px;
 }
 
 .bar {
@@ -324,9 +349,9 @@
 }
 
 .button {
-  border: 1px solid #d40000;
-  background: #d40000;
-  color: #fff;
+  border: 1px solid var(--red, #e5191c);
+  background: var(--red, #e5191c);
+  color: var(--paper, #f4f1ea);
   padding: 8px 16px;
   font: inherit;
   font-size: 14px;
@@ -341,7 +366,7 @@
 .buttonGhost {
   background: transparent;
   color: inherit;
-  border-color: rgba(0, 0, 0, 0.4);
+  border-color: rgba(244, 241, 234, 0.45);
 }
 
 .buttonDanger {
@@ -589,9 +614,14 @@
   border-left-color: var(--paper, #f4f1ea);
 }
 
+/* clip-path 会把 outline 一起裁掉，所以焦点环用内侧 box-shadow（任何主题下都可见）。 */
 .slot:focus-visible {
-  outline: 3px solid var(--red, #e5191c);
-  outline-offset: 3px;
+  outline: none;
+  box-shadow: inset 0 0 0 3px var(--red, #e5191c);
+}
+
+.slotSelected:focus-visible {
+  box-shadow: inset 0 0 0 3px var(--black, #0a0a0b);
 }
 
 .slotSelected,
@@ -840,31 +870,41 @@
 
 /* --- 窄屏 / 手机紧凑视图 --------------------------------------------------- */
 
-@media (max-width: 900px) {
+@container journal (max-width: 900px) {
   .saveLayout {
     grid-template-columns: 1fr;
     gap: 14px;
   }
 
-  /* 预览贴着视口底部：点选槽位后不必来回滚动。 */
+  /* 窄屏：预览排在列表下方、随页面自然滚动；点选槽位时由组件把它带进视口
+     （不用 sticky 覆盖列表内容，避免把槽位压在预览下面点不到）。 */
   .savePreviewCol {
-    position: sticky;
-    bottom: 8px;
-    z-index: 2;
+    position: static;
   }
 
   .preview {
     position: static;
-    max-height: 46vh;
-    overflow-y: auto;
   }
 }
 
-@media (max-width: 620px) {
+@container journal (max-width: 620px) {
+  .saveToolbar {
+    align-items: flex-start;
+  }
+
+  .saveToolbar > .actions {
+    width: 100%;
+  }
+
   .slot {
     grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
     padding: 10px 12px 10px 10px;
     gap: 6px 10px;
+  }
+
+  .slotNo {
+    grid-row: 1 / span 2;
   }
 
   .slotDateBox {
@@ -893,9 +933,5 @@
 
   .previewDay {
     font-size: 48px;
-  }
-
-  .preview {
-    max-height: 52vh;
   }
 }
