@@ -29,9 +29,33 @@ export function phoneScrollContainer(el: HTMLElement | null): HTMLElement | null
   return el?.closest<HTMLElement>(".pw-screen") ?? null;
 }
 
-/** 解析实际滚动容器：手机 → `.pw-screen`，独立页 → window。 */
+/**
+ * 找**最近的真正可滚动的祖先**。
+ *
+ * 这里踩过一个坑：手机里真正滚动的**不是** `.pw-screen`，而是它里面的 `.pw-appbody`
+ * （`overflow-y:auto`，实测 scrollHeight 2608 / clientHeight 524）。早期版本写死找
+ * `.pw-screen`，于是手机里的滚动记忆**一直没生效** —— 而 jsdom 测试因为自己假设了
+ * `.pw-screen` 反而全绿。是浏览器端到端测量把它抓出来的。
+ */
+export function nearestScrollableAncestor(el: HTMLElement | null): HTMLElement | null {
+  let node = el?.parentElement ?? null;
+  while (node && node !== document.body && node !== document.documentElement) {
+    const style = window.getComputedStyle(node);
+    const canScrollY = /(auto|scroll|overlay)/.test(style.overflowY);
+    if (canScrollY && node.scrollHeight > node.clientHeight + 1) return node;
+    node = node.parentElement;
+  }
+  return null;
+}
+
+/**
+ * 解析实际滚动容器，按优先级：
+ * 1. 最近的可滚动祖先（手机 App 里的 `.pw-appbody`、某些页面的局部滚动区）；
+ * 2. 手机宿主的 `.pw-screen`（jsdom 里没有布局，量不出可滚性，用这个兜底）；
+ * 3. window（独立页）。
+ */
 export function scrollContainerFor(el: HTMLElement | null): HTMLElement | Window {
-  return phoneScrollContainer(el) ?? window;
+  return nearestScrollableAncestor(el) ?? phoneScrollContainer(el) ?? window;
 }
 
 function readOffset(container: HTMLElement | Window): number {
@@ -102,13 +126,31 @@ export function useScrollMemory(
   }, [key, options.consume, options.enabled, options.containerRef, ready]);
 
   // 卸载前记下当前位置，供「详情 → 返回」使用。
-  // **容器在 effect 建立时就解析**：React 会在卸载清理之前把 ref 置空，
-  // 到清理时再解析会回退成 window，于是永远存 0（实测踩到）。
+  //
+  // 这里有两层坑，都是浏览器端到端测量抓出来的：
+  //  1. React 会在卸载清理**之前**把 ref 置空 —— 清理时直接读 ref 会拿到 null，
+  //     于是回退成 window、永远存 0；
+  //  2. 但也不能在 effect 建立时就把**容器**定死 —— 列表首帧还没内容，
+  //     `.pw-appbody` 此时 scrollHeight == clientHeight，量不出「可滚动」，
+  //     会退化成不滚动的 `.pw-screen`，同样存 0（实测：进正文时存的是 0 而不是 1300）。
+  //
+  // 解法：每次渲染后把**列表元素本身**同步到一个自有 ref（元素一直有效），
+  // 真正解析容器放到卸载那一刻 —— 那时内容已渲染、可滚性可量。
+  // 卸载时 DOM 已经开始拆，那时量不出「可滚动」—— 所以**每次渲染后**就解析好容器
+  // （此刻内容还在、可滚性可量），卸载时直接读它。
+  const scrollTargetRef = useRef<HTMLElement | Window | null>(null);
+  useEffect(() => {
+    const anchor = options.containerRef?.current ?? null;
+    if (!anchor) return;
+    const resolved = scrollContainerFor(anchor);
+    // 解析不到真正可滚的容器时，别把上一轮的好结果覆盖掉。
+    if (resolved !== window || scrollTargetRef.current === null) scrollTargetRef.current = resolved;
+  });
+
   useEffect(() => {
     if (!options.enabled) return undefined;
-    const container = scrollContainerFor(options.containerRef?.current ?? null);
     return () => {
-      writeScroll(key, readOffset(container));
+      writeScroll(key, readOffset(scrollTargetRef.current ?? window));
     };
-  }, [key, options.enabled, options.containerRef]);
+  }, [key, options.enabled]);
 }
