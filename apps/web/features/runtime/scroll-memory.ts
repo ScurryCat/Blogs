@@ -15,7 +15,7 @@
  * 祖先自动判定容器，独立页自然回退到 window。
  */
 
-import { useEffect, useRef, type RefObject } from "react";
+import { useState, useEffect, useRef, type RefObject } from "react";
 
 // 各调用方用自己的前缀，互不干扰。
 export const FEED_SCROLL_PREFIX = "ins.feed.scroll.v1";
@@ -104,11 +104,16 @@ export function useScrollMemory(
   options: RestoreScrollOptions = { enabled: true, consume: true },
 ): void {
   const restored = useRef(false);
+  // **挂载时就把要恢复的位置读出来**：恢复要等 ready（数据加载完，约一秒后），
+  // 而保存用的 scroll 监听器在重挂载时就挂上了 —— 新元素初始的滚动事件会把 0
+  // 写进同一个键，等恢复真正执行时读到的就是 0（浏览器打点实测：目标=0）。
+  const [initialTarget] = useState<number | null>(() => readScroll(key));
 
   useEffect(() => {
     if (!options.enabled || !ready || restored.current) return;
     restored.current = true;
-    const target = readScroll(key);
+    // 用挂载时读到的值：等到 ready 再读会被保存监听器覆盖成 0。
+    const target = initialTarget;
     if (target === null) return;
     // 等一帧：图片与卡片的高度在首帧之后才稳定，过早滚动会被后续布局顶回去。
     // **容器也必须在帧内解析**：首帧时列表内容刚插入，`.pw-appbody` 还没因内容变高
@@ -125,7 +130,7 @@ export function useScrollMemory(
       }
     });
     return () => cancelAnimationFrame(raf);
-  }, [key, options.consume, options.enabled, options.containerRef, ready]);
+  }, [key, options.consume, options.enabled, options.containerRef, ready, initialTarget]);
 
   // 卸载前记下当前位置，供「详情 → 返回」使用。
   //
