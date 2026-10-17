@@ -66,7 +66,7 @@ afterEach(() => {
 describe("模块形状", () => {
   it("screens 是完全部允许的屏幕集合（宿主用它回退非法 screen）", () => {
     expect(screens).toEqual(METANAV_SCREENS);
-    expect([...screens]).toEqual(["palaces", "resolve", "search", "mugen"]);
+    expect([...screens]).toEqual(["palaces", "resolve", "search", "mugen", "palace"]);
   });
 
   it("默认导出是可渲染的组件：收到 PhoneViewProps 就能渲染出视图", async () => {
@@ -191,10 +191,9 @@ describe("退出清理", () => {
       item.textContent?.includes("进入殿堂"),
     );
     click(button ?? null);
-    expect(calls.openContent).toHaveBeenCalledWith({
-      destination: "/apps/metanav/palaces/phantom-base",
-      source: "metaverse-entry",
-    });
+    // 手机里：殿堂阅读是应用内屏幕，走换屏（不跳 canonical 页面，否则手机会被关闭）
+    expect(calls.changeScreen).toHaveBeenCalledWith("palace", "phantom-base");
+    expect(calls.openContent).not.toHaveBeenCalled();
     view.unmount();
   });
 });

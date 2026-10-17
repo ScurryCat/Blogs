@@ -47,10 +47,13 @@ function Chapter({ post, index }: { post: PostSummary; index: number }): ReactNo
 export function PalaceReading({
   palace,
   related = [],
+  onBack,
 }: {
   palace: PalaceDetail;
   /** 相关专题（其他公开殿堂），由调用方决定取哪些；没有就整块不显示。 */
   related?: readonly PalaceSummary[];
+  /** 手机内渲染时传入：返回由宿主换屏完成，不再跳独立路由（否则手机会被关闭）。 */
+  onBack?: () => void;
 }): ReactNode {
   const [first, ...rest] = palace.posts;
 
@@ -63,9 +66,15 @@ export function PalaceReading({
           <p className={styles.lead}>{palace.summary}</p>
         </div>
         <nav className={styles.actions} aria-label="殿堂操作">
-          <SiteLink className={`${styles.button} ${styles.buttonGhost}`} href="/apps/metanav" source="phone-link">
-            回到导航
-          </SiteLink>
+          {onBack ? (
+            <button className={`${styles.button} ${styles.buttonGhost}`} type="button" onClick={onBack}>
+              回到导航
+            </button>
+          ) : (
+            <SiteLink className={`${styles.button} ${styles.buttonGhost}`} href="/apps/metanav" source="phone-link">
+              回到导航
+            </SiteLink>
+          )}
         </nav>
       </header>
 

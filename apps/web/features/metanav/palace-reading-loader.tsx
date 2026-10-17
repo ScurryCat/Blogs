@@ -17,7 +17,7 @@ import { getPalace, listPalaces } from "./api";
 import { useLoader } from "./host";
 import { PalaceReading } from "./palace-reading";
 
-export function PalaceReadingLoader({ slug }: { slug: string }): ReactNode {
+export function PalaceReadingLoader({ slug, onBack }: { slug: string; onBack?: () => void }): ReactNode {
   const { state, reload } = useLoader(
     async (signal) => {
       const palace = await getPalace(slug, signal);
@@ -59,5 +59,5 @@ export function PalaceReadingLoader({ slug }: { slug: string }): ReactNode {
     );
   }
 
-  return <PalaceReading palace={state.data.palace} related={state.data.related} />;
+  return <PalaceReading palace={state.data.palace} related={state.data.related} onBack={onBack} />;
 }

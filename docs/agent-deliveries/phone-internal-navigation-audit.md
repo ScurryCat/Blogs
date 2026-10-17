@@ -32,7 +32,7 @@
 | P1 | INS | 标签 chip | `/apps/ins?tag=<tag>` | ✗ 无（`screens` 只有 `feed/detail/saved`）|
 | P2 | INS | 消息 → 角色 | `/apps/ins/messages/<id>` | ✗ 无 |
 | ~~P3~~ | 手记 | 「读取手记」 | ~~`/apps/journal/<id>`~~ → **已改为手机内 `screen=reading`** ✅ 第 43 轮完成 | ✅ 有 `reading` |
-| P4 | 导航 | 殿堂详情 | `/apps/metanav/palaces/<slug>` | ✗ 无 |
+| ~~P4~~ | 导航 | 殿堂详情 | ~~`/apps/metanav/palaces/<slug>`~~ → **已改为手机内 `screen=palace`** ✅ 第 44 轮完成 | ✅ 有 `palace` |
 
 四处都是 **B 类**（同一 App 的列表→详情 / 筛选 / 会话），却走了站点路由 → **手机被关闭**。
 其中 P1、P2 已在台账 §6.5 / §6.16 记录，本轮新增 P3、P4。
@@ -61,6 +61,16 @@
 **收益**：四处 UX 不一致一次解决；且为以后「任何应用内详情」立下统一做法。
 **风险**：改动 4 个 App + 宿主 + 测试；需要真实浏览器回归（本会话已有 E2E 能力：见
 `tools/e2e-phone-scroll.py` 的隔离栈搭法）。
+
+## 三·补二：P4 已落地（第 44 轮）
+
+导航里的殿堂详情（`palaces-screen` / `palace-card`）在手机内改为换屏 `screen=palace` + `item=slug`，
+`PalaceReading` 增加可选 `onBack`（手机内返回走宿主换屏，不再跳 `/apps/metanav`）。
+**殿堂阅读的 canonical 页面与 `metaverse-entry` 来源在独立页保持不变。**
+
+测试：导航 46 项全过（含 5 处断言从「发 metaverse-entry」改为「换屏到 palace」）。
+**端到端未做**：本地/隔离库没有殿堂数据（种子脚本只造手记），无法在浏览器里点进殿堂；
+后续要么补殿堂种子，要么在验收环境准备数据。
 
 ## 三·补：P3 已落地（第 43 轮）
 

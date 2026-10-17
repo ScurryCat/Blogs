@@ -46,6 +46,11 @@ function FootprintSection({ host }: { host: MetanavHost }): ReactNode {
           // 存储不可用不影响导航，但要如实说明「这次不会被记住」。
           setNotice("浏览器存储不可用：可以继续进入殿堂，但这次访问不会被记住。");
         }
+        if (host.mode === "phone") {
+          // 手机里：殿堂阅读是应用内屏幕，不跳 canonical 页面（否则手机会被关闭）
+          host.changeScreen("palace", palace.slug);
+          return;
+        }
         host.openContent({ destination: palacePath(palace.slug), source: "metaverse-entry" });
       } catch (error) {
         if (isAbort(error)) return;

@@ -89,6 +89,10 @@ export function EnterPalace({
       type="button"
       onClick={() => {
         remember(host, palace);
+        if (host.mode === "phone") {
+          host.changeScreen("palace", palace.slug);
+          return;
+        }
         host.openContent({ destination: href, source: "metaverse-entry" });
       }}
     >

@@ -166,11 +166,9 @@ describe("已发现殿堂（默认屏幕）", () => {
     expect(button).toBeTruthy();
 
     click(button ?? null);
-    expect(calls.openContent).toHaveBeenCalledTimes(1);
-    expect(calls.openContent.mock.calls[0]?.[0]).toEqual({
-      destination: "/apps/metanav/palaces/phantom-base",
-      source: "metaverse-entry",
-    });
+    // 手机里：进入殿堂走换屏到 palace 屏幕（不跳 canonical 页面，否则手机会被关闭）
+    expect(calls.changeScreen).toHaveBeenCalledWith("palace", "phantom-base");
+    expect(calls.openContent).not.toHaveBeenCalled();
     view.unmount();
   });
 
@@ -327,10 +325,9 @@ describe("认知定位：三种反馈", () => {
       item.textContent?.includes("进入殿堂"),
     );
     click(enter ?? null);
-    expect(calls.openContent.mock.calls[0]?.[0]).toEqual({
-      destination: "/apps/metanav/palaces/phantom-base",
-      source: "metaverse-entry",
-    });
+    // 手机里：进入殿堂走换屏（「不自动跳转」这条不变量仍然成立，只是入口改成换屏）
+    expect(calls.changeScreen.mock.calls[0]).toEqual(["palace", "phantom-base"]);
+    expect(calls.openContent).not.toHaveBeenCalled();
     view.unmount();
   });
 
@@ -499,16 +496,18 @@ describe("本机足迹", () => {
     click(entry ?? null);
     await advance(30);
     expect(view.container.textContent).toContain("现在已经不可读了");
+    // 已不可读 → 不进入任何视图（换屏与站点跳转都不该发生）
     expect(calls.openContent).not.toHaveBeenCalled();
+    expect(calls.changeScreen).not.toHaveBeenCalled();
     // 过期入口从足迹里消失（提示文案里仍会提到标题，因此断言按钮而不是整段文本）。
     const remaining = [...view.container.querySelectorAll("button")].filter((item) =>
       item.textContent?.includes("已被撤回的殿堂"),
     );
-    expect(remaining).toHaveLength(0);
+    expect(remaining.length).toBe(0);
     view.unmount();
   });
 
-  it("重访可读的殿堂：记录一次并发送 metaverse-entry", async () => {
+  it("重访可读的殿堂：记录一次并换成 palace 屏幕（手机内）", async () => {
     const state = createMemoryStateAdapter();
     recordVisit(state, { slug: PALACE.slug, title: PALACE.title, at: "2026-10-16T10:00:00.000Z" });
     const fetchMock = vi.fn<FetchLike>(async (url) => {
@@ -526,10 +525,9 @@ describe("本机足迹", () => {
     click(entry ?? null);
     await advance(30);
 
-    expect(calls.openContent.mock.calls[0]?.[0]).toEqual({
-      destination: "/apps/metanav/palaces/phantom-base",
-      source: "metaverse-entry",
-    });
+    // 手机里：重访也走换屏（记录足迹的逻辑不变）
+    expect(calls.changeScreen.mock.calls[0]).toEqual(["palace", "phantom-base"]);
+    expect(calls.openContent).not.toHaveBeenCalled();
     view.unmount();
   });
 
@@ -571,7 +569,8 @@ describe("本机足迹", () => {
       item.textContent?.includes("进入殿堂"),
     );
     click(button ?? null);
-    expect(calls.openContent).toHaveBeenCalledTimes(1);
+    // 存储不可用不影响进入：仍然换成 palace 屏幕（只是这次不会被记住）
+    expect(calls.changeScreen).toHaveBeenCalledWith("palace", "phantom-base");
     view.unmount();
   });
 });

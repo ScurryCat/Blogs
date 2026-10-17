@@ -24,7 +24,7 @@ export interface MetanavHost {
   toast(message: string, options?: { tone?: "info" | "error" }): void;
 }
 
-export const METANAV_SCREENS = ["palaces", "resolve", "search", "mugen"] as const;
+export const METANAV_SCREENS = ["palaces", "resolve", "search", "mugen", "palace"] as const;
 export type MetanavScreen = (typeof METANAV_SCREENS)[number];
 
 export function isMetanavScreen(value: string | null | undefined): value is MetanavScreen {
