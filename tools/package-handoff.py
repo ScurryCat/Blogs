@@ -254,7 +254,7 @@ def build(out: Path) -> tuple[int, int, str]:
         "docs/agent-deliveries/ + docs/design-references/ + tools/ + visual-evidence/（本地视觉证据快照）\n"
         "未包含（有意）：源代码（在仓库里，见 SOURCE-REVISION.md）、任何凭据；"
         ".dsh/ 下未列入 visual-evidence 的临时分析产物不随包分发。\n"
-        f"文件数：{len(entries) + 3}（含 HANDOFF/MANIFEST/SHA256SUMS）\n"
+        f"文件数：{len(entries) + 4}（含 HANDOFF/MANIFEST/SHA256SUMS/SOURCE-REVISION）\n"
     )
 
     sums = []
