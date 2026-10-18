@@ -77,7 +77,7 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 > 9 个视觉还原界面的演示内容与手机 deep link 已在本地分享库中。
 >
 > **当前验收摘要（单一基线，勿再用历史正文数字拼凑）**：
-> 代码基线 = 包内 `{head}`；前端 **936** 单测、后端 **952**（`--e2e --mobile` 7/7 段全绿、端到端 12 项）。
+> 代码基线 = 包内 `{head}`；前端 **1123** 单测、后端 **1025**（`--e2e --mobile` 7/7 段全绿、端到端 12 项；P5 创作台已集成）。
 > 独立验收 v2 结论：**功能阶段通过，完整验收未通过**；逐项回应与证据见
 > `docs/agent-deliveries/acceptance-v2-response.md`；验收报告点名的
 > **F1 / F2 / F3 已返工**（详见 `docs/agent-deliveries/P4-acceptance-v2-fixes.md`）：

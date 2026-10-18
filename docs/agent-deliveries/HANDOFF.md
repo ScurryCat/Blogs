@@ -20,7 +20,7 @@
 > （自动保存 / 本机恢复 / 412 冲突显式处理 / 跨设备）、共享图片选择器、放课后快捷更新、
 > 前台站主快捷入口与来源上下文恢复。
 > 验收：**A1–A12 全通过**；B1/B3/B4/B5 通过；**B2 真机触控/软键盘/中文输入法未验证（无设备）**。
-> P5 e2e 219 断言通过 / 0 失败；后端 1025/0；前端 1122/0；隔离 build exit 0；迁移 round-trip PASS。
+> P5 e2e 219 断言通过 / 0 失败；后端 1025/0；前端 1123/0；隔离 build exit 0；迁移 round-trip PASS。
 > **先读**：`P5-final-report.md`（总结与复验命令）→ `../acceptance/P5-acceptance-report.md`（逐条证据）
 > → `P5-C0-integration-contract.md`（接口约定）。文章编辑器与完整媒体管理属第二/三批，本轮未做。
 
@@ -48,8 +48,8 @@
 
 ```
 静态审计（图标/路由/资源/明智资源）  PASS
-前端 typecheck / lint / 单测          PASS   936 / 936
-后端整树                              PASS   952 / 0
+前端 typecheck / lint / 单测          PASS   1123 / 1123
+后端整树                              PASS   1025 / 0（P5 创作台集成后）
 浏览器 T02 + 取数审计                 PASS   52 / 52
 多视口 × 缩放档                       PASS   11 项
 业务流验收脚本 ×4                     PASS
