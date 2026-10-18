@@ -114,6 +114,9 @@ export function CharacterList({ linkSource = "phone-link", onOpen }: CharacterLi
         </span>
         <span className="msg-list-head-note">Character messages</span>
       </div>
+      <p className="msg-list-strip" aria-hidden="true">
+        MESSAGES · IM · 非官方同人
+      </p>
       <p className="msg-role-intro">
         这里是游戏角色的非官方同人会话：预设剧情由本站写好，自由聊天由 AI 生成。
         名单里只有游戏角色；真实朋友的入口在 COOP 应用里，不混在这里。
@@ -178,6 +181,11 @@ export function CharacterList({ linkSource = "phone-link", onOpen }: CharacterLi
           );
         })}
       </ul>
+      <p className="msg-op-hints" aria-hidden="true">
+        <span>SCROLL 滚动</span>
+        <span>TAP 选择</span>
+        <span>BACK 返回</span>
+      </p>
       <p className="msg-role-footnote">
         会话保存在本站最多 24 小时，你可以随时清除。角色台词不是游戏原文。
         {" "}

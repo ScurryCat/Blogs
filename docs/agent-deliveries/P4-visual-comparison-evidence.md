@@ -10,7 +10,7 @@
 ```bash
 python3 tools/capture-visual-comparison.py http://127.0.0.1:3100
 # 输出：.dsh/screenshots/visual-comparison/
-#   site-<界面>.png      站点截图（1440×900）
+#   site-<界面>.png      站点截图（1440×900；含 IM 列表/会话/会话-图片卡）
 #   comparison-{1..3}.png 参考帧 | 站点界面 并排对照图
 ```
 
@@ -23,9 +23,9 @@ python3 tools/capture-visual-comparison.py http://127.0.0.1:3100
 | --- | --- | --- | --- | --- |
 | 1 | `p5-phone-home-fullframe`（P5 手机主屏） | `/?phone=home` 手机桌面 | 站点为红黑应用磁贴网格 + 手机壳；对照帧为 P5 App 网格：**结构语言有（磁贴网格/顶部状态），整屏细节未复刻** | 已对照（部分） |
 | 2 | `p5r-street-hud-fullframe`（日期/IM 通知/小地图） | `/?phone=home` + 站点 HUD | 站点 HUD 有日期/时间与手机入口；**无小地图、无地点 toast、无 IM 角标通知** | 已对照（部分） |
-| 3 | `p5r-im-groupchat-fullframe`（IM 群聊） | `/?phone=ins` IM feed | 站点 IM 为应用内列表 + 红黑白语言；**P5 IM 手机外框/多气泡群聊布局未复刻** | 已对照（部分） |
-| 4 | `p5r-im-photo-fullframe`（图片消息） | `/?phone=ins&screen=conversation&item=morgana`（剧本 `map` 节点） | **Phase 1 已实现**：白框拍立得图片卡 + 灯箱；与参考帧的 IM 整屏视觉语言仍只部分对照（卡片风格/手机外框未逐像素复刻） | 已实现（Phase 1）/ 视觉部分对照 |
-| 5 | `p5r-dialogue-choice-fullframe`（回复选择） | `/?phone=ins&screen=conversation&item=futaba` | 站点剧本会话有回复选项（交互结构存在）；**P5 对话框/选项整屏视觉未复刻**（站点是 IM 气泡语言） | 已对照（部分） |
+| 3 | `p5r-im-groupchat-fullframe`（IM 群聊） | `/?phone=ins&screen=messages` IM 列表 | **2026-10-18 第一轮整屏修形**：IM 顶条、纸白会话条、拍立得头像、底部操作提示已对齐参考语言；手机外框/多气泡群聊/逐像素比例仍未复刻 | 已对照（部分，已修形第一轮） |
+| 4 | `p5r-im-photo-fullframe`（图片消息） | `/?phone=ins&screen=conversation&item=morgana`（剧本 `map` 节点） | **Phase 1 已实现**：白框拍立得图片卡 + 灯箱；**2026-10-18 第一轮整屏修形**：对方消息改纸白纸条、我方黑板白字、发言人黑标签、图片卡放大/黑框硬阴影、底部操作提示；手机外框/照片裁切比例仍未复刻 | 已实现（Phase 1）/ 视觉部分对照（已修形第一轮） |
+| 5 | `p5r-dialogue-choice-fullframe`（回复选择） | `/?phone=ins&screen=conversation&item=morgana` | 站点剧本会话有回复选项（交互结构存在）；**2026-10-18 IM 修形后**：消息条/选项条已用黑白纸条语言，但 P5 对话框 + 场景人物构图未复刻 | 已对照（部分） |
 | 6 | `p5-load-save-fullframe`（Load 存档槽） | `/apps/journal` 手记 | 站点手记为存档式列表 + SAVE DATA 卡；**存档槽整屏视觉未复刻** | 已对照（部分） |
 | 7 | `p5-calendar-fullframe`（日历） | `/apps/journal` 手记日历屏 | 站点有日历屏（月历/日期格）；**P5 日历整屏字体与布局未复刻** | 已对照（部分） |
 | 8 | `p5-status-fullframe`（五维状态） | `/about` 人物档案 | 站点有五维雷达/属性；**P5 五维星图布局未复刻** | 已对照（部分） |
@@ -39,7 +39,7 @@ python3 tools/capture-visual-comparison.py http://127.0.0.1:3100
 | 16 | `p5r-dialogue-normal-fullframe`（普通对话，Kamoshida） | — | 站点无游戏对话整屏；IM 会话属不同语言 | 不适用 |
 | 17 | `p5r-dialogue-maruki-fullframe`（普通对话，Maruki） | — | 同上 | 不适用 |
 
-汇总：17 帧中 **站点有对应界面 14 项**（13 项语言级部分对照 + 1 项对象不适用），
+汇总：17 帧中 **站点有对应界面 14 项**（13 项语言级部分对照 + 1 项对象不适用；IM 两项已完成第一轮整屏修形），
 **2 项明确未实现**（图片消息、楼层图），2 项无对应整屏（普通对话）。
 
 ## 3. 诚实结论

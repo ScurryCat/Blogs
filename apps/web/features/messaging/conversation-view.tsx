@@ -226,6 +226,12 @@ export function ConversationView({
         ))}
       </ol>
 
+      {/* 操作提示条：还原参考帧底部的 Scroll / Next 语言（纯展示，不新增交互）。 */}
+      <p className="msg-op-hints" aria-hidden="true">
+        <span>SCROLL 滚动</span>
+        <span>BACK 返回</span>
+      </p>
+
       {hasChoices && node !== null ? (
         <div className="msg-choices" role="group" aria-label="预设回复">
           <p className="msg-choices-hint">选择一条回复，或者自己说一句：</p>

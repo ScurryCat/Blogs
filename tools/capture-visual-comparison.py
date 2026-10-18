@@ -26,8 +26,9 @@ CURATED = pathlib.Path("/Users/v/Documents/ChatGPT/Blog开发/assets/reference/p
 # 站点界面 → 对应参考帧（可多张）
 SITES = [
     ("phone-home", "/?phone=home", ["p5-phone-home-fullframe.jpg", "p5r-street-hud-fullframe.jpg"]),
-    ("im-feed", "/?phone=ins", ["p5r-im-groupchat-fullframe.jpg", "p5r-im-photo-fullframe.jpg"]),
-    ("im-conversation", "/?phone=ins&screen=conversation&item=futaba", ["p5r-dialogue-choice-fullframe.jpg"]),
+    ("im-list", "/?phone=ins&screen=messages", ["p5r-im-groupchat-fullframe.jpg"]),
+    ("im-conversation", "/?phone=ins&screen=conversation&item=morgana", ["p5r-dialogue-choice-fullframe.jpg"]),
+    ("im-conversation-photo", "/?phone=ins&screen=conversation&item=morgana", ["p5r-im-photo-fullframe.jpg"]),
     ("journal", "/apps/journal", ["p5-load-save-fullframe.jpg", "p5-calendar-fullframe.jpg"]),
     ("about", "/about", ["p5-status-fullframe.jpg"]),
     ("map", "/map", ["p5-map-school-fullframe.jpg", "p5-tokyo-map-fullframe.jpg"]),
@@ -64,6 +65,13 @@ def main() -> int:
             page.goto(BASE + path, wait_until="load", timeout=60000)
             boot(page)
             page.wait_for_timeout(1800)
+            # IM 图片消息对照：进入「这地方是什么」节点，让图片卡出现在截图里。
+            if slug == "im-conversation-photo":
+                try:
+                    page.get_by_role("button", name="这地方是什么").click(timeout=5000)
+                    page.wait_for_timeout(3500)
+                except Exception:  # noqa: BLE001
+                    pass
             file = OUT / f"site-{slug}.png"
             page.screenshot(path=str(file))
             shots[slug] = str(file)
