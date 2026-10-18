@@ -96,6 +96,8 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 > **手记整屏视觉修形第一轮（2026-10-18）**：存档列表纸白/深红大槽位 + SAVE DATA 大字；
 > 日历黑底大字网格（周日红/周六青）、记录日红数字+下划线、TODAY 贴纸
 > （`P4-journal-visual-refinement.md`；仍部分还原）。
+> **协助者 COOP 整屏视觉修形第一轮（2026-10-18）**：纸白卡面 + 红黑斜切插画区 + 拍立得头像 +
+> 黑色姓名条 + 深红大序号（`P4-coop-visual-refinement.md`；仍部分还原，RANK 无数据不伪造）。
 > **视觉对照证据（2026-10-18）**：`tools/capture-visual-comparison.py` 把 17 张参考帧与
 > 站点 13 个界面并排对照，逐项结论见 `P4-visual-comparison-evidence.md`
 > （13 项语言级部分对照 / 2 项未实现（图片消息、楼层图）/ 2 项无对应整屏；**整屏还原仍未通过**）。

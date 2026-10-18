@@ -121,6 +121,12 @@
 预览面板红黑层次；日历黑底大字网格（周日红/周六青）、记录日红数字+下划线、TODAY 贴纸。
 手记测试 55/55；仍标部分还原（`P4-journal-visual-refinement.md`）。
 
+## 五之一之四、协助者 COOP 整屏视觉修形第一轮（2026-10-18）
+
+对照 `p5r-coop-confidant` 完整帧：纸白卡面 + 红黑斜切插画区 + 拍立得头像 + 黑色姓名条 +
+深红大序号（阿卡那装饰数字，不是 rank）；COOP 测试 79/79；仍标部分还原
+（`P4-coop-visual-refinement.md`；RANK/NEW ABILITY 无数据不伪造）。
+
 ## 五之二、视觉对照证据（2026-10-18）
 
 - `tools/capture-visual-comparison.py`：真实浏览器截图 11 个站点界面，与 17 张参考帧并排对照
