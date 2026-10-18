@@ -228,8 +228,12 @@ export function ConversationView({
 
       {/* 操作提示条：还原参考帧底部的 Scroll / Next 语言（纯展示，不新增交互）。 */}
       <p className="msg-op-hints" aria-hidden="true">
-        <span>SCROLL 滚动</span>
-        <span>BACK 返回</span>
+        <span>
+          <i className="msg-hint-key" aria-hidden="true">L</i> 滚动
+        </span>
+        <span>
+          <i className="msg-hint-key" aria-hidden="true">✕</i> 返回
+        </span>
       </p>
 
       {hasChoices && node !== null ? (

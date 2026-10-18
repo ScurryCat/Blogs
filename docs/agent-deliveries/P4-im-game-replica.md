@@ -52,6 +52,13 @@
 
 截图：`.dsh/screenshots/im-replica/11-conversation-clean.png`、`12-inbox-clean.png`。
 
+## 1.8 第五轮（2026-10-19）
+
+- IM wordmark 改回参考帧的**黑底白字 + 红色左条 + 红硬阴影**（此前为纸白底黑字）；
+- 底部提示改**圆形描边键**：`(L) 滚动`、`(✕) 返回`，红底白字；
+- 头像右缘加白色三角指向消息条，补参考帧的拍立得压边连接；
+- 证据：`.dsh/screenshots/im-replica/13-conversation-logo-hints.png`。
+
 ## 2. 证据
 
 - 截图：`.dsh/screenshots/im-replica/`

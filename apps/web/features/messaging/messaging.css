@@ -2218,3 +2218,44 @@
     transform: none;
   }
 }
+
+/* 参考帧底部操作键：圆形描边键 + 白字（L 滚动 / ✕ 返回）。 */
+.msg-op-hints {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--msg-paper);
+  font-weight: 700;
+}
+
+.msg-hint-key {
+  display: inline-grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  margin-right: 3px;
+  border: 2px solid var(--msg-paper);
+  border-radius: 50%;
+  color: var(--msg-paper);
+  font: 700 8px/1 var(--f-hat);
+  font-style: normal;
+  vertical-align: middle;
+}
+
+/* 头像右缘的白色三角指向消息条（参考帧拍立得压边的连接语言）。 */
+.msg-row .msg-avatar {
+  position: relative;
+}
+
+.msg-row .msg-avatar::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -8px;
+  margin-top: -6px;
+  width: 0;
+  height: 0;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-left: 8px solid var(--msg-paper);
+}

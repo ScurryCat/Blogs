@@ -1038,6 +1038,8 @@ html.ov-lock body {
 .pw-appview[data-phone-app="ins"] .msg-thread-bar .msg-logo {
   font-size: 30px;
   padding: 4px 9px 2px 8px;
+  background: var(--msg-ink);
+  color: var(--msg-paper);
   box-shadow: 3px 3px 0 var(--msg-red);
 }
 
@@ -1053,6 +1055,8 @@ html.ov-lock body {
 .pw-appview[data-phone-app="ins"] .msg-list-head .msg-logo {
   font-size: 32px;
   padding: 5px 10px 3px;
+  background: var(--msg-ink);
+  color: var(--msg-paper);
   box-shadow: 4px 4px 0 var(--msg-red);
 }
 
