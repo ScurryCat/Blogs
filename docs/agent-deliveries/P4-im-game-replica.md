@@ -17,6 +17,17 @@
 | 收件列表的 IM wordmark | 列表头补回 IM wordmark 并放大；返回键不再遮挡 |
 | 底部 Scroll/Close 提示 | 保留 `SCROLL 滚动 / BACK 返回` 行，对应游戏底部操作提示 |
 
+## 1.5 第二轮（2026-10-19）
+
+- 收件列表补**真实状态/日期斜标签**：状态用真实会话状态（新会话/暂停/对话中/已结束），
+  日期用 `last_message_at` 格式化为 `M/D 周X`（Asia/Shanghai），对应参考帧的 HOLD/NEW + 3/19 Su；
+  不显示游戏里的 HOLD/NEW 字样（站点无该语义，不伪造）；
+- 行加斜切 `clip-path`，标签做白底黑字/红底白字斜块；
+- 消息正文 700 粗体、白边 4px、每条按序号轻微不同倾角、右下白色小标记；
+- 手机宿主内 IM 全屏、头部扁平化、列表头 IM wordmark 不再被返回键遮挡。
+
+截图：`.dsh/screenshots/im-replica/04-conversation-v3.png`、`07-inbox-date-tag.png`。
+
 ## 2. 证据
 
 - 截图：`.dsh/screenshots/im-replica/`

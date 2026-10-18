@@ -20,6 +20,21 @@ import { MESSAGES_APP_PATH, conversationAppPath } from "./paths";
 import { previewOf, type Character } from "./types";
 import { describeChatError } from "./use-conversation";
 
+/** 收件行的真实日期标签：M/D + 星期（Asia/Shanghai），对应参考帧的「3/19 Su」位置。 */
+function roleDateLabel(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const parts = new Intl.DateTimeFormat("zh-CN", {
+    timeZone: "Asia/Shanghai",
+    month: "numeric",
+    day: "numeric",
+    weekday: "short",
+  }).formatToParts(date);
+  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
+  const weekday = get("weekday").replace("周", "");
+  return `${get("month")}/${get("day")} ${weekday}`;
+}
+
 export interface CharacterListProps {
   /** 手机里点是短过渡，独立页是普通跳转。 */
   linkSource?: "phone-internal" | "phone-link";
@@ -136,6 +151,15 @@ export function CharacterList({ linkSource = "phone-link", onOpen }: CharacterLi
                 : summary.status === "finished"
                   ? `这段剧情已结束 · ${summary.message_count} 条`
                   : `${summary.message_count} 条消息`;
+          const statusTag =
+            summary === null
+              ? "新会话"
+              : summary.status === "free"
+                ? "暂停"
+                : summary.status === "finished"
+                  ? "已结束"
+                  : "对话中";
+          const dateLabel = summary?.last_message_at ? roleDateLabel(summary.last_message_at) : "";
           const href = conversationAppPath(character.id);
 
           const body = (
@@ -145,6 +169,10 @@ export function CharacterList({ linkSource = "phone-link", onOpen }: CharacterLi
                 <img src={character.avatar} alt={character.avatar_alt} width={52} height={52} />
               </span>
               <span className="msg-role-text">
+                <span className="msg-role-tags" aria-hidden="true">
+                  <span className="msg-role-status">{statusTag}</span>
+                  {dateLabel ? <span className="msg-role-date">{dateLabel}</span> : null}
+                </span>
                 <span className="msg-role-name">{character.name}</span>
                 <span className="msg-role-tagline">{character.tagline}</span>
                 <span className="msg-role-preview">{preview}</span>

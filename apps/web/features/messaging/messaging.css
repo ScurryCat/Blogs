@@ -2173,3 +2173,48 @@
     transform: none;
   }
 }
+
+/* 收件列表：参考帧的状态/日期斜标签（用真实会话状态与 last_message_at）。 */
+.msg-role {
+  position: relative;
+  clip-path: polygon(0 2%, 100% 0, 98.6% 100%, 0 96%);
+}
+
+.msg-role-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin: 0 0 3px;
+  transform: skewX(-8deg);
+}
+
+.msg-role-status {
+  padding: 1px 7px;
+  background: #a90d12;
+  color: var(--msg-paper);
+  border: 2px solid var(--msg-ink);
+  font: 700 10px/1.6 var(--f-cjk);
+  letter-spacing: 0.12em;
+}
+
+.msg-role-date {
+  padding: 1px 8px;
+  background: var(--msg-paper);
+  color: var(--msg-ink);
+  border: 2px solid var(--msg-ink);
+  box-shadow: 3px 3px 0 var(--msg-ink);
+  font: 700 11px/1.6 var(--f-hat);
+  letter-spacing: 0.06em;
+  transform: rotate(-2deg);
+}
+
+@media (max-width: 480px) {
+  .msg-role {
+    clip-path: none;
+  }
+
+  .msg-role-tags {
+    transform: none;
+  }
+}
