@@ -1845,3 +1845,71 @@
     box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.45);
   }
 }
+
+/* IM 消息块第三轮补充：头部压缩 / 气泡加宽 / 正文 16px（报告 §5 标题比例与布局差距）。 */
+.msg-thread-bar {
+  padding: 8px 10px;
+  gap: 8px;
+}
+
+.msg-thread-bar .msg-logo {
+  font-size: 26px;
+  padding: 6px 9px 4px;
+}
+
+.msg-thread-bar .msg-avatar-lg {
+  width: 40px;
+  height: 40px;
+}
+
+.msg-thread-name {
+  font-size: 18px;
+}
+
+.msg-thread-handle {
+  font-size: 10px;
+  letter-spacing: 0.02em;
+}
+
+.msg-thread-tags {
+  font-size: 10px;
+}
+
+.msg-list {
+  gap: 9px;
+}
+
+.msg-row {
+  gap: 5px;
+}
+
+.msg-bubble-wrap {
+  max-width: 90%;
+}
+
+.msg-bubble .msg-text,
+.msg-bubble-in .msg-text,
+.msg-bubble-out .msg-text {
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+/* 红底标签/悬停用深红，保证 12–16px 文字对比度 ≥4.5:1。 */
+.msg-sender-name {
+  background: #a90d12;
+}
+
+.msg-choice:hover:not(:disabled),
+.msg-choice:focus-visible:not(:disabled) {
+  background: #a90d12;
+}
+
+@media (max-width: 480px) {
+  .msg-bubble-wrap {
+    max-width: 94%;
+  }
+
+  .msg-thread-bar .msg-logo {
+    font-size: 22px;
+  }
+}

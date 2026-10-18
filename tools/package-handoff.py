@@ -173,6 +173,7 @@ VISUAL_EVIDENCE = [
     (".dsh/screenshots/im-visual-v2/03-list-black.png", "visual-evidence/im-list.png"),
     (".dsh/screenshots/im-visual-v2/01-start.png", "visual-evidence/im-conversation-black-bars.png"),
     (".dsh/screenshots/im-visual-v2/02-map-node.png", "visual-evidence/im-photo-message-black-bars.png"),
+    (".dsh/screenshots/im-visual-v2/04-compact-header.png", "visual-evidence/im-conversation-compact-header.png"),
     (".dsh/screenshots/im-image-card/01-conversation-image-card.png", "visual-evidence/im-image-card-e2e.png"),
     (".dsh/screenshots/acceptance-complete-r2r3/01-lightbox-open.png", "visual-evidence/im-lightbox-open.png"),
     (".dsh/screenshots/acceptance-complete-r2r3/02-after-escape-still-in-conversation.png", "visual-evidence/im-lightbox-escape-stays-in-conversation.png"),
