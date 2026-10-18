@@ -2126,3 +2126,50 @@
     align-self: center;
   }
 }
+
+/* 消息气泡尾部的白色小缺口/标记（参考帧的黑条白边细节）。 */
+.msg-bubble-wrap {
+  position: relative;
+}
+
+.msg-row-in .msg-bubble-wrap::after {
+  content: "";
+  position: absolute;
+  right: -9px;
+  bottom: -7px;
+  width: 13px;
+  height: 7px;
+  background: var(--msg-paper, #f4f1ea);
+  transform: rotate(24deg);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* 对照 P5R IM 会话帧：正文加粗、白边加厚、每条轻微不同倾角。 */
+.msg-bubble .msg-text {
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.msg-bubble {
+  border-width: 4px;
+}
+
+.msg-row:nth-child(2n) .msg-bubble {
+  transform: rotate(-0.2deg);
+}
+
+.msg-row:nth-child(3n) .msg-bubble {
+  transform: rotate(-1.6deg);
+}
+
+.msg-row:nth-child(4n) .msg-bubble {
+  transform: rotate(0.3deg);
+}
+
+@media (max-width: 480px) {
+  .msg-row:nth-child(2n) .msg-bubble,
+  .msg-row:nth-child(3n) .msg-bubble,
+  .msg-row:nth-child(4n) .msg-bubble {
+    transform: none;
+  }
+}

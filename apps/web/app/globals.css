@@ -971,3 +971,101 @@ html.ov-lock body {
     font-size: 20px;
   }
 }
+
+/* ==========================================================================
+   IM 聊天界面复刻（2026-10-19）：手机宿主内去掉「APP 外壳头」，让 IM 自身占满
+   手机屏幕；返回按钮改为浮在左上角的黑/白/红按钮（参考帧没有网页式 appbar）。
+   仅作用于手机宿主里的 ins（消息）应用，不影响独立页/桌面。
+   ========================================================================== */
+
+.pw-appview[data-phone-app="ins"] {
+  position: relative;
+}
+
+.pw-appview[data-phone-app="ins"] .pw-appbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 8;
+  padding: 7px 8px;
+  background: transparent;
+  border: 0;
+  pointer-events: none;
+}
+
+.pw-appview[data-phone-app="ins"] .pw-appbar .pw-appname,
+.pw-appview[data-phone-app="ins"] .pw-appbar .pw-expand {
+  display: none;
+}
+
+.pw-appview[data-phone-app="ins"] .pw-appbar .pw-back {
+  pointer-events: auto;
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 3px solid var(--msg-ink, #101014);
+  background: var(--msg-paper, #f4f1ea);
+  color: var(--msg-ink, #101014);
+  box-shadow: 4px 4px 0 var(--msg-red, #e5191c);
+  transform: rotate(-2deg);
+  font-size: 18px;
+}
+
+.pw-appview[data-phone-app="ins"] .pw-appbody {
+  padding-top: 0;
+}
+
+/* 手机里 IM 头部只留 wordmark 与详情（参考帧无角色信息横条）。 */
+.pw-appview[data-phone-app="ins"] .msg-thread-id {
+  display: none;
+}
+
+.pw-appview[data-phone-app="ins"] .msg-thread-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 2px 8px 2px 48px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  transform: none;
+}
+
+.pw-appview[data-phone-app="ins"] .msg-thread-bar .msg-logo {
+  font-size: 30px;
+  padding: 4px 9px 2px 8px;
+  box-shadow: 3px 3px 0 var(--msg-red);
+}
+
+.pw-appview[data-phone-app="ins"] .msg-thread-bar .msg-logo::before {
+  width: 6px;
+  height: 24px;
+}
+
+.pw-appview[data-phone-app="ins"] .msg-list-head {
+  padding-left: 44px;
+}
+
+.pw-appview[data-phone-app="ins"] .msg-list-head .msg-logo {
+  font-size: 32px;
+  padding: 5px 10px 3px;
+  box-shadow: 4px 4px 0 var(--msg-red);
+}
+
+.pw-appview[data-phone-app="ins"] .msg-details {
+  margin-left: auto;
+  align-self: flex-start;
+}
+
+.pw-appview[data-phone-app="ins"] .msg-details-btn {
+  padding: 4px 8px;
+  background: var(--msg-paper);
+  color: var(--msg-ink);
+  border: 2px solid var(--msg-ink);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.55);
+  font-size: 11px;
+}

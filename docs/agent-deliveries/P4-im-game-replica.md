@@ -1,0 +1,42 @@
+# 游戏内 IM 聊天界面复刻（2026-10-19）
+
+> 目标：按 P5R 游戏内 IM/SNS 参考帧复刻聊天界面（不是「视觉语言接近」）。
+> 参考帧：`hud/p5r-im-conversation-fullframe.jpg`（会话）、`hud/p5r-im-inbox-fullframe.jpg`（收件）、
+> `hud/p5r-im-reply-selection-fullframe.jpg`（G2 回复选择，站主提供）。
+
+## 1. 本轮改动
+
+| 参考帧特征 | 站点实现 |
+| --- | --- |
+| 手机内只有 IM 自身，没有网页式 App 头 | 手机宿主里隐藏 `pw-appbar` 的 App 名/展开链接；返回键改为浮层黑白红方钮；IM 占满手机屏 |
+| 头部只有大 wordmark，没有角色信息横条 | 手机宿主隐藏 `msg-thread-id`；IM wordmark 32–38px、纸白底+红侧条+红硬阴影，左上；详情缩为小方钮 |
+| 黑底白边消息条、白字、轻微倾角 | 气泡 4px 白边、黑底白字、正文 700 粗体；每条按序号 -1.6°/-0.2°/0.3° 微倾 |
+| 头像白框拍立得、叠压消息条左缘 | 头像 44px、彩色相纸底、负边距叠压气泡；白纸黑内框 |
+| 气泡右下白色小标记 | `.msg-bubble-wrap::after` 白色小斜条（参考帧的白边缺口/标记语言） |
+| 白色箭头回复选项、首条红字 | G2 后已实现：白底黑边箭头条、右对齐、首条红字、悬停反色 |
+| 收件列表的 IM wordmark | 列表头补回 IM wordmark 并放大；返回键不再遮挡 |
+| 底部 Scroll/Close 提示 | 保留 `SCROLL 滚动 / BACK 返回` 行，对应游戏底部操作提示 |
+
+## 2. 证据
+
+- 截图：`.dsh/screenshots/im-replica/`
+  - `04-conversation-v3.png`：手机宿主内 IM 会话（全屏、wordmark、黑底白边粗体、白箭头选项）
+  - `05-inbox-v2.png`：收件列表（IM wordmark + 黑底白边角色条）
+- 参考帧：外部精选库 `hud/p5r-im-conversation-fullframe.jpg`、`hud/p5r-im-inbox-fullframe.jpg`；
+  G2 `hud/p5r-im-reply-selection-fullframe.jpg`（22/22 校验）
+- 测试：messaging 7 文件 72 通过；phone 相关 102 通过（CSS 隔离测试仍通过）
+
+## 3. 仍与参考帧不同（未冒充逐像素）
+
+1. 参考帧是**整台倾斜手机**占满游戏画面（含手部/场景）；站点是固定桌面手机壳，不复制场景/手部；
+2. 游戏 IM 没有自由输入框；站点保留「自己说一句」自由聊天入口（产品功能，非原版 UI）；
+3. 收件列表的日期/状态斜标签（3/19 Su、HOLD/NEW）没有游戏内数据，未伪造；
+4. 手机外框、字号与整体比例仍非逐像素等比。
+
+## 4. 复验
+
+```bash
+bash tools/verify-all.sh --e2e --mobile      # 7/7 段
+PLAYWRIGHT_BROWSERS_PATH=.dsh/ms-playwright python3 tools/e2e-webkit-mobile-smoke.py http://127.0.0.1:3100
+python3 tools/e2e-im-image-card.py http://127.0.0.1:3100
+```

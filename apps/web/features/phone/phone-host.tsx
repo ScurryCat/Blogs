@@ -182,7 +182,7 @@ export function PhoneHost(): ReactNode {
             {onDesktop || !manifest ? (
               <PhoneDesktop page={desktopPage} onPageChange={setDesktopPage} />
             ) : (
-              <div className="pw-appview">
+              <div className="pw-appview" data-phone-app={manifest.id}>
                 <header className="pw-appbar">
                   <button className="pw-back" type="button" aria-label="返回" onClick={back}>
                     ◂
