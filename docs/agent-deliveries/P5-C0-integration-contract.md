@@ -1,7 +1,8 @@
 # P5 · C0 集成契约（站主创作台 · 第一批）
 
-> 状态：**执行中**（本轮只在本地提交，不推送）。
-> 上游设计书：`/Users/v/Documents/ChatGPT/Blog开发/docs/handoff/2026-10-18-p5-creator-workspace-design.md`
+> 状态：**已完成 · 第一批验收通过**（2026-10-19；提交 `3b0914e` + `9644737`）。
+> 最终交付报告：`docs/agent-deliveries/P5-final-report.md`；验收证据：`docs/acceptance/P5-acceptance-report.md`。
+> 上游设计书：`docs/handoff/2026-10-18-p5-creator-workspace-design.md`（原文亦见 `/Users/v/Documents/ChatGPT/Blog开发/docs/handoff/`）
 > 本文是**实现与验收的唯一接口约定**：C1–C5 都按这里写；实现与本文冲突时先改本文，
 > 再改代码（不允许各自发明接口）。
 > 日期：2026-10-18 ｜ 集成负责人：C0（Lead）
