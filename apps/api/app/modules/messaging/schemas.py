@@ -23,13 +23,20 @@ from pydantic import BaseModel, Field
 
 
 class CardOut(BaseModel):
-    """服务端验证过的站内内容引用。`url` 由服务端生成，前端只用它渲染 SiteLink。"""
+    """服务端验证过的站内内容引用。`url` 由服务端生成，前端只用它渲染 SiteLink。
+
+    图片卡（kind=`image` / `album_photo`）额外带 `width/height/alt`；内容卡不带这三个字段。
+    `url` 对图片卡是服务端生成的 w640 变体地址（永远不是原图），前端只负责展示。
+    """
 
     kind: str
     id: str
     title: str
     summary: str
     url: str
+    width: int | None = None
+    height: int | None = None
+    alt: str | None = None
 
 
 class MessageOut(BaseModel):

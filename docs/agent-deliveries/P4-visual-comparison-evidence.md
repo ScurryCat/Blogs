@@ -24,7 +24,7 @@ python3 tools/capture-visual-comparison.py http://127.0.0.1:3100
 | 1 | `p5-phone-home-fullframe`（P5 手机主屏） | `/?phone=home` 手机桌面 | 站点为红黑应用磁贴网格 + 手机壳；对照帧为 P5 App 网格：**结构语言有（磁贴网格/顶部状态），整屏细节未复刻** | 已对照（部分） |
 | 2 | `p5r-street-hud-fullframe`（日期/IM 通知/小地图） | `/?phone=home` + 站点 HUD | 站点 HUD 有日期/时间与手机入口；**无小地图、无地点 toast、无 IM 角标通知** | 已对照（部分） |
 | 3 | `p5r-im-groupchat-fullframe`（IM 群聊） | `/?phone=ins` IM feed | 站点 IM 为应用内列表 + 红黑白语言；**P5 IM 手机外框/多气泡群聊布局未复刻** | 已对照（部分） |
-| 4 | `p5r-im-photo-fullframe`（图片消息） | `/?phone=ins` IM feed | **站点不支持图片消息**（B4 待产品拍板） | 未实现 |
+| 4 | `p5r-im-photo-fullframe`（图片消息） | `/?phone=ins&screen=conversation&item=morgana`（剧本 `map` 节点） | **Phase 1 已实现**：白框拍立得图片卡 + 灯箱；与参考帧的 IM 整屏视觉语言仍只部分对照（卡片风格/手机外框未逐像素复刻） | 已实现（Phase 1）/ 视觉部分对照 |
 | 5 | `p5r-dialogue-choice-fullframe`（回复选择） | `/?phone=ins&screen=conversation&item=futaba` | 站点剧本会话有回复选项（交互结构存在）；**P5 对话框/选项整屏视觉未复刻**（站点是 IM 气泡语言） | 已对照（部分） |
 | 6 | `p5-load-save-fullframe`（Load 存档槽） | `/apps/journal` 手记 | 站点手记为存档式列表 + SAVE DATA 卡；**存档槽整屏视觉未复刻** | 已对照（部分） |
 | 7 | `p5-calendar-fullframe`（日历） | `/apps/journal` 手记日历屏 | 站点有日历屏（月历/日期格）；**P5 日历整屏字体与布局未复刻** | 已对照（部分） |

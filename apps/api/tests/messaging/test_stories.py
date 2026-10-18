@@ -258,7 +258,15 @@ def test_content_refs_use_known_kinds_only():
     """剧本里用到的 kind 必须都在 content.py 的实现分支里。"""
     from app.modules.messaging import content
 
-    supported = {"post", "moment", "recent_posts", "recent_moments", "path"}
+    supported = {
+        "post",
+        "moment",
+        "recent_posts",
+        "recent_moments",
+        "path",
+        "image",
+        "album_photo",
+    }
     used: set[str] = set()
     for story in stories.STORIES:
         for node in story.nodes.values():
@@ -267,7 +275,7 @@ def test_content_refs_use_known_kinds_only():
                 assert isinstance(ref, ContentRef)
                 assert ref.label
     assert used <= supported, used - supported
-    assert {"recent_posts", "recent_moments", "path"} <= used
+    assert {"recent_posts", "recent_moments", "path", "album_photo"} <= used
     # STATIC_LINKS 里出现的路径就是剧本里 path 引用允许的取值
     allowed_paths = {link.path for link in content.STATIC_LINKS}
     for story in stories.STORIES:

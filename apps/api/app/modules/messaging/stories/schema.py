@@ -34,7 +34,8 @@ class ContentRef:
     """
 
     kind: str
-    """`post`（slug）/ `moment`（UUID）/ `path`（站内固定路径，见 content.STATIC_LINKS）。"""
+    """`post`（slug）/ `moment`（UUID）/ `path`（站内固定路径，见 content.STATIC_LINKS）/
+    `image`（媒体 UUID，需 ready + 有公开引用）/ `album_photo`（`相册slug[:序号]`，需相册公开）。"""
     id: str
     label: str
     """按钮文字。脚本作者写死；模型输出不使用这个字段（模型只给 token）。"""

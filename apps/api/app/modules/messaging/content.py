@@ -75,6 +75,9 @@ class ResolvedCard:
 
     字段与 `messages.cards` 的 JSONB 形状一致；`url` 由服务端生成，
     前端只用它 + `SiteLink` 渲染，不再自己拼路径（08 §3）。
+
+    图片卡（kind=`image` / `album_photo`）额外带 `width/height/alt`；
+    `url` 是 w640 变体地址（不是原图），前端用 `<img>` 渲染。
     """
 
     kind: str
@@ -82,15 +85,25 @@ class ResolvedCard:
     title: str
     summary: str
     url: str
+    width: int | None = None
+    height: int | None = None
+    alt: str | None = None
 
-    def as_payload(self) -> dict[str, str]:
-        return {
+    def as_payload(self) -> dict[str, object]:
+        payload: dict[str, object] = {
             "kind": self.kind,
             "id": self.id,
             "title": self.title,
             "summary": self.summary,
             "url": self.url,
         }
+        if self.width is not None:
+            payload["width"] = self.width
+        if self.height is not None:
+            payload["height"] = self.height
+        if self.alt is not None:
+            payload["alt"] = self.alt
+        return payload
 
 
 def _excerpt(text: str, limit: int = SUMMARY_MAX_CODEPOINTS) -> str:
@@ -118,6 +131,52 @@ def moment_card(moment_id: uuid.UUID, text: str) -> ResolvedCard:
         title=_excerpt(text, 24) or "一条图文动态",
         summary=_excerpt(text),
         url=f"/apps/ins/{moment_id}",
+    )
+
+
+def image_card(
+    *,
+    media_id: str,
+    title: str,
+    summary: str,
+    alt: str,
+    width: int,
+    height: int,
+) -> ResolvedCard:
+    """图片卡：`url` 固定指向服务端 w640 变体（原图永远不对访客开放）。"""
+    return ResolvedCard(
+        kind="image",
+        id=media_id,
+        title=title.strip() or "一张照片",
+        summary=summary.strip(),
+        url=f"/api/v1/media/{media_id}/w640.webp",
+        width=width,
+        height=height,
+        alt=alt.strip() or "照片",
+    )
+
+
+def album_photo_card(
+    *,
+    album_slug: str,
+    index: int,
+    title: str,
+    summary: str,
+    alt: str,
+    media_id: str,
+    width: int,
+    height: int,
+) -> ResolvedCard:
+    """公开相册照片卡：用于剧本按「相册 slug + 序号」引用站主已有照片。"""
+    return ResolvedCard(
+        kind="album_photo",
+        id=f"{album_slug}:{index}",
+        title=title.strip() or "一张相册照片",
+        summary=summary.strip(),
+        url=f"/api/v1/media/{media_id}/w640.webp",
+        width=width,
+        height=height,
+        alt=alt.strip() or "相册照片",
     )
 
 
@@ -178,6 +237,88 @@ def find_moment(session: Session, moment_id: str) -> ResolvedCard | None:
     return moment_card(moment.id, moment.text)
 
 
+def _variant_size(media_id: uuid.UUID, session: Session) -> tuple[int, int] | None:
+    """w640 变体的宽高；不存在就返回 None（图片卡直接丢弃，不留坏图）。"""
+    from app.modules.media import service as media_service
+
+    media = media_service.get_media(session, media_id)
+    if media is None or not media.is_ready:
+        return None
+    variant = media_service.resolve_variant(media, "w640.webp")
+    if variant is None:
+        return None
+    return variant.width, variant.height
+
+
+def find_image(session: Session, media_ref: str, *, label: str) -> ResolvedCard | None:
+    """按媒体 UUID 取一张**公开可读**的图片；未 ready / 无公开引用 / 无变体都返回 None。"""
+    from app.modules.media import public_refs as media_public_refs
+    from app.modules.media import service as media_service
+
+    try:
+        media_id = uuid.UUID(media_ref.strip())
+    except (ValueError, AttributeError, TypeError):
+        return None
+    media = media_service.get_media(session, media_id)
+    if media is None or not media.is_ready:
+        return None
+    if not media_public_refs.is_publicly_referenced(session, media.id):
+        return None
+    size = _variant_size(media.id, session)
+    if size is None:
+        return None
+    alt = label.strip() or "照片"
+    return image_card(
+        media_id=str(media.id),
+        title=alt,
+        summary="",
+        alt=alt,
+        width=size[0],
+        height=size[1],
+    )
+
+
+def find_album_photo(session: Session, raw_ref: str, *, label: str) -> ResolvedCard | None:
+    """按 `<album_slug>` 或 `<album_slug>:<index>` 取**公开相册**里的一张照片。
+
+    公开条件完全复用 gallery 的投影（已发布 + 已到时间 + 有效公开来源），
+    不另写一套权限判断；取不到就丢弃（剧本不会显示坏图）。
+    """
+    from app.modules.gallery import service as gallery_service
+
+    slug, _, index_raw = raw_ref.partition(":")
+    slug = slug.strip()
+    if not slug:
+        return None
+    try:
+        index = int(index_raw) if index_raw.strip() else 0
+    except ValueError:
+        return None
+    if index < 0:
+        return None
+
+    album = gallery_service.get_public_album(session, slug)
+    if album is None:
+        return None
+    photos = gallery_service.public_photos_for_albums(session, [album.id]).get(album.id, [])
+    if index >= len(photos):
+        return None
+    photo = photos[index]
+    size = _variant_size(photo.media_id, session)
+    if size is None:
+        return None
+    return album_photo_card(
+        album_slug=album.slug,
+        index=index,
+        title=label or album.title,
+        summary=photo.caption or photo.alt,
+        alt=photo.alt or label,
+        media_id=str(photo.media_id),
+        width=size[0],
+        height=size[1],
+    )
+
+
 def resolve_refs(session: Session, refs: tuple[ContentRef, ...]) -> list[ResolvedCard]:
     """把剧本里的引用解析成卡片。解析不到的**静默丢弃**（不产生空链接）。"""
     cards: list[ResolvedCard] = []
@@ -197,6 +338,12 @@ def resolve_refs(session: Session, refs: tuple[ContentRef, ...]) -> list[Resolve
         elif kind == "path":
             link = _STATIC_BY_PATH.get(ref.id.strip())
             resolved = [path_card(link)] if link else []
+        elif kind == "image":
+            single = find_image(session, ref.id, label=ref.label)
+            resolved = [single] if single else []
+        elif kind == "album_photo":
+            single = find_album_photo(session, ref.id, label=ref.label)
+            resolved = [single] if single else []
         # 未知 kind：丢弃。剧本校验不拦这一项是有意的 —— 新 kind 只影响渲染，
         # 不应该让整本站点起不来；测试会断言所有在用 kind 都被覆盖。
         for card in resolved:
@@ -277,8 +424,12 @@ __all__ = [
     "CandidateContent",
     "ResolvedCard",
     "StaticLink",
+    "album_photo_card",
     "candidate_contents",
     "extract_cards",
+    "image_card",
+    "find_album_photo",
+    "find_image",
     "find_moment",
     "find_post",
     "moment_card",

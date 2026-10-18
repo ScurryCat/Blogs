@@ -9,8 +9,8 @@
 > **本文件与 v2 交接包一体**：`docs/handoff-package-2026-10-17-v2.zip` 由
 > `python3 tools/package-handoff.py` 重新生成（含本文件、全部交付单与更新后的 tools/）。
 > 最近一次完整复验：`bash tools/verify-all.sh --e2e --mobile` → **7/7 段全部通过**
-> （前端 929 / 后端 942 / T02 52/52 / 多视口 11 / 业务流 4/4 / 端到端 12 项）。
-> 验收 v2 返工后：`bash tools/verify-all.sh --fast` 通过（前端 929），F1/F3 复验脚本通过。
+> （前端 933 / 后端 942 / T02 52/52 / 多视口 11 / 业务流 4/4 / 端到端 12 项）。
+> 验收 v2 返工后：`bash tools/verify-all.sh --fast` 通过（前端 933），F1/F3 复验脚本通过。
 
 ---
 

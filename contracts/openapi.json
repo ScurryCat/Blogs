@@ -614,8 +614,30 @@
         "type": "object"
       },
       "CardOut": {
-        "description": "服务端验证过的站内内容引用。`url` 由服务端生成，前端只用它渲染 SiteLink。",
+        "description": "服务端验证过的站内内容引用。`url` 由服务端生成，前端只用它渲染 SiteLink。\n\n图片卡（kind=`image` / `album_photo`）额外带 `width/height/alt`；内容卡不带这三个字段。\n`url` 对图片卡是服务端生成的 w640 变体地址（永远不是原图），前端只负责展示。",
         "properties": {
+          "alt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alt"
+          },
+          "height": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Height"
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -635,6 +657,17 @@
           "url": {
             "title": "Url",
             "type": "string"
+          },
+          "width": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Width"
           }
         },
         "required": [

@@ -32,6 +32,10 @@ export interface Card {
   title: string;
   summary: string;
   url: string;
+  /** 图片卡（kind=image / album_photo）：服务端 w640 变体的宽高与替代文本。 */
+  width?: number | null;
+  height?: number | null;
+  alt?: string | null;
 }
 
 export interface Message {

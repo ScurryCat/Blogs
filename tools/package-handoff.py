@@ -38,6 +38,7 @@ TOOL_WHITELIST = [
     "e2e-im-draft.py",
     "e2e-ins-conversation.py",
     "e2e-ins-album-links-ui.py",
+    "e2e-im-image-card.py",
     "e2e-ins-tag.py",
     "e2e-journal-reading.py",
     "e2e-metanav-palace.py",
@@ -75,7 +76,7 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 > 9 个视觉还原界面的演示内容与手机 deep link 已在本地分享库中。
 >
 > **当前验收摘要（单一基线，勿再用历史正文数字拼凑）**：
-> 代码基线 = 包内 `{head}`；前端 **929** 单测、后端 **943**（`--e2e --mobile` 7/7 段全绿、端到端 12 项）。
+> 代码基线 = 包内 `{head}`；前端 **933** 单测、后端 **952**（`--e2e --mobile` 7/7 段全绿、端到端 12 项）。
 > 独立验收 v2 结论：**功能阶段通过，完整验收未通过**；逐项回应与证据见
 > `docs/agent-deliveries/acceptance-v2-response.md`；验收报告点名的
 > **F1 / F2 / F3 已返工**（详见 `docs/agent-deliveries/P4-acceptance-v2-fixes.md`）：
@@ -93,7 +94,10 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 > **视觉对照证据（2026-10-18）**：`tools/capture-visual-comparison.py` 把 17 张参考帧与
 > 站点 11 个界面并排对照，逐项结论见 `P4-visual-comparison-evidence.md`
 > （13 项语言级部分对照 / 2 项未实现（图片消息、楼层图）/ 2 项无对应整屏；**整屏还原仍未通过**）。
-> 仍未关闭：真实设备（触控/软键盘/移动 Safari）、IM 图片消息（待产品拍板）。
+> **IM 图片消息 Phase 1 已实现（2026-10-18，站主拍板方案 A）**：剧本图片卡
+> （`image`/`album_photo`）+ 白框拍立得 + 灯箱 + 撤回/失效降级；后端 9 / 前端 4 /
+> 浏览器 e2e 8/8（`tools/e2e-im-image-card.py`）；Phase 2 AI 选图 / Phase 3 访客引用相册仍未做。
+> 仍未关闭：真实设备（触控/软键盘/移动 Safari）。
 > **管理端 INS 收录 UI 真实浏览器全流程已补齐**：`tools/e2e-ins-album-links-ui.py` 9/9 通过
 > （登录→建相册草稿→建动态→上传→收录→保存→发布→公开页可见）；期间修复了 2 个真实 UI 阻断缺陷：
 > 管理列表 limit=50 超后端上限 30 的 422、画廊写接口 CSRF body 字段导致的 422/500。

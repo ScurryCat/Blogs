@@ -1841,8 +1841,15 @@ export interface components {
         /**
          * CardOut
          * @description 服务端验证过的站内内容引用。`url` 由服务端生成，前端只用它渲染 SiteLink。
+         *
+         *     图片卡（kind=`image` / `album_photo`）额外带 `width/height/alt`；内容卡不带这三个字段。
+         *     `url` 对图片卡是服务端生成的 w640 变体地址（永远不是原图），前端只负责展示。
          */
         CardOut: {
+            /** Alt */
+            alt?: string | null;
+            /** Height */
+            height?: number | null;
             /** Id */
             id: string;
             /** Kind */
@@ -1853,6 +1860,8 @@ export interface components {
             title: string;
             /** Url */
             url: string;
+            /** Width */
+            width?: number | null;
         };
         /** CharacterOut */
         CharacterOut: {

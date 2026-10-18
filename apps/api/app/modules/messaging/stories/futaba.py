@@ -16,7 +16,7 @@ from app.modules.messaging.stories.schema import (
 
 STORY = StoryDefinition(
     id="futaba-noise-and-signal",
-    version="1.1.0",
+    version="1.2.0",
     character_id="futaba",
     start_node="intro",
     nodes={
@@ -122,6 +122,10 @@ STORY = StoryDefinition(
                 StoryChoice(id="debug-log-wrap", label="我去加一条", next_node="wrap"),
             ),
             resume_text="还有别的想问的？",
+            cards=(
+                # B4 Phase 1：图片卡（公开相册照片；相册不存在/未公开时静默丢弃）
+                ContentRef(kind="album_photo", id="screens:0", label="当时的现场截图"),
+            ),
         ),
         "rebuild": StoryNode(
             id="rebuild",

@@ -16,7 +16,7 @@ from app.modules.messaging.stories.schema import (
 
 STORY = StoryDefinition(
     id="morgana-first-visit",
-    version="1.1.0",
+    version="1.2.0",
     character_id="morgana",
     start_node="intro",
     nodes={
@@ -107,6 +107,8 @@ STORY = StoryDefinition(
             resume_text="还想问据点里的什么？",
             cards=(
                 ContentRef(kind="path", id="/map", label="打开地图"),
+                # B4 Phase 1：图片卡（公开相册照片；相册不存在/未公开时静默丢弃）
+                ContentRef(kind="album_photo", id="tokyo-nights:0", label="东京夜景的一张"),
             ),
         ),
         "screens": StoryNode(
