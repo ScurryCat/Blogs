@@ -1972,3 +1972,107 @@
 .msg-choice-list > li:first-child .msg-choice::before {
   color: #b80f15;
 }
+
+/* IM 逐像素第二轮细化（2026-10-19）：按 G2 参考进一步压缩头部、头像叠压消息条、
+   收紧行距与回复选项宽度。目标是把「面板内占比」拉近参考帧，不改变信息与可访问性。 */
+.msg-thread-bar {
+  padding: 6px 8px;
+  gap: 7px;
+}
+
+.msg-thread-bar .msg-avatar-lg {
+  width: 32px;
+  height: 32px;
+}
+
+.msg-thread-bar .msg-logo {
+  font-size: 28px;
+  padding: 5px 8px 3px;
+}
+
+.msg-thread-name {
+  font-size: 16px;
+  line-height: 1.15;
+}
+
+.msg-thread-handle {
+  display: none;
+}
+
+.msg-thread-tags {
+  font-size: 9px;
+  margin-top: 1px;
+}
+
+.msg-list {
+  gap: 7px;
+  padding-bottom: 8px;
+}
+
+.msg-row {
+  gap: 0;
+  align-items: flex-start;
+}
+
+.msg-row .msg-avatar {
+  width: 44px;
+  height: 44px;
+  margin-top: 14px;
+  margin-right: -11px;
+  z-index: 2;
+  flex: 0 0 auto;
+}
+
+.msg-bubble-wrap {
+  max-width: 88%;
+  margin-left: 4px;
+}
+
+.msg-sender-name {
+  font-size: 11px;
+  padding: 0 6px;
+}
+
+.msg-sender .msg-time {
+  font-size: 10px;
+}
+
+.msg-bubble {
+  padding: 9px 13px;
+}
+
+.msg-bubble .msg-text {
+  line-height: 1.55;
+}
+
+.msg-choices {
+  padding-top: 6px;
+  gap: 6px;
+}
+
+.msg-choice {
+  width: 68%;
+  padding: 8px 14px;
+}
+
+.msg-choice:nth-child(2n) {
+  width: 60%;
+}
+
+@media (max-width: 480px) {
+  .msg-row .msg-avatar {
+    width: 38px;
+    height: 38px;
+    margin-right: -8px;
+  }
+
+  .msg-bubble-wrap {
+    max-width: 91%;
+  }
+
+  .msg-choice,
+  .msg-choice:nth-child(2n),
+  .msg-choice:nth-child(3n) {
+    width: 90%;
+  }
+}

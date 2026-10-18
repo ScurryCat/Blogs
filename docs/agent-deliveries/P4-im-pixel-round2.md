@@ -35,6 +35,19 @@
 （参考帧 G2 ↔ 站点 `im-reply-selection`）。参考帧已入库为
 `hud/p5r-im-reply-selection-fullframe.jpg`（22/22 校验通过）。
 
+## 2.6 第二轮细化（2026-10-19）
+
+在 G2 回复选项完成后的继续细化：
+
+- 会话头再压缩：头像 32px、logo 28px、标题 16px，隐藏 handle，标签 9px；
+- 头像 44px 并**负边距叠压**消息条左缘（参考帧的拍立得压边关系）；
+- 消息条宽度 88%，正文行高 1.55，发送人标签 11px / 时间 10px；
+- 回复选项宽度 68% / 60% 交替，间距收紧，首条红字；
+- 手机端头像 38px、消息 91%、选项 90%。
+
+截图：`.dsh/screenshots/im-visual-v2/05-pixel-round2.png`；
+对照：`.dsh/screenshots/visual-comparison/comparison-2.png` 首行（G2 ↔ 站点回复选择）。
+
 ## 3. 仍未对齐（下一轮可继续）
 
 1. 参考帧是倾斜手机/手部持机，本站是正置手机壳；整屏构图无法逐像素等同比；
