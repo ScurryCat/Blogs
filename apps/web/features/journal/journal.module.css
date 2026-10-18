@@ -1819,3 +1819,92 @@
 .calendarPane .day:nth-child(7n - 1) {
   color: #2fd8e6;
 }
+
+/* ==========================================================================
+   手记逐像素第二轮（2026-10-19）：参考 P5 Load / Calendar 完整帧，
+   把标题/槽位/日历的尺寸与倾斜再向参考帧推进一档。
+   ========================================================================== */
+
+.saveHeading {
+  gap: 16px;
+  transform: skewX(-7deg) rotate(-1.1deg);
+}
+
+.saveKicker {
+  font-size: clamp(46px, 4.8vw, 64px);
+  letter-spacing: -0.01em;
+  text-shadow: 6px 6px 0 var(--red-deep, #a90d12);
+}
+
+.saveTitle {
+  padding: 3px 10px;
+  font-size: 13px;
+  letter-spacing: 0.24em;
+}
+
+.saveList {
+  gap: 12px;
+}
+
+.slot {
+  transform: rotate(-0.9deg);
+  border-left-width: 8px;
+  box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.55);
+}
+
+.slot:nth-child(even) {
+  transform: rotate(0.8deg);
+}
+
+.slotNo {
+  font-size: 22px;
+  padding: 4px 10px 3px;
+}
+
+.slotDay {
+  font-size: 38px;
+}
+
+.slotTitle {
+  font-size: 18px;
+}
+
+.preview {
+  transform: rotate(-1deg);
+  box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.55);
+}
+
+.previewDay {
+  font-size: 72px;
+}
+
+.calendarPane .monthTitle {
+  font-size: 30px;
+  padding: 3px 16px 2px;
+}
+
+.calendarPane .day {
+  font-size: clamp(22px, 2.4vw, 32px);
+}
+
+.calendarPane .weekday {
+  font-size: 14px;
+}
+
+@media (max-width: 760px) {
+  .saveKicker {
+    font-size: 34px;
+  }
+
+  .slotDay {
+    font-size: 28px;
+  }
+
+  .previewDay {
+    font-size: 56px;
+  }
+
+  .calendarPane .day {
+    font-size: 22px;
+  }
+}

@@ -178,6 +178,8 @@ VISUAL_EVIDENCE = [
     (".dsh/screenshots/im-visual-v2/04-compact-header.png", "visual-evidence/im-conversation-compact-header.png"),
     (".dsh/screenshots/im-visual-v2/05-pixel-round2.png", "visual-evidence/im-pixel-round2.png"),
     (".dsh/screenshots/im-visual-v2/06-wordmark.png", "visual-evidence/im-wordmark-pixel-round3.png"),
+    (".dsh/screenshots/journal-visual-v2/01-save-list.png", "visual-evidence/journal-pixel-round2-save-list.png"),
+    (".dsh/screenshots/journal-visual-v2/02-calendar.png", "visual-evidence/journal-pixel-round2-calendar.png"),
     (".dsh/ai-icons/sheet.jpg", "visual-evidence/ai-app-icons-sheet.jpg"),
     (".dsh/screenshots/im-image-card/01-conversation-image-card.png", "visual-evidence/im-image-card-e2e.png"),
     (".dsh/screenshots/acceptance-complete-r2r3/01-lightbox-open.png", "visual-evidence/im-lightbox-open.png"),
