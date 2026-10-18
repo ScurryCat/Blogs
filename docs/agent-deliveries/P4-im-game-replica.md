@@ -28,6 +28,18 @@
 
 截图：`.dsh/screenshots/im-replica/04-conversation-v3.png`、`07-inbox-date-tag.png`。
 
+## 1.6 第三轮（2026-10-19）
+
+- 手机宿主内隐藏「自己说一句」输入条、自由聊天用量、选择提示文案（参考帧没有输入框）；
+  独立页仍保留完整自由聊天；
+- 底部操作提示压到手机最底部（白纸底黑字，左「SCROLL 滚动」右「BACK 返回」），
+  对应参考帧左下 Scroll / 右下 Close 的位置；
+- 消息区改为 flex 占满剩余高度，选项区固定底部；
+- 390px 手机视口：详情按钮留出右上关闭钮空间，避免被裁切。
+
+截图：`.dsh/screenshots/im-replica/08-conversation-bottom-hints.png`、
+`09-mobile-conversation.png`、`10-mobile-v2.png`。
+
 ## 2. 证据
 
 - 截图：`.dsh/screenshots/im-replica/`

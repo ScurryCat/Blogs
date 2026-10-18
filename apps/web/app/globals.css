@@ -1069,3 +1069,54 @@ html.ov-lock body {
   box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.55);
   font-size: 11px;
 }
+
+/* IM 复刻：手机宿主内去掉自由聊天输入条/用量，把操作提示压到底部（参考帧底部 Scroll/Close），
+   消息区占满剩余高度。独立页仍保留完整自由聊天与用量。 */
+.pw-appview[data-phone-app="ins"] .msg-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.pw-appview[data-phone-app="ins"] .msg-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.pw-appview[data-phone-app="ins"] .msg-composer,
+.pw-appview[data-phone-app="ins"] .msg-usage,
+.pw-appview[data-phone-app="ins"] .msg-choices-hint {
+  display: none;
+}
+
+.pw-appview[data-phone-app="ins"] .msg-choices {
+  order: 10;
+  padding-bottom: 4px;
+}
+
+.pw-appview[data-phone-app="ins"] .msg-op-hints {
+  order: 20;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding: 5px 8px 6px;
+  border-top: 2px solid var(--msg-ink);
+  background: var(--msg-paper);
+  color: var(--msg-ink);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 520px) {
+  .pw-appview[data-phone-app="ins"] .msg-details {
+    margin-right: 34px;
+  }
+
+  .pw-appview[data-phone-app="ins"] .msg-details-btn {
+    padding: 3px 6px;
+    font-size: 10px;
+  }
+}
