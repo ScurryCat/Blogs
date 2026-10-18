@@ -19,7 +19,7 @@
 | 10 | 东京地图 Map | `p5-tokyo-map` | `P4-legacy-visual-refinement.md` | `.dsh/screenshots/phone-about-map-visual/` |
 
 另有 IM 图片消息 Phase 1（`P4-im-image-messages-result.md`）与视觉对照证据
-（`P4-visual-comparison-evidence.md`，17 帧 ↔ 13 个站点界面）。
+（`P4-visual-comparison-evidence.md`，21 帧 ↔ 13 个站点界面）。
 
 ## 2. 统一做法
 
@@ -34,7 +34,7 @@
 
 - 各包前端测试：IM 71、手记 55、COOP 79、Showcase 50、Velvet 59、Exploration 39、Leisure 27；
 - 全量回归：前端 **933**、后端 **952**、T02 52/52、多视口 11、业务流 4/4、端到端 12 项；
-- 视觉对照：`comparison-{1..3}.png`（17 帧 ↔ 13 界面并排）。
+- 视觉对照：`comparison-{1..3}.png`（21 帧 ↔ 13 界面并排）。
 
 ## 4. 仍未覆盖 / 下一步
 

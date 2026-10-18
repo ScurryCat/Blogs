@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""验收 v2 补帧复验：精选库里的 6 张完整帧存在、哈希一致、索引/来源可追溯。
+"""验收 v2 / 完整验收 R1 补帧复验：精选库完整帧存在、哈希一致、索引/来源可追溯。
 
 对应验收报告 §5.1 / §7.3：本地参考库要能支撑「完整帧」视觉对照
 （回复选择 G2、普通对话 G1、IM 完整屏、手机 HUD），并记录来源与哈希。
@@ -21,10 +21,11 @@ DEFAULT_REFERENCE = pathlib.Path("/Users/v/Documents/ChatGPT/Blog开发/assets/r
 
 # 期望帧：路径 → (sha256, (宽, 高), 用途)
 EXPECTED = {
-    "hud/p5r-dialogue-choice-fullframe.jpg": (
+    # R1 纠正：这张实际是 P4/P4G Fox 选项画面，只作辅助参考，**不用于 G2**。
+    "hud/p4-dialogue-choice-fullframe.jpg": (
         "2392b491423975316e3a025bb1c144baafc33e792c16ea808e394798c7f83a2c",
         (1920, 1080),
-        "G2 回复选择完整帧",
+        "P4 对话选项帧（非 P5R；辅助参考，不用于 G2）",
     ),
     "hud/p5r-dialogue-normal-fullframe.jpg": (
         "7ca48c1b02572f79202216b5b786acdb303b7d062bc3179637c40f1018290d4d",
@@ -78,15 +79,35 @@ EXPECTED = {
         "校内地图整屏帧（地图/殿堂参考）",
     ),
     "hud/p5-tokyo-map-fullframe.jpg": (
+        "682985c68d0304ded43d50b933940fb8b252a9058106ccd857a89dcec42258c5",
+        (1920, 1080),
+        "P5R 东京地点选择地图完整帧（R1 纠正版）",
+    ),
+    "hud/p5-date-progress-city-fullframe.jpg": (
         "b5036e9387f34e5f518350a01d67bf386d84b6810052bc640649ab6cab9268b4",
         (1920, 1080),
-        "东京地图整屏帧（东京漫游参考）",
+        "P5 日期推进/城市背景帧（非地点选择地图；R1 纠正）",
     ),
     # --- 2026-10-18 第三批：界面整屏帧（天鹅绒/印象空间/COOP/殿堂/放课后） ---
     "hud/p5r-velvet-room-fullframe.jpg": (
+        "cd13dca030e63b8cc38298e73920e7387efc2b43cd3a0f6419b6b988d9f301ee",
+        (1920, 1080),
+        "P5R 天鹅绒房间完整帧（R1 纠正版：Lavenza 场景）",
+    ),
+    "hud/p4-velvet-room-fullframe.jpg": (
         "2ee23c9363ebc617ff82d2d88393d5ffbd4ff55f961f8dfb8eea0f46389457cc",
         (3840, 2160),
-        "天鹅绒房间整屏帧（P5R Velvet Room）",
+        "P4 天鹅绒房间轿车内景（非 P5R；辅助参考）",
+    ),
+    "hud/p5r-im-inbox-fullframe.jpg": (
+        "06459056af462a6c5075f5838036f30cc023273eee690edd25564d0ceeaff706",
+        (1920, 1080),
+        "P5R IM 收件列表完整帧（R1 补）",
+    ),
+    "hud/p5r-im-conversation-fullframe.jpg": (
+        "dac6193a60d25e3162efcae1ae26ac60eb4eb5183b2c7f044704dfbfa4c4e781",
+        (1920, 1080),
+        "P5R IM 会话完整帧（R1 补；无回复选项）",
     ),
     "hud/p5-mementos-fullframe.jpg": (
         "e94b414fda0caea2575a68a0435db25e0c09676a23c9478437694280b75df3f4",

@@ -83,10 +83,10 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 > F1 默认素材入口迁移到 `persona-curated/`（旧库降级离线档案）；
 > F2 桌面接入 2 枚已审核原版图标（metanav 经典红眼 / ins 原版消息标识，其余 8 个仍标适配）；
 > F3 INS 收录相册改 cursor 全量分页 + 列表外已选相册详情补取（仅 404 判删除）。
-> **参考帧补齐（2026-10-18，三批 17 张）**：P5R 6（G2 回复选择 / G1 普通对话 ×2 /
+> **参考帧补齐（2026-10-18，三批 17 张（R1 后 21 张））**：P5R 6（G2 回复选择 / G1 普通对话 ×2 /
 > IM 完整屏 ×2 / 手机 HUD）+ P5 6（存档/读取 / 手机主屏 / 日历 / 五维状态 / 校内地图 / 东京地图）
 > + 5（天鹅绒房间 / 印象空间 / COOP / 殿堂 / 放课后），
-> `tools/acceptance/verify-reference-frames.py` **17/17**；来源核实见
+> `tools/acceptance/verify-reference-frames.py` **21/21**；来源核实见
 > `docs/design-references/reference-frame-sources.md`（官方 3：PS CDN 1 + Steam 2；
 > 可追溯非官方 12；未核实 2=IM 两帧）。整屏参考帧缺口已收口。
 > **移动引擎证据（2026-10-18）**：WebKit + iPhone 视口 24/24（首页/手机/IM/图库灯箱/触控点按），
@@ -107,7 +107,7 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 > **整屏视觉修形第一轮完成（2026-10-18）**：10 个界面 / 9 轮（IM 两轮，另有手记、COOP、殿堂、
 > 天鹅绒、印象空间、放课后、手机主屏、关于、东京地图），对照表 13 个可映射界面全部覆盖
 > （1 个对象不适用），索引 `P4-visual-refinement-summary.md`；均标「部分还原」。
-> **视觉对照证据（2026-10-18）**：`tools/capture-visual-comparison.py` 把 17 张参考帧与
+> **视觉对照证据（2026-10-18）**：`tools/capture-visual-comparison.py` 把 21 张参考帧与
 > 站点 13 个界面并排对照，逐项结论见 `P4-visual-comparison-evidence.md`
 > （13 项已完成整屏语言修形第一轮 / 1 项对象不适用（校内楼层图）/ 2 项无对应整屏；
 > **整屏逐像素还原仍未通过**）。
@@ -120,7 +120,7 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 > 管理列表 limit=50 超后端上限 30 的 422、画廊写接口 CSRF body 字段导致的 422/500。
 > **请先读 `docs/agent-deliveries/HANDOFF-ADDENDUM-2026-10-17.md`**（状态增量与未完成项），
 > 再读 `docs/agent-deliveries/P4-final-state.md`（一页纸速览）与本文其余部分。
-> 重要：**整屏逐像素还原验收仍未通过**——17 张参考帧已补齐，13 个可映射界面完成
+> 重要：**整屏逐像素还原验收仍未通过**——21 张参考帧已补齐，13 个可映射界面完成
 > 第一轮视觉语言修形，但尺寸/间距/字体尚未逐像素对照；B4 图片消息 Phase 1 已实现，
 > Phase 2 AI 选图 / Phase 3 访客引用相册仍未做。
 <!-- /PACKAGE-V2 -->

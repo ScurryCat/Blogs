@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""视觉对照证据采集：17 张参考帧 ↔ 站点实际界面截图。
+"""视觉对照证据采集：21 张参考帧 ↔ 站点实际界面截图。
 
 验收报告 §5.1 要求「补存档 / IM 等完整参考和视觉对照证据」。本脚本做两件事：
 1. 用真实浏览器截取站点对应界面（桌面 1440×900，访客视角）；
@@ -27,7 +27,7 @@ CURATED = pathlib.Path("/Users/v/Documents/ChatGPT/Blog开发/assets/reference/p
 SITES = [
     ("phone-home", "/?phone=home", ["p5-phone-home-fullframe.jpg", "p5r-street-hud-fullframe.jpg"]),
     ("im-list", "/?phone=ins&screen=messages", ["p5r-im-groupchat-fullframe.jpg"]),
-    ("im-conversation", "/?phone=ins&screen=conversation&item=morgana", ["p5r-dialogue-choice-fullframe.jpg"]),
+    ("im-conversation", "/?phone=ins&screen=conversation&item=morgana", ["p5r-im-conversation-fullframe.jpg"]),
     ("im-conversation-photo", "/?phone=ins&screen=conversation&item=morgana", ["p5r-im-photo-fullframe.jpg"]),
     ("journal", "/apps/journal", ["p5-load-save-fullframe.jpg"]),
     ("journal-calendar", "/apps/journal", ["p5-calendar-fullframe.jpg"]),

@@ -9,7 +9,7 @@
 | # | 缺口 | 影响验收项 | 现状 | 严重度 |
 | --- | --- | --- | --- | --- |
 | G1 | **普通文字消息完整帧** | §4.2 普通文字消息 / §8.1「三类完整参考帧」 | ✅ **已有完整帧（2026-10-18）**：普通对话整屏 ×2（PS 官方 CDN 4K + 本地导入 Maruki）+ IM 完整屏 ×2（群聊/含图片消息，1920×1080/1280×720），可作为文字消息与整屏布局对照；**仍不覆盖**「对方→我方→对方」的发送方气泡帧与时间戳位置（无该样例） | 可做整屏布局对照；交互细节仍标未完成 |
-| G2 | **回复选择完整帧** | §4.2 剧情回复 / §8.1 | ✅ **已有完整帧（2026-10-18）**：`hud/p5r-dialogue-choice-fullframe.jpg`（P5R，1920×1080，Fox 场景 + 3 个可选回复），来源 Game UI Database 图片直链，逐帧实看无明智 | 已可做回复选择还原对照 |
+| G2 | **回复选择完整帧** | §4.2 剧情回复 / §8.1 | ❌ **仍缺（2026-10-18 R1 纠正）**：原标 `p5r-dialogue-choice-fullframe.jpg` 实为 **P4/P4G** Fox 选项画面（已重命名为 `p4-dialogue-choice-fullframe.jpg`，不用于 G2）；新增 P5R IM 收件列表/会话帧，但**尚无 P5/P5R IM 回复选择帧** | 缺口仍未关闭；不用 P4 帧冒充 |
 | G3 | **异世界导航经典红眼图标原图** | §2.3 图标 / §4.7 | ⚠️ **已落地（验收 F2 返工，2026-10-17）**：本地 HUD 表仍无独立原图；改用可追溯外部清理版（Imgur）+ P5 动画原版画面证据，接入桌面实际渲染 `app/original/metanav-original.png`；属「原版视觉清理版」，不宣称官方原始矢量。详见 `original-app-icons.md` | 已接入；官方原始 sprites 仍未入库 |
 | G4 | 图片消息完整帧（**来源未核实**） | §4.2 图片消息 | ⚠️ **部分补齐（2026-10-18）**：图片消息完整帧仍为 `p5r-im-photo-fullframe.jpg`（本地导入，原始 URL 未核实；即原 `p5r-sns`）；另补 IM 群聊完整帧（Pinterest 图片直链，原始发布 URL 未核实）。**来源核实仍不通过** | 可做布局对照；来源与 B4 图片消息协议仍待解决 |
 
@@ -156,7 +156,7 @@
   细化 v1（2026-10-17，见 `P3-mementos-visual-result.md`）。
   两者**整屏还原仍标未完成**。
 
-## 7. 2026-10-18 补帧记录（验收 v2 §5.1 / §7.3，共 17 张完整帧）
+## 7. 2026-10-18 补帧记录（验收 v2 §5.1 / §7.3，共 21 张完整帧）
 
 > 执行方式：Yandex 图片检索定位候选 → 下载 → 人眼逐帧核对 → dHash 与本地帧交叉比对 →
 > 写入外部精选库 `persona-curated/hud/` → 仓库脚本复验哈希。
@@ -164,7 +164,7 @@
 
 | 帧（`persona-curated/hud/`） | 用途 | 来源 | 规格 / SHA-256 | 画面复核 |
 | --- | --- | --- | --- | --- |
-| `p5r-dialogue-choice-fullframe.jpg` | **G2 回复选择完整帧** | Game UI Database 图片直链：`https://www.gameuidatabase.com/uploads/Persona-402132021-025557-75229.jpg` | 1920×1080 / `2392b491…` | Fox 对话 + 3 选项（Ask for healing / Pat its head / Don't do anything）；无明智 |
+| `p4-dialogue-choice-fullframe.jpg` | P4/P4G 对话选项（**辅助参考，R1 纠正**） | Game UI Database 图片直链：`https://www.gameuidatabase.com/uploads/Persona-402132021-025557-75229.jpg` | 1920×1080 / `2392b491…` | P4 Fox 事件 3 选项（Ask for healing 等）；无明智；**非 P5R，不用于 G2** |
 | `p5r-dialogue-normal-fullframe.jpg` | G1 普通对话完整帧 | **PlayStation 官方图片 CDN**：`https://image.api.playstation.com/vulcan/ap/rnd/202209/0202/QZuvnoBy0DhHj8CH5znQLIpL.jpg` | 3840×2160 / `7ca48c1b…` | Shadow Kamoshida 场景；与本地 screenshot-04 dHash 距离 1（同帧） |
 | `p5r-dialogue-maruki-fullframe.jpg` | G1 普通对话完整帧 | 本地导入 `persona-dist/.../screenshot-01`（原始 URL 未核实；文件名内嵌 SHA-256 前缀 `feabb359…`） | 1920×1080 / `feabb359…` | 教室 + Maruki + 文本框；无明智 |
 | `p5r-im-groupchat-fullframe.jpg` | IM 完整屏（群聊） | Pinterest 图片直链（原始发布 URL 未核实）：`https://i.pinimg.com/originals/8e/fc/c1/8efcc13d4eae5df544dadf98c202bd47.jpg` | 1280×720 / `44b761f4…` | Ryuji/Makoto 头像 + 3 条对方消息 + 底部提示；无明智 |
@@ -180,22 +180,26 @@
 | `p5-calendar-fullframe.jpg` | 日历整屏帧（手记参考） | `https://www.gameuidatabase.com/uploads/Persona-511142020-082022-80721.jpg` | 1920×1080 / `eb1bbf4d…` | 月历 + TODAY + Day/Night Job；无明智 |
 | `p5-status-fullframe.jpg` | 五维状态整屏帧（人物档案参考） | `https://www.gameuidatabase.com/uploads/Persona-511142020-082022-55919.jpg` | 1920×1080 / `7a613ba1…` | LV/HP/SP + 五维属性；无明智 |
 | `p5-map-school-fullframe.jpg` | 校内地图整屏帧 | `https://www.gameuidatabase.com/uploads/Persona-511142020-082124-80802.jpg` | 1920×1080 / `1c9e0717…` | Shujin Academy 1F 平面图 + 图例；无明智 |
-| `p5-tokyo-map-fullframe.jpg` | 东京地图整屏帧 | `https://www.gameuidatabase.com/uploads/Persona504202020-044456.jpg` | 1920×1080 / `b5036e93…` | 东京城市地图 + 日期覆盖 + Joker 剪影；无明智 |
+| `p5-tokyo-map-fullframe.jpg` | **P5R 东京地点选择地图完整帧（R1 纠正版）** | Sketchfab 模型预览图（P5R 地图 UI）：`https://media.sketchfab.com/models/a8fd2793e583446e9509cf65f350fb9d/thumbnails/adb0aa09aa80478e91e7ae3f5ac4b0ba/e660c92572ad4b6ea0b712bee0928671.jpeg` | 1920×1080 / `682985c6…` | 红底东京地图 + 各站图标 + P5R 标志；无角色/无明智 |
+| `p5-date-progress-city-fullframe.jpg` | P5 日期推进/城市背景（**非地图界面，R1 纠正**） | `https://www.gameuidatabase.com/uploads/Persona504202020-044456.jpg` | 1920×1080 / `b5036e93…` | 8–13 日星期标签 + 城市背景；无明智 |
 
 ### 7.3 第三批：界面整屏帧（天鹅绒/印象空间/COOP/殿堂/放课后，2026-10-18）
 
 | 帧（`persona-curated/hud/`） | 用途 | 来源 | 规格 / SHA-256 | 画面复核 |
 | --- | --- | --- | --- | --- |
-| `p5r-velvet-room-fullframe.jpg` | **天鹅绒房间整屏帧** | `https://i.playground.ru/i/pix/3183010/image.jpg` | 3840×2160 / `2ee23c93…` | P5R 蓝色天鹅绒房间内景 + Igor/Lavenza；无明智 |
+| `p5r-velvet-room-fullframe.jpg` | **P5R 天鹅绒房间完整帧（R1 纠正版）** | Game UI Database：`https://www.gameuidatabase.com/uploads/Persona-5-Royal03112021-110116-38024.jpg` | 1920×1080 / `cd13dca0…` | P5R 蓝色天鹅绒牢房内景 + Lavenza；无明智 |
+| `p4-velvet-room-fullframe.jpg` | P4 天鹅绒房间轿车内景（**辅助参考，R1 纠正**） | `https://i.playground.ru/i/pix/3183010/image.jpg` | 3840×2160 / `2ee23c93…` | P4 轿车内景 + Igor/Margaret；无明智；**非 P5R** |
+| `p5r-im-inbox-fullframe.jpg` | P5R IM 收件列表（R1 补） | Game UI Database：`https://www.gameuidatabase.com/uploads/Persona-5-Royal03112021-110210-20416.jpg` | 1920×1080 / `06459056…` | IM 列表（Sumire/HOLD/NEW/日期）；无明智 |
+| `p5r-im-conversation-fullframe.jpg` | P5R IM 会话（R1 补；**无回复选项**） | `https://cdn.wccftech.com/wp-content/uploads/2020/02/Persona-5-Royal-IM-Conversation.jpg` | 1920×1080 / `dac6193a…` | 手部持机 + 倾斜红面板 + 消息 + Reply 提示；无明智 |
 | `p5-mementos-fullframe.jpg` | **印象空间整屏帧** | `https://blogger.googleusercontent.com/.../s1600/p5-07.png` | 800×447 / `e94b414f…` | Mementos「Aiyatsbus: Area 1」+ HUD；无明智（原图分辨率较低，如实记录） |
 | `p5r-coop-confidant-fullframe.jpg` | **COOP 协助者整屏帧** | `https://telegra.ph/file/00eba9dd4038e3fca38c5.jpg` | 1400×788 / `b3ef4cc5…` | CONFIDANT / Arcana Fool / RANK 1 / NEW ABILITY；无明智 |
 | `p5-palace-treasure-fullframe.jpg` | **殿堂整屏帧** | `https://i.ytimg.com/vi/RFZtVfi35PE/maxresdefault.jpg` | 1280×720 / `a5e4d4ce…` | 宫殿宝库内景 + Futaba 对话；无明智 |
 | `p5-leisure-batting-fullframe.jpg` | **放课后整屏帧** | `https://cdn.segmentnextimages.com/wp-content/uploads/2023/06/persona-5-batting-cage.jpg` | 1281×723 / `69aeee91…` | 打击练习场 HOMERUN 记分牌 + Swing/Stop；无明智 |
 
-复验脚本：`python3 tools/acceptance/verify-reference-frames.py`（**17/17** 帧存在、哈希/尺寸/索引/来源一致；
-参考库不存在时 SKIP）。**存档/读取 + 天鹅绒/印象空间/COOP/殿堂/放课后整屏帧均已补齐**；
-仍缺：真实设备渲染证据、IM 图片消息协议（B4）。
+复验脚本：`python3 tools/acceptance/verify-reference-frames.py`（**21/21** 帧存在、哈希/尺寸/索引/来源一致；
+参考库不存在时 SKIP）。整屏帧覆盖已补，但 **G2（P5/P5R IM 回复选择）仍缺**；
+仍缺：真实设备渲染证据、IM 图片消息协议后续阶段（B4 Phase 2/3）。
 
-**来源核实（2026-10-18）**：见 `reference-frame-sources.md` —— 17 帧中 **官方 3 张**
+**来源核实（2026-10-18）**：见 `reference-frame-sources.md` —— 21 帧中 **官方 3 张**
 （PlayStation CDN 1 + Steam 官方商店截图 2，dHash 0/1 同帧核对）、可追溯非官方 12 张、
 未核实 2 张（P5R IM 帧，G4 口径保留未核实）。

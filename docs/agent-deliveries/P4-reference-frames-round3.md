@@ -1,3 +1,8 @@
+> **历史文档（2026-10-18 早期补帧记录）**：其中 G2「回复选择」帧实际是 P4/P4G 画面、
+> 天鹅绒帧实际是 P4 轿车内景、东京地图帧实际是 P5 日期推进——完整验收报告 R1 已纠正。
+> 当前正确参考与来源见 `reference-frame-sources.md`（21 张）与 `P4-acceptance-complete-r1.md`。
+> 本文件以下原文保留以作历史对照，不要当作当前参考清单。
+
 # 参考帧补齐（验收 v2 §5.1 / §7.3，三批共 17 张）
 
 > 验收报告剩余项：「补存档 / IM 等完整参考和视觉对照证据」。
@@ -63,7 +68,7 @@ P5 原版完整帧（全部 1920×1080，逐帧实看无明智吾郎）：
 
 | 帧 | 用途 |
 | --- | --- |
-| `p5r-velvet-room-fullframe.jpg` | 天鹅绒房间（P5R 内景 + Igor/Lavenza） |
+| ~~`p5r-velvet-room-fullframe.jpg`~~ | ~~天鹅绒房间（P5R 内景 + Igor/Lavenza）~~（实为 P4 轿车帧，已纠正） |
 | `p5-mementos-fullframe.jpg` | 印象空间（Mementos Aiyatsbus Area 1 + HUD） |
 | `p5r-coop-confidant-fullframe.jpg` | COOP 协助者（Confidant 升阶 / Arcana / New Ability） |
 | `p5-palace-treasure-fullframe.jpg` | 殿堂（宝库内景 + 对话框） |

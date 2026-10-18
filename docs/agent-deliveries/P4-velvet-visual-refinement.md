@@ -1,7 +1,9 @@
 # 天鹅绒房间整屏视觉修形 · 第一轮（对照 P5R Velvet Room 完整帧）
 
 > 站主指令：按对照表继续整屏视觉修形（IM → 手记 → COOP → 殿堂 → 天鹅绒）。
-> 参考帧：`persona-curated/hud/p5r-velvet-room-fullframe.jpg`（来源/哈希见 `reference-frame-sources.md`）。
+> 参考帧：`persona-curated/hud/p5r-velvet-room-fullframe.jpg`（**2026-10-18 R1 纠正版**：
+> P5R 蓝色天鹅绒牢房 + Lavenza，Game UI Database；此前误用的 P4 轿车内景已重命名为
+> `p4-velvet-room-fullframe.jpg`，仅作辅助参考）。来源/哈希见 `reference-frame-sources.md`。
 > 日期：2026-10-18。
 
 ## 1. 本轮改动
@@ -19,7 +21,7 @@
 
 ## 2. 与参考帧的映射边界
 
-参考帧是 3D 天鹅绒房间（蓝丝绒、吊灯、Igor/Lavenza、电梯与金色装饰）。
+参考帧是 P5R 天鹅绒牢房内景（蓝丝绒、冷光、Lavenza 与金色装饰）。
 本站没有人物/房间素材，也不做 3D 场景；用**深蓝丝绒条纹 + 冷光 + 金饰线 + 白色登记板**
 复刻房间与「登记簿」的整体语言，而不是伪造游戏画面或角色立绘。
 
@@ -28,7 +30,7 @@
 - Velvet 前端测试：**59/59** 通过（含 CSS 前缀隔离测试）；
 - `bash tools/verify-all.sh --e2e --mobile` → **7/7 段全绿**
   （前端 933 / 后端 952 / T02 52/52 / 多视口 11 / 业务流 4/4 / 端到端 12 项）；
-- 视觉对照重采集 `/velvet` 与 `p5r-velvet-room-fullframe` 并排图；
+- 视觉对照重采集 `/velvet` 与纠正后的 `p5r-velvet-room-fullframe` 并排图（P4 帧不再作为该页依据）；
 - 截图：`.dsh/screenshots/velvet-visual/01-velvet.png`。
 
 ## 4. 剩余差距

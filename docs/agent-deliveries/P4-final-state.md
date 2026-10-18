@@ -44,12 +44,12 @@
   - **管理端 INS 收录 UI 真实浏览器流程已补齐**（`tools/e2e-ins-album-links-ui.py` 9/9）：
     登录→建相册草稿→建动态→上传→收录→保存→发布→公开页可见；期间修复管理列表 limit>30 的 422、
     画廊写接口 CSRF body 字段的 422/500 两个真实阻断缺陷（后端回归 +1）。
-  - **参考帧补齐（2026-10-18，验收 §5.1/§7.3）**：外部精选库新增 **17 张完整帧**——
+  - **参考帧补齐（2026-10-18，验收 §5.1/§7.3）**：外部精选库新增 **21 张完整帧**——
     P5R 6（G2 回复选择、G1 普通对话 ×2、IM 完整屏 ×2、手机 HUD）+
     P5 6（**存档/读取**、手机主屏、日历、五维状态、校内地图、东京地图）+
     5（天鹅绒房间、印象空间、COOP 协助者、殿堂宝物、放课后打击练习场）；
     来源/哈希/画面复核见 `reference-frame-gaps.md` §7 与 `P4-reference-frames-round3.md`；
-    `verify-reference-frames.py` **17/17** 通过；来源核实见 `reference-frame-sources.md`
+    `verify-reference-frames.py` **21/21** 通过；来源核实见 `reference-frame-sources.md`
     （官方 3 张：PlayStation CDN 1 + Steam 官方截图 2；可追溯非官方 12；未核实 2）。
     整屏参考帧缺口已收口；剩余为真实设备与 IM 图片消息。
   - **IM 整屏视觉修形（2026-10-18，站主指令 IM 优先，已两轮）**：会话列表/会话页改为
@@ -81,7 +81,7 @@
   - **完整验收 R2/R3 返工（2026-10-18）**：IM 图片灯箱接入 OverlayManager（Escape 不再退出
     App）、Portal 到 body、灯箱失败降级；e2e 手机宿主+独立页 60 项断言全过
     （`P4-acceptance-complete-r2r3.md`）；R1 参考帧游戏归属待处理。
-  - **视觉对照证据（2026-10-18）**：`tools/capture-visual-comparison.py` 把 17 张参考帧与
+  - **视觉对照证据（2026-10-18）**：`tools/capture-visual-comparison.py` 把 21 张参考帧与
     站点 11 个界面并排对照；结论见 `P4-visual-comparison-evidence.md`
     （13 项语言级部分对照 / 2 项未实现（图片消息、楼层图）/ 2 项无对应整屏；
     **整屏逐像素还原仍未通过**）。
@@ -113,7 +113,7 @@ python3 tools/verify-demo-content.py http://127.0.0.1:3100 --api http://127.0.0.
 | 缺口 | 卡在哪 | 需要谁 |
 | --- | --- | --- |
 | **首页排版（可选后续）** | 已还原为原本布局；若要重排，等站主给方向后单独做 | 站主 |
-| ~~整屏视觉参考帧~~ | **已收口**：17 张完整帧覆盖 G1/G2/IM/HUD/存档读取/手机主屏/日历/五维/地图/天鹅绒/印象空间/COOP/殿堂/放课后（`P4-reference-frames-round3.md`） | — |
+| ~~整屏视觉参考帧~~ | **已收口**：21 张完整帧覆盖 G1/G2/IM/HUD/存档读取/手机主屏/日历/五维/地图/天鹅绒/印象空间/COOP/殿堂/放课后（`P4-reference-frames-round3.md`） | — |
 | ~~B4 图片消息 Phase 1~~ | **已实现**（方案 A，见 `P4-im-image-messages-result.md`）；Phase 2 AI 选图 / Phase 3 访客引用相册仍可选 | — |
 | **P4 原版应用图标（部分完成）** | `metanav` / `ins` 已接入已审核原版（清理版，来源/证据见 `original-app-icons.md`）；其余 8 个 App 仍为适配设计（AI 位图/自绘 SVG） | 其余 App 的官方素材 |
 | ~~管理端收录 UI 真流程~~ | **已补齐**（`e2e-ins-album-links-ui.py` 9/9，浏览器截图） | — |

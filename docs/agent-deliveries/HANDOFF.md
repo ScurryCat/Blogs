@@ -244,10 +244,13 @@ MANIFEST.txt                    ← 文件清单与打包说明
   - **管理端 INS 收录 UI 真实浏览器全流程**已补齐：`tools/e2e-ins-album-links-ui.py` 9/9；
     期间修复管理列表 limit>30 的 422、画廊写接口 CSRF body 字段的 422/500。
   - 返工记录：`docs/agent-deliveries/P4-acceptance-v2-fixes.md`。
-- **参考帧补齐（2026-10-18，三批 17 张）**：P5R 6（G2 回复选择 / G1 普通对话 ×2 /
+- **参考帧补齐（2026-10-18，三批 17 张 → R1 后 21 张）**：P5/5R 完整帧 + 辅助帧；
+  **R1 纠正（2026-10-18）**：原标 G2 的 P4 选项帧、P4 天鹅绒帧、P5 日期推进帧已重标为辅助参考；
+  P5R 天鹅绒/东京地点选择地图已换成正确帧；**G2（P5/P5R IM 回复选择）仍缺**。原 G2 说明：
+  P5R 6（G2 回复选择 / G1 普通对话 ×2 /
   IM 完整屏 ×2 / 手机 HUD）+ P5 6（**存档/读取** / 手机主屏 / 日历 / 五维状态 / 校内地图 /
   东京地图）+ 5（天鹅绒房间 / 印象空间 / COOP / 殿堂 / 放课后），
-  `verify-reference-frames.py` **17/17**；来源核实见 `reference-frame-sources.md`
+  `verify-reference-frames.py` **21/21**；来源核实见 `reference-frame-sources.md`
   （官方 3 张：PS CDN 1 + Steam 官方截图 2；可追溯非官方 12；未核实 2=IM 两帧）；
   整屏参考帧缺口已收口（详见 `P4-reference-frames-round3.md`）。
 - **移动引擎证据（2026-10-18）**：WebKit + iPhone 视口 24/24（首页/手机/IM/图库灯箱/触控点按），
@@ -275,7 +278,7 @@ MANIFEST.txt                    ← 文件清单与打包说明
   （`P4-leisure-visual-refinement.md`）。
 - **整屏视觉修形第一轮完成（2026-10-18）**：10 个界面 / 9 轮，对照表 13 个可映射界面全部覆盖
   （1 个对象不适用），索引 `P4-visual-refinement-summary.md`；下一阶段逐像素第二轮（IM 优先）。
-- **视觉对照证据（2026-10-18）**：17 张参考帧 ↔ 站点 13 界面并排对照（截图 + 逐项结论），
+- **视觉对照证据（2026-10-18）**：21 张参考帧 ↔ 站点 13 界面并排对照（截图 + 逐项结论），
   见 `P4-visual-comparison-evidence.md`；**整屏还原仍未通过**（13 项部分对照、2 项未实现）。
 - **IM 图片消息（Phase 1 已实现，2026-10-18）**：站主拍板方案 A；剧本图片卡
   （`image`/`album_photo`）+ 白框拍立得 + 灯箱 + 撤回/失效降级；后端 9 / 前端 4 / e2e 8/8；
