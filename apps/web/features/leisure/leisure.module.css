@@ -720,3 +720,254 @@
 .wrap .select {
   min-height: 44px;
 }
+
+/* ==========================================================================
+   2026-10-18 放课后整屏视觉修形 · 第一轮（对照 P5 击球练习场完整帧）
+   参考帧：persona-curated/hud/p5-leisure-batting-fullframe.jpg
+   参考语言：黑暗击球笼、白色/黄色霓虹 BATTING 招牌、笼网与灯管、记分牌。
+   只改视觉：追番/游戏数据、进度/评分/短评语义不变，不新增假完成率。
+   ========================================================================== */
+
+.wrap {
+  --l-neon: #ffd75e;
+  --l-cyan: #7ee8ff;
+  position: relative;
+  isolation: isolate;
+  padding: 20px 20px 26px;
+  border: 3px solid #05070c;
+  box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.6);
+  background:
+    radial-gradient(ellipse 52% 30% at 50% 0%, rgba(255, 215, 94, 0.28), transparent 72%),
+    radial-gradient(ellipse 40% 34% at 82% 60%, rgba(126, 232, 255, 0.14), transparent 72%),
+    repeating-linear-gradient(58deg, rgba(255, 255, 255, 0.045) 0 2px, transparent 2px 34px),
+    repeating-linear-gradient(-58deg, rgba(255, 255, 255, 0.035) 0 2px, transparent 2px 34px),
+    linear-gradient(180deg, #0b1018 0%, #080b10 60%, #05070c 100%);
+  overflow: hidden;
+}
+
+/* 击球笼顶灯：两排暖色灯管。 */
+.wrap::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 6%;
+  right: 6%;
+  height: 6px;
+  background: repeating-linear-gradient(90deg, var(--l-neon) 0 46px, transparent 46px 86px);
+  opacity: 0.7;
+  filter: drop-shadow(0 0 10px rgba(255, 215, 94, 0.65));
+  pointer-events: none;
+}
+
+.wrap::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 10px;
+  background: repeating-linear-gradient(45deg, var(--l-neon) 0 14px, #101014 14px 28px);
+  pointer-events: none;
+}
+
+.bar {
+  border-bottom: 0;
+  padding-bottom: 4px;
+}
+
+.bar::after {
+  content: "BATTING CAGE";
+  align-self: center;
+  padding: 6px 16px;
+  background: #f4f1ea;
+  color: #101014;
+  border: 3px solid #101014;
+  box-shadow: 5px 5px 0 var(--l-neon, #ffd75e);
+  font: 400 clamp(16px, 2vw, 24px) / 1 var(--f-disp, sans-serif);
+  letter-spacing: 0.08em;
+  transform: rotate(-4deg) skewX(-4deg);
+}
+
+.wrap .kick {
+  font: 400 clamp(30px, 4vw, 46px) / 0.95 var(--f-disp, sans-serif);
+  letter-spacing: 0.02em;
+  color: #f4f1ea;
+  text-shadow: 4px 4px 0 rgba(255, 215, 94, 0.75);
+}
+
+.wrap .title {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 3px 12px;
+  background: var(--l-neon, #ffd75e);
+  color: #101014;
+  font: 700 14px/1.5 var(--f-hat, sans-serif);
+  letter-spacing: 0.18em;
+  transform: skewX(-7deg);
+}
+
+.wrap .lead {
+  color: rgba(244, 241, 234, 0.84);
+}
+
+/* 页签：霓虹灯管牌。 */
+.wrap .tab {
+  border: 2px solid var(--l-neon, #ffd75e);
+  background: #0a0d12;
+  color: var(--l-neon, #ffd75e);
+  box-shadow: 3px 3px 0 #101014;
+}
+
+.wrap .tab[aria-current="true"] {
+  background: var(--l-neon, #ffd75e);
+  border-color: #101014;
+  color: #101014;
+  box-shadow: 4px 4px 0 #101014;
+}
+
+.wrap .tab:hover,
+.wrap .tab:focus-visible {
+  background: #f4f1ea;
+  border-color: #101014;
+  color: #101014;
+}
+
+.wrap .tab[aria-current="true"]:hover {
+  background: var(--l-neon, #ffd75e);
+  color: #101014;
+}
+
+/* 筛选：记分牌。 */
+.wrap .select {
+  border: 2px solid var(--l-neon, #ffd75e);
+  background: #0a0d12;
+  color: #f4f1ea;
+  box-shadow: 3px 3px 0 #101014;
+}
+
+.wrap .filters .hint {
+  border: 2px solid #101014;
+  background: var(--l-neon, #ffd75e);
+  color: #101014;
+  font-weight: 700;
+  box-shadow: 3px 3px 0 #101014;
+}
+
+/* 条目卡：击球笼记分板（黑底 + 黄色霓虹边 + 硬阴影）。 */
+.wrap .card {
+  border: 3px solid #101014;
+  outline: 2px solid var(--l-neon, #ffd75e);
+  outline-offset: -6px;
+  background: #0a0d12;
+  color: #f4f1ea;
+  box-shadow: 8px 8px 0 var(--l-neon, #ffd75e);
+}
+
+.wrap .card:hover,
+.wrap .card:focus-within {
+  box-shadow: 11px 11px 0 var(--l-cyan, #7ee8ff);
+}
+
+.wrap .cover {
+  border-right: 3px solid #101014;
+}
+
+.wrap .coverEmpty {
+  border-right: 3px solid #101014;
+  background:
+    repeating-linear-gradient(-45deg, rgba(255, 215, 94, 0.55) 0 14px, transparent 14px 28px),
+    #0a0d12;
+  color: #f4f1ea;
+  text-shadow: 2px 2px 0 #101014;
+}
+
+.wrap .cardTitle {
+  color: #f4f1ea;
+}
+
+.wrap .cardTitle:hover,
+.wrap .card:focus-within .cardTitle {
+  text-shadow: 3px 3px 0 var(--l-neon, #ffd75e);
+}
+
+.wrap .kindChip {
+  background: var(--l-neon, #ffd75e);
+  border-color: #101014;
+  color: #101014;
+}
+
+.wrap .kindChip[data-leisure-kind="game"] {
+  background: transparent;
+  border-color: var(--l-cyan, #7ee8ff);
+  color: var(--l-cyan, #7ee8ff);
+}
+
+.wrap .progressChip {
+  background: var(--l-cyan, #7ee8ff);
+  border-color: #101014;
+  color: #071216;
+}
+
+.wrap .rating {
+  background: var(--l-neon, #ffd75e);
+  color: #101014;
+  box-shadow: 3px 3px 0 #101014;
+}
+
+.wrap .meterBar {
+  background: rgba(244, 241, 234, 0.18);
+  border: 1px solid #101014;
+}
+
+.wrap .meterFill {
+  background: var(--l-neon, #ffd75e);
+  box-shadow: 0 0 10px rgba(255, 215, 94, 0.6);
+}
+
+.wrap .notes {
+  color: rgba(244, 241, 234, 0.85);
+}
+
+.wrap .button {
+  background: var(--l-neon, #ffd75e);
+  border-color: #101014;
+  color: #101014;
+  box-shadow: 3px 3px 0 #101014;
+}
+
+.wrap .button:hover,
+.wrap .button:focus-visible {
+  background: var(--l-cyan, #7ee8ff);
+}
+
+.wrap .notice {
+  border-left-color: var(--l-neon, #ffd75e);
+  background: rgba(255, 215, 94, 0.1);
+  color: rgba(244, 241, 234, 0.9);
+}
+
+@media (max-width: 480px) {
+  .wrap {
+    padding: 14px 12px 20px;
+    background:
+      radial-gradient(ellipse 70% 28% at 50% 0%, rgba(255, 215, 94, 0.22), transparent 72%),
+      linear-gradient(180deg, #0b1018 0%, #080b10 60%, #05070c 100%);
+  }
+
+  .bar::after {
+    display: none;
+  }
+
+  .wrap .kick {
+    font-size: 27px;
+  }
+
+  .wrap .card {
+    box-shadow: 5px 5px 0 var(--l-neon, #ffd75e);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wrap .card,
+  .wrap .grid > li:nth-child(2n) .card {
+    transform: none;
+  }
+}

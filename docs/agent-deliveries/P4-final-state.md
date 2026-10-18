@@ -71,6 +71,11 @@
   - **印象空间 Mementos 整屏视觉修形第一轮（2026-10-18）**：黑暗隧道冷光 + 黄黑警示条 +
     荧光绿档案箱/号牌 + AWARENESS AREA 贴牌 + 线路牌状态徽标；Exploration 测试 39/39；
     仍标部分还原（`P4-mementos-visual-refinement.md`；CSS 色块替代 3D 隧道）。
+  - **放课后 Leisure 整屏视觉修形第一轮（2026-10-18）**：黑暗击球笼 + 黄灯管排 + 笼网斜纹 +
+    BATTING CAGE 贴牌 + 黄色霓虹记分板卡片；Leisure 测试 27/27；仍标部分还原
+    （`P4-leisure-visual-refinement.md`；CSS 色块替代 3D 场景）。
+  - **整屏视觉修形第一轮汇总（2026-10-18）**：7 个界面 / 8 轮全部完成，索引见
+    `P4-visual-refinement-summary.md`；下一阶段为逐像素第二轮。
   - **视觉对照证据（2026-10-18）**：`tools/capture-visual-comparison.py` 把 17 张参考帧与
     站点 11 个界面并排对照；结论见 `P4-visual-comparison-evidence.md`
     （13 项语言级部分对照 / 2 项未实现（图片消息、楼层图）/ 2 项无对应整屏；
