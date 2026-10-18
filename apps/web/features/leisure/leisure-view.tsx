@@ -19,6 +19,7 @@ import { EntryCard } from "./entry-card";
 import { useLoader, type LeisureHost } from "./host";
 import styles from "./leisure.module.css";
 import { DEFAULT_FILTERS, filterEntries, isLeisureScreen } from "./paths";
+import { LeisureOwnerActions } from "./owner-entry";
 import { PROGRESS_OPTIONS, type LeisureKind } from "./types";
 
 const DEFAULT_SCREENS = ["anime", "game"] as const;
@@ -70,6 +71,8 @@ export function LeisureView({
             </button>
           ))}
         </nav>
+        {/* 站主快捷入口：仅 useOwnerSession 确认 owner 后渲染（匿名访客看不到）。 */}
+        <LeisureOwnerActions />
       </header>
 
       <div className={styles.filters}>

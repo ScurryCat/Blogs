@@ -5,7 +5,7 @@
  */
 
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 
 import { LeisureWorkspace } from "@/features/leisure/admin/leisure-workspace";
 
@@ -15,5 +15,16 @@ export const metadata: Metadata = {
 };
 
 export default function AdminLeisurePage(): ReactNode {
-  return <LeisureWorkspace />;
+  return (
+    // 快捷更新区用 useSearchParams 读 returnTo（来自前台入口），必须有 Suspense 边界。
+    <Suspense
+      fallback={
+        <p className="data-notice" role="status">
+          正在打开放课后管理…
+        </p>
+      }
+    >
+      <LeisureWorkspace />
+    </Suspense>
+  );
 }

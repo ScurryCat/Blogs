@@ -20,6 +20,7 @@ import { ApiClientError, ApiTransportError } from "@/lib/api/client";
 import { fetchMoment } from "./api";
 import { FavoriteButton } from "./favorite-button";
 import { ImagePreview } from "./image-preview";
+import { InsOwnerEntry } from "./owner-entry";
 import { ShareButton } from "./share-button";
 import { formatPublishedAt, variantUrl, type Moment, type MomentImage } from "./types";
 
@@ -207,6 +208,9 @@ export function DetailView({
           </SiteLink>
         </nav>
       )}
+
+      {/* 站主入口：只在确认站主登录后由组件自己渲染（详情页「编辑当前动态」）。 */}
+      <InsOwnerEntry kind="ins-edit" momentId={moment.id} />
 
       <header className="ins-detail-head">
         <p className="ins-card-kicker">{"// MOMENT"}</p>

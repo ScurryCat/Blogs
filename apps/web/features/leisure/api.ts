@@ -24,6 +24,17 @@ export const LEISURE_API = {
   unpublish: (id: string) => `/admin/leisure/entries/${encodeURIComponent(id)}/unpublish`,
 } as const;
 
+/**
+ * 写请求的 CSRF 头（契约 §9.2）。
+ *
+ * 长文/长短评的请求体可能超过 core/csrf.py 读 body 的 4096 字节上限，因此新写请求
+ * 统一带 `X-CSRF-Token` 请求头；body 里的 `csrf_token` 只为兼容旧接口保留，
+ * **不依赖**它。
+ */
+function writeHeaders(csrfToken: string): Record<string, string> {
+  return { "X-CSRF-Token": csrfToken };
+}
+
 export interface LeisureQuery {
   kind?: LeisureKind;
   progress?: string;
@@ -98,6 +109,7 @@ export function createEntry(
   return apiRequest<LeisureAdminEntry>(LEISURE_API.adminEntries, {
     method: "POST",
     body: { ...input, csrf_token: csrfToken },
+    headers: writeHeaders(csrfToken),
   });
 }
 
@@ -111,6 +123,7 @@ export function updateEntry(
     method: "PATCH",
     body: { ...patch, csrf_token: csrfToken },
     ifMatch: `"${version}"`,
+    headers: writeHeaders(csrfToken),
   });
 }
 
@@ -123,6 +136,7 @@ export function publishEntry(
     method: "POST",
     body: { csrf_token: csrfToken },
     ifMatch: `"${version}"`,
+    headers: writeHeaders(csrfToken),
   });
 }
 
@@ -135,6 +149,7 @@ export function unpublishEntry(
     method: "POST",
     body: { csrf_token: csrfToken },
     ifMatch: `"${version}"`,
+    headers: writeHeaders(csrfToken),
   });
 }
 
@@ -143,5 +158,6 @@ export function deleteEntry(id: string, version: number, csrfToken: string): Pro
     method: "DELETE",
     body: { csrf_token: csrfToken },
     ifMatch: `"${version}"`,
+    headers: writeHeaders(csrfToken),
   });
 }

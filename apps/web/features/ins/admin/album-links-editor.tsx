@@ -44,6 +44,14 @@ export interface AlbumLinksEditorProps {
   /** 服务端返回的 `error.fields.album_links`（409/422 时由工作台传入，如实展示）。 */
   fieldError?: string | null;
   disabled?: boolean;
+  /**
+   * 可选：由调用方接管「新建相册」入口。
+   *
+   * 传入时渲染按钮而不是同级新标签页链接：调用方可以**先发起一次工作草稿保存**
+   * （INS 独立编辑页的「新建相册往返不丢草稿」），再打开现有相册管理页。
+   * 不传时保持原有链接行为 —— 旧工作台/旧页面完全不受影响。
+   */
+  onCreateAlbum?: () => void;
 }
 
 /** 相册卡上给站主看的公开状态文案（不把「已收录」说成「已展示」）。 */
@@ -60,6 +68,7 @@ export function AlbumLinksEditor({
   describeError,
   fieldError = null,
   disabled = false,
+  onCreateAlbum,
 }: AlbumLinksEditorProps): ReactNode {
   const [albums, setAlbums] = useState<readonly AdminAlbum[]>([]);
   const [phase, setPhase] = useState<"loading" | "ready" | "failed">("loading");
@@ -289,15 +298,27 @@ export function AlbumLinksEditor({
           刷新相册列表
         </button>
         {/* 新标签页打开**现有**相册管理流程：本页草稿（文字 / 图片 / 收录选择）不受影响。 */}
-        <a
-          className="ins-btn"
-          href={ALBUM_ADMIN_PATH}
-          target="_blank"
-          rel="noopener noreferrer"
-          data-album-admin-link=""
-        >
-          新建相册（新标签页）
-        </a>
+        {onCreateAlbum ? (
+          <button
+            type="button"
+            className="ins-btn"
+            data-album-admin-link=""
+            onClick={onCreateAlbum}
+            disabled={disabled}
+          >
+            新建相册（新标签页）
+          </button>
+        ) : (
+          <a
+            className="ins-btn"
+            href={ALBUM_ADMIN_PATH}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-album-admin-link=""
+          >
+            新建相册（新标签页）
+          </a>
+        )}
       </div>
       <p className="ins-admin-hint">
         需要新相册时点「新建相册」——它打开的是现有相册管理页，不会自动发布；当前动态的

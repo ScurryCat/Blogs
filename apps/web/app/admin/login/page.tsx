@@ -1,19 +1,23 @@
 "use client";
 
 /**
- * 最小站主登录页（T01）。
+ * 最小站主登录页（T01；P5 由 C2 支持 `?returnTo=` 返回来源页）。
  *
  * 范围（SHARED-CONTRACTS §2）：T01 只负责这一张登录视图；管理外壳（/admin 的布局、
- * 导航、受保护页面）由 T02 负责。因此这里登录成功后**不跳转到还不存在的页面**，
- * 只显示已登录状态与「可进入管理外壳」的说明 —— 不显示坏按钮。
+ * 导航、受保护页面）由 T02 负责。
  *
  * 行为要点：
  *  - 挂载时读取 `GET /api/v1/auth/session`：建立预登录会话并拿到 CSRF token；
  *  - 卸载（或重新读取）时 abort 进行中的请求，不留悬挂读取与监听（验收 §1）；
  *  - 提交期间锁定按钮，失败保留输入（不清空已填内容），密码不回显到任何地方；
- *  - 不使用 localStorage / sessionStorage 保存任何凭据或 CSRF token（05 §5.8）。
+ *  - 不使用 localStorage / sessionStorage 保存任何凭据或 CSRF token（05 §5.8）；
+ *  - **P5**：支持 `?returnTo=<safeInternalPath>`。登录成功后 `router.replace(returnTo)`；
+ *    参数非法/为空但有 returnTo 时回 `/admin`；**没有 returnTo 参数时保持旧行为**（显示已登录态）；
+ *  - **P5**：主动退出登录时调用 `clearAllWorkDraftLocalCopies()` 清空本机恢复副本，
+ *    并让站主身份探针缓存失效（前台入口立即消失）。
  */
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { fetchSession, login, logout, type SessionStatus } from "@/features/auth/api";
@@ -25,6 +29,24 @@ import {
   validateLoginInput,
   type LoginFieldErrors,
 } from "@/features/auth/validation";
+import { readReturnTo } from "@/features/workspace/return-context";
+import { resetOwnerSessionCache } from "@/features/workspace/session";
+import { clearAllWorkDraftLocalCopies } from "@/features/workspace/use-work-draft";
+
+/**
+ * 登录成功后的站内返回（契约 §9.5）。
+ *
+ * 单独做成子组件：只有确实带 `?returnTo=` 参数时才挂载，因此调用 `useRouter`
+ * 的时机受控，未带参数的原有用例（jsdom 里没有 App Router）不受影响。
+ */
+function LoginReturnRedirect({ target }: { target: string }) {
+  const router = useRouter();
+  useEffect(() => {
+    // replace：登录页不留在后退栈里。
+    router.replace(target);
+  }, [router, target]);
+  return <p role="status">正在返回来源页面…</p>;
+}
 
 type Phase = "loading" | "ready" | "submitting" | "unavailable";
 
@@ -45,7 +67,21 @@ export default function AdminLoginPage() {
   const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string>("");
+  /** 登录成功后的站内返回目标；null = 本页没有 returnTo 参数（保持旧行为）。 */
+  const [returnTarget, setReturnTarget] = useState<string | null>(null);
   const requestRef = useRef<AbortController | null>(null);
+
+  // 读取 `?returnTo=`：先经 safeInternalPath 白名单校验，非法回 `/admin`（契约 §9.5）。
+  // 用 window.location 而不是 useSearchParams：本页是纯客户端视图，也避免静态渲染时的
+  // Suspense 边界要求；没有参数时不设置目标，保持原登录页行为。
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    void (async () => {
+      const params = new URLSearchParams(window.location.search);
+      if (!params.has("returnTo")) return;
+      setReturnTarget(readReturnTo(params) ?? "/admin");
+    })();
+  }, []);
 
   /**
    * 读取会话状态。
@@ -121,6 +157,8 @@ export default function AdminLoginPage() {
       setFieldErrors({});
       setStatusMessage("登录成功。");
       setPhase("ready");
+      // 让创作台/前台入口的站主身份探针缓存失效：下次挂载会重新确认已登录。
+      resetOwnerSessionCache();
     } catch (error) {
       setFieldErrors(fieldErrorsFromApi(error));
       setFormError(describeLoginError(error));
@@ -139,6 +177,9 @@ export default function AdminLoginPage() {
     setPhase("submitting");
     try {
       await logout(session.csrf_token);
+      // P5：主动退出登录清除全部本机恢复副本（契约 §3.2 / §9.4），并让入口缓存失效。
+      clearAllWorkDraftLocalCopies();
+      resetOwnerSessionCache();
       setStatusMessage("已注销。");
       setPhase("loading");
       await loadSession();
@@ -150,9 +191,11 @@ export default function AdminLoginPage() {
 
   const authenticated = session?.authenticated === true;
   const busy = phase === "loading" || phase === "submitting";
+  const redirecting = authenticated && returnTarget !== null;
 
   return (
     <main style={{ maxWidth: 420, margin: "0 auto", padding: "24px 16px", fontFamily: "system-ui, sans-serif" }}>
+      {redirecting ? <LoginReturnRedirect target={returnTarget} /> : null}
       <h1 style={{ fontSize: 20, marginBottom: 4 }}>PHANTOM LOG · 站主登录</h1>
       <p style={{ marginTop: 0, color: "#555", fontSize: 14 }}>
         本站没有公开注册；账号由部署期 CLI 初始化。

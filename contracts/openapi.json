@@ -803,6 +803,80 @@
         "title": "ChoiceOut",
         "type": "object"
       },
+      "CommitResultOut": {
+        "properties": {
+          "action": {
+            "enum": [
+              "save",
+              "publish",
+              "update"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "content_type": {
+            "enum": [
+              "moment",
+              "journal"
+            ],
+            "title": "Content Type",
+            "type": "string"
+          },
+          "draft_id": {
+            "format": "uuid",
+            "title": "Draft Id",
+            "type": "string"
+          },
+          "idempotent_replay": {
+            "title": "Idempotent Replay",
+            "type": "boolean"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "target_id": {
+            "format": "uuid",
+            "title": "Target Id",
+            "type": "string"
+          },
+          "target_version": {
+            "title": "Target Version",
+            "type": "integer"
+          },
+          "visibility": {
+            "anyOf": [
+              {
+                "enum": [
+                  "private",
+                  "public"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visibility"
+          }
+        },
+        "required": [
+          "draft_id",
+          "content_type",
+          "target_id",
+          "target_version",
+          "status",
+          "visibility",
+          "action",
+          "idempotent_replay"
+        ],
+        "title": "CommitResultOut",
+        "type": "object"
+      },
       "ConversationCreateIn": {
         "properties": {
           "character_id": {
@@ -3361,6 +3435,35 @@
         "title": "LogoutIn",
         "type": "object"
       },
+      "MediaAdminListOut": {
+        "description": "列表统一结构（契约 §3.4 / core.pagination）：`{items, next_cursor}`。",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MediaAdminReferenceOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "MediaAdminListOut",
+        "type": "object"
+      },
       "MediaAdminOut": {
         "properties": {
           "bytes": {
@@ -3422,6 +3525,75 @@
           "original_url"
         ],
         "title": "MediaAdminOut",
+        "type": "object"
+      },
+      "MediaAdminReferenceOut": {
+        "description": "管理侧列表 / 详情项：`MediaAdminOut` + 公开引用提示（契约 §3.4）。\n\n`publicly_referenced=True` 表示这张图**已被其他位置公开引用**：把它用于私密\n手记不会撤回其他公开引用，也不会让本来不可读的媒体变可读 —— 提示文案由前端呈现。",
+        "properties": {
+          "bytes": {
+            "title": "Bytes",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "mime_type": {
+            "title": "Mime Type",
+            "type": "string"
+          },
+          "original_url": {
+            "title": "Original Url",
+            "type": "string"
+          },
+          "publicly_referenced": {
+            "title": "Publicly Referenced",
+            "type": "boolean"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/MediaVariantOut"
+            },
+            "title": "Variants",
+            "type": "array"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "mime_type",
+          "bytes",
+          "width",
+          "height",
+          "sha256",
+          "status",
+          "created_at",
+          "variants",
+          "original_url",
+          "publicly_referenced"
+        ],
+        "title": "MediaAdminReferenceOut",
         "type": "object"
       },
       "MediaPublicOut": {
@@ -4113,6 +4285,31 @@
           "node_version"
         ],
         "title": "NodeVersionIn",
+        "type": "object"
+      },
+      "OwnerStatusOut": {
+        "description": "`GET /auth/owner-status`：无副作用探针（不建会话、不写字）。\n\n只回答「当前请求者是不是已登录站主」以及最小身份信息；**不含** CSRF token /\n过期时间 —— 它只用于前台条件渲染站主入口，不是登录状态的权威来源。",
+        "properties": {
+          "authenticated": {
+            "title": "Authenticated",
+            "type": "boolean"
+          },
+          "user": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SessionUserOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "authenticated",
+          "user"
+        ],
+        "title": "OwnerStatusOut",
         "type": "object"
       },
       "PalaceActionIn": {
@@ -7980,6 +8177,375 @@
         ],
         "title": "WallAlbumOut",
         "type": "object"
+      },
+      "WorkDraftCommitIn": {
+        "additionalProperties": false,
+        "description": "POST /admin/work-drafts/{id}/commit（契约 §3.3）。",
+        "properties": {
+          "action": {
+            "enum": [
+              "save",
+              "publish",
+              "update"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "commit_key": {
+            "format": "uuid",
+            "title": "Commit Key",
+            "type": "string"
+          },
+          "csrf_token": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Csrf Token"
+          },
+          "expected_target_version": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Target Version"
+          }
+        },
+        "required": [
+          "action",
+          "commit_key"
+        ],
+        "title": "WorkDraftCommitIn",
+        "type": "object"
+      },
+      "WorkDraftCreateIn": {
+        "additionalProperties": false,
+        "description": "POST /admin/work-drafts。`target_version` / `target_id` / `status` 由服务端写。",
+        "properties": {
+          "content_type": {
+            "enum": [
+              "moment",
+              "journal"
+            ],
+            "title": "Content Type",
+            "type": "string"
+          },
+          "csrf_token": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Csrf Token"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          },
+          "images": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/WorkDraftImageIn"
+                },
+                "maxItems": 9,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Images"
+          },
+          "target_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Id"
+          }
+        },
+        "required": [
+          "content_type"
+        ],
+        "title": "WorkDraftCreateIn",
+        "type": "object"
+      },
+      "WorkDraftCreateOut": {
+        "description": "创建或恢复：200 = 复用既有有效草稿，201 = 新建。",
+        "properties": {
+          "draft": {
+            "$ref": "#/components/schemas/WorkDraftOut"
+          },
+          "reused": {
+            "title": "Reused",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "draft",
+          "reused"
+        ],
+        "title": "WorkDraftCreateOut",
+        "type": "object"
+      },
+      "WorkDraftImageIn": {
+        "description": "草稿里的一张图。\n\n`position` 可省略：省略时按数组顺序编号；给出时必须从 0 开始连续。\n前端把选图器的 `PickedImage` 原样提交时可能带 `media` 字段，这里容忍并忽略\n（服务端始终按 media_id 重新取媒体，不信任客户端回传的媒体快照）。",
+        "properties": {
+          "alt": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Alt",
+            "type": "string"
+          },
+          "media_id": {
+            "format": "uuid",
+            "title": "Media Id",
+            "type": "string"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "maximum": 8.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          }
+        },
+        "required": [
+          "media_id"
+        ],
+        "title": "WorkDraftImageIn",
+        "type": "object"
+      },
+      "WorkDraftImageOut": {
+        "properties": {
+          "alt": {
+            "title": "Alt",
+            "type": "string"
+          },
+          "media": {
+            "$ref": "#/components/schemas/MediaAdminOut"
+          },
+          "media_id": {
+            "format": "uuid",
+            "title": "Media Id",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "media_id",
+          "position",
+          "alt",
+          "media"
+        ],
+        "title": "WorkDraftImageOut",
+        "type": "object"
+      },
+      "WorkDraftListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WorkDraftOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "WorkDraftListOut",
+        "type": "object"
+      },
+      "WorkDraftOut": {
+        "properties": {
+          "content_type": {
+            "enum": [
+              "moment",
+              "journal"
+            ],
+            "title": "Content Type",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "draft_version": {
+            "title": "Draft Version",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/WorkDraftImageOut"
+            },
+            "title": "Images",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "committed",
+              "discarded"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "target_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Id"
+          },
+          "target_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Version"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "content_type",
+          "target_id",
+          "target_version",
+          "draft_version",
+          "status",
+          "summary",
+          "data",
+          "images",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "WorkDraftOut",
+        "type": "object"
+      },
+      "WorkDraftUpdateIn": {
+        "additionalProperties": false,
+        "description": "PATCH /admin/work-drafts/{id}。`data` 浅合并；`images` 省略=不动、给出=整组替换。",
+        "properties": {
+          "csrf_token": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Csrf Token"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          },
+          "images": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/WorkDraftImageIn"
+                },
+                "maxItems": 9,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Images"
+          }
+        },
+        "title": "WorkDraftUpdateIn",
+        "type": "object"
       }
     }
   },
@@ -10324,6 +10890,84 @@
       }
     },
     "/api/v1/admin/media": {
+      "get": {
+        "description": "`created_at DESC, id DESC` 分页；列表项带 `publicly_referenced`。\n\n公开引用检查走统一的 `media.public_refs.is_publicly_referenced`（只读、带公开\n条件、未登记 = 不公开）。页面大小上限 30，因此这里是「有界」的逐项检查；\n真正的跨域批量查询需要扩展点提供批量接口（见交付单「未完成项」）。",
+        "operationId": "list_admin_media_api_v1_admin_media_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 16,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaAdminListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "站主媒体分页（共享图片选择器）",
+        "tags": [
+          "admin-media"
+        ]
+      },
       "post": {
         "description": "上传 → 校验 → 派生变体 → 文件落位 → 记录 ready。\n\n任何一步失败都不会返回 201：失败时客户端拿不到「上传成功」的假信号。",
         "operationId": "upload_media_api_v1_admin_media_post",
@@ -10360,6 +11004,48 @@
           }
         },
         "summary": "上传单张图片（站主）",
+        "tags": [
+          "admin-media"
+        ]
+      }
+    },
+    "/api/v1/admin/media/{media_id}": {
+      "get": {
+        "operationId": "read_admin_media_api_v1_admin_media__media_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "media_id",
+            "required": true,
+            "schema": {
+              "title": "Media Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaAdminReferenceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "站主媒体详情",
         "tags": [
           "admin-media"
         ]
@@ -12008,6 +12694,337 @@
         ]
       }
     },
+    "/api/v1/admin/work-drafts": {
+      "get": {
+        "operationId": "list_work_drafts_api_v1_admin_work_drafts_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "content_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 16,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Content Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkDraftListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "工作草稿列表（仅本人 active）",
+        "tags": [
+          "admin-work-drafts"
+        ]
+      },
+      "post": {
+        "description": "已有 target 且存在 active 草稿 → 返回既有草稿（200, reused=true）。\n\n新建返回 201。新内容（无 target）允许同时存在多份草稿。",
+        "operationId": "create_work_draft_api_v1_admin_work_drafts_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkDraftCreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkDraftCreateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "创建或恢复工作草稿",
+        "tags": [
+          "admin-work-drafts"
+        ]
+      }
+    },
+    "/api/v1/admin/work-drafts/{draft_id}": {
+      "delete": {
+        "description": "active → discarded（204）。只解除媒体保留关系，不删除文件与正式内容。",
+        "operationId": "delete_work_draft_api_v1_admin_work_drafts__draft_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "draft_id",
+            "required": true,
+            "schema": {
+              "title": "Draft Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "丢弃工作草稿",
+        "tags": [
+          "admin-work-drafts"
+        ]
+      },
+      "get": {
+        "operationId": "read_work_draft_api_v1_admin_work_drafts__draft_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "draft_id",
+            "required": true,
+            "schema": {
+              "title": "Draft Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkDraftOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "读取工作草稿",
+        "tags": [
+          "admin-work-drafts"
+        ]
+      },
+      "patch": {
+        "description": "只写工作副本：`data` 浅合并、`images` 给出时整组替换；If-Match 缺失 428 / 不符 412。",
+        "operationId": "update_work_draft_api_v1_admin_work_drafts__draft_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "draft_id",
+            "required": true,
+            "schema": {
+              "title": "Draft Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkDraftUpdateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkDraftOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "保存工作副本（If-Match 草稿版本）",
+        "tags": [
+          "admin-work-drafts"
+        ]
+      }
+    },
+    "/api/v1/admin/work-drafts/{draft_id}/commit": {
+      "post": {
+        "description": "显式提交：同一 `commit_key` 重试回放上次结果（`idempotent_replay:true`）。",
+        "operationId": "commit_work_draft_api_v1_admin_work_drafts__draft_id__commit_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "draft_id",
+            "required": true,
+            "schema": {
+              "title": "Draft Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkDraftCommitIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommitResultOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "提交工作草稿（事务 + 双版本检查 + 幂等）",
+        "tags": [
+          "admin-work-drafts"
+        ]
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "operationId": "login_api_v1_auth_login_post",
@@ -12085,6 +13102,28 @@
           }
         },
         "summary": "注销",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/owner-status": {
+      "get": {
+        "description": "读会话但**不创建预登录会话、不写字**（P5 契约 §9.1）。\n\n前台访客页面需要「确认站主已登录后才展示快捷入口」。直接复用 `GET /auth/session`\n会给每个匿名访客建 10 分钟预登录会话（DB 写放大），因此这里提供只读探针：\n没有会话 / 预登录 / 过期 / 账号禁用一律 `authenticated=false`，响应 200。\n\n刻意不调用 `require_admin`（它会 touch last_seen_at 写库），也不返回 CSRF token：\n隐藏入口不是授权，真正的管理请求仍必须通过 `require_admin*`。",
+        "operationId": "read_owner_status_api_v1_auth_owner_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerStatusOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "站主登录状态探针（无副作用）",
         "tags": [
           "auth"
         ]

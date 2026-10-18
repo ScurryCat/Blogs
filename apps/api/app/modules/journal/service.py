@@ -543,6 +543,72 @@ def soft_delete_entry(session: Session, entry: JournalEntry) -> None:
     session.commit()
 
 
+def write_entry_pending(
+    session: Session,
+    *,
+    entry: JournalEntry | None,
+    changes: dict,
+    images: list[tuple[uuid.UUID, int, str]] | None,
+    publish: bool,
+) -> JournalEntry:
+    """工作草稿提交用：在**调用方事务**内创建 / 更新手记，**不提交**。
+
+    设计书 §3.3 要求「提供可参与外层事务的调用路径」：正式行、媒体关系与草稿状态
+    由调用方（`work_drafts.service.commit_draft`）一次提交，失败整体回滚。
+
+    语义（与既有管理写接口同一套校验）：
+
+      - `entry is None` → 新建：**永远** draft + private（发布时才置 published + public）；
+      - `changes` 只包含本次要改的字段（`entry_date/title/content_md/mood/location/post_id`），
+        未出现的字段保留原值；新建时 `entry_date` 必填；
+      - `images is None` → 保留原图片关系（新建按无图）；给出时完整替换；
+      - `publish=True` → 复用发布门槛（标题与正文非空），并置 published + public；
+      - 版本：既有手记 +1；新建行从 1 开始（发布不再额外 +1）。
+
+    校验失败抛 `ApiError`（图片不可用 / 文章不存在 / 发布门槛均为 409）：
+    调用方按自己的接口契约翻译状态码并负责回滚。
+    """
+    is_new = entry is None
+    if is_new:
+        entry = JournalEntry(
+            entry_date=changes["entry_date"],
+            title=str(changes.get("title", "") or ""),
+            content_md=str(changes.get("content_md", "") or ""),
+            mood=str(changes.get("mood", "") or ""),
+            location=str(changes.get("location", "") or ""),
+            post_id=changes.get("post_id"),
+            status=STATUS_DRAFT,
+            visibility=VISIBILITY_PRIVATE,
+        )
+        session.add(entry)
+        session.flush()
+    else:
+        for field in ("entry_date", "title", "content_md", "mood", "location"):
+            if field in changes:
+                setattr(entry, field, changes[field])
+
+    if images is not None:
+        _assert_media_usable(session, images)
+        _replace_images(session, entry, images)
+
+    if "post_id" in changes:
+        _assert_post_exists(session, changes["post_id"])
+        entry.post_id = changes["post_id"]
+
+    if publish:
+        _publish_requirement(entry)
+        entry.status = STATUS_PUBLISHED
+        entry.visibility = VISIBILITY_PUBLIC
+        # published_at 只在首次发布时写入（与 publish_entry 一致）。
+        if entry.published_at is None:
+            entry.published_at = utcnow()
+
+    if not is_new:
+        entry.bump_version()
+    session.flush()
+    return entry
+
+
 # --- 媒体公开引用检查（供 wiring 使用）--------------------------------------
 
 

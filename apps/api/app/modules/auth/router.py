@@ -25,7 +25,13 @@ from app.core.passwords import dummy_hash, verify_password
 from app.core.csrf import csrf_token_for
 from app.modules.auth import ratelimit, service
 from app.modules.auth.deps import session_cookie_value
-from app.modules.auth.schemas import LoginIn, LogoutIn, SessionStatusOut, SessionUserOut
+from app.modules.auth.schemas import (
+    LoginIn,
+    LogoutIn,
+    OwnerStatusOut,
+    SessionStatusOut,
+    SessionUserOut,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +73,35 @@ def read_session(
             response, settings, raw_token, max_age=settings.prelogin_ttl_seconds
         )
     return _status_payload(row, service.session_user(session, row))
+
+
+@router.get(
+    "/owner-status",
+    response_model=OwnerStatusOut,
+    summary="站主登录状态探针（无副作用）",
+)
+def read_owner_status(
+    request: Request,
+    session: Session = Depends(get_session),
+    settings: Settings = Depends(get_settings_dep),
+) -> OwnerStatusOut:
+    """读会话但**不创建预登录会话、不写字**（P5 契约 §9.1）。
+
+    前台访客页面需要「确认站主已登录后才展示快捷入口」。直接复用 `GET /auth/session`
+    会给每个匿名访客建 10 分钟预登录会话（DB 写放大），因此这里提供只读探针：
+    没有会话 / 预登录 / 过期 / 账号禁用一律 `authenticated=false`，响应 200。
+
+    刻意不调用 `require_admin`（它会 touch last_seen_at 写库），也不返回 CSRF token：
+    隐藏入口不是授权，真正的管理请求仍必须通过 `require_admin*`。
+    """
+    row = service.load_session(
+        session, session_cookie_value(request, settings), settings=settings
+    )
+    user = service.session_user(session, row) if row is not None else None
+    return OwnerStatusOut(
+        authenticated=user is not None,
+        user=SessionUserOut(id=user.id, username=user.username) if user is not None else None,
+    )
 
 
 @router.post("/login", response_model=SessionStatusOut, summary="站主登录")

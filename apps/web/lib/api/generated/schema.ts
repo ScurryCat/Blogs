@@ -421,7 +421,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * 站主媒体分页（共享图片选择器）
+         * @description `created_at DESC, id DESC` 分页；列表项带 `publicly_referenced`。
+         *
+         *     公开引用检查走统一的 `media.public_refs.is_publicly_referenced`（只读、带公开
+         *     条件、未登记 = 不公开）。页面大小上限 30，因此这里是「有界」的逐项检查；
+         *     真正的跨域批量查询需要扩展点提供批量接口（见交付单「未完成项」）。
+         */
+        get: operations["list_admin_media_api_v1_admin_media_get"];
         put?: never;
         /**
          * 上传单张图片（站主）
@@ -430,6 +438,23 @@ export interface paths {
          *     任何一步失败都不会返回 201：失败时客户端拿不到「上传成功」的假信号。
          */
         post: operations["upload_media_api_v1_admin_media_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/media/{media_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 站主媒体详情 */
+        get: operations["read_admin_media_api_v1_admin_media__media_id__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -751,6 +776,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/work-drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 工作草稿列表（仅本人 active） */
+        get: operations["list_work_drafts_api_v1_admin_work_drafts_get"];
+        put?: never;
+        /**
+         * 创建或恢复工作草稿
+         * @description 已有 target 且存在 active 草稿 → 返回既有草稿（200, reused=true）。
+         *
+         *     新建返回 201。新内容（无 target）允许同时存在多份草稿。
+         */
+        post: operations["create_work_draft_api_v1_admin_work_drafts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/work-drafts/{draft_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 读取工作草稿 */
+        get: operations["read_work_draft_api_v1_admin_work_drafts__draft_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * 丢弃工作草稿
+         * @description active → discarded（204）。只解除媒体保留关系，不删除文件与正式内容。
+         */
+        delete: operations["delete_work_draft_api_v1_admin_work_drafts__draft_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * 保存工作副本（If-Match 草稿版本）
+         * @description 只写工作副本：`data` 浅合并、`images` 给出时整组替换；If-Match 缺失 428 / 不符 412。
+         */
+        patch: operations["update_work_draft_api_v1_admin_work_drafts__draft_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/work-drafts/{draft_id}/commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 提交工作草稿（事务 + 双版本检查 + 幂等）
+         * @description 显式提交：同一 `commit_key` 重试回放上次结果（`idempotent_replay:true`）。
+         */
+        post: operations["commit_work_draft_api_v1_admin_work_drafts__draft_id__commit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -779,6 +872,33 @@ export interface paths {
         put?: never;
         /** 注销 */
         post: operations["logout_api_v1_auth_logout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/owner-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 站主登录状态探针（无副作用）
+         * @description 读会话但**不创建预登录会话、不写字**（P5 契约 §9.1）。
+         *
+         *     前台访客页面需要「确认站主已登录后才展示快捷入口」。直接复用 `GET /auth/session`
+         *     会给每个匿名访客建 10 分钟预登录会话（DB 写放大），因此这里提供只读探针：
+         *     没有会话 / 预登录 / 过期 / 账号禁用一律 `authenticated=false`，响应 200。
+         *
+         *     刻意不调用 `require_admin`（它会 touch last_seen_at 写库），也不返回 CSRF token：
+         *     隐藏入口不是授权，真正的管理请求仍必须通过 `require_admin*`。
+         */
+        get: operations["read_owner_status_api_v1_auth_owner_status_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1903,6 +2023,40 @@ export interface components {
             /** Label */
             label: string;
         };
+        /** CommitResultOut */
+        CommitResultOut: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "save" | "publish" | "update";
+            /**
+             * Content Type
+             * @enum {string}
+             */
+            content_type: "moment" | "journal";
+            /**
+             * Draft Id
+             * Format: uuid
+             */
+            draft_id: string;
+            /** Idempotent Replay */
+            idempotent_replay: boolean;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "published";
+            /**
+             * Target Id
+             * Format: uuid
+             */
+            target_id: string;
+            /** Target Version */
+            target_version: number;
+            /** Visibility */
+            visibility: ("private" | "public") | null;
+        };
         /** ConversationCreateIn */
         ConversationCreateIn: {
             /** Character Id */
@@ -2773,6 +2927,16 @@ export interface components {
             /** Csrf Token */
             csrf_token?: string | null;
         };
+        /**
+         * MediaAdminListOut
+         * @description 列表统一结构（契约 §3.4 / core.pagination）：`{items, next_cursor}`。
+         */
+        MediaAdminListOut: {
+            /** Items */
+            items: components["schemas"]["MediaAdminReferenceOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
         /** MediaAdminOut */
         MediaAdminOut: {
             /** Bytes */
@@ -2793,6 +2957,43 @@ export interface components {
             mime_type: string;
             /** Original Url */
             original_url: string;
+            /** Sha256 */
+            sha256: string;
+            /** Status */
+            status: string;
+            /** Variants */
+            variants: components["schemas"]["MediaVariantOut"][];
+            /** Width */
+            width: number;
+        };
+        /**
+         * MediaAdminReferenceOut
+         * @description 管理侧列表 / 详情项：`MediaAdminOut` + 公开引用提示（契约 §3.4）。
+         *
+         *     `publicly_referenced=True` 表示这张图**已被其他位置公开引用**：把它用于私密
+         *     手记不会撤回其他公开引用，也不会让本来不可读的媒体变可读 —— 提示文案由前端呈现。
+         */
+        MediaAdminReferenceOut: {
+            /** Bytes */
+            bytes: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Height */
+            height: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Mime Type */
+            mime_type: string;
+            /** Original Url */
+            original_url: string;
+            /** Publicly Referenced */
+            publicly_referenced: boolean;
             /** Sha256 */
             sha256: string;
             /** Status */
@@ -3082,6 +3283,18 @@ export interface components {
             csrf_token?: string | null;
             /** Node Version */
             node_version: number;
+        };
+        /**
+         * OwnerStatusOut
+         * @description `GET /auth/owner-status`：无副作用探针（不建会话、不写字）。
+         *
+         *     只回答「当前请求者是不是已登录站主」以及最小身份信息；**不含** CSRF token /
+         *     过期时间 —— 它只用于前台条件渲染站主入口，不是登录状态的权威来源。
+         */
+        OwnerStatusOut: {
+            /** Authenticated */
+            authenticated: boolean;
+            user: components["schemas"]["SessionUserOut"] | null;
         };
         /**
          * PalaceActionIn
@@ -4606,6 +4819,154 @@ export interface components {
             /** Title */
             title: string;
         };
+        /**
+         * WorkDraftCommitIn
+         * @description POST /admin/work-drafts/{id}/commit（契约 §3.3）。
+         */
+        WorkDraftCommitIn: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "save" | "publish" | "update";
+            /**
+             * Commit Key
+             * Format: uuid
+             */
+            commit_key: string;
+            /** Csrf Token */
+            csrf_token?: string | null;
+            /** Expected Target Version */
+            expected_target_version?: number | null;
+        };
+        /**
+         * WorkDraftCreateIn
+         * @description POST /admin/work-drafts。`target_version` / `target_id` / `status` 由服务端写。
+         */
+        WorkDraftCreateIn: {
+            /**
+             * Content Type
+             * @enum {string}
+             */
+            content_type: "moment" | "journal";
+            /** Csrf Token */
+            csrf_token?: string | null;
+            /** Data */
+            data?: {
+                [key: string]: unknown;
+            } | null;
+            /** Images */
+            images?: components["schemas"]["WorkDraftImageIn"][] | null;
+            /** Target Id */
+            target_id?: string | null;
+        };
+        /**
+         * WorkDraftCreateOut
+         * @description 创建或恢复：200 = 复用既有有效草稿，201 = 新建。
+         */
+        WorkDraftCreateOut: {
+            draft: components["schemas"]["WorkDraftOut"];
+            /** Reused */
+            reused: boolean;
+        };
+        /**
+         * WorkDraftImageIn
+         * @description 草稿里的一张图。
+         *
+         *     `position` 可省略：省略时按数组顺序编号；给出时必须从 0 开始连续。
+         *     前端把选图器的 `PickedImage` 原样提交时可能带 `media` 字段，这里容忍并忽略
+         *     （服务端始终按 media_id 重新取媒体，不信任客户端回传的媒体快照）。
+         */
+        WorkDraftImageIn: {
+            /**
+             * Alt
+             * @default
+             */
+            alt: string;
+            /**
+             * Media Id
+             * Format: uuid
+             */
+            media_id: string;
+            /** Position */
+            position?: number | null;
+        };
+        /** WorkDraftImageOut */
+        WorkDraftImageOut: {
+            /** Alt */
+            alt: string;
+            media: components["schemas"]["MediaAdminOut"];
+            /**
+             * Media Id
+             * Format: uuid
+             */
+            media_id: string;
+            /** Position */
+            position: number;
+        };
+        /** WorkDraftListOut */
+        WorkDraftListOut: {
+            /** Items */
+            items: components["schemas"]["WorkDraftOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** WorkDraftOut */
+        WorkDraftOut: {
+            /**
+             * Content Type
+             * @enum {string}
+             */
+            content_type: "moment" | "journal";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Data */
+            data: {
+                [key: string]: unknown;
+            };
+            /** Draft Version */
+            draft_version: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Images */
+            images: components["schemas"]["WorkDraftImageOut"][];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "committed" | "discarded";
+            /** Summary */
+            summary: string;
+            /** Target Id */
+            target_id: string | null;
+            /** Target Version */
+            target_version: number | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * WorkDraftUpdateIn
+         * @description PATCH /admin/work-drafts/{id}。`data` 浅合并；`images` 省略=不动、给出=整组替换。
+         */
+        WorkDraftUpdateIn: {
+            /** Csrf Token */
+            csrf_token?: string | null;
+            /** Data */
+            data?: {
+                [key: string]: unknown;
+            } | null;
+            /** Images */
+            images?: components["schemas"]["WorkDraftImageIn"][] | null;
+        };
     };
     responses: never;
     parameters: never;
@@ -5880,6 +6241,39 @@ export interface operations {
             };
         };
     };
+    list_admin_media_api_v1_admin_media_get: {
+        parameters: {
+            query?: {
+                cursor?: string | null;
+                limit?: number;
+                status?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaAdminListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     upload_media_api_v1_admin_media_post: {
         parameters: {
             query?: never;
@@ -5900,6 +6294,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MediaAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_admin_media_api_v1_admin_media__media_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaAdminReferenceOut"];
                 };
             };
             /** @description Validation Error */
@@ -6871,6 +7296,206 @@ export interface operations {
             };
         };
     };
+    list_work_drafts_api_v1_admin_work_drafts_get: {
+        parameters: {
+            query?: {
+                content_type?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkDraftListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_work_draft_api_v1_admin_work_drafts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkDraftCreateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkDraftCreateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_work_draft_api_v1_admin_work_drafts__draft_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkDraftOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_work_draft_api_v1_admin_work_drafts__draft_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_work_draft_api_v1_admin_work_drafts__draft_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                draft_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkDraftUpdateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkDraftOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    commit_work_draft_api_v1_admin_work_drafts__draft_id__commit_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                draft_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkDraftCommitIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitResultOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     login_api_v1_auth_login_post: {
         parameters: {
             query?: never;
@@ -6931,6 +7556,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_owner_status_api_v1_auth_owner_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnerStatusOut"];
                 };
             };
         };

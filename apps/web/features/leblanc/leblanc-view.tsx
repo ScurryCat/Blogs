@@ -36,6 +36,7 @@ import { ratingLabel } from "@/features/leisure/paths";
 import type { LeisureEntry } from "@/features/leisure/types";
 
 import styles from "./leblanc.module.css";
+import { LeblancOwnerActions } from "./owner-entry";
 
 /** 一句近况。站主手动维护的**真实**文案，不是模型生成（07 §3）。 */
 export const CURRENT_STATUS = "在把博客从静态页面改成怪盗基地，顺手记录每天在追什么、玩什么。";
@@ -48,6 +49,9 @@ export function LeblancView(): ReactNode {
         <h1 className={styles.title}>勒布朗</h1>
         <p className={styles.status}>{CURRENT_STATUS}</p>
       </header>
+
+      {/* 站主快捷入口：仅确认已登录后渲染；匿名访客看不到任何占位。 */}
+      <LeblancOwnerActions />
 
       {/*
         三个块彼此独立：任何一个失败都不会影响其它块，也不会影响页头、音乐与页脚。

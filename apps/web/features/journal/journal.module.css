@@ -382,6 +382,156 @@
   align-items: center;
 }
 
+/* --- 站主快捷入口（P5 · C4；契约 §4.6） ---------------------------------- */
+
+/* 入口只在确认 owner 后渲染；样式上就是普通次要按钮，不改变访客布局。 */
+.ownerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.ownerActions a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* --- 手记独立编辑页（P5 · C4；契约 §4.5 / §9.5 / §9.7） ------------------- */
+
+.editorBody {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .editorBody {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* fieldset 只承担「提交后整体只读」，不改变网格布局。 */
+.editorFieldset {
+  display: contents;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-inline-size: 0;
+}
+
+.editorMain {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.editorMainRow {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.editorPanes {
+  display: grid;
+  gap: 8px;
+}
+
+.editorTabs {
+  display: flex;
+  gap: 8px;
+}
+
+.editorTab {
+  border: 1px solid rgba(244, 241, 234, 0.4);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 14px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.editorTab[aria-selected="true"] {
+  background: var(--red, #e5191c);
+  border-color: var(--red, #e5191c);
+  color: var(--paper, #f4f1ea);
+}
+
+/* Markdown 预览：正文输入区域保持平直、稳定，不做透视/倾斜（设计书 §2.6）。 */
+.markdownPreview {
+  border: 1px dashed rgba(244, 241, 234, 0.35);
+  padding: 14px 16px;
+  min-height: 220px;
+  line-height: 1.85;
+  overflow-wrap: anywhere;
+}
+
+.markdownPreview :is(h2, h3) {
+  margin: 1.2em 0 0.4em;
+  line-height: 1.4;
+}
+
+.markdownPreview :is(p, ul, ol, blockquote) {
+  margin: 0 0 0.8em;
+}
+
+.markdownPreview :is(ul, ol) {
+  padding-left: 1.4em;
+}
+
+.markdownPreview blockquote {
+  border-left: 3px solid rgba(244, 241, 234, 0.35);
+  padding-left: 12px;
+  opacity: 0.9;
+}
+
+.markdownPreview img {
+  max-width: 100%;
+  height: auto;
+}
+
+.editorBlockers {
+  border-left: 3px solid #a05a00;
+  background: rgba(160, 90, 0, 0.14);
+  padding: 8px 12px;
+  margin: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.editorAside {
+  display: grid;
+  gap: 14px;
+  border: 1px solid rgba(244, 241, 234, 0.18);
+  padding: 14px;
+  align-content: start;
+}
+
+.editorAux {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.75;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+/* 手机触控目标 ≥44px（设计书 §2.6 / 契约 §4.8）；桌面键盘操作不受影响。 */
+.editorBody :is(.input, .select, .editorTab),
+.editorBody button {
+  min-height: 44px;
+}
+
+.editorBody .textarea {
+  min-height: 260px;
+}
+
 /* --- 管理端 --------------------------------------------------------------- */
 
 .adminList {

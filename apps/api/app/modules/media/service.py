@@ -21,7 +21,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from fastapi import UploadFile
-from sqlalchemy import select
+from sqlalchemy import select, tuple_
 from sqlalchemy.orm import Session
 
 from app.core.db import utcnow
@@ -30,6 +30,13 @@ from app.core.errors import (
     CODE_PAYLOAD_TOO_LARGE,
     CODE_SERVICE_UNAVAILABLE,
     ApiError,
+)
+from app.core.pagination import (
+    DEFAULT_LIMIT,
+    MAX_LIMIT,
+    decode_cursor,
+    encode_cursor,
+    filter_fingerprint,
 )
 from app.modules.media import public_refs, storage
 from app.modules.media.models import STATUS_FAILED, STATUS_PROCESSING, STATUS_READY, Media
@@ -166,6 +173,64 @@ async def ingest_file(
 
 def get_media(session: Session, media_id: uuid.UUID) -> Media | None:
     return session.get(Media, media_id)
+
+
+# --- 管理侧媒体列表 / 详情（P5 共享图片选择器，契约 §3.4）------------------
+
+
+def clamp_limit(limit: int | None) -> int:
+    if limit is None:
+        return DEFAULT_LIMIT
+    return max(1, min(int(limit), MAX_LIMIT))
+
+
+def list_admin_media(
+    session: Session,
+    *,
+    owner_id: uuid.UUID,
+    status: str | None = None,
+    cursor: str | None = None,
+    limit: int | None = None,
+) -> tuple[list[Media], str | None]:
+    """站主媒体分页：`(created_at DESC, id DESC)` + 不透明游标（契约 §3.4）。
+
+    只返回**未删除**的本人媒体；`status` 可选过滤（processing / ready / failed）。
+    排序键带 id 兜底，同一时间戳的多行分页不漏不重；游标里带筛选指纹。
+    """
+    size = clamp_limit(limit)
+    fingerprint = filter_fingerprint({"scope": "admin-media", "status": status})
+
+    conditions = [Media.owner_id == owner_id, Media.deleted_at.is_(None)]
+    if status is not None:
+        conditions.append(Media.status == status)
+
+    statement = select(Media).where(*conditions)
+    if cursor:
+        sort_value, entity_id = decode_cursor(cursor, fingerprint=fingerprint)
+        statement = statement.where(
+            tuple_(Media.created_at, Media.id) < tuple_(sort_value, entity_id)
+        )
+    statement = statement.order_by(Media.created_at.desc(), Media.id.desc()).limit(size + 1)
+    rows = list(session.execute(statement).scalars().all())
+
+    next_cursor: str | None = None
+    if len(rows) > size:
+        rows = rows[:size]
+        last = rows[-1]
+        next_cursor = encode_cursor(
+            sort_value=last.created_at, entity_id=last.id, fingerprint=fingerprint
+        )
+    return rows, next_cursor
+
+
+def get_admin_media(
+    session: Session, media_id: uuid.UUID, *, owner_id: uuid.UUID
+) -> Media:
+    """站主媒体详情：只允许看自己的、未删除的媒体，否则统一 404。"""
+    media = session.get(Media, media_id)
+    if media is None or media.deleted_at is not None or media.owner_id != owner_id:
+        raise not_found()
+    return media
 
 
 @dataclass(frozen=True)

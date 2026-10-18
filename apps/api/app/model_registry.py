@@ -32,6 +32,7 @@ MODEL_MODULES: tuple[str, ...] = (
     "app.modules.gallery.models",
     "app.modules.skills.models",
     "app.modules.exploration.models",
+    "app.modules.work_drafts.models",
 )
 
 _ModelT = TypeVar("_ModelT", bound=type)

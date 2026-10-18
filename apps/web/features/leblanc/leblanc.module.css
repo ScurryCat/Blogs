@@ -116,6 +116,31 @@
   padding-top: 12px;
 }
 
+/* --- 站主快捷入口（P5 · C4；契约 §4.6） ---------------------------------- */
+
+/* 只在确认 owner 后渲染；普通访客的布局与链接行完全不变。 */
+.ownerLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  padding: 10px 12px;
+}
+
+.ownerLinks a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.ownerKicker {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  opacity: 0.7;
+}
+
 .links a {
   font-size: 14px;
 }

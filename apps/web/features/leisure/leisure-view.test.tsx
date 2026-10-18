@@ -178,7 +178,10 @@ describe("追番页签", () => {
     const view = render(<LeisureView screen="anime" host={host} />);
     await advance(30);
 
-    expect(String(fetchMock.mock.calls[0]?.[0])).toBe("/api/v1/leisure/entries?kind=anime&limit=30");
+    // 前台还有一次站主身份探针（/auth/owner-status，P5 站主入口用），
+    // 因此不假设它是第一个请求：只断言公开列表请求本身存在且参数正确。
+    const urls = fetchMock.mock.calls.map((call) => String(call[0]));
+    expect(urls).toContain("/api/v1/leisure/entries?kind=anime&limit=30");
     // 文案里**说明**「不同步第三方」是正确的（读者需要知道这一点）；
     // 被禁止的是捏造同步状态 —— 那属于「功能上没有」的断言，在后端用例里验证。
     const text = view.container.textContent ?? "";
@@ -217,7 +220,8 @@ describe("追番页签", () => {
     const { host } = stubHost();
     const view = render(<LeisureView screen="game" host={host} />);
     await advance(30);
-    expect(String(fetchMock.mock.calls[0]?.[0])).toBe("/api/v1/leisure/entries?kind=game&limit=30");
+    const urls = fetchMock.mock.calls.map((call) => String(call[0]));
+    expect(urls).toContain("/api/v1/leisure/entries?kind=game&limit=30");
     view.unmount();
   });
 

@@ -87,6 +87,14 @@ export interface ApiRequestOptions {
   signal?: AbortSignal;
   /** 读取失败时是否退避重试一次。写操作请保持 false。 */
   retryRead?: boolean;
+  /**
+   * 追加请求头（P5 草稿契约 §9.2）。
+   *
+   * 为什么需要：`core/csrf.py` 只在 JSON body ≤4096 字节时读取 body 里的 `csrf_token`，
+   * 长手记正文一次自动保存就会超限；因此新写请求统一用 `X-CSRF-Token` 头。
+   * **同名头以这里传入的为准**（例如显式覆盖 `Content-Type`）。
+   */
+  headers?: Record<string, string>;
 }
 
 const READ_METHODS = new Set(["GET"]);
@@ -148,6 +156,10 @@ export async function apiRequest<T>(
   const headers: Record<string, string> = { Accept: "application/json" };
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
   if (options.ifMatch !== undefined) headers["If-Match"] = options.ifMatch;
+  // 调用方追加头：放在内部头之后，允许显式覆盖（契约 §9.2 的 X-CSRF-Token 走这里）。
+  if (options.headers) {
+    for (const [name, value] of Object.entries(options.headers)) headers[name] = value;
+  }
 
   let lastTransportError: unknown;
   for (let attempt = 1; attempt <= attempts; attempt += 1) {

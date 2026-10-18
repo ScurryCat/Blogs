@@ -232,6 +232,22 @@
   align-items: center;
 }
 
+/* --- 站主快捷入口（P5 · C4；契约 §4.6） ---------------------------------- */
+
+/* 入口只在确认 owner 后渲染；样式上就是普通次要按钮，不改变访客布局。 */
+.ownerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.ownerActions a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
 .button {
   border: 1px solid #d40000;
   background: #d40000;
@@ -353,6 +369,31 @@
   background: rgba(0, 0, 0, 0.03);
   display: grid;
   gap: 8px;
+}
+
+/* --- 快捷更新（P5 · C4；契约 §4.5 / §9.6） -------------------------------- */
+
+.quick {
+  border: 2px solid rgba(0, 0, 0, 0.75);
+  padding: 16px;
+  margin: 18px 0 10px;
+  background: rgba(0, 0, 0, 0.03);
+  display: grid;
+  gap: 12px;
+}
+
+.quickHead {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.quickBody {
+  display: grid;
+  gap: 14px;
+  max-width: 720px;
 }
 
 /* ==========================================================================

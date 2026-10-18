@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 import pytest
 from alembic import command
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
@@ -155,14 +156,19 @@ def test_migration_backfills_independent_sources_and_downgrade_stays_safe(
         seed = _seed_pre_n3_history(engine)
         assert _count(engine, "select count(*) from album_media") == 3
 
-        # --- 升级到 N3 ------------------------------------------------------
+        # --- 升级到 N3（N3 之后可能还有别的迁移：断言的是「升到了当前 head」）--
         command.upgrade(_alembic_config(database_url), "head")
         assert _table_exists(engine, "album_media_sources")
+        # head 会随新迁移变化，这里动态取当前 head，避免每加一个迁移就要改本断言。
+        current_head = ScriptDirectory.from_config(
+            _alembic_config(database_url)
+        ).get_current_head()
+        assert current_head is not None
         with engine.connect() as connection:
             version = connection.execute(
                 text("select version_num from alembic_version")
             ).scalars().one()
-        assert version == N3_REVISION
+        assert version == current_head
 
         backfilled = _count(engine, "select count(*) from album_media_sources")
         assert backfilled == 3, "迁移前已有的每一张相册图片都必须回填为独立来源"

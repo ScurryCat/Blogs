@@ -263,8 +263,20 @@ function Workspace({ session }: { session: SessionStatus }): ReactNode {
           </p>
         </div>
         <div className={styles.actions}>
-          <button className={styles.button} type="button" onClick={startCreate}>
-            写一篇
+          {/*
+            P5 · C4：独立编辑页入口。旧工作台保留全部能力（新建/编辑/发布/可见性/删除），
+            这两条只是把「新建手记」「继续编辑」接到新编辑器，不替换旧流程。
+          */}
+          <SiteLink
+            className={styles.button}
+            href="/admin/journal/new"
+            source="top-nav"
+            data-journal-new-page
+          >
+            新建手记（独立页）
+          </SiteLink>
+          <button className={`${styles.button} ${styles.buttonGhost}`} type="button" onClick={startCreate}>
+            写一篇（本页）
           </button>
           <button
             className={`${styles.button} ${styles.buttonGhost}`}
@@ -326,8 +338,16 @@ function Workspace({ session }: { session: SessionStatus }): ReactNode {
                   type="button"
                   onClick={() => void startEdit(entry)}
                 >
-                  编辑
+                  编辑（本页）
                 </button>
+                <SiteLink
+                  className={`${styles.button} ${styles.buttonGhost}`}
+                  href={`/admin/journal/${encodeURIComponent(entry.id)}/edit`}
+                  source="top-nav"
+                  data-journal-edit-page={entry.id}
+                >
+                  继续编辑（独立页）
+                </SiteLink>
               </div>
             </li>
           ))}

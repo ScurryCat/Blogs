@@ -40,6 +40,8 @@ import {
   ratingLabel,
 } from "../paths";
 import { KIND_LABELS, PROGRESS_OPTIONS, type LeisureAdminEntry, type LeisureKind } from "../types";
+import { QuickUpdate } from "./quick-update";
+import { ReturnToBar } from "./return-to-bar";
 
 function describeWriteFailure(error: unknown): { message: string; conflict: boolean } {
   if (error instanceof ApiClientError) {
@@ -333,6 +335,9 @@ function Workspace({ session }: { session: SessionStatus }): ReactNode {
         </nav>
       </header>
 
+      {/* 从前台快捷入口进来时提供「返回来源」（带 returnTo 时才有）。 */}
+      <ReturnToBar />
+
       {notice ? (
         <p className={styles.notice} role={notice.tone === "error" ? "alert" : "status"}>
           {notice.message}
@@ -343,6 +348,16 @@ function Workspace({ session }: { session: SessionStatus }): ReactNode {
           {loadError}
         </p>
       ) : null}
+
+      {/*
+        P5 · C4：快捷更新区（契约 §4.5 / §9.6）。与下方完整编辑共用同一份列表数据；
+        提交成功后重读列表，下一次提交用新版本（If-Match）。
+      */}
+      <QuickUpdate
+        session={session}
+        entries={entries}
+        onUpdated={reload}
+      />
 
       <h2 className={styles.title}>全部记录（含草稿）</h2>
       {entries === null && !loadError ? (

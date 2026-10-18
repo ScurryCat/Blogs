@@ -1,0 +1,621 @@
+/* =====================================================================
+   P5 创作台 · 共享外壳样式（C2 唯一 owner，`ws-` 前缀）
+   ---------------------------------------------------------------------
+   只被 `app/admin/layout.tsx` 引入，因此不会影响公开页面。
+   视觉：延续 P5 黑白红、粗边框、硬阴影、选中反色；
+   **正文输入区平直稳定** —— 本文件里没有任何 skew/rotate 作用于 input/textarea/contenteditable。
+   移动：≤620px 的编辑器是固定全视口层（100dvh + safe-area），触控目标 ≥44px。
+   ===================================================================== */
+
+/* ---------- 创作台首页 ---------- */
+.ws-home {
+  display: grid;
+  gap: 28px;
+  color: var(--paper);
+}
+
+.ws-home-head {
+  display: grid;
+  gap: 6px;
+  padding-bottom: 14px;
+  border-bottom: 3px solid var(--paper);
+}
+
+.ws-kicker {
+  margin: 0;
+  color: var(--red);
+  font: 400 13px/1 var(--f-hat, "Anton", sans-serif);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.ws-home-title {
+  margin: 0;
+  font: 900 clamp(26px, 4vw, 40px) / 1.05 var(--f-cjk, sans-serif);
+  letter-spacing: 0.01em;
+}
+
+.ws-home-sub {
+  margin: 0;
+  color: var(--dim);
+  font: 500 14px/1.6 var(--f-cjk, sans-serif);
+}
+
+.ws-section {
+  display: grid;
+  gap: 12px;
+}
+
+.ws-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+  padding-left: 12px;
+  border-left: 6px solid var(--red);
+}
+
+.ws-section-title {
+  margin: 0;
+  font: 900 20px/1.15 var(--f-cjk, sans-serif);
+}
+
+.ws-section-note {
+  margin: 0;
+  color: var(--dim);
+  font: 500 13px/1.5 var(--f-cjk, sans-serif);
+}
+
+/* ---------- 开始记录：四张动作卡 ---------- */
+.ws-start-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.ws-start-card {
+  display: grid;
+  gap: 4px;
+  align-content: center;
+  min-height: 88px;
+  padding: 14px 16px;
+  background: var(--black);
+  color: var(--paper);
+  border: 3px solid var(--paper);
+  box-shadow: 6px 6px 0 rgb(0 0 0 / 0.55);
+  text-decoration: none;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.ws-start-card:hover,
+.ws-start-card:focus-visible {
+  background: var(--paper);
+  color: var(--black);
+}
+
+.ws-start-label {
+  font: 900 18px/1.15 var(--f-cjk, sans-serif);
+}
+
+.ws-start-hint {
+  color: var(--dim);
+  font: 500 12px/1.4 var(--f-cjk, sans-serif);
+}
+
+.ws-start-card:hover .ws-start-hint,
+.ws-start-card:focus-visible .ws-start-hint {
+  color: var(--red-deep);
+}
+
+/* ---------- 列表（工作草稿 / 近期内容） ---------- */
+.ws-list {
+  display: grid;
+  gap: 8px;
+}
+
+.ws-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+  min-height: 52px;
+  padding: 12px 14px;
+  background: rgb(3 3 3 / 0.6);
+  border: 2px solid var(--line);
+  color: var(--paper);
+  text-decoration: none;
+}
+
+.ws-row:hover,
+.ws-row:focus-visible {
+  border-color: var(--paper);
+  background: var(--paper);
+  color: var(--black);
+}
+
+.ws-row:focus-visible {
+  outline: 3px solid var(--red);
+  outline-offset: 2px;
+}
+
+.ws-row-type {
+  flex: none;
+  padding: 2px 8px;
+  background: var(--red);
+  color: var(--paper);
+  font: 900 12px/1.6 var(--f-cjk, sans-serif);
+  letter-spacing: 0.08em;
+}
+
+.ws-row-body {
+  flex: 1 1 240px;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.ws-row-title {
+  overflow: hidden;
+  font: 700 15px/1.45 var(--f-cjk, sans-serif);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ws-row-meta {
+  color: var(--dim);
+  font: 500 12px/1.5 var(--f-cjk, sans-serif);
+}
+
+.ws-row:hover .ws-row-meta,
+.ws-row:focus-visible .ws-row-meta {
+  color: var(--ink-2, #1c1c1f);
+}
+
+.ws-row-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  font: 500 12px/1.5 var(--f-cjk, sans-serif);
+}
+
+.ws-grid-rows {
+  display: grid;
+  gap: 8px;
+}
+
+.ws-recent-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  min-height: 52px;
+  padding: 12px 14px;
+  border: 2px solid var(--line);
+  background: rgb(3 3 3 / 0.6);
+}
+
+.ws-recent-row .ws-row-body {
+  flex: 1 1 240px;
+}
+
+.ws-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.ws-row-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 2px solid currentcolor;
+  color: var(--paper);
+  font: 700 13px/1 var(--f-cjk, sans-serif);
+  text-decoration: none;
+}
+
+.ws-row-link:hover,
+.ws-row-link:focus-visible {
+  background: var(--red);
+  border-color: var(--red);
+  color: var(--paper);
+}
+
+/* ---------- 空态 / 错误 / 加载 ---------- */
+.ws-empty,
+.ws-error,
+.ws-loading {
+  margin: 0;
+  padding: 14px 16px;
+  border-left: 6px solid var(--dim);
+  background: rgb(3 3 3 / 0.55);
+  color: var(--dim);
+  font: 500 14px/1.65 var(--f-cjk, sans-serif);
+}
+
+.ws-error {
+  border-left-color: var(--red);
+  color: var(--paper);
+}
+
+.ws-error-line {
+  margin: 0;
+}
+
+.ws-error-line + .ws-error-line,
+.ws-error .ws-error-line + .ws-error-line {
+  margin-top: 4px;
+}
+
+.ws-loading {
+  border-left-color: var(--paper);
+}
+
+.ws-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* ---------- 内容管理（已有管理页入口） ---------- */
+.ws-manage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.ws-manage-link {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 2px solid var(--line);
+  color: var(--paper);
+  font: 700 14px/1.3 var(--f-cjk, sans-serif);
+  text-decoration: none;
+}
+
+.ws-manage-link:hover,
+.ws-manage-link:focus-visible {
+  background: var(--paper);
+  border-color: var(--paper);
+  color: var(--black);
+}
+
+/* ---------- 按钮：触控目标 ≥44px ---------- */
+.ws-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 16px;
+  background: var(--black);
+  color: var(--paper);
+  border: 2px solid var(--paper);
+  cursor: pointer;
+  font: 700 14px/1.2 var(--f-cjk, sans-serif);
+  text-decoration: none;
+}
+
+.ws-btn:hover,
+.ws-btn:focus-visible {
+  background: var(--paper);
+  color: var(--black);
+}
+
+.ws-btn:focus-visible {
+  outline: 3px solid var(--red);
+  outline-offset: 2px;
+}
+
+.ws-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.ws-btn-primary {
+  background: var(--red);
+  border-color: var(--red);
+  color: var(--paper);
+}
+
+.ws-btn-primary:hover,
+.ws-btn-primary:focus-visible {
+  background: var(--paper);
+  border-color: var(--paper);
+  color: var(--red-deep);
+}
+
+.ws-btn-ghost {
+  background: transparent;
+}
+
+/* ---------- 同步状态（安静提示） ---------- */
+.ws-sync {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  color: var(--dim);
+  font: 500 12px/1.4 var(--f-cjk, sans-serif);
+}
+
+.ws-sync-dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  background: var(--dim);
+  border-radius: 50%;
+}
+
+.ws-sync-time {
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+
+[data-sync-state="saving"] .ws-sync-dot {
+  background: var(--paper);
+  animation: ws-pulse 1.2s ease-in-out infinite;
+}
+
+[data-sync-state="local-only"] .ws-sync-dot {
+  background: var(--paper);
+  opacity: 0.7;
+}
+
+[data-sync-state="synced"] {
+  border-color: rgb(244 241 234 / 0.36);
+  color: var(--paper);
+}
+
+[data-sync-state="synced"] .ws-sync-dot {
+  background: #4f8f5a;
+}
+
+[data-sync-state="failed"] {
+  border-color: var(--red);
+  color: var(--paper);
+}
+
+[data-sync-state="failed"] .ws-sync-dot,
+[data-sync-state="conflict"] .ws-sync-dot {
+  background: var(--red);
+}
+
+[data-sync-state="conflict"] {
+  border-color: var(--red);
+  background: rgb(159 12 18 / 0.18);
+  color: var(--paper);
+}
+
+@keyframes ws-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ---------- 冲突提示 ---------- */
+.ws-conflict {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--paper);
+  color: var(--black);
+  border: 3px solid var(--red);
+  box-shadow: 8px 8px 0 rgb(0 0 0 / 0.5);
+}
+
+.ws-conflict-kicker {
+  margin: 0;
+  color: var(--red-deep);
+  font: 900 12px/1 var(--f-hat, "Anton", sans-serif);
+  letter-spacing: 0.16em;
+}
+
+.ws-conflict-text {
+  margin: 0;
+  font: 700 14px/1.6 var(--f-cjk, sans-serif);
+}
+
+.ws-conflict-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ws-conflict .ws-btn {
+  border-color: var(--black);
+  background: var(--black);
+  color: var(--paper);
+}
+
+.ws-conflict .ws-btn-primary {
+  background: var(--red);
+  border-color: var(--red);
+}
+
+.ws-conflict .ws-btn:hover,
+.ws-conflict .ws-btn:focus-visible {
+  background: var(--paper);
+  color: var(--black);
+}
+
+/* ---------- 编辑器外壳 ---------- */
+.ws-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.ws-editor-head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 10px 0;
+  background: var(--black);
+  border-bottom: 3px solid var(--paper);
+}
+
+.ws-editor-titles {
+  flex: 1 1 220px;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.ws-editor-title {
+  margin: 0;
+  overflow: hidden;
+  color: var(--paper);
+  font: 900 20px/1.2 var(--f-cjk, sans-serif);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ws-editor-subtitle {
+  margin: 0;
+  color: var(--dim);
+  font: 500 12px/1.5 var(--f-cjk, sans-serif);
+}
+
+.ws-editor-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ws-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.ws-editor-body {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+/* 编辑器里的表单控件：平直、稳定、够大（无 skew/rotate，不影响光标与输入法） */
+.ws-editor-body input,
+.ws-editor-body textarea,
+.ws-editor-body select {
+  min-height: 44px;
+  padding: 10px 12px;
+  background: var(--black);
+  color: var(--paper);
+  border: 2px solid var(--line);
+  font: 400 16px/1.6 var(--f-cjk, sans-serif);
+  font-family: var(--f-cjk, sans-serif);
+}
+
+.ws-editor-body input:focus-visible,
+.ws-editor-body textarea:focus-visible,
+.ws-editor-body select:focus-visible {
+  border-color: var(--paper);
+  outline: 3px solid var(--red);
+  outline-offset: 1px;
+}
+
+.ws-editor-body label {
+  font: 700 14px/1.5 var(--f-cjk, sans-serif);
+}
+
+.ws-hint {
+  margin: 0;
+  color: var(--dim);
+  font: 500 12px/1.5 var(--f-cjk, sans-serif);
+}
+
+/* ---------- 手机（真实浏览器 ≤620px）：固定全视口单列 ---------- */
+@media (max-width: 620px) {
+  .ws-editor {
+    position: fixed;
+    inset: 0;
+    z-index: 940;
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    padding-top: max(8px, env(safe-area-inset-top));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+    padding-left: max(12px, env(safe-area-inset-left));
+    background: var(--black);
+    overscroll-behavior: contain;
+  }
+
+  .ws-editor-head {
+    position: sticky;
+    top: max(0px, env(safe-area-inset-top));
+    padding: 8px 0 10px;
+    background: var(--black);
+  }
+
+  .ws-editor-title {
+    font-size: 17px;
+  }
+
+  .ws-editor-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: max(18px, env(safe-area-inset-bottom));
+  }
+
+  .ws-editor-actions,
+  .ws-editor-actions .ws-btn,
+  .ws-editor-body button,
+  .ws-start-card,
+  .ws-row,
+  .ws-manage-link {
+    min-height: 44px;
+  }
+
+  .ws-editor-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .ws-editor-actions .ws-btn {
+    flex: 1 1 0;
+  }
+
+  .ws-home-title {
+    font-size: 26px;
+  }
+
+  .ws-row-side {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+/* 减少动态效果：状态点的脉冲也关掉 */
+@media (prefers-reduced-motion: reduce) {
+  [data-sync-state="saving"] .ws-sync-dot {
+    animation: none;
+  }
+  .ws-start-card {
+    transition: none;
+  }
+}

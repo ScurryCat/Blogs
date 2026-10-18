@@ -28,6 +28,17 @@ class SessionStatusOut(BaseModel):
     prelogin: bool
 
 
+class OwnerStatusOut(BaseModel):
+    """`GET /auth/owner-status`：无副作用探针（不建会话、不写字）。
+
+    只回答「当前请求者是不是已登录站主」以及最小身份信息；**不含** CSRF token /
+    过期时间 —— 它只用于前台条件渲染站主入口，不是登录状态的权威来源。
+    """
+
+    authenticated: bool
+    user: SessionUserOut | None
+
+
 class LoginIn(BaseModel):
     username: str = Field(min_length=1, max_length=64)
     password: str = Field(min_length=1, max_length=1024)

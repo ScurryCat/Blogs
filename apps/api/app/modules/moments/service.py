@@ -510,10 +510,12 @@ def update_moment(
     return moment
 
 
-def publish_moment(session: Session, moment: Moment, *, if_match: str | None) -> Moment:
-    """发布。发布门槛：1–9 张 ready 图片 —— 不满足则 409，不改状态。"""
-    require_version(moment.version, if_match)
+def _assert_publishable(session: Session, moment: Moment) -> None:
+    """发布门槛（03 §5）：1–9 张图片，且所有关联媒体必须 ready（未删除）。
 
+    不满足抛 409。抽成独立函数供「工作草稿提交」在**同一事务**里复用 ——
+    提交方自己负责把 409 翻译成它契约里的状态码。
+    """
     refs = image_refs_for_moments(session, [moment.id]).get(moment.id, [])
     if len(refs) < IMAGES_MIN:
         raise conflict("发布前至少需要一张图片", {"images": ["至少 1 张图片"]})
@@ -534,6 +536,12 @@ def publish_moment(session: Session, moment: Moment, *, if_match: str | None) ->
     unready = [str(media_id) for media_id in media_ids if media_id not in ready]
     if unready:
         raise conflict("有图片尚未处理完成，不能发布", {"images": unready})
+
+
+def publish_moment(session: Session, moment: Moment, *, if_match: str | None) -> Moment:
+    """发布。发布门槛：1–9 张 ready 图片 —— 不满足则 409，不改状态。"""
+    require_version(moment.version, if_match)
+    _assert_publishable(session, moment)
 
     moment.status = STATUS_PUBLISHED
     # 服务端生成发布时间，不信任客户端时钟（03 §5）。
@@ -568,6 +576,103 @@ def soft_delete_moment(session: Session, moment: Moment, *, if_match: str | None
     moment.bump_version()
     gallery_sources.bump_album_versions(session, affected_albums)
     _commit(session)
+
+
+def write_moment_pending(
+    session: Session,
+    *,
+    author_id: uuid.UUID,
+    moment: Moment | None,
+    text: str | None,
+    images: list[MomentImageIn] | None,
+    tags: list[str] | None,
+    album_links: list | None,
+    publish: bool,
+) -> Moment:
+    """工作草稿提交用：在**调用方事务**内创建 / 更新动态内容，**不提交**。
+
+    这是设计书 §3.3 要求的「可参与外层事务的调用路径」：正式行、媒体关系、
+    相册收录来源与草稿状态由调用方（`work_drafts.service.commit_draft`）一次提交，
+    失败整体回滚；这里绝不 `session.commit()`。
+
+    语义与既有写接口保持同一套校验，只把「是否提交」交给调用方：
+
+      - `moment is None` → 新建正式草稿（version 从 1 开始）；
+      - `text is None` → 保留原值（新建按空串）；
+      - `images is None` → 保留原图片关系（新建按无图）；给出时完整替换；
+      - `tags is None` → 保留原标签（新建按无标签）；给出时完整替换；
+      - `album_links is None` → 保留原收录配置，但清掉已不属于该动态的图片配置
+        （与 `update_moment` 的「不传」语义一致）；给出时完整替换；
+      - `publish=True` → 复用发布门槛（1–9 张 ready 图片），置 published 并写发布时间；
+      - 版本：既有动态 +1；新建行从 1 开始（发布不再额外 +1，一次提交一次版本）。
+
+    校验失败抛 `ApiError`（图片未 ready / 发布门槛 / 非法相册均为 409）：
+    调用方按自己的接口契约翻译状态码并负责回滚。
+    """
+    is_new = moment is None
+    if is_new:
+        moment = Moment(
+            author_id=author_id,
+            text=_validate_text(text) or "",
+            status=STATUS_DRAFT,
+            published_at=None,
+        )
+        session.add(moment)
+        session.flush()
+    elif text is not None:
+        moment.text = _validate_text(text) or ""
+
+    if images is not None:
+        _load_ready_media(session, images)
+        _replace_images(session, moment, images)
+    if tags is not None:
+        _replace_tags(session, moment, tags)
+
+    affected_albums: set[uuid.UUID] = set()
+    if album_links is not None:
+        # 收录目标的校验必须在写任何状态之前完成（非法相册 / 图片 → 409）。
+        image_alts = (
+            {image.media_id: image.alt.strip() for image in images}
+            if images is not None
+            else (
+                {}
+                if is_new
+                else gallery_sources.moment_media_alts(session, moment.id)
+            )
+        )
+        normalized_links = gallery_sources.validate_moment_album_links(
+            session,
+            links=_album_link_mappings(album_links),
+            image_alts=image_alts,
+        )
+        affected_albums = gallery_sources.replace_moment_album_links(
+            session,
+            moment=moment,
+            normalized_links=normalized_links,
+            image_alts=image_alts,
+        )
+    elif images is not None and not is_new:
+        # 不传 album_links（草稿数据里没有这个键）：保留原选择，但清掉已删图片的配置。
+        keep_media_ids = [
+            media_id
+            for media_id, _position, _alt in image_refs_for_moments(
+                session, [moment.id]
+            ).get(moment.id, [])
+        ]
+        affected_albums = gallery_sources.prune_moment_album_links(
+            session, moment=moment, keep_media_ids=keep_media_ids
+        )
+    gallery_sources.bump_album_versions(session, affected_albums)
+
+    if publish:
+        _assert_publishable(session, moment)
+        moment.status = STATUS_PUBLISHED
+        moment.published_at = utcnow()
+
+    if not is_new:
+        moment.bump_version()
+    session.flush()
+    return moment
 
 
 # --- 内容域贡献（供 public_refs / tags_source 使用）------------------------

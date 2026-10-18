@@ -19,6 +19,7 @@ import { SiteLink } from "@/features/runtime/navigation/site-link";
 import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { ImagePreview } from "./image-preview";
+import { InsOwnerEntry } from "./owner-entry";
 import { FeedSkeleton, MomentCard } from "./moment-card";
 import { useFeedScrollRestore, scrollKey } from "./scroll-memory";
 import { excerptOf, type Moment } from "./types";
@@ -88,6 +89,8 @@ export function FeedView({
 
   return (
     <section className="ins-feed-wrap" aria-label="图文动态" ref={wrapRef}>
+      {/* 站主入口：只在确认站主登录后由组件自己渲染（列表页「发布动态」）。 */}
+      <InsOwnerEntry kind="ins-new" />
       <nav className="ins-filters" aria-label="标签筛选">
         {onSelectTag ? (
           // 手机里：标签是应用内状态，换屏而不是跳站内路由（否则手机会被关闭）

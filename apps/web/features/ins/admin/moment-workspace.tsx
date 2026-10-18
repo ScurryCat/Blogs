@@ -14,6 +14,7 @@
  *    因此上传图片不会把正在编辑的文字冲掉。
  */
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import {
@@ -360,6 +361,10 @@ export function MomentWorkspace({
             <button type="button" className="ins-btn" onClick={() => void loadList()} disabled={busy}>
               刷新列表
             </button>
+            {/* P5 第一批独立编辑页入口：不替换旧工作台，只是多一条更轻的路径。 */}
+            <Link className="ins-btn" href="/admin/moments/new">
+              新建动态（独立编辑页）
+            </Link>
           </div>
         </div>
 
@@ -391,6 +396,10 @@ export function MomentWorkspace({
                     {moment.images_admin.length} 图 · v{moment.version}
                   </span>
                 </button>
+                {/* 独立编辑页：会在工作草稿里复用/创建副本；旧工作台的保存/发布逻辑不受影响。 */}
+                <Link className="ins-admin-list-edit" href={`/admin/moments/${moment.id}/edit`}>
+                  继续编辑（独立页）
+                </Link>
               </li>
             ))}
           </ul>

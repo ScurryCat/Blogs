@@ -264,10 +264,21 @@ html.ov-lock body {
 .admin-bar nav {
   margin-left: auto;
 }
+/* P5（C2）：管理导航补创作台 / 动态 / 手记 / 放课后 / 相册 / 更多管理，仅管理外壳使用。 */
+.admin-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
 .admin-bar nav a {
   color: var(--paper);
   font: 400 14px/1 var(--f-hat);
   letter-spacing: 0.12em;
+}
+.admin-bar nav a:hover,
+.admin-bar nav a:focus-visible {
+  color: var(--red);
 }
 .admin-body {
   padding: 20px 0;

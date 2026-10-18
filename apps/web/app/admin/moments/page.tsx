@@ -61,6 +61,12 @@ export default function AdminMomentsPage(): ReactNode {
           以 <strong>{session.user?.username}</strong> 登录 ·
           <Link href="/apps/ins"> 看公开页面</Link>
         </p>
+        {/* P5 第一批：新增独立编辑入口；下面的旧工作台继续保留（不删现有能力）。 */}
+        <p className="ins-admin-head-entry">
+          <Link className="ins-btn" href="/admin/moments/new">
+            新建动态（独立编辑页）
+          </Link>
+        </p>
       </header>
       <MomentWorkspace
         csrfToken={session.csrf_token}

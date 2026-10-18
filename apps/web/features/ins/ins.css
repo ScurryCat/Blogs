@@ -1115,3 +1115,314 @@
 .ins-btn {
   min-height: 44px;
 }
+
+/* =====================================================================
+   P5 第一批 · 站主快捷入口与 INS 独立编辑页（C3）
+   ---------------------------------------------------------------------
+   - 入口只在确认站主后由组件自己渲染（隐藏入口不是授权）；
+   - 编辑页桌面在 `.admin-shell` 内，≤620px 的全屏单列由 workspace 的
+     EditorShell 负责，这里只保正文字段平直稳定、触控目标 ≥44px。
+   ===================================================================== */
+
+/* ---------- 前台站主入口（列表「发布动态」/ 详情「编辑当前动态」） ---------- */
+
+.ins-owner-entry {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin: 10px 0;
+  padding: 8px 16px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--ins-ink, #f4f1ea);
+  background: transparent;
+  border: 2px solid var(--ins-red, #d3122a);
+  text-decoration: none;
+}
+
+.ins-owner-entry:hover,
+.ins-owner-entry:focus-visible {
+  color: #fff;
+  background: var(--ins-red, #d3122a);
+}
+
+.ins-owner-entry:focus-visible {
+  outline: 3px solid var(--ins-ink, #f4f1ea);
+  outline-offset: 2px;
+}
+
+/* ---------- 编辑页：通用 ---------- */
+
+.ins-editor-hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #b9b2a6;
+}
+
+.ins-editor-notice,
+.ins-editor-error {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #f4f1ea;
+  background: rgba(244, 241, 234, 0.08);
+  border-left: 3px solid #f4f1ea;
+}
+
+.ins-editor-error {
+  background: rgba(211, 18, 42, 0.16);
+  border-left-color: #d3122a;
+}
+
+.ins-editor-notice a,
+.ins-editor-error a {
+  color: #ffd166;
+}
+
+/* ---------- ① 图片区 ---------- */
+
+.ins-editor-media {
+  margin: 0 0 16px;
+  padding: 12px;
+  border: 2px solid rgba(244, 241, 234, 0.3);
+}
+
+.ins-editor-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ins-editor-section-head h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.ins-editor-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ins-editor-thumb {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 150px;
+  padding: 6px;
+  background: rgba(244, 241, 234, 0.05);
+  border: 2px solid rgba(244, 241, 234, 0.28);
+}
+
+.ins-editor-thumb-meta {
+  font-size: 11px;
+  color: #b9b2a6;
+}
+
+.ins-editor-thumb-alt {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #f4f1ea;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- ② 文字区：平直稳定，无透视/倾斜 ---------- */
+
+.ins-editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: #b9b2a6;
+}
+
+.ins-editor-field textarea,
+.ins-editor-field input {
+  min-height: 44px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #0d0d0f;
+  background: #f4f1ea;
+  border: 2px solid #0d0d0f;
+  border-radius: 0;
+  /* 中文正文无衬线、不做 skew/rotate（设计书 §2.6）。 */
+  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", ui-sans-serif, sans-serif;
+}
+
+.ins-editor-field textarea:focus-visible,
+.ins-editor-field input:focus-visible {
+  outline: 3px solid #d3122a;
+  outline-offset: 1px;
+}
+
+.ins-editor-field small {
+  font-size: 11px;
+  color: #b9b2a6;
+}
+
+.ins-editor-field em {
+  font-size: 12px;
+  font-style: normal;
+  color: #ffb3bb;
+}
+
+/* ---------- ④ 发布阻塞原因 ---------- */
+
+.ins-editor-blockers {
+  margin: 0 0 14px;
+  padding: 12px;
+  border: 2px solid #d3122a;
+  background: rgba(211, 18, 42, 0.1);
+}
+
+.ins-editor-blockers h2 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  color: #ffb3bb;
+}
+
+.ins-editor-blockers ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* ---------- ⑤ 预览 ---------- */
+
+.ins-editor-preview-wrap {
+  margin: 0 0 16px;
+}
+
+.ins-editor-preview {
+  margin-top: 10px;
+  padding: 12px;
+  border: 2px dashed rgba(244, 241, 234, 0.4);
+  background: rgba(244, 241, 234, 0.04);
+}
+
+.ins-editor-preview-text {
+  margin: 0 0 10px;
+  font-size: 15px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.ins-editor-preview-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.ins-editor-preview-images li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 150px;
+  font-size: 12px;
+}
+
+/* ---------- 提交成功页 ---------- */
+
+.ins-editor-success {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  border: 3px solid #f4f1ea;
+  box-shadow: 6px 6px 0 #d3122a;
+}
+
+.ins-editor-success h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.ins-editor-success p {
+  margin: 0;
+  line-height: 1.7;
+}
+
+.ins-editor-success-act {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ins-editor-success-act a,
+.ins-editor-success-act button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  text-decoration: none;
+}
+
+@media (max-width: 620px) {
+  .ins-editor-thumb,
+  .ins-editor-preview-images li {
+    width: calc(50% - 5px);
+  }
+
+  .ins-editor-section-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ins-editor-section-head .ws-btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .ins-editor-success-act a,
+  .ins-editor-success-act button {
+    flex: 1 1 100%;
+  }
+}
+
+/* ---------- 旧动态工作台：P5 独立编辑入口（不替换旧能力） ---------- */
+
+.ins-admin-head-entry {
+  margin: 8px 0 0;
+}
+
+.ins-admin-list-edit {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin: 0 0 8px 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--ins-ink, #f4f1ea);
+  border: 1px dashed rgba(244, 241, 234, 0.45);
+  text-decoration: none;
+}
+
+.ins-admin-list-edit:hover,
+.ins-admin-list-edit:focus-visible {
+  color: #fff;
+  background: var(--ins-red, #d3122a);
+  border-style: solid;
+}
+
+@media (max-width: 620px) {
+  .ins-admin-list-edit {
+    margin-left: 0;
+  }
+}

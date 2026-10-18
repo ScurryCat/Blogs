@@ -17,6 +17,7 @@ import { MarkdownView } from "@/features/legacy/markdown/view";
 import { SiteLink } from "@/features/runtime/navigation/site-link";
 
 import styles from "./journal.module.css";
+import { JournalOwnerEditEntry } from "./owner-entry";
 import { imageUrl, parseCalendarDate } from "./paths";
 import type { JournalEntryDetail } from "./types";
 
@@ -36,6 +37,10 @@ export function EntryReading({ entry }: { entry: JournalEntryDetail }): ReactNod
           ) : null}
           {entry.location ? <li className={styles.chip}>地点：{entry.location}</li> : null}
         </ul>
+        {/* 站主快捷入口：仅确认已登录后渲染；普通访客完全看不到。 */}
+        <div className={styles.ownerActions} data-owner-actions="journal-reading">
+          <JournalOwnerEditEntry entryId={entry.id} />
+        </div>
       </header>
 
       {entry.images.length ? (

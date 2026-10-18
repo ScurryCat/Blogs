@@ -25,6 +25,7 @@ import { EntryReadingLoader } from "./entry-reading-loader";
 import { useLoader, type JournalHost } from "./host";
 import styles from "./journal.module.css";
 import { formatMonthLabel, isJournalScreen, parseCalendarDate } from "./paths";
+import { JournalOwnerNewEntry } from "./owner-entry";
 import { SaveScreen } from "./save-screen";
 import { lastYear, rememberScreen, rememberYear } from "./state";
 import type { JournalCalendar, JournalEntrySummary } from "./types";
@@ -107,6 +108,10 @@ export function JournalView({
               </button>
             ))}
         </nav>
+        {/* 站主快捷入口：仅 useOwnerSession 确认 owner 后渲染（匿名访客连占位都没有）。 */}
+        <div className={styles.ownerActions} data-owner-actions="journal">
+          <JournalOwnerNewEntry date={active === "calendar" ? selectedDay : null} />
+        </div>
       </header>
 
       {active === "calendar" ? (

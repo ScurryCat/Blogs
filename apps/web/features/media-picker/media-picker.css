@@ -1,0 +1,510 @@
+/* =====================================================================
+   PHANTOM LOG · 共享图片选择器样式（P5 第一批 · C3）
+   ---------------------------------------------------------------------
+   所有权：`apps/web/features/media-picker/`（C3）。由选择器组件自己 import，
+   INS 独立编辑页与手记编辑页共用。
+
+   美术方向延续 P5：黑白红、粗边框、选中反色；媒体缩略图是主体，
+   容器只做安静的框架。触控目标 ≥44px；≤620px 全屏单列可滚动。
+   ===================================================================== */
+
+.mpx-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(5, 5, 7, 0.82);
+  overscroll-behavior: contain;
+}
+
+.mpx-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(960px, 100%);
+  max-height: min(92dvh, 100%);
+  overflow: auto;
+  padding: 16px;
+  color: var(--ins-ink, #f4f1ea);
+  background: #0d0d0f;
+  border: 3px solid #f4f1ea;
+  box-shadow: 8px 8px 0 #d3122a;
+  overscroll-behavior: contain;
+}
+
+.mpx-panel:focus {
+  outline: none;
+}
+
+.mpx-panel:focus-visible {
+  outline: 3px solid #d3122a;
+  outline-offset: 2px;
+}
+
+/* ---------- 头部 ---------- */
+
+.mpx-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #d3122a;
+}
+
+.mpx-head h2 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+  transform: skewX(-6deg);
+}
+
+.mpx-sub {
+  margin: 0;
+  font-size: 12px;
+  color: #b9b2a6;
+}
+
+/* ---------- 按钮（触控目标 ≥44px） ---------- */
+
+.mpx-btn {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 13px;
+  color: #f4f1ea;
+  background: transparent;
+  border: 2px solid #f4f1ea;
+  cursor: pointer;
+}
+
+.mpx-btn:hover:not(:disabled) {
+  color: #0d0d0f;
+  background: #f4f1ea;
+}
+
+.mpx-btn:focus-visible {
+  outline: 3px solid #d3122a;
+  outline-offset: 2px;
+}
+
+.mpx-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.mpx-btn.is-primary {
+  color: #0d0d0f;
+  background: #f4f1ea;
+  border-color: #f4f1ea;
+  font-weight: 700;
+}
+
+.mpx-btn.is-primary:hover:not(:disabled) {
+  background: #d3122a;
+  border-color: #d3122a;
+  color: #fff;
+}
+
+.mpx-btn.is-danger {
+  border-color: #d3122a;
+  color: #ff8b98;
+}
+
+.mpx-btn.is-danger:hover:not(:disabled) {
+  background: #d3122a;
+  color: #fff;
+}
+
+.mpx-close {
+  flex: 0 0 auto;
+}
+
+/* ---------- 提示 ---------- */
+
+.mpx-notice {
+  margin: 0;
+  padding: 8px 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #f4f1ea;
+  background: rgba(244, 241, 234, 0.08);
+  border-left: 3px solid #f4f1ea;
+}
+
+.mpx-notice.is-error {
+  border-left-color: #d3122a;
+  background: rgba(211, 18, 42, 0.16);
+}
+
+.mpx-hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #b9b2a6;
+}
+
+.mpx-warn {
+  margin: 2px 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #ffd166;
+}
+
+.mpx-meta {
+  margin: 0;
+  font-size: 12px;
+  color: #b9b2a6;
+}
+
+/* ---------- 区块标题 ---------- */
+
+.mpx-section-title {
+  margin: 0 0 8px;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  color: #f4f1ea;
+}
+
+.mpx-selected,
+.mpx-upload,
+.mpx-library {
+  padding: 10px 0;
+  border-bottom: 1px dashed rgba(244, 241, 234, 0.24);
+}
+
+/* ---------- 已选列表 ---------- */
+
+.mpx-picked-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mpx-picked-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px;
+  background: rgba(244, 241, 234, 0.05);
+  border: 2px solid rgba(244, 241, 234, 0.3);
+}
+
+.mpx-order {
+  flex: 0 0 28px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: #d3122a;
+  text-align: center;
+  padding-top: 4px;
+}
+
+.mpx-picked-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mpx-alt {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #b9b2a6;
+}
+
+.mpx-alt input {
+  min-height: 44px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 14px;
+  color: #0d0d0f;
+  background: #f4f1ea;
+  border: 2px solid #0d0d0f;
+}
+
+.mpx-alt input:focus-visible {
+  outline: 3px solid #d3122a;
+  outline-offset: 1px;
+}
+
+.mpx-alt small {
+  font-size: 11px;
+  color: #b9b2a6;
+}
+
+.mpx-picked-act {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mpx-picked-act .mpx-btn {
+  padding: 6px 10px;
+}
+
+/* ---------- 缩略图 ---------- */
+
+.mpx-thumb {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #1b1b20;
+  border: 2px solid rgba(244, 241, 234, 0.35);
+  color: #b9b2a6;
+  font-size: 11px;
+}
+
+.mpx-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mpx-thumb.is-sm {
+  width: 64px;
+  height: 64px;
+}
+
+.mpx-thumb.is-md {
+  width: 100%;
+  height: 120px;
+}
+
+/* ---------- 上传 ---------- */
+
+.mpx-upload-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  color: #b9b2a6;
+}
+
+.mpx-upload-label input[type="file"] {
+  min-height: 44px;
+  padding: 10px;
+  font: inherit;
+  font-size: 13px;
+  color: #f4f1ea;
+  background: rgba(244, 241, 234, 0.06);
+  border: 2px dashed rgba(244, 241, 234, 0.5);
+  cursor: pointer;
+}
+
+.mpx-upload-label input[type="file"]:focus-visible {
+  outline: 3px solid #d3122a;
+  outline-offset: 2px;
+}
+
+.mpx-locals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mpx-local {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  max-width: 100%;
+  padding: 6px 8px;
+  font-size: 12px;
+  color: #b9b2a6;
+  border: 1px solid rgba(244, 241, 234, 0.3);
+}
+
+.mpx-local img {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 42px;
+  object-fit: cover;
+}
+
+.mpx-local.is-failed {
+  border-color: #d3122a;
+  color: #ffb3bb;
+}
+
+/* ---------- 媒体库网格 ---------- */
+
+.mpx-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 10px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mpx-media {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 6px;
+  font: inherit;
+  text-align: left;
+  color: #f4f1ea;
+  background: transparent;
+  border: 2px solid rgba(244, 241, 234, 0.3);
+  cursor: pointer;
+}
+
+.mpx-media:hover:not(:disabled) {
+  border-color: #f4f1ea;
+}
+
+.mpx-media:focus-visible {
+  outline: 3px solid #d3122a;
+  outline-offset: 2px;
+}
+
+.mpx-media:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.mpx-media.is-selected {
+  border-color: #d3122a;
+  background: rgba(211, 18, 42, 0.14);
+}
+
+.mpx-media-meta {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #b9b2a6;
+}
+
+.mpx-media-order {
+  align-self: flex-start;
+  padding: 2px 6px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11px;
+  color: #0d0d0f;
+  background: #d3122a;
+}
+
+.mpx-media-warn {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #ffd166;
+}
+
+.mpx-media-state {
+  font-size: 11px;
+  color: #ffb3bb;
+}
+
+.mpx-state {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 10px;
+  border: 2px solid #d3122a;
+}
+
+.mpx-state p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.mpx-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+/* ---------- 底部操作区（sticky：软键盘弹出后仍可达） ---------- */
+
+.mpx-foot {
+  position: sticky;
+  bottom: -16px;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  padding: 10px 0 max(10px, env(safe-area-inset-bottom));
+  background: #0d0d0f;
+  border-top: 2px solid #f4f1ea;
+}
+
+.mpx-foot-count {
+  margin: 0;
+  font-size: 13px;
+  color: #f4f1ea;
+}
+
+.mpx-foot-act {
+  display: flex;
+  gap: 8px;
+}
+
+.mpx-foot .mpx-hint {
+  flex: 1 1 100%;
+}
+
+/* ---------- 手机：全屏单列 ---------- */
+
+@media (max-width: 620px) {
+  .mpx-overlay {
+    padding: 0;
+  }
+
+  .mpx-panel {
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    padding: 12px 12px max(12px, env(safe-area-inset-bottom));
+    border: 0;
+    box-shadow: none;
+  }
+
+  .mpx-picked-item {
+    flex-wrap: wrap;
+  }
+
+  .mpx-picked-act {
+    flex: 1 1 100%;
+    justify-content: flex-end;
+  }
+
+  .mpx-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mpx-foot {
+    bottom: -12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mpx-head h2 {
+    transform: none;
+  }
+}

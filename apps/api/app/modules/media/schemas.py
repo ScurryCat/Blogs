@@ -51,6 +51,23 @@ class MediaAdminOut(BaseModel):
     original_url: str
 
 
+class MediaAdminReferenceOut(MediaAdminOut):
+    """管理侧列表 / 详情项：`MediaAdminOut` + 公开引用提示（契约 §3.4）。
+
+    `publicly_referenced=True` 表示这张图**已被其他位置公开引用**：把它用于私密
+    手记不会撤回其他公开引用，也不会让本来不可读的媒体变可读 —— 提示文案由前端呈现。
+    """
+
+    publicly_referenced: bool
+
+
+class MediaAdminListOut(BaseModel):
+    """列表统一结构（契约 §3.4 / core.pagination）：`{items, next_cursor}`。"""
+
+    items: list[MediaAdminReferenceOut]
+    next_cursor: str | None
+
+
 def variant_url(media_id: uuid.UUID, name: str) -> str:
     return f"{API_V1_PREFIX}/media/{media_id}/{name}"
 
@@ -107,4 +124,14 @@ def media_admin_out(media: Media) -> MediaAdminOut:
         created_at=media.created_at,
         variants=_variant_payloads(media, include_original=True),
         original_url=variant_url(media.id, ORIGINAL_VARIANT),
+    )
+
+
+def media_admin_reference_out(
+    media: Media, *, publicly_referenced: bool
+) -> MediaAdminReferenceOut:
+    """管理侧列表 / 详情项：`MediaAdminOut` 的字段 + 公开引用提示。"""
+    base = media_admin_out(media)
+    return MediaAdminReferenceOut(
+        **base.model_dump(), publicly_referenced=publicly_referenced
     )
