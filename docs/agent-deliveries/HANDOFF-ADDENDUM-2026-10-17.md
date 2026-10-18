@@ -139,6 +139,12 @@
 （钢印编号/冰蓝左沿）+ REGISTRY 金贴牌；Velvet 测试 59/59；仍标部分还原
 （`P4-velvet-visual-refinement.md`；CSS 色块替代 3D 房间）。
 
+## 五之一之七、印象空间整屏视觉修形第一轮（2026-10-18）
+
+对照 `p5-mementos` 完整帧：黑暗隧道冷光 + 黄黑警示条 + 荧光绿档案箱/号牌 +
+AWARENESS AREA 贴牌 + 线路牌状态徽标；Exploration 测试 39/39；仍标部分还原
+（`P4-mementos-visual-refinement.md`；CSS 色块替代 3D 隧道）。
+
 ## 五之二、视觉对照证据（2026-10-18）
 
 - `tools/capture-visual-comparison.py`：真实浏览器截图 11 个站点界面，与 17 张参考帧并排对照

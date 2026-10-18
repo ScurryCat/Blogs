@@ -663,3 +663,228 @@ textarea.pme-input {
   margin-left: 10px;
   vertical-align: middle;
 }
+
+/* ==========================================================================
+   2026-10-18 印象空间整屏视觉修形 · 第一轮
+   参考帧：persona-curated/hud/p5-mementos-fullframe.jpg（黑暗地铁隧道 + 绿色冷光 +
+   黄黑警示标 + AWARENESS AREA）。
+   只改视觉：问题记录/工作状态/关联内容的数据与语义不变，不新增完成度或等级。
+   ========================================================================== */
+
+.pme-wrap {
+  --m-neon: #39ff88;
+  --m-hazard: #ffd75e;
+  position: relative;
+  isolation: isolate;
+  padding: 20px 20px 24px;
+  border: 3px solid #05070c;
+  box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.6);
+  background:
+    radial-gradient(ellipse 58% 30% at 50% 0%, rgba(57, 255, 136, 0.24), transparent 72%),
+    radial-gradient(ellipse 46% 40% at 8% 70%, rgba(180, 124, 232, 0.18), transparent 70%),
+    repeating-linear-gradient(104deg, rgba(57, 255, 136, 0.06) 0 2px, transparent 2px 64px),
+    linear-gradient(180deg, #0a1a13 0%, #081016 58%, #05070c 100%);
+  overflow: hidden;
+}
+
+/* 顶部/底部黄黑警示条（地铁站台边缘语言）。 */
+.pme-wrap::before,
+.pme-wrap::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: repeating-linear-gradient(45deg, var(--m-hazard) 0 14px, #101014 14px 28px);
+  pointer-events: none;
+}
+
+.pme-wrap::before {
+  top: 0;
+}
+
+.pme-wrap::after {
+  bottom: 0;
+}
+
+.pme-bar {
+  border-bottom: 0;
+  padding-bottom: 4px;
+}
+
+.pme-bar::after {
+  content: "AWARENESS AREA";
+  align-self: center;
+  padding: 6px 14px;
+  background: #f4f1ea;
+  color: #101014;
+  border: 3px solid #101014;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.55);
+  font: 400 clamp(15px, 1.8vw, 22px) / 1 var(--f-disp, sans-serif);
+  letter-spacing: 0.1em;
+  transform: rotate(-4deg) skewX(-4deg);
+}
+
+.pme-kicker {
+  font: 400 clamp(30px, 4vw, 46px) / 0.95 var(--f-disp, sans-serif);
+  letter-spacing: 0.03em;
+  color: var(--m-neon);
+  text-shadow: 4px 4px 0 rgba(5, 7, 12, 0.9);
+}
+
+.pme-title {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 3px 12px;
+  background: var(--m-neon);
+  color: #06110b;
+  font: 700 14px/1.5 var(--f-hat, sans-serif);
+  letter-spacing: 0.18em;
+  text-shadow: none;
+  transform: skewX(-7deg);
+}
+
+.pme-lead {
+  color: rgba(244, 241, 234, 0.82);
+}
+
+/* 统计与筛选：站台号牌 + 荧光绿。 */
+.pme-stat {
+  border: 2px solid rgba(57, 255, 136, 0.45);
+  background: #101014;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
+}
+
+.pme-stat b {
+  color: var(--m-neon);
+  text-shadow: 0 0 12px rgba(57, 255, 136, 0.5);
+}
+
+.pme-chip {
+  border: 2px solid rgba(57, 255, 136, 0.45);
+  background: #0a0f0d;
+}
+
+.pme-chip[aria-current="true"] {
+  border-color: var(--m-neon);
+  background: var(--m-neon);
+  color: #06110b;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.55);
+}
+
+.pme-chip:hover,
+.pme-chip:focus-visible {
+  border-color: var(--m-neon);
+  background: rgba(57, 255, 136, 0.14);
+  color: var(--m-neon);
+}
+
+/* 问题卡 = 隧道里的档案箱：黑框 + 荧光绿左沿 + 黄色 No. 标。 */
+.pme-card {
+  background:
+    linear-gradient(155deg, rgba(57, 255, 136, 0.08), rgba(8, 12, 14, 0.96) 55%),
+    #0a0f10;
+  border: 3px solid #101014;
+  border-left: 8px solid var(--m-neon);
+  box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.55);
+}
+
+.pme-card::before {
+  content: "No." counter(mementos-entry, decimal-leading-zero);
+  background: var(--m-hazard);
+  border: 2px solid #101014;
+  color: #101014;
+  font-weight: 700;
+}
+
+.pme-card:hover,
+.pme-card:focus-visible {
+  border-color: var(--m-neon);
+  border-left-color: var(--m-hazard);
+  box-shadow:
+    9px 9px 0 rgba(0, 0, 0, 0.6),
+    0 0 24px rgba(57, 255, 136, 0.3);
+}
+
+.pme-card-title {
+  font-family: var(--f-disp, sans-serif);
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.7);
+}
+
+/* 状态徽标：地铁线路牌（已解决=绿 / 暂搁置=灰黄）。 */
+.pme-badge {
+  border: 2px solid #101014;
+  background: var(--m-neon);
+  color: #06110b;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
+  transform: rotate(-2deg);
+}
+
+.pme-badge[data-work-status="archived"] {
+  background: var(--m-hazard);
+  color: #101014;
+}
+
+.pme-badge[data-work-status="investigating"] {
+  background: #9fd8ff;
+  color: #06110b;
+}
+
+/* 详情面板与按钮沿用同一套站台牌语言。 */
+.pme-panel {
+  border: 3px solid #101014;
+  background: #0a0f10;
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.55);
+}
+
+.pme-section-title {
+  color: var(--m-neon);
+  font-family: var(--f-disp, sans-serif);
+}
+
+.pme-button {
+  border: 2px solid #101014;
+  background: var(--m-hazard);
+  color: #101014;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.55);
+}
+
+.pme-button:hover,
+.pme-button:focus-visible {
+  background: var(--m-neon);
+  color: #06110b;
+}
+
+.pme-button-ghost {
+  background: transparent;
+  color: var(--m-neon);
+  border-color: var(--m-neon);
+}
+
+@media (max-width: 480px) {
+  .pme-wrap {
+    padding: 14px 12px 20px;
+    background:
+      radial-gradient(ellipse 70% 28% at 50% 0%, rgba(57, 255, 136, 0.2), transparent 72%),
+      linear-gradient(180deg, #0a1a13 0%, #081016 58%, #05070c 100%);
+  }
+
+  .pme-bar::after {
+    display: none;
+  }
+
+  .pme-kicker {
+    font-size: 27px;
+  }
+
+  .pme-card {
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.55);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pme-card:hover,
+  .pme-card:focus-visible {
+    transform: none;
+  }
+}
