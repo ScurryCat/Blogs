@@ -133,6 +133,12 @@
 纸白宝物卡（黑厚框/硬阴影/EXHIBIT 编号）+ 金色页签；Showcase 测试 50/50；仍标部分还原
 （`P4-showcase-visual-refinement.md`；CSS 色块替代 3D 宝库，不做 3D 漫游）。
 
+## 五之一之六、天鹅绒房间整屏视觉修形第一轮（2026-10-18）
+
+对照 `p5r-velvet-room` 完整帧：深蓝丝绒条纹 + 顶部冷光 + 金/冰饰线 + 白色登记板技能卡
+（钢印编号/冰蓝左沿）+ REGISTRY 金贴牌；Velvet 测试 59/59；仍标部分还原
+（`P4-velvet-visual-refinement.md`；CSS 色块替代 3D 房间）。
+
 ## 五之二、视觉对照证据（2026-10-18）
 
 - `tools/capture-visual-comparison.py`：真实浏览器截图 11 个站点界面，与 17 张参考帧并排对照

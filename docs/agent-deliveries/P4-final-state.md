@@ -65,6 +65,9 @@
   - **我的殿堂 Showcase 整屏视觉修形第一轮（2026-10-18）**：暗红/黑斜切宝库墙 + 金色宝箱辉光 +
     金色 TREASURE 贴牌 + 纸白宝物卡（黑厚框/硬阴影/EXHIBIT 编号）+ 金色页签；Showcase 测试 50/50；
     仍标部分还原（`P4-showcase-visual-refinement.md`；不做 3D 漫游、不伪造成绩）。
+  - **天鹅绒房间 Velvet 整屏视觉修形第一轮（2026-10-18）**：深蓝丝绒条纹 + 冷光 + 金/冰饰线 +
+    白色登记板技能卡（钢印编号/冰蓝左沿）+ REGISTRY 金贴牌；Velvet 测试 59/59；
+    仍标部分还原（`P4-velvet-visual-refinement.md`；CSS 色块替代 3D 房间）。
   - **视觉对照证据（2026-10-18）**：`tools/capture-visual-comparison.py` 把 17 张参考帧与
     站点 11 个界面并排对照；结论见 `P4-visual-comparison-evidence.md`
     （13 项语言级部分对照 / 2 项未实现（图片消息、楼层图）/ 2 项无对应整屏；

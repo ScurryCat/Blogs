@@ -100,6 +100,8 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 > 黑色姓名条 + 深红大序号（`P4-coop-visual-refinement.md`；仍部分还原，RANK 无数据不伪造）。
 > **我的殿堂 Showcase 整屏视觉修形第一轮（2026-10-18）**：暗红/黑斜切宝库墙 + 金色宝箱辉光 +
 > 金色 TREASURE 贴牌 + 纸白宝物卡 + 金色页签（`P4-showcase-visual-refinement.md`；仍部分还原）。
+> **天鹅绒房间整屏视觉修形第一轮（2026-10-18）**：深蓝丝绒条纹 + 冷光 + 金/冰饰线 +
+> 白色登记板技能卡 + REGISTRY 金贴牌（`P4-velvet-visual-refinement.md`；仍部分还原）。
 > **视觉对照证据（2026-10-18）**：`tools/capture-visual-comparison.py` 把 17 张参考帧与
 > 站点 13 个界面并排对照，逐项结论见 `P4-visual-comparison-evidence.md`
 > （13 项语言级部分对照 / 2 项未实现（图片消息、楼层图）/ 2 项无对应整屏；**整屏还原仍未通过**）。

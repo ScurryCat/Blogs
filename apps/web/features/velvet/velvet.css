@@ -734,3 +734,226 @@
   margin-left: 10px;
   vertical-align: middle;
 }
+
+/* ==========================================================================
+   2026-10-18 天鹅绒房间整屏视觉修形 · 第一轮
+   参考帧：persona-curated/hud/p5r-velvet-room-fullframe.jpg（蓝丝绒房间 + 冷光 + 金饰）
+   参考语言：深蓝丝绒幕布、冰冷聚光、金色饰线、白色登记板。
+   只改视觉：领域/技能/证据数据不变，不新增等级或熟练度数值。
+   ========================================================================== */
+
+.plv-room {
+  --v-gold: #ffd75e;
+  position: relative;
+  isolation: isolate;
+  padding: 20px 20px 26px;
+  border: 3px solid #0d1b2c;
+  box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.55);
+  background:
+    radial-gradient(ellipse 55% 34% at 50% 0%, rgba(159, 216, 255, 0.3), transparent 70%),
+    radial-gradient(ellipse 90% 70% at 50% 115%, rgba(43, 92, 147, 0.5), transparent 70%),
+    repeating-linear-gradient(90deg, rgba(159, 216, 255, 0.07) 0 16px, transparent 16px 44px),
+    linear-gradient(180deg, #102a47 0%, #0a1727 52%, #060c14 100%);
+  overflow: hidden;
+}
+
+/* 顶部金色饰线 + 底部深蓝帷幕折叠。 */
+.plv-room::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: linear-gradient(90deg, transparent, var(--v-gold) 18%, var(--v-ice) 50%, var(--v-gold) 82%, transparent);
+  pointer-events: none;
+}
+
+.plv-room::after {
+  content: "";
+  position: absolute;
+  inset: auto -10% -70px -10%;
+  height: 160px;
+  background: repeating-linear-gradient(102deg, rgba(6, 12, 20, 0.9) 0 42px, rgba(16, 42, 71, 0.9) 42px 84px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.plv-bar {
+  border-bottom: 0;
+  padding-bottom: 4px;
+}
+
+.plv-bar::after {
+  content: "REGISTRY";
+  align-self: center;
+  padding: 5px 14px;
+  background: var(--v-gold);
+  color: #0d1b2c;
+  border: 3px solid #0d1b2c;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.5);
+  font: 400 clamp(16px, 2vw, 24px) / 1 var(--f-disp, sans-serif);
+  letter-spacing: 0.12em;
+  transform: rotate(-5deg) skewX(-4deg);
+}
+
+.plv-kicker {
+  font: 400 clamp(28px, 3.8vw, 44px) / 0.95 var(--f-disp, sans-serif);
+  letter-spacing: 0.04em;
+  color: var(--v-ice, #9fd8ff);
+  text-shadow: 4px 4px 0 rgba(13, 27, 44, 0.9);
+}
+
+.plv-title {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 3px 12px;
+  background: var(--v-ice, #9fd8ff);
+  color: #0d1b2c;
+  font: 700 14px/1.5 var(--f-hat, sans-serif);
+  letter-spacing: 0.18em;
+  text-shadow: none;
+  transform: skewX(-7deg);
+}
+
+.plv-lead {
+  color: rgba(244, 241, 234, 0.82);
+}
+
+.plv-lead a {
+  color: var(--v-gold);
+}
+
+/* 牢门 = 金冰双线框的登记台。 */
+.plv-gate {
+  border: 3px solid var(--v-ice, #9fd8ff);
+  outline: 2px solid rgba(255, 215, 94, 0.7);
+  outline-offset: 4px;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.55),
+    8px 8px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* 技能卡 = 白色登记板：深蓝墨字 + 冰冷左沿 + 登记钢印编号。 */
+.plv-card {
+  background: #f4f1ea;
+  color: #0d1b2c;
+  border: 3px solid #0d1b2c;
+  border-left: 8px solid var(--v-blue, #2b5c93);
+  box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.55);
+}
+
+.plv-card::before {
+  background: var(--v-ice, #9fd8ff);
+  border: 2px solid #0d1b2c;
+  color: #0d1b2c;
+  font-weight: 700;
+}
+
+.plv-card-name {
+  color: #0d1b2c;
+  text-shadow: none;
+}
+
+.plv-card:hover .plv-card-name,
+.plv-card:focus-visible .plv-card-name {
+  color: #a80c14;
+}
+
+.plv-card-domain {
+  background: #0d1b2c;
+  border-color: #0d1b2c;
+  color: var(--v-ice, #9fd8ff);
+}
+
+.plv-card-scope {
+  color: #232f3d;
+}
+
+.plv-card-meta {
+  border-top: 1px solid rgba(13, 27, 44, 0.28);
+  color: #4a5563;
+}
+
+.plv-card-meta strong {
+  color: #a80c14;
+}
+
+.plv-card:hover,
+.plv-card:focus-visible {
+  border-color: #0d1b2c;
+  border-left-color: #a80c14;
+  box-shadow:
+    9px 9px 0 rgba(0, 0, 0, 0.6),
+    0 0 24px rgba(159, 216, 255, 0.35);
+}
+
+/* 合体面板：深蓝登记台 + 金色内线。 */
+.plv-combo {
+  border: 3px solid var(--v-ice, #9fd8ff);
+  outline: 2px solid rgba(255, 215, 94, 0.55);
+  outline-offset: 3px;
+  background:
+    linear-gradient(180deg, rgba(16, 42, 71, 0.95), rgba(6, 12, 20, 0.97));
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.5);
+}
+
+.plv-field-label {
+  color: var(--v-gold);
+}
+
+.plv-select {
+  border-color: rgba(159, 216, 255, 0.6);
+}
+
+.plv-button {
+  background: var(--v-ice, #9fd8ff);
+  color: #0d1b2c;
+  border-color: #0d1b2c;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.55);
+}
+
+.plv-button:hover,
+.plv-button:focus-visible {
+  background: var(--v-gold);
+  color: #0d1b2c;
+}
+
+.plv-button-ghost {
+  background: transparent;
+  color: var(--v-ice, #9fd8ff);
+  border-color: var(--v-ice, #9fd8ff);
+}
+
+.plv-note {
+  border-left-color: var(--v-gold);
+  background: rgba(16, 42, 71, 0.9);
+}
+
+@media (max-width: 480px) {
+  .plv-room {
+    padding: 12px 12px 20px;
+    background:
+      radial-gradient(ellipse 70% 30% at 50% 0%, rgba(159, 216, 255, 0.26), transparent 70%),
+      linear-gradient(180deg, #102a47 0%, #0a1727 52%, #060c14 100%);
+  }
+
+  .plv-bar::after {
+    display: none;
+  }
+
+  .plv-kicker {
+    font-size: 26px;
+  }
+
+  .plv-card {
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.55);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plv-card:hover,
+  .plv-card:focus-visible {
+    transform: none;
+  }
+}
