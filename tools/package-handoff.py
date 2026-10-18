@@ -237,7 +237,20 @@ def source_revision_text() -> str:
     branch = run("git", "rev-parse", "--abbrev-ref", "HEAD").strip()
     remote = run("git", "remote", "get-url", "origin").strip()
     ahead = run("git", "rev-list", "--count", "origin/main..HEAD").strip()
-    status = run("git", "status", "--short").strip() or "（工作区干净）"
+    # 只记录与本交接包直接相关的路径状态：工作区可能同时有其它 worker 的
+    # 后端/前端改动，未提交状态不应污染交接包的源码基线说明。
+    status = run(
+        "git",
+        "status",
+        "--short",
+        "--untracked-files=no",
+        "--",
+        "docs",
+        "tools",
+        "apps/web/features/messaging",
+        "apps/web/features/phone",
+        "apps/web/public/assets/legacy/img/app/ai",
+    ).strip() or "（相关文件工作区干净）"
     log = run("git", "log", "--oneline", "-25").strip()
     return (
         "# 源码版本清单（交接包自动生成）\n\n"
