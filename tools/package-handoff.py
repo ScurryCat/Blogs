@@ -38,6 +38,7 @@ TOOL_WHITELIST = [
     "e2e-im-draft.py",
     "e2e-ins-conversation.py",
     "e2e-ins-album-links-ui.py",
+    "e2e-ins-draft-album-flow.py",
     "e2e-im-image-card.py",
     "e2e-ins-tag.py",
     "e2e-journal-reading.py",
@@ -114,6 +115,8 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 > **IM 图片消息 Phase 1 已实现（2026-10-18，站主拍板方案 A）**：剧本图片卡
 > （`image`/`album_photo`）+ 白框拍立得 + 灯箱 + 撤回/失效降级；后端 9 / 前端 4 /
 > 浏览器 e2e 8/8（`tools/e2e-im-image-card.py`）；Phase 2 AI 选图 / Phase 3 访客引用相册仍未做。
+> **管理端 INS 隔离全流程（2026-10-18）**：草稿保留 + 新标签建相册 + 图库展示 + 撤回联动，
+> 隔离栈真实浏览器 19/19（`P4-acceptance-complete-admin-flow.md`）。
 > **完整验收 2026-10-18 返工**：R2 灯箱 Escape 不再退出 App、R3 灯箱失败降级（e2e 60/60）；
 > R1 三张错标参考帧已纠正并补正确 P5R 天鹅绒/东京地图/IM 帧（21/21；**G2 仍缺**）；
 > §6 AI 位图桌面回退移除（2 原版 + 8 自绘适配）、相册 1200 上限提示、pending 中性标题、
@@ -176,6 +179,10 @@ VISUAL_EVIDENCE = [
     (".dsh/screenshots/acceptance-complete-r2r3/03-lightbox-failure-fallback.png", "visual-evidence/im-lightbox-failure-fallback.png"),
     (".dsh/screenshots/mobile-webkit/im-list-390x844.png", "visual-evidence/webkit-im-list.png"),
     (".dsh/screenshots/mobile-webkit/im-conversation-390x844.png", "visual-evidence/webkit-im-conversation.png"),
+    (".dsh/screenshots/ins-draft-album/01-draft-filled.png", "visual-evidence/ins-draft-filled.png"),
+    (".dsh/screenshots/ins-draft-album/03-back-draft-preserved.png", "visual-evidence/ins-draft-preserved.png"),
+    (".dsh/screenshots/ins-draft-album/05-gallery-visible.png", "visual-evidence/ins-gallery-visible.png"),
+    (".dsh/screenshots/ins-draft-album/06-after-withdraw-gallery.png", "visual-evidence/ins-withdraw-gallery-gone.png"),
     (".dsh/screenshots/journal-visual/01-journal-list.png", "visual-evidence/journal-save-slots.png"),
     (".dsh/screenshots/journal-visual/02-journal-calendar.png", "visual-evidence/journal-calendar.png"),
     (".dsh/screenshots/coop-visual/01-coop.png", "visual-evidence/coop.png"),

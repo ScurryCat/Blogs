@@ -174,6 +174,11 @@ AWARENESS AREA 贴牌 + 线路牌状态徽标；Exploration 测试 39/39；仍�
   pending 中性标题；历史文档标注；WebKit 断言增强 28/28。
 详见 `P4-acceptance-complete-r2r3.md`、`P4-acceptance-complete-r1.md`、`P4-acceptance-complete-residual.md`。
 
+## 五之一之十二、管理端 INS 隔离全流程（2026-10-18）
+
+`tools/e2e-ins-draft-album-flow.py`：隔离栈 19/19——动态草稿保留、新标签建相册、
+图库相册页可见、动态撤回后 INS/图库都消失。`P4-acceptance-complete-admin-flow.md`。
+
 ## 五之二、视觉对照证据（2026-10-18）
 
 - `tools/capture-visual-comparison.py`：真实浏览器截图 11 个站点界面，与 21 张参考帧并排对照
