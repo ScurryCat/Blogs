@@ -40,6 +40,18 @@
 截图：`.dsh/screenshots/im-replica/08-conversation-bottom-hints.png`、
 `09-mobile-conversation.png`、`10-mobile-v2.png`。
 
+## 1.7 第四轮（2026-10-19）
+
+按参考帧继续做「减法」：
+
+- 手机宿主内隐藏原版没有的发送人/时间行、列表介绍段、角色 tagline、消息条数 meta、
+  “Character messages” 小注；独立页保持完整信息；
+- 底部提示改为红底上的白色粗体 + 红点（参考帧 Scroll/Close 语言），去掉白纸条；
+- 会话 wordmark 轻微上移/旋转，压住手机屏上缘；
+- 收件列表行收紧 padding，只留头像、名称、预览、状态/日期标签。
+
+截图：`.dsh/screenshots/im-replica/11-conversation-clean.png`、`12-inbox-clean.png`。
+
 ## 2. 证据
 
 - 截图：`.dsh/screenshots/im-replica/`

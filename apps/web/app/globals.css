@@ -1120,3 +1120,47 @@ html.ov-lock body {
     font-size: 10px;
   }
 }
+
+/* IM 复刻：手机宿主内去掉原版没有的补充说明/标签，让屏幕更接近参考帧的「头像 + 消息条」。 */
+.pw-appview[data-phone-app="ins"] .msg-sender,
+.pw-appview[data-phone-app="ins"] .msg-role-intro,
+.pw-appview[data-phone-app="ins"] .msg-role-tagline,
+.pw-appview[data-phone-app="ins"] .msg-role-meta,
+.pw-appview[data-phone-app="ins"] .msg-list-head-note {
+  display: none;
+}
+
+.pw-appview[data-phone-app="ins"] .msg-role {
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+
+.pw-appview[data-phone-app="ins"] .msg-role-text {
+  gap: 2px;
+}
+
+.pw-appview[data-phone-app="ins"] .msg-op-hints {
+  background: transparent;
+  color: var(--msg-paper);
+  border-top: 0;
+  font-weight: 700;
+}
+
+.pw-appview[data-phone-app="ins"] .msg-op-hints span::before {
+  content: "●";
+  color: var(--msg-red);
+  margin-right: 4px;
+  font-size: 9px;
+}
+
+/* 会话 wordmark 轻微越过头图/上边，接近参考帧的大字压边。 */
+.pw-appview[data-phone-app="ins"] .msg-thread-bar .msg-logo {
+  margin-top: -7px;
+  transform: rotate(-3deg);
+}
+
+@media (max-width: 520px) {
+  .pw-appview[data-phone-app="ins"] .msg-thread-bar .msg-logo {
+    margin-top: -4px;
+  }
+}
