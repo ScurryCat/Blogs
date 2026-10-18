@@ -119,7 +119,8 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 > 隔离栈真实浏览器 19/19（`P4-acceptance-complete-admin-flow.md`）。
 > **完整验收 2026-10-18 返工**：R2 灯箱 Escape 不再退出 App、R3 灯箱失败降级（e2e 60/60）；
 > R1 三张错标参考帧已纠正并补正确 P5R 天鹅绒/东京地图/IM 帧（21/21；**G2 仍缺**）；
-> §6 AI 位图桌面回退移除（2 原版 + 8 自绘适配）、相册 1200 上限提示、pending 中性标题、
+> §6 旧 AI 位图桌面回退移除；2 原版 + 10 张站主授权的 AI 同风格图标（`ai-app-icons.md`）、
+> 相册 1200 上限提示、pending 中性标题、
 > WebKit 断言增强 28/28；详见 `P4-acceptance-complete-*.md`。
 > 仍未关闭：真实设备（触控/软键盘/移动 Safari）、G2 参考帧、剩余 8 枚原作图标。
 > **管理端 INS 收录 UI 真实浏览器全流程已补齐**：`tools/e2e-ins-album-links-ui.py` 9/9 通过
@@ -174,6 +175,7 @@ VISUAL_EVIDENCE = [
     (".dsh/screenshots/im-visual-v2/01-start.png", "visual-evidence/im-conversation-black-bars.png"),
     (".dsh/screenshots/im-visual-v2/02-map-node.png", "visual-evidence/im-photo-message-black-bars.png"),
     (".dsh/screenshots/im-visual-v2/04-compact-header.png", "visual-evidence/im-conversation-compact-header.png"),
+    (".dsh/ai-icons/sheet.jpg", "visual-evidence/ai-app-icons-sheet.jpg"),
     (".dsh/screenshots/im-image-card/01-conversation-image-card.png", "visual-evidence/im-image-card-e2e.png"),
     (".dsh/screenshots/acceptance-complete-r2r3/01-lightbox-open.png", "visual-evidence/im-lightbox-open.png"),
     (".dsh/screenshots/acceptance-complete-r2r3/02-after-escape-still-in-conversation.png", "visual-evidence/im-lightbox-escape-stays-in-conversation.png"),

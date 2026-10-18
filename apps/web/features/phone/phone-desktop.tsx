@@ -18,6 +18,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { PhoneMusicCard } from "./phone-music-card";
 import { APP_ICONS } from "./app-icons";
+import { aiAppIcon } from "./ai-app-icons";
 import { originalAppIcon } from "./app-original-icons";
 import { usePhone } from "./phone-provider";
 import type { PhoneAppManifest } from "./types";
@@ -66,9 +67,10 @@ function AppTile({ app }: { app: PhoneAppManifest }): ReactNode {
   const { host } = usePhone();
   const glyph = LEGACY_GLYPHS[app.id];
   // 图标顺序：① 已审核原版图标（metanav 红眼 / ins 消息标识）；
-  // ② 自绘矢量（明确标 data-app-icon="adapted"）；③ 旧字形；④ 文字首字。
-  // **不再回退 AI 位图**：第二轮 AI 生成图标不再作为桌面默认图标来源（完整验收 §6.1）。
+  // ② 站主授权的 AI 同风格适配图标（游戏中不存在的 App，data-app-icon="ai-adapted"）；
+  // ③ 自绘矢量；④ 旧字形 / 文字首字。
   const originalIcon = originalAppIcon(app.id);
+  const aiIcon = aiAppIcon(app.id);
   const icon = APP_ICONS[app.id];
   const activate = () => {
     if (app.kind === "embedded") {
@@ -89,6 +91,16 @@ function AppTile({ app }: { app: PhoneAppManifest }): ReactNode {
           width={34}
           height={34}
           data-app-icon="original"
+        />
+      ) : aiIcon ? (
+        // eslint-disable-next-line @next/next/no-img-element -- 已审核的 AI 适配图标，尺寸固定。
+        <img
+          className="g-img"
+          src={aiIcon}
+          alt=""
+          width={34}
+          height={34}
+          data-app-icon="ai-adapted"
         />
       ) : icon ? (
         <span className="g-adapted" data-app-icon="adapted" aria-hidden="true">

@@ -209,11 +209,15 @@ describe("手机桌面", () => {
     expect(page2).toEqual(["palace", "tokyo", "cast", "profile", "velvet", "mementos"]);
     expect(view.container.querySelector(".pw-music")).not.toBeNull();
 
-    // §6.1：桌面图标只能是「已审核原版」或「自绘适配」，不再有 AI 位图默认回退。
+    // 完整验收 §6.1 + 站主 2026-10-18 授权：原版图标或 AI 同风格适配图标；
+    // AI 图标必须是 ai-adapted 且来自 app/ai/，不能是旧的 AI 位图回退。
     const markers = [...view.container.querySelectorAll(".pw-app")].map(
       (tile) => tile.querySelector("[data-app-icon]")?.getAttribute("data-app-icon") ?? null,
     );
-    expect(markers.every((marker) => marker === "original" || marker === "adapted")).toBe(true);
+    expect(
+      markers.every((marker) => marker === "original" || marker === "ai-adapted"),
+    ).toBe(true);
+    expect(view.container.querySelectorAll('[data-app-icon="adapted"]').length).toBe(0);
     expect(
       view.container.querySelector('img[src*="/assets/legacy/img/app/"][data-app-icon="adapted"]'),
     ).toBeNull();

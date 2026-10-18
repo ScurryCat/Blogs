@@ -121,7 +121,7 @@ python3 tools/verify-demo-content.py http://127.0.0.1:3100 --api http://127.0.0.
 | **首页排版（可选后续）** | 已还原为原本布局；若要重排，等站主给方向后单独做 | 站主 |
 | ~~整屏视觉参考帧~~ | **已收口**：21 张完整帧覆盖 G1/G2/IM/HUD/存档读取/手机主屏/日历/五维/地图/天鹅绒/印象空间/COOP/殿堂/放课后（`P4-reference-frames-round3.md`） | — |
 | ~~B4 图片消息 Phase 1~~ | **已实现**（方案 A，见 `P4-im-image-messages-result.md`）；Phase 2 AI 选图 / Phase 3 访客引用相册仍可选 | — |
-| **P4 原版应用图标（部分完成）** | `metanav` / `ins` 已接入已审核原版（清理版，来源/证据见 `original-app-icons.md`）；其余 8 个 App 为自绘 SVG 适配；**AI 位图默认回退已移除** | 其余 App 的官方素材 |
+| ~~P4 应用图标~~ | **按站主授权定稿**：`metanav` / `ins` 原版（`original-app-icons.md`）；其余 10 个站点自适配 App 为 AI 同风格图标（`ai-app-icons.md`） | — |
 | ~~管理端收录 UI 真流程~~ | **已补齐**（`e2e-ins-album-links-ui.py` 9/9，浏览器截图） | — |
 | **真机验证（部分证据）** | 无设备；已补 **WebKit 引擎 + iPhone 视口 28/28**（`P4-mobile-engine-evidence.md`），**不等于真机**；软键盘/中文输入法/真实触控仍需真机 | 有 iPhone/Android 的人 |
 | **品牌红面板黑字对比度** | 4.23:1（AA 需 4.5），需设计折中 | 设计/站主 |

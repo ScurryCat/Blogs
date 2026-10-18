@@ -40,8 +40,8 @@
 
 `metanav`（经典红眼）与 `ins/im`（原版消息标识）已接入桌面**实际渲染分支**：
 `features/phone/app-original-icons.ts` 映射 → `phone-desktop.tsx` 优先渲染
-`<img data-app-icon="original">`；没有原版条目的其余 8 个 App 改用**自绘 SVG**（`data-app-icon="adapted"`），
-**AI 位图不再作为桌面默认回退**（2026-10-18 完整验收 §6.1 返工）；
+`<img data-app-icon="original">`；其余 10 个站点自适配 App 使用**站主授权的 AI 同风格图标**（`data-app-icon="ai-adapted"`，见 `ai-app-icons.md`），
+旧 AI 位图不再作为桌面默认回退；
 逐项标记不冒充原版。来源、版本、画面核对、哈希、裁切与「原版/适配」分界见
 `docs/design-references/original-app-icons.md`。
 
