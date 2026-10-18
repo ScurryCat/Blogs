@@ -24,8 +24,8 @@ python3 tools/capture-visual-comparison.py http://127.0.0.1:3100
 | --- | --- | --- | --- | --- |
 | 1 | `p5-phone-home-fullframe`（P5 手机主屏） | `/?phone=home` 手机桌面 | **2026-10-18 第一轮修形**：状态栏日期白牌 + 磁贴黑框/图标放大/红硬阴影 + 翻页条；P5 彩色磁贴壁纸与小地图未复刻 | 已对照（部分，已修形） |
 | 2 | `p5r-street-hud-fullframe`（日期/IM 通知/小地图） | `/?phone=home` + 站点 HUD | 站点无独立街道 HUD 场景；站点 HUD 有日期/时间与手机入口，**无小地图、无地点 toast、无 IM 角标通知**（对象部分不同，未单独修形） | 已对照（部分） |
-| 3 | `p5r-im-groupchat-fullframe`（IM 群聊） | `/?phone=ins&screen=messages` IM 列表 | **2026-10-18 两轮整屏修形**：IM 顶条/放大 wordmark、纸白会话条、白纸黑框拍立得头像、底部红点提示已对齐参考语言；手机外框/多气泡群聊/逐像素比例仍未复刻 | 已对照（部分，两轮修形） |
-| 4 | `p5r-im-photo-fullframe`（图片消息） | `/?phone=ins&screen=conversation&item=morgana`（剧本 `map` 节点） | **Phase 1 已实现**：白框拍立得图片卡 + 灯箱；**2026-10-18 两轮整屏修形**：宽纸白消息条、黑板白字我方消息、发言人黑标签、4:3 大图卡（白框+外黑框+硬阴影）、底部红点提示；手机外框与逐像素比例仍未复刻 | 已实现（Phase 1）/ 视觉部分对照（两轮修形） |
+| 3 | `p5r-im-groupchat-fullframe`（IM 群聊） | `/?phone=ins&screen=messages` IM 列表 | **2026-10-18 三轮修形**：IM 顶条/放大 wordmark、**黑底白边斜切会话条 + 彩色相纸头像**、底部红点提示；消息框与选项也改为黑底白边斜切（报告 §5 指出的原版语言） | 已对照（部分，三轮修形） |
+| 4 | `p5r-im-photo-fullframe`（图片消息） | `/?phone=ins&screen=conversation&item=morgana`（剧本 `map` 节点） | **Phase 1 已实现**：白框拍立得图片卡 + 灯箱；**2026-10-18 三轮修形**：黑底白边斜切消息框、红底白字发言人标、彩色相纸头像、黑底白边回复选项、白厚框图片消息；手机外框与逐像素比例仍未复刻 | 已实现（Phase 1）/ 视觉部分对照（三轮修形） |
 | 5 | ~~`p5r-dialogue-choice-fullframe`~~ → `p4-dialogue-choice-fullframe`（**P4/P4G，R1 纠正**） | `/?phone=ins&screen=conversation&item=morgana` | 该帧实为 P4 Fox 选项画面，**不能用于 P5R IM 回复选择对照**；站点会话的回复选项结构存在，但 **G2（P5/P5R IM 回复选择）仍缺帧** | 不适用（P4 辅助参考）/ G2 缺口未关闭 |
 | 6 | `p5-load-save-fullframe`（Load 存档槽） | `/apps/journal` 手记 | **2026-10-18 第一轮修形**：大字号 SAVE DATA、纸白/深红存档大槽位、黑硬边/投影、预览面板红黑层次；参考帧的游玩时长/难度字段本站无数据（不伪造），整屏比例仍未逐像素 | 已对照（部分，已修形） |
 | 7 | `p5-calendar-fullframe`（日历） | `/apps/journal` → 日历 | **2026-10-18 第一轮修形**：黑底大字网格、周日红/周六青、记录日红色数字+下划线、TODAY 贴纸、选中青色；右侧 Day/Night Job 栏与顶部 L1/R1 切换未复刻（本站无对应数据/交互） | 已对照（部分，已修形） |

@@ -1643,3 +1643,205 @@
   box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.5);
   font: 400 14px/1.7 var(--f-cjk, sans-serif);
 }
+
+/* ==========================================================================
+   IM 消息块第二轮（2026-10-18 完整验收 §5）
+   参考帧：p5r-im-groupchat / p5r-im-inbox / p5r-im-conversation
+   原作 IM 的主体是**黑底白边斜切消息框**（不是纸白矩形）；本轮按此修正。
+   结构/语义不变：<ol> 顺序、AI 标记、纯文本、焦点/Esc 行为照旧。
+   ========================================================================== */
+
+.msg-bubble,
+.msg-bubble-in,
+.msg-bubble-out {
+  background: var(--msg-ink);
+  color: var(--msg-paper);
+  border: 3px solid var(--msg-paper);
+  border-radius: 0;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.45);
+  padding: 10px 14px;
+  clip-path: polygon(0 0, 100% 2%, 98.4% 100%, 0 97.5%);
+}
+
+.msg-bubble-in {
+  border-left: 3px solid var(--msg-paper);
+  transform: rotate(-1.1deg);
+}
+
+.msg-bubble-out {
+  background: var(--msg-ink);
+  color: var(--msg-paper);
+  border-color: var(--msg-paper);
+  border-right: 7px solid var(--msg-red);
+  transform: rotate(1deg);
+}
+
+.msg-bubble .msg-text,
+.msg-bubble-in .msg-text,
+.msg-bubble-out .msg-text {
+  color: var(--msg-paper);
+}
+
+/* 发言人：红底白字小斜标（原版头像下方的色块语言）。 */
+.msg-sender-name {
+  background: var(--msg-red);
+  color: var(--msg-paper);
+  padding: 1px 8px;
+  transform: skewX(-6deg) rotate(-1deg);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
+}
+
+.msg-sender .msg-time {
+  color: var(--msg-paper);
+  opacity: 0.72;
+}
+
+/* 头像：白纸拍立得 + 彩色相纸（原版 IM 头像的彩色块）。 */
+.msg-row .msg-avatar {
+  background: #ffd75e;
+  border: 3px solid var(--msg-paper);
+  box-shadow:
+    0 0 0 2px var(--msg-ink),
+    4px 4px 0 rgba(0, 0, 0, 0.5);
+}
+
+.msg-row:nth-child(3n) .msg-avatar {
+  background: #7ee8ff;
+  transform: rotate(6deg);
+}
+
+.msg-row:nth-child(4n) .msg-avatar {
+  background: #ff8a5c;
+  transform: rotate(-4deg);
+}
+
+/* 回复选项：黑底白边斜切条（原版 IM 的回复/选择区）。 */
+.msg-choices {
+  border-top: 0;
+}
+
+.msg-choice {
+  background: var(--msg-ink);
+  color: var(--msg-paper);
+  border: 3px solid var(--msg-paper);
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.5);
+  transform: skewX(-4deg) rotate(-0.5deg);
+  padding: 10px 16px;
+  font-weight: 700;
+}
+
+.msg-choice::before {
+  content: "\25B8  ";
+  color: #ff4b4f;
+}
+
+.msg-choice:hover:not(:disabled),
+.msg-choice:focus-visible:not(:disabled) {
+  background: var(--msg-red);
+  color: var(--msg-paper);
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.55);
+}
+
+/* 图片消息：白厚框 + 黑内框 + 白色图注条（参考帧的照片消息语言）。 */
+.msg-photo {
+  padding: 8px;
+  border: 5px solid var(--msg-paper);
+  outline: 3px solid var(--msg-ink);
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.5);
+  transform: rotate(-2.4deg);
+  background: var(--msg-paper);
+}
+
+.msg-photo-caption {
+  background: var(--msg-paper);
+  color: var(--msg-ink);
+  border: 2px solid var(--msg-ink);
+  font-weight: 700;
+}
+
+@media (max-width: 480px) {
+  .msg-bubble {
+    clip-path: none;
+    transform: rotate(-0.6deg);
+  }
+
+  .msg-bubble-out {
+    transform: rotate(0.6deg);
+  }
+
+  .msg-choice {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .msg-bubble,
+  .msg-bubble-in,
+  .msg-bubble-out,
+  .msg-choice {
+    transform: none;
+  }
+}
+
+/* IM 会话列表第三轮：黑底白边斜切会话条（对齐原版 IM 群聊帧的消息块语言）。 */
+.msg-role {
+  background: var(--msg-ink);
+  color: var(--msg-paper);
+  border: 3px solid var(--msg-paper);
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.45);
+  transform: rotate(-0.7deg);
+}
+
+.msg-role:nth-child(even) {
+  transform: rotate(0.6deg);
+}
+
+.msg-role:hover,
+.msg-role:focus-visible {
+  background: var(--msg-ink);
+  border-color: var(--msg-red);
+  box-shadow: 6px 6px 0 var(--msg-red);
+}
+
+.msg-role .msg-role-name {
+  color: var(--msg-paper);
+}
+
+.msg-role .msg-role-tagline {
+  color: #ff4b4f;
+}
+
+.msg-role .msg-role-preview {
+  color: rgba(244, 241, 234, 0.86);
+}
+
+.msg-role .msg-role-meta {
+  color: rgba(244, 241, 234, 0.62);
+  opacity: 1;
+}
+
+.msg-role .msg-role-chevron {
+  color: var(--msg-paper);
+}
+
+.msg-role .msg-role-avatar {
+  background: #ffd75e;
+}
+
+.msg-role:nth-child(2n) .msg-role-avatar {
+  background: #7ee8ff;
+  transform: rotate(5deg);
+}
+
+.msg-role:nth-child(3n) .msg-role-avatar {
+  background: #ff8a5c;
+  transform: rotate(-4deg);
+}
+
+@media (max-width: 480px) {
+  .msg-role,
+  .msg-role:nth-child(even) {
+    transform: none;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.45);
+  }
+}
