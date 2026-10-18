@@ -1631,3 +1631,15 @@
     transform: none;
   }
 }
+
+/* 灯箱内图片失败：不显示破图，给出可读状态并保留关闭操作（R3）。 */
+.msg-photo-lightbox-fallback {
+  margin: 0;
+  max-width: min(560px, 86vw);
+  padding: 18px 20px;
+  background: var(--msg-paper, #f4f1ea);
+  color: var(--msg-ink, #101014);
+  border: 3px solid var(--msg-red, #e5191c);
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.5);
+  font: 400 14px/1.7 var(--f-cjk, sans-serif);
+}

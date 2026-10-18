@@ -151,6 +151,12 @@ AWARENESS AREA 贴牌 + 线路牌状态徽标；Exploration 测试 39/39；仍�
 黄色霓虹记分板卡片；Leisure 测试 27/27。至此对照表 7 个界面 / 8 轮第一轮整屏语言修形完成，
 索引见 `P4-visual-refinement-summary.md`；仍标「部分还原」，下一阶段逐像素第二轮。
 
+## 五之一之十、完整验收 R2/R3 返工（2026-10-18）
+
+图片灯箱接入共享 OverlayManager（Escape 不再退出 App）、Portal 到 body、灯箱失败降级；
+浏览器 e2e 重写为手机宿主 + 独立聊天页 60 项断言全过。R1（参考帧标错游戏）待处理。
+详见 `P4-acceptance-complete-r2r3.md`。
+
 ## 五之一之九、手机主屏 / 关于 / 东京地图修形第一轮（2026-10-18）
 
 手机状态栏日期白牌 + 磁贴描边/图标放大；五维白纸状态卡 + 黑底状态面板 + SOCIAL STATS 贴牌；

@@ -11,6 +11,8 @@
 import { act } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { OverlayProvider } from "@/features/runtime/overlay-manager";
+
 import type { Card } from "./types";
 import { ContentCardList } from "./content-card";
 import { click, key, render, resetDocument } from "@/tests/helpers/render";
@@ -52,20 +54,50 @@ describe("IM 图片卡", () => {
     view.unmount();
   });
 
-  it("点击打开灯箱，Escape 关闭并把焦点还给触发按钮", () => {
-    const view = render(<ContentCardList cards={[ALBUM_PHOTO]} />);
+  it("点击打开灯箱，Escape 关闭并把焦点还给触发按钮（经共享 OverlayManager）", () => {
+    const view = render(
+      <OverlayProvider>
+        <ContentCardList cards={[ALBUM_PHOTO]} />
+      </OverlayProvider>,
+    );
     const trigger = view.container.querySelector<HTMLButtonElement>("button.msg-photo");
     expect(trigger).not.toBeNull();
     click(trigger);
 
-    const dialog = view.container.querySelector('[role="dialog"]');
+    const dialog = document.querySelector('[role="dialog"]');
     expect(dialog).not.toBeNull();
     expect(dialog?.getAttribute("aria-modal")).toBe("true");
     expect(dialog?.querySelector(".msg-photo-lightbox-img")?.getAttribute("alt")).toBe("相册里的照片");
 
     key(document, "Escape");
-    expect(view.container.querySelector('[role="dialog"]')).toBeNull();
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
     expect(document.activeElement).toBe(trigger);
+    view.unmount();
+  });
+
+  it("灯箱内图片请求失败时显示可读降级，且仍可关闭", () => {
+    const view = render(
+      <OverlayProvider>
+        <ContentCardList cards={[ALBUM_PHOTO]} />
+      </OverlayProvider>,
+    );
+    click(view.container.querySelector("button.msg-photo"));
+
+    const lightboxImg = document.querySelector<HTMLImageElement>("img.msg-photo-lightbox-img");
+    expect(lightboxImg).not.toBeNull();
+    act(() => {
+      lightboxImg?.dispatchEvent(new Event("error"));
+    });
+
+    expect(document.querySelector("img.msg-photo-lightbox-img")).toBeNull();
+    expect(document.querySelector(".msg-photo-lightbox-fallback")?.textContent).toContain(
+      "图片暂时不可用",
+    );
+    const closeButton = document.querySelector<HTMLButtonElement>(".msg-photo-lightbox-close");
+    expect(closeButton).not.toBeNull();
+    click(closeButton);
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+    expect(document.activeElement).toBe(view.container.querySelector("button.msg-photo"));
     view.unmount();
   });
 

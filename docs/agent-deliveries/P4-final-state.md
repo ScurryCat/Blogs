@@ -78,6 +78,9 @@
     黑底状态面板、东京地图裱框与档案卡；`P4-legacy-visual-refinement.md`。
   - **整屏视觉修形第一轮汇总（2026-10-18）**：10 个界面 / 9 轮完成（对照表 13 个可映射界面
     全部完成，1 个对象不适用），索引见 `P4-visual-refinement-summary.md`；下一阶段为逐像素第二轮。
+  - **完整验收 R2/R3 返工（2026-10-18）**：IM 图片灯箱接入 OverlayManager（Escape 不再退出
+    App）、Portal 到 body、灯箱失败降级；e2e 手机宿主+独立页 60 项断言全过
+    （`P4-acceptance-complete-r2r3.md`）；R1 参考帧游戏归属待处理。
   - **视觉对照证据（2026-10-18）**：`tools/capture-visual-comparison.py` 把 17 张参考帧与
     站点 11 个界面并排对照；结论见 `P4-visual-comparison-evidence.md`
     （13 项语言级部分对照 / 2 项未实现（图片消息、楼层图）/ 2 项无对应整屏；
