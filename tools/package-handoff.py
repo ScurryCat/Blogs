@@ -76,7 +76,7 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 > 9 个视觉还原界面的演示内容与手机 deep link 已在本地分享库中。
 >
 > **当前验收摘要（单一基线，勿再用历史正文数字拼凑）**：
-> 代码基线 = 包内 `{head}`；前端 **933** 单测、后端 **952**（`--e2e --mobile` 7/7 段全绿、端到端 12 项）。
+> 代码基线 = 包内 `{head}`；前端 **936** 单测、后端 **952**（`--e2e --mobile` 7/7 段全绿、端到端 12 项）。
 > 独立验收 v2 结论：**功能阶段通过，完整验收未通过**；逐项回应与证据见
 > `docs/agent-deliveries/acceptance-v2-response.md`；验收报告点名的
 > **F1 / F2 / F3 已返工**（详见 `docs/agent-deliveries/P4-acceptance-v2-fixes.md`）：
@@ -89,7 +89,7 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 > `tools/acceptance/verify-reference-frames.py` **21/21**；来源核实见
 > `docs/design-references/reference-frame-sources.md`（官方 3：PS CDN 1 + Steam 2；
 > 可追溯非官方 12；未核实 2=IM 两帧）。整屏参考帧缺口已收口。
-> **移动引擎证据（2026-10-18）**：WebKit + iPhone 视口 24/24（首页/手机/IM/图库灯箱/触控点按），
+> **移动引擎证据（2026-10-18）**：WebKit + iPhone 视口 28/28（首页/手机/IM/图库灯箱/触控点按），
 > 但**不等于真机**；软键盘/中文输入法/真实触控仍需真机（`P4-mobile-engine-evidence.md`）。
 > **IM 整屏视觉修形（2026-10-18，两轮，站主指令 IM 优先）**：纸白宽消息条 + 白纸黑框拍立得头像 +
 > 放大 IM wordmark + 红点操作提示 + 4:3 大图片卡（`P4-im-visual-refinement.md`；仍部分还原）。
@@ -114,7 +114,11 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 > **IM 图片消息 Phase 1 已实现（2026-10-18，站主拍板方案 A）**：剧本图片卡
 > （`image`/`album_photo`）+ 白框拍立得 + 灯箱 + 撤回/失效降级；后端 9 / 前端 4 /
 > 浏览器 e2e 8/8（`tools/e2e-im-image-card.py`）；Phase 2 AI 选图 / Phase 3 访客引用相册仍未做。
-> 仍未关闭：真实设备（触控/软键盘/移动 Safari）。
+> **完整验收 2026-10-18 返工**：R2 灯箱 Escape 不再退出 App、R3 灯箱失败降级（e2e 60/60）；
+> R1 三张错标参考帧已纠正并补正确 P5R 天鹅绒/东京地图/IM 帧（21/21；**G2 仍缺**）；
+> §6 AI 位图桌面回退移除（2 原版 + 8 自绘适配）、相册 1200 上限提示、pending 中性标题、
+> WebKit 断言增强 28/28；详见 `P4-acceptance-complete-*.md`。
+> 仍未关闭：真实设备（触控/软键盘/移动 Safari）、G2 参考帧、剩余 8 枚原作图标。
 > **管理端 INS 收录 UI 真实浏览器全流程已补齐**：`tools/e2e-ins-album-links-ui.py` 9/9 通过
 > （登录→建相册草稿→建动态→上传→收录→保存→发布→公开页可见）；期间修复了 2 个真实 UI 阻断缺陷：
 > 管理列表 limit=50 超后端上限 30 的 422、画廊写接口 CSRF body 字段导致的 422/500。
@@ -167,6 +171,11 @@ VISUAL_EVIDENCE = [
     (".dsh/screenshots/im-visual/02-im-conversation-start.png", "visual-evidence/im-conversation.png"),
     (".dsh/screenshots/im-visual/03-im-conversation-image.png", "visual-evidence/im-photo-message.png"),
     (".dsh/screenshots/im-image-card/01-conversation-image-card.png", "visual-evidence/im-image-card-e2e.png"),
+    (".dsh/screenshots/acceptance-complete-r2r3/01-lightbox-open.png", "visual-evidence/im-lightbox-open.png"),
+    (".dsh/screenshots/acceptance-complete-r2r3/02-after-escape-still-in-conversation.png", "visual-evidence/im-lightbox-escape-stays-in-conversation.png"),
+    (".dsh/screenshots/acceptance-complete-r2r3/03-lightbox-failure-fallback.png", "visual-evidence/im-lightbox-failure-fallback.png"),
+    (".dsh/screenshots/mobile-webkit/im-list-390x844.png", "visual-evidence/webkit-im-list.png"),
+    (".dsh/screenshots/mobile-webkit/im-conversation-390x844.png", "visual-evidence/webkit-im-conversation.png"),
     (".dsh/screenshots/journal-visual/01-journal-list.png", "visual-evidence/journal-save-slots.png"),
     (".dsh/screenshots/journal-visual/02-journal-calendar.png", "visual-evidence/journal-calendar.png"),
     (".dsh/screenshots/coop-visual/01-coop.png", "visual-evidence/coop.png"),
@@ -251,7 +260,7 @@ def build(out: Path) -> tuple[int, int, str]:
         "交接包 · 怪盗手机 P5 第二轮 UI（v2，打包后更新版）\n"
         f"打包时间 {stamp}；代码状态 HEAD {head}（分支 main，未推送）\n"
         "内容：HANDOFF.md（v2 更新横幅 + 原文）+ MANIFEST.txt + SHA256SUMS + SOURCE-REVISION.md + "
-        "docs/agent-deliveries/ + docs/design-references/ + tools/ + visual-evidence/（本地视觉证据快照）\n"
+        "docs/agent-deliveries/ + docs/design-references/ + tools/ + visual-evidence/（本地视觉证据快照：24 张）\n"
         "未包含（有意）：源代码（在仓库里，见 SOURCE-REVISION.md）、任何凭据；"
         ".dsh/ 下未列入 visual-evidence 的临时分析产物不随包分发。\n"
         f"文件数：{len(entries) + 4}（含 HANDOFF/MANIFEST/SHA256SUMS/SOURCE-REVISION）\n"

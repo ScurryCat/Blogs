@@ -53,24 +53,13 @@ describe("手机应用注册表", () => {
     }
   });
 
-  it("每个登记应用都有桌面图标资源（app/<id>.png 或自绘 SVG）", () => {
-    // 桌面 `ICON_STYLE="raster"` 会请求 `app/<id>.png`；新增登记但没准备位图时，
-    // 桌面会出现裂图（真实踩过：登记 velvet / mementos 后 404）。
-    // 允许用自绘 SVG 兜底，但至少要有一个真实存在的图标来源。
+  it("每个登记应用都有自绘图标；AI 位图不再作为桌面默认回退", () => {
+    // 完整验收 §6.1：AI 位图不再作为默认图标来源。桌面顺序是
+    // 已审核原版图标（2 个）→ 自绘 SVG（明确标 adapted）→ 旧字形/文字首字。
     for (const manifest of createPhoneRegistry(PHONE_APPS).manifests()) {
-      const raster = path.join(
-        process.cwd(),
-        "public",
-        "assets",
-        "legacy",
-        "img",
-        "app",
-        `${manifest.id}.png`,
-      );
-      const hasSvg = Boolean(APP_ICONS[manifest.id]);
       expect(
-        existsSync(raster) || hasSvg,
-        `${manifest.id} 没有桌面图标：既没有 ${raster}，也没有自绘 SVG 条目`,
+        Boolean(APP_ICONS[manifest.id]),
+        `${manifest.id} 没有自绘 SVG 条目（AI 位图回退已移除）`,
       ).toBe(true);
     }
   });

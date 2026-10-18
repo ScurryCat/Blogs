@@ -1,3 +1,6 @@
+> **历史文档（2026-10-17 v2 验收返工记录）**：当前状态以 `HANDOFF.md` 顶部摘要、
+> `P4-final-state.md` 与 `P4-acceptance-complete-*.md` 为准。本文件的测试数字/状态为当时基线。
+
 # 交接包 v2 验收返工记录（F1 / F2 / F3）
 
 > 验收来源：`/Users/v/Documents/ChatGPT/Blog开发/docs/acceptance/2026-10-17-handoff-v2-acceptance.md`

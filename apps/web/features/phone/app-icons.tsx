@@ -121,6 +121,21 @@ export const APP_ICONS: Record<string, ReactNode> = {
       <path d="M7.2 15.4l-1.4 3.2h2.1l1.4-3.2zM12 15.4l-1.4 5.1h2.1l1.4-5.1zM16.8 15.4l-1.4 3.2h2.1l1.4-3.2z" fill="currentColor" opacity=".72" />
     </Icon>
   ),
+  velvet: (
+    <Icon title="天鹅绒房间">
+      <path d="M12 2.6c-4.4 0-7.4 3-7.4 7.2 0 5 3.5 8.5 7.4 12.2 3.9-3.7 7.4-7.2 7.4-12.2 0-4.2-3-7.2-7.4-7.2z" fill="currentColor" />
+      <circle cx="9.2" cy="9" r="1.5" fill="var(--black)" />
+      <circle cx="14.8" cy="9" r="1.5" fill="var(--black)" />
+      <path d="M8.6 13.4h6.8L12 17.2z" fill="var(--black)" />
+    </Icon>
+  ),
+  mementos: (
+    <Icon title="印象空间">
+      <path d="M3.5 20.5v-8L12 4.2l8.5 8.3v8h-4.7v-4.1a3.8 3.8 0 0 0-7.6 0v4.1z" fill="currentColor" />
+      <path d="M8.2 20.5v-4.1a3.8 3.8 0 0 1 7.6 0v4.1h-2.2v-4.1a1.6 1.6 0 0 0-3.2 0v4.1z" fill="var(--black)" />
+      <path d="M2 20.5h20v1.4H2z" fill="currentColor" />
+    </Icon>
+  ),
   profile: (
     <Icon title="档案">
       <path d="M2.6 4.4h18.8v15.2H2.6z" fill="currentColor" />

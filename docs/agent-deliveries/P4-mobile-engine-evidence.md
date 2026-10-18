@@ -7,10 +7,13 @@
 ## 1. 结论
 
 - `tools/e2e-webkit-mobile-smoke.py`：在 **WebKit** 引擎、390×844 与 320×720、
-  `is_mobile + has_touch` 下运行 **24/24 通过**：
+  `is_mobile + has_touch` 下运行 **28/28 通过**（2026-10-18 断言增强后）：
   - 首页 WebKit 渲染、无横向溢出、「怪盗手记」无红底；
-  - 手机可打开、桌面磁贴渲染、**原版图标 2 枚加载**、触控点按应用磁贴有响应；
-  - IM 在手机内打开且 feed 渲染；
+  - 手机可打开、桌面磁贴渲染、**原版图标 2 枚加载**；
+  - 触控点按磁贴后**真正进入目标应用**（读目标名 → 断言 appview/appbody、桌面消失、appname 匹配），
+    不再把「仍留在桌面」算通过；
+  - IM 真正进入 `?phone=ins&screen=messages` 的**角色消息列表 → 会话 → ≥2 个回复选项**
+    （不再把 INS 动态 feed 当 IM）；
   - 图库页有内容、**触控打开灯箱**、Escape 关闭灯箱。
 - 截图：`.dsh/screenshots/mobile-webkit/`（本地产物，不随包分发）。
 - 结果 JSON：`.dsh/mobile-webkit-results.json`。
@@ -28,7 +31,7 @@ PLAYWRIGHT_BROWSERS_PATH=.dsh/ms-playwright \
 | --- | --- |
 | WebKit/Safari 引擎能正确渲染首页/手机/IM/图库 | 真实 iPhone 的硬件性能与内存表现 |
 | iPhone 尺寸（390/320）下无横向溢出、布局可用 | **软键盘弹出/遮挡**与中文输入法组合输入 |
-| 触控事件可打开应用、可打开/关闭灯箱 | 真实手指触控精度、滚动惯性、手势冲突 |
+| 触控事件可进入目标应用、进入 IM 列表/会话/回复选项、可打开/关闭灯箱 | 真实手指触控精度、滚动惯性、手势冲突 |
 | 原版图标在移动引擎下真实加载（HTTP 200） | 真机 iOS Safari 的完整兼容性（含后台/旋转/省电） |
 
 ## 3. 仍未关闭

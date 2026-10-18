@@ -208,6 +208,16 @@ describe("手机桌面", () => {
     );
     expect(page2).toEqual(["palace", "tokyo", "cast", "profile", "velvet", "mementos"]);
     expect(view.container.querySelector(".pw-music")).not.toBeNull();
+
+    // §6.1：桌面图标只能是「已审核原版」或「自绘适配」，不再有 AI 位图默认回退。
+    const markers = [...view.container.querySelectorAll(".pw-app")].map(
+      (tile) => tile.querySelector("[data-app-icon]")?.getAttribute("data-app-icon") ?? null,
+    );
+    expect(markers.every((marker) => marker === "original" || marker === "adapted")).toBe(true);
+    expect(
+      view.container.querySelector('img[src*="/assets/legacy/img/app/"][data-app-icon="adapted"]'),
+    ).toBeNull();
+    expect(view.container.querySelectorAll(".pw-app .g-fallback").length).toBe(0);
   });
 
   it("进入应用后焦点留在应用视图内（不会掉到 body）", async () => {

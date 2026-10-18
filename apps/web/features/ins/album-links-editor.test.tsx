@@ -305,6 +305,44 @@ describe("AlbumLinksEditor", () => {
     view.unmount();
   });
 
+  it("补取详情未完成/失败时不叫「相册不可用」：标题使用中性加载/失败文案", async () => {
+    const brokenId = "77777777-7777-4777-8777-777777777777";
+    stub = stubFetch([
+      { match: "/api/v1/admin/albums?limit=30", body: { items: [PUBLISHED_ALBUM], next_cursor: null } },
+      {
+        match: `/api/v1/admin/albums/${brokenId}`,
+        status: 500,
+        body: { error: { code: "INTERNAL", message: "boom", fields: {} }, request_id: "stub" },
+      },
+    ]);
+    const view = render(<Harness initialLinks={[{ album_id: brokenId, media_ids: [MEDIA_A] }]} />);
+    await advance(120);
+    const title = view.container.querySelector(".ins-admin-album-head strong")?.textContent ?? "";
+    expect(title).toContain("相册状态读取失败");
+    expect(title).not.toContain("（相册不可用）");
+    view.unmount();
+  });
+
+  it("相册列表达到 1200 个加载上限时明确提示仍有更多（不静默假装全量）", async () => {
+    stub = stubFetch([
+      {
+        match: "/api/v1/admin/albums?limit=30",
+        body: { items: [PUBLISHED_ALBUM], next_cursor: "cursor-2" },
+      },
+      {
+        match: "/api/v1/admin/albums?cursor=cursor-2",
+        body: { items: [DRAFT_ALBUM], next_cursor: "cursor-2" },
+      },
+    ]);
+    const view = render(<Harness />);
+    await advance(400);
+    const notice = view.container.querySelector("[data-album-links-truncated]");
+    expect(notice).not.toBeNull();
+    expect(notice?.textContent).toContain("仍有更多相册未加载");
+    expect(notice?.textContent).toContain("1200");
+    view.unmount();
+  });
+
   it("已选相册详情读取失败（非 404）：如实显示读取失败，不当作已删除", async () => {
     const brokenId = "55555555-5555-4555-8555-555555555555";
     stub = stubFetch([

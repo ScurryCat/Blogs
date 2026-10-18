@@ -66,10 +66,10 @@ function AppTile({ app }: { app: PhoneAppManifest }): ReactNode {
   const { host } = usePhone();
   const glyph = LEGACY_GLYPHS[app.id];
   // 图标顺序：① 已审核原版图标（metanav 红眼 / ins 消息标识）；
-  // ② 自绘矢量；③ 第二轮 AI 位图 / 注册表回退（其余 app 属「适配设计」，逐项标记见文档）。
+  // ② 自绘矢量（明确标 data-app-icon="adapted"）；③ 旧字形；④ 文字首字。
+  // **不再回退 AI 位图**：第二轮 AI 生成图标不再作为桌面默认图标来源（完整验收 §6.1）。
   const originalIcon = originalAppIcon(app.id);
   const icon = APP_ICONS[app.id];
-  const rasterIcon = `/assets/legacy/img/app/${app.id}.png`;
   const activate = () => {
     if (app.kind === "embedded") {
       host.openApp(app.id);
@@ -90,18 +90,18 @@ function AppTile({ app }: { app: PhoneAppManifest }): ReactNode {
           height={34}
           data-app-icon="original"
         />
-      ) : rasterIcon ? (
-        // eslint-disable-next-line @next/next/no-img-element -- 已审核的静态资源，尺寸固定。
-        <img className="g-img" src={rasterIcon} alt="" width={34} height={34} data-app-icon="adapted" />
       ) : icon ? (
-        icon
+        <span className="g-adapted" data-app-icon="adapted" aria-hidden="true">
+          {icon}
+        </span>
       ) : glyph ? (
         <span className="g" aria-hidden="true">
           {glyph}
         </span>
       ) : (
-        // eslint-disable-next-line @next/next/no-img-element -- 图标来自已审核的静态资源，尺寸固定。
-        <img className="g-img" src={app.icon} alt="" width={34} height={34} />
+        <span className="g-fallback" data-app-icon="fallback" aria-hidden="true">
+          {app.name.slice(0, 1)}
+        </span>
       )}
       <span className="c">{app.name}</span>
       <span className="e">{app.subtitle}</span>

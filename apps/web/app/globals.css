@@ -923,3 +923,40 @@ html.ov-lock body {
   letter-spacing: 0.12em;
   color: #ff4b4f;
 }
+
+/* 桌面图标来源标记（R1/§6.1）：原版图片 vs 自绘适配；AI 位图回退已移除。 */
+.pw-app .g-adapted {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  color: var(--red);
+}
+
+.pw-app .g-adapted .g-svg {
+  width: 34px;
+  height: 34px;
+}
+
+.pw-app .g-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  color: var(--red);
+  font: 900 22px/1 var(--f-cjk);
+}
+
+@media (max-width: 620px) {
+  .pw-app .g-adapted,
+  .pw-app .g-adapted .g-svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  .pw-app .g-fallback {
+    width: 30px;
+    height: 30px;
+    font-size: 20px;
+  }
+}

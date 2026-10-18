@@ -106,30 +106,68 @@ def main() -> int:
             check(f"[{key}] 桌面应用磁贴渲染", phone["apps"] > 0, str(phone["apps"]))
             check(f"[{key}] 原版图标 2 枚加载", len(phone["originalIcons"]) == 2 and all(i["w"] > 0 for i in phone["originalIcons"]), str(phone["originalIcons"]))
             if phone["apps"]:
-                # 触控点按第一个应用磁贴：应进入应用层（.pw-appview）或仍留在桌面
-                page.locator(".pw-app").first.tap()
-                page.wait_for_timeout(1200)
-                tapped = page.evaluate("() => !!document.querySelector('.pw-appview') || !!document.querySelector('.pw-app-page')")
-                results[key]["tapOpensApp"] = tapped
-                check(f"[{key}] 触控点按应用磁贴有响应", tapped)
+                # 触控点按第一个应用磁贴：必须真正进入**目标应用**，不能把「仍留在桌面」算通过。
+                first_tile = page.locator(".pw-app").first
+                expected_name = (first_tile.locator(".c").inner_text(timeout=3000) or "").strip()
+                first_tile.tap()
+                page.wait_for_timeout(1500)
+                tapped = page.evaluate(
+                    """() => ({
+                      appview: !!document.querySelector('.pw-appview'),
+                      desktop: !!document.querySelector('.pw-apps'),
+                      appname: (document.querySelector('.pw-appname')?.innerText || '').trim(),
+                      appbody: !!document.querySelector('.pw-appbody'),
+                    })"""
+                )
+                opened_target = (
+                    tapped["appview"]
+                    and tapped["appbody"]
+                    and not tapped["desktop"]
+                    and bool(expected_name)
+                    and expected_name.split("\n")[0] in tapped["appname"]
+                )
+                results[key]["tapOpensApp"] = {"expected": expected_name, **tapped}
+                check(
+                    f"[{key}] 触控点按进入目标应用（{expected_name or '?'}）",
+                    opened_target,
+                    str(results[key]["tapOpensApp"]),
+                )
             page.screenshot(path=str(SHOTS / f"phone-{key}.png"))
 
-            # IM（脚本/消息渲染）
-            page.goto(BASE + "/?phone=ins", wait_until="load", timeout=60000)
+            # IM：真正进入消息列表 → 会话 → 回复选项（不是 INS 动态 feed）
+            page.goto(BASE + "/?phone=ins&screen=messages", wait_until="load", timeout=60000)
             boot(page)
-            page.wait_for_timeout(1800)
-            ins = page.evaluate(
+            page.wait_for_timeout(2200)
+            msg_list = page.evaluate(
                 """() => ({
                   open: !!document.querySelector('[data-phone-host]'),
                   appview: !!document.querySelector('.pw-appview'),
-                  feed: !!document.querySelector('.ins-feed-wrap'),
-                  text: (document.querySelector('.pw-appview')?.innerText || '').slice(0, 60).replace(/\\s+/g, ' '),
+                  inbox: !!document.querySelector('.msg-app'),
+                  roles: document.querySelectorAll('.msg-role').length,
+                  appname: (document.querySelector('.pw-appname')?.innerText || '').trim(),
                 })"""
             )
-            results[key]["ins"] = ins
-            check(f"[{key}] IM 在手机内打开", ins["open"] and ins["appview"])
-            check(f"[{key}] IM feed 渲染", ins["feed"])
-            page.screenshot(path=str(SHOTS / f"ins-{key}.png"))
+            results[key]["imList"] = msg_list
+            check(f"[{key}] IM 在手机内打开", msg_list["open"] and msg_list["appview"])
+            check(f"[{key}] IM 消息列表渲染（角色条目 > 0）", msg_list["inbox"] and msg_list["roles"] > 0, str(msg_list))
+            page.screenshot(path=str(SHOTS / f"im-list-{key}.png"))
+
+            conv = {"opened": False, "choices": 0, "text": ""}
+            if msg_list["roles"] > 0:
+                page.locator(".msg-role").first.tap()
+                page.wait_for_timeout(2200)
+                conv = page.evaluate(
+                    """() => ({
+                      opened: !!document.querySelector('.msg-list'),
+                      choices: document.querySelectorAll('.msg-choices button').length,
+                      composer: !!document.querySelector('.msg-composer'),
+                      text: (document.querySelector('.msg-list')?.innerText || '').slice(0, 60).replace(/\\s+/g, ' '),
+                    })"""
+                )
+            results[key]["imConversation"] = conv
+            check(f"[{key}] 触控进入 IM 会话", conv["opened"])
+            check(f"[{key}] 回复选择渲染（≥2 选项）", conv["choices"] >= 2, str(conv))
+            page.screenshot(path=str(SHOTS / f"im-conversation-{key}.png"))
 
             # 图库 + 灯箱（触控）
             page.goto(BASE + "/gallery", wait_until="load", timeout=60000)

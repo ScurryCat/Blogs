@@ -72,6 +72,8 @@ export function AlbumLinksEditor({
   const [missingIds, setMissingIds] = useState<ReadonlySet<string>>(new Set());
   /** 补取详情失败（非 404）的相册：如实显示读取失败，不能当删除。 */
   const [detailErrors, setDetailErrors] = useState<ReadonlyMap<string, string>>(new Map());
+  /** 列表达到 40 页 × 30 条上限后仍有 next_cursor：明确提示还有更多，不静默假装全量。 */
+  const [listTruncated, setListTruncated] = useState(false);
   const controllerRef = useRef<AbortController | null>(null);
   const detailControllerRef = useRef<AbortController | null>(null);
   const attemptedDetails = useRef<Set<string>>(new Set());
@@ -82,6 +84,7 @@ export function AlbumLinksEditor({
     controllerRef.current = controller;
     setPhase("loading");
     setListError(null);
+    setListTruncated(false);
     // 手动刷新：清掉上一次的补取结果，按新数据重新判断「缺失」。
     attemptedDetails.current = new Set();
     setMissingIds(new Set());
@@ -100,6 +103,8 @@ export function AlbumLinksEditor({
         if (!cursor) break;
       }
       setAlbums(collected);
+      // 循环正常结束后 cursor 仍非空 = 达到 40 页上限但还有更多；给用户明确提示。
+      setListTruncated(Boolean(cursor));
       setPhase("ready");
     } catch (error) {
       if (controller.signal.aborted) return;
@@ -312,6 +317,13 @@ export function AlbumLinksEditor({
           </button>
         </p>
       ) : null}
+      {phase === "ready" && listTruncated ? (
+        <p className="ins-admin-notice" role="status" data-album-links-truncated="">
+          相册列表已达本页加载上限（40 页 × 30 条 = 1200 个），仍有更多相册未加载。
+          可用搜索过滤已加载项；已选相册会按 ID 校验，保存不受列表截断影响。
+          如需完整管理，请到相册管理页查看。
+        </p>
+      ) : null}
       {phase === "ready" && albums.length === 0 ? (
         <p className="ins-admin-hint" role="status">
           还没有任何相册。可以先去「新建相册」建一个草稿相册；本动态之后仍可保存与发布，
@@ -340,7 +352,16 @@ export function AlbumLinksEditor({
                 data-album-link={album?.slug ?? link.album_id}
               >
                 <div className="ins-admin-album-head">
-                  <strong>{album?.title ?? "（相册不可用）"}</strong>
+                  <strong>
+                    {album?.title ??
+                      (missing
+                        ? "（相册已不可用）"
+                        : detailError
+                          ? "（相册状态读取失败）"
+                          : phase === "failed"
+                            ? "（相册列表读取失败）"
+                            : "（正在读取相册…）")}
+                  </strong>
                   <span className="ins-admin-album-meta">
                     {missing
                       ? "相册已不可用（可能已删除）：保存会被服务端拒绝，请先移除。"

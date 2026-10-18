@@ -165,6 +165,15 @@ AWARENESS AREA 贴牌 + 线路牌状态徽标；Exploration 测试 39/39；仍�
 东京地图白描边黑厚框 + 档案卡黑标题条。`P4-legacy-visual-refinement.md`。
 至此对照表 13 个可映射界面全部完成第一轮整屏语言修形（1 个对象不适用）。
 
+## 五之一之十一、完整验收 R2/R3、R1 与 §6 返工（2026-10-18）
+
+- R2/R3：图片灯箱接入 OverlayManager、Portal 到 body、图片失败降级；e2e 60/60。
+- R1：3 张参考帧游戏/用途纠正 + 正确 P5R 天鹅绒/东京地图/IM 收件/会话帧；21/21；
+  **G2 IM 回复选择仍缺**。
+- §6：AI 位图桌面回退移除（2 原版 + 8 自绘适配，并标记 adapted）；相册 1200 上限提示；
+  pending 中性标题；历史文档标注；WebKit 断言增强 28/28。
+详见 `P4-acceptance-complete-r2r3.md`、`P4-acceptance-complete-r1.md`、`P4-acceptance-complete-residual.md`。
+
 ## 五之二、视觉对照证据（2026-10-18）
 
 - `tools/capture-visual-comparison.py`：真实浏览器截图 11 个站点界面，与 21 张参考帧并排对照
