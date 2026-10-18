@@ -59,6 +59,23 @@
 - 头像右缘加白色三角指向消息条，补参考帧的拍立得压边连接；
 - 证据：`.dsh/screenshots/im-replica/13-conversation-logo-hints.png`。
 
+## 1.9 第六轮（2026-10-19）：整体对照
+
+- 生成游戏帧 ↔ 站点 IM 的并排对照：`.dsh/screenshots/im-replica/comparison-conversation.png`
+  （上：会话；下：收件列表）；
+- 回复选项间距收紧、轻微错叠；最终会话截图
+  `.dsh/screenshots/im-replica/14-final-conversation.png`；
+- WebKit + iPhone 视口复验 **28/28**。
+
+### 对照结论（诚实边界）
+
+已达到的复刻点：手机内全屏 IM、黑底白字红条 wordmark、黑底白边粗体消息条 + 头像压边、
+白色箭头回复选项、白色小标记、收件列表状态/日期斜标签、底部圆形 L/✕ 操作键。
+
+仍不同：参考帧是整台倾斜手机 + 手部 + 街道场景；站点是固定桌面手机壳；
+参考内容是多条群聊/多日收件，站点是两条开场 + 选项；游戏无自由输入框，站点独立页保留。
+因此本文件记录的是「界面语言与构图复刻」，不是与游戏画面逐像素等比。
+
 ## 2. 证据
 
 - 截图：`.dsh/screenshots/im-replica/`

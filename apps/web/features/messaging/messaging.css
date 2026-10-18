@@ -2259,3 +2259,20 @@
   border-bottom: 6px solid transparent;
   border-left: 8px solid var(--msg-paper);
 }
+
+/* 参考 G2：底部回复选项彼此紧叠、轻微错位，不是等距表单。 */
+.msg-choice-list {
+  gap: 2px;
+}
+
+.msg-choice {
+  margin-top: -2px;
+}
+
+.msg-choice-list > li:first-child .msg-choice {
+  margin-top: 0;
+}
+
+.msg-choice:nth-child(2n) {
+  margin-left: auto;
+}
