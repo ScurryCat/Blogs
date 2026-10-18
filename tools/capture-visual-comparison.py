@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""视觉对照证据采集：21 张参考帧 ↔ 站点实际界面截图。
+"""视觉对照证据采集：22 张参考帧 ↔ 站点实际界面截图。
 
 验收报告 §5.1 要求「补存档 / IM 等完整参考和视觉对照证据」。本脚本做两件事：
 1. 用真实浏览器截取站点对应界面（桌面 1440×900，访客视角）；
@@ -28,6 +28,7 @@ SITES = [
     ("phone-home", "/?phone=home", ["p5-phone-home-fullframe.jpg", "p5r-street-hud-fullframe.jpg"]),
     ("im-list", "/?phone=ins&screen=messages", ["p5r-im-groupchat-fullframe.jpg"]),
     ("im-conversation", "/?phone=ins&screen=conversation&item=morgana", ["p5r-im-conversation-fullframe.jpg"]),
+    ("im-reply-selection", "/?phone=ins&screen=conversation&item=morgana", ["p5r-im-reply-selection-fullframe.jpg"]),
     ("im-conversation-photo", "/?phone=ins&screen=conversation&item=morgana", ["p5r-im-photo-fullframe.jpg"]),
     ("journal", "/apps/journal", ["p5-load-save-fullframe.jpg"]),
     ("journal-calendar", "/apps/journal", ["p5-calendar-fullframe.jpg"]),
@@ -63,6 +64,8 @@ def main() -> int:
         ctx = browser.new_context(viewport={"width": 1440, "height": 900})
         page = ctx.new_page()
         for slug, path, _frames in SITES:
+            if slug == "im-reply-selection":
+                ctx.clear_cookies()
             page.goto(BASE + path, wait_until="load", timeout=60000)
             boot(page)
             page.wait_for_timeout(1800)
@@ -71,6 +74,15 @@ def main() -> int:
                 try:
                     page.get_by_role("button", name="日历", exact=True).click(timeout=5000)
                     page.wait_for_timeout(1800)
+                except Exception:  # noqa: BLE001
+                    pass
+            if slug == "im-reply-selection":
+                # G2 对照需要把 IM 会话滚到底，让回复选项条出现在截图里。
+                try:
+                    page.evaluate(
+                        "() => { const el = document.querySelector('.msg-list'); if (el) el.scrollTop = el.scrollHeight; }"
+                    )
+                    page.wait_for_timeout(900)
                 except Exception:  # noqa: BLE001
                     pass
             if slug == "im-conversation-photo":

@@ -17,19 +17,19 @@
 | --- | --- | --- |
 | R2 图片灯箱 Escape 退出 App | ✅ 修复（OverlayManager + Portal；会话/滚动/焦点保留） | `P4-acceptance-complete-r2r3.md`；e2e 60/60 |
 | R3 灯箱图片失败无降级 | ✅ 修复（可读状态 + 可关闭） | 同上；单测/浏览器 |
-| R1 参考帧游戏/用途错标 | ✅ 帧已重标/补正确 P5R 帧；**G2 回复选择帧仍缺** | `P4-acceptance-complete-r1.md`；21/21 |
+| R1 参考帧游戏/用途错标 | ✅ 帧已重标/补正确 P5R 帧；**G2 已由站主提供并入库（22/22）** | `P4-acceptance-complete-r1.md`；`P4-g2-reference-search.md` |
 | §6.1 AI 位图默认回退 | ✅ 已移除；2 原版 + 10 AI 同风格适配（站主 2026-10-18 授权，`ai-app-icons.md`） | `P4-acceptance-complete-residual.md` |
 | §6.2 相册 1200 上限提示 | ✅ 已加提示 | 同上；编辑器测试 13/13 |
 | §6.3 pending/失败标题 | ✅ 中性文案 | 同上 |
 | §6.4 历史文档混杂 | ✅ 当前 HANDOFF 更新、历史文档标注 | 同上 |
-| §6.5 精选库摘要 | ✅ README/INDEX 21 帧 | 同上 |
+| §6.5 精选库摘要 | ✅ README/INDEX 22 帧（含 G2） | 同上 |
 | §6.6 IM 阶段边界 | ✅ Phase 1 完成、2/3 未做 | 同上 |
 | §5 WebKit 断言有效性 | ✅ 目标应用/IM 会话/回复选项断言；28/28 | `P4-mobile-engine-evidence.md` |
 | §7.4 管理端隔离全流程 | ✅ 草稿保留/图库/撤回联动；19/19 | `P4-acceptance-complete-admin-flow.md` |
 
 ## 3. 仍未关闭（需外部输入）
 
-1. **G2**：P5/P5R IM **回复选择**完整帧仍缺（已穷尽本地库、官方日站 194 张、Steam/PS/GUD/Wccftech/Bing/Yandex/YouTube；见 `P4-g2-reference-search.md`）；
+1. ~~G2~~ → **已关闭（2026-10-18 站主提供）**：`hud/p5r-im-reply-selection-fullframe.jpg`；站点回复选项已按帧改为白色箭头条。
 2. ~~手机图标全部原作定稿~~ → **已按站主授权完成**：2 原版 + 10 AI 同风格适配图标；
 3. **真机验证**：无 iPhone/Android 设备（软键盘/中文输入法/真实触控/移动 Safari）；
 4. **整屏逐像素还原**：IM 逐像素第二轮已完成第一版（黑底白边消息块/头部比例/宽度/16px；

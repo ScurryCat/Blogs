@@ -23,6 +23,18 @@
 - 测试：messaging **72/72**；全量 `--e2e --mobile` 7/7 段全绿（936 / 952）
 - 文档：`P4-im-visual-refinement.md`（第三轮）、`P4-visual-comparison-evidence.md` 行 3/4
 
+## 2.5 回复选项（G2 参考帧到达后，2026-10-18 第四轮）
+
+站主补充 G2 截图后，按图把回复选项从「黑底白边条」再改为：
+
+- **白色箭头选项条**（右端三角缺口）、右对齐、右下堆叠；
+- 第一条红字（`#b80f15`），其余黑字；悬停/键盘焦点反转为黑底白字；
+- 宽度 72% / 64% 交替，手机 92%；保留原有 `button` 语义、键盘可操作与焦点环。
+
+对照：`.dsh/screenshots/visual-comparison/comparison-2.png` 首行
+（参考帧 G2 ↔ 站点 `im-reply-selection`）。参考帧已入库为
+`hud/p5r-im-reply-selection-fullframe.jpg`（22/22 校验通过）。
+
 ## 3. 仍未对齐（下一轮可继续）
 
 1. 参考帧是倾斜手机/手部持机，本站是正置手机壳；整屏构图无法逐像素等同比；

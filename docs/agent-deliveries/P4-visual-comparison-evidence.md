@@ -1,4 +1,4 @@
-# 视觉对照证据：21 张参考帧 ↔ 站点实际界面
+# 视觉对照证据：22 张参考帧 ↔ 站点实际界面
 
 > 验收报告 §5.1：「补存档 / IM 等完整参考和视觉对照证据」。
 > 本文件用**真实浏览器截图**把参考帧与站点现状并排对照，
@@ -14,7 +14,7 @@ python3 tools/capture-visual-comparison.py http://127.0.0.1:3100
 #   comparison-{1..3}.png 参考帧 | 站点界面 并排对照图
 ```
 
-参考帧来自外部精选库 `persona-curated/hud/`（**21 张完整帧**，见 `reference-frame-sources.md`；
+参考帧来自外部精选库 `persona-curated/hud/`（**22 张完整帧**，见 `reference-frame-sources.md`；
 2026-10-18 R1 已把 3 张错标帧重标为 P4/P5 辅助参考，并补入正确的 P5R 天鹅绒/东京地图/IM 帧）。
 对照图为本地产物（不进包）；本文件记录逐项结论，验收者可按命令复现。
 
@@ -26,7 +26,7 @@ python3 tools/capture-visual-comparison.py http://127.0.0.1:3100
 | 2 | `p5r-street-hud-fullframe`（日期/IM 通知/小地图） | `/?phone=home` + 站点 HUD | 站点无独立街道 HUD 场景；站点 HUD 有日期/时间与手机入口，**无小地图、无地点 toast、无 IM 角标通知**（对象部分不同，未单独修形） | 已对照（部分） |
 | 3 | `p5r-im-groupchat-fullframe`（IM 群聊） | `/?phone=ins&screen=messages` IM 列表 | **2026-10-18 三轮修形**：IM 顶条/放大 wordmark、**黑底白边斜切会话条 + 彩色相纸头像**、底部红点提示；消息框与选项也改为黑底白边斜切（报告 §5 指出的原版语言） | 已对照（部分，三轮修形） |
 | 4 | `p5r-im-photo-fullframe`（图片消息） | `/?phone=ins&screen=conversation&item=morgana`（剧本 `map` 节点） | **Phase 1 已实现**：白框拍立得图片卡 + 灯箱；**2026-10-18 三轮修形**：黑底白边斜切消息框、红底白字发言人标、彩色相纸头像、黑底白边回复选项、白厚框图片消息；手机外框与逐像素比例仍未复刻 | 已实现（Phase 1）/ 视觉部分对照（三轮修形） |
-| 5 | ~~`p5r-dialogue-choice-fullframe`~~ → `p4-dialogue-choice-fullframe`（**P4/P4G，R1 纠正**） | `/?phone=ins&screen=conversation&item=morgana` | 该帧实为 P4 Fox 选项画面，**不能用于 P5R IM 回复选择对照**；站点会话的回复选项结构存在，但 **G2（P5/P5R IM 回复选择）仍缺帧** | 不适用（P4 辅助参考）/ G2 缺口未关闭 |
+| 5 | `p4-dialogue-choice-fullframe`（**P4/P4G，R1 纠正**）+ `p5r-im-reply-selection-fullframe`（**G2，站主提供**） | `/?phone=ins&screen=conversation&item=morgana` | P4 帧仅作辅助参考；**G2 已补齐**：P5R SNS 回复选择（白色箭头选项条，红/黑文字）。站点回复选项已按 G2 改为白底黑边箭头条、右对齐、首项红字；对照见 `comparison-2.png` 首行 | 已对照（G2 已关闭；站点修形完成第一版） |
 | 6 | `p5-load-save-fullframe`（Load 存档槽） | `/apps/journal` 手记 | **2026-10-18 第一轮修形**：大字号 SAVE DATA、纸白/深红存档大槽位、黑硬边/投影、预览面板红黑层次；参考帧的游玩时长/难度字段本站无数据（不伪造），整屏比例仍未逐像素 | 已对照（部分，已修形） |
 | 7 | `p5-calendar-fullframe`（日历） | `/apps/journal` → 日历 | **2026-10-18 第一轮修形**：黑底大字网格、周日红/周六青、记录日红色数字+下划线、TODAY 贴纸、选中青色；右侧 Day/Night Job 栏与顶部 L1/R1 切换未复刻（本站无对应数据/交互） | 已对照（部分，已修形） |
 | 8 | `p5-status-fullframe`（五维状态） | `/about` 人物档案 | **2026-10-18 第一轮修形**：五维区黑底白框状态面板、SOCIAL STATS 白牌、白纸属性条 + 红 pips、硬阴影；P5 星图中心构图未复刻 | 已对照（部分，已修形） |
@@ -40,9 +40,9 @@ python3 tools/capture-visual-comparison.py http://127.0.0.1:3100
 | 16 | `p5r-dialogue-normal-fullframe`（普通对话，Kamoshida） | — | 站点无游戏对话整屏；IM 会话属不同语言 | 不适用 |
 | 17 | `p5r-dialogue-maruki-fullframe`（普通对话，Maruki） | — | 同上 | 不适用 |
 
-汇总（R1 纠正后）：**21 张完整帧**；其中站点有对应界面的参考仍为 13 项，
+汇总（R1 纠正 + G2 补齐后）：**22 张完整帧**；其中站点有对应界面的参考仍为 13 项，
 已完成整屏语言修形第一轮（手机主屏、IM 列表/会话/图片消息、手记两屏、五维、东京地图、天鹅绒、印象空间、COOP、殿堂、放课后）。
-**G2（P5/P5R IM 回复选择）仍缺帧**，P4 选项帧明确为不适用；校内楼层图无对应对象；2 项普通对话无对应整屏。
+**G2 已补齐**（站主 2026-10-18 提供）；P4 选项帧明确为不适用；校内楼层图无对应对象；2 项普通对话无对应整屏。
 图片消息 Phase 1 已实现（`P4-im-image-messages-result.md`），Phase 2/3 未做。
 
 ## 3. 诚实结论
@@ -50,7 +50,7 @@ python3 tools/capture-visual-comparison.py http://127.0.0.1:3100
 - 本证据回答的是「**参考帧已可用、站点现状是什么、差在哪**」；
   **整屏逐像素还原验收仍未通过**——多数界面只到「视觉语言级」或「结构对照」，
   没有逐屏尺寸/间距/字体对照通过的证据。
-- **R1 未关闭**：缺少正确的 P5/P5R IM 回复选择帧（G2）；P4 选项帧只作辅助参考；
+- **R1 已关闭**：G2 回复选择帧已由站主提供并入库；P4 选项帧仅作辅助参考；
 - 明确缺对象：校内楼层图（本站是东京城市地图）、游戏对话框整屏；
 - 图片消息（B4）Phase 1 已实现（零迁移、后端校验 + 前端图片卡/灯箱）；
 - 仍未通过的是**整屏逐像素还原验收**本身（尺寸/间距/字体未逐像素对照）。

@@ -49,9 +49,9 @@
     P5 6（**存档/读取**、手机主屏、日历、五维状态、校内地图、东京地图）+
     5（天鹅绒房间、印象空间、COOP 协助者、殿堂宝物、放课后打击练习场）；
     来源/哈希/画面复核见 `reference-frame-gaps.md` §7 与 `P4-reference-frames-round3.md`；
-    `verify-reference-frames.py` **21/21** 通过；来源核实见 `reference-frame-sources.md`
+    `verify-reference-frames.py` **22/22** 通过；来源核实见 `reference-frame-sources.md`
     （官方 3 张：PlayStation CDN 1 + Steam 官方截图 2；可追溯非官方 12；未核实 2）。
-    整屏参考帧已补齐并完成 R1 纠正；剩余为真实设备、G2 IM 回复选择帧、部分原作图标。
+    整屏参考帧已补齐并完成 R1 纠正；G2 已由站主提供，剩余为真实设备与部分界面逐像素差距。
   - **IM 整屏视觉修形（2026-10-18，站主指令 IM 优先，已两轮）**：会话列表/会话页改为
     纸白宽消息条 + 白纸黑框拍立得头像 + 放大 IM wordmark + 底部红点操作提示 +
     4:3 大图片卡（白框+外黑框）；黑字/白字对比度与语义不变，messaging 测试 71/71；
@@ -81,7 +81,7 @@
   - **管理端 INS 隔离全流程（2026-10-18）**：草稿保留 + 新标签建相册 + 图库展示 + 撤回联动，
     隔离栈 19/19（`P4-acceptance-complete-admin-flow.md`）。
   - **完整验收 R1 返工（2026-10-18）**：纠正 3 张错标参考帧（P4/P5 辅助参考）并补正确 P5R
-    天鹅绒/东京地点选择/IM 帧；`verify-reference-frames.py` 21/21；G2 仍缺。
+    天鹅绒/东京地点选择/IM 帧；`verify-reference-frames.py` 22/22；**G2 已由站主提供**。
   - **完整验收 §6 返工（2026-10-18）**：AI 位图桌面图标默认回退已移除（2 原版 + 8 自绘适配）；
     相册 1200 上限提示 + pending 中性标题；WebKit 断言增强 28/28；历史文档标注。
   - **完整验收 R2/R3 返工（2026-10-18）**：IM 图片灯箱接入 OverlayManager（Escape 不再退出
@@ -91,7 +91,7 @@
     站点 11 个界面并排对照；结论见 `P4-visual-comparison-evidence.md`
     （13 项语言级部分对照 / 2 项未实现（图片消息、楼层图）/ 2 项无对应整屏；
     **整屏逐像素还原仍未通过**）。
-  - **完整验收仍不通过**：整屏逐像素视觉对照（部分）、真机验证、G2 参考帧、剩余 8 枚原作图标未收口。
+  - **完整验收仍不通过**：整屏逐像素视觉对照（部分）、真机验证未收口；参考帧与桌面图标已按站主授权补齐。
 - **验证基建**：`audit-contrast.py` / `audit-structure.py` / `audit-failure-states.py` /
   `verify-home-refresh.py` / `verify-demo-content.py` / `seed-demo-content.py` /
   `verify-reference-entry.py` / `verify-reference-frames.py` / `verify-phone-icons.py` /
@@ -119,7 +119,7 @@ python3 tools/verify-demo-content.py http://127.0.0.1:3100 --api http://127.0.0.
 | 缺口 | 卡在哪 | 需要谁 |
 | --- | --- | --- |
 | **首页排版（可选后续）** | 已还原为原本布局；若要重排，等站主给方向后单独做 | 站主 |
-| ~~整屏视觉参考帧~~ | **已收口**：21 张完整帧覆盖 G1/G2/IM/HUD/存档读取/手机主屏/日历/五维/地图/天鹅绒/印象空间/COOP/殿堂/放课后（`P4-reference-frames-round3.md`） | — |
+| ~~整屏视觉参考帧~~ | **已收口**：22 张完整帧覆盖 G1/G2/IM/HUD/存档读取/手机主屏/日历/五维/地图/天鹅绒/印象空间/COOP/殿堂/放课后（`P4-reference-frames-round3.md`） | — |
 | ~~B4 图片消息 Phase 1~~ | **已实现**（方案 A，见 `P4-im-image-messages-result.md`）；Phase 2 AI 选图 / Phase 3 访客引用相册仍可选 | — |
 | ~~P4 应用图标~~ | **按站主授权定稿**：`metanav` / `ins` 原版（`original-app-icons.md`）；其余 10 个站点自适配 App 为 AI 同风格图标（`ai-app-icons.md`） | — |
 | ~~管理端收录 UI 真流程~~ | **已补齐**（`e2e-ins-album-links-ui.py` 9/9，浏览器截图） | — |
