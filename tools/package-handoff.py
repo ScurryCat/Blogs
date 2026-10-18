@@ -109,7 +109,8 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 > （1 个对象不适用），索引 `P4-visual-refinement-summary.md`；均标「部分还原」。
 > **视觉对照证据（2026-10-18）**：`tools/capture-visual-comparison.py` 把 17 张参考帧与
 > 站点 13 个界面并排对照，逐项结论见 `P4-visual-comparison-evidence.md`
-> （13 项语言级部分对照 / 2 项未实现（图片消息、楼层图）/ 2 项无对应整屏；**整屏还原仍未通过**）。
+> （13 项已完成整屏语言修形第一轮 / 1 项对象不适用（校内楼层图）/ 2 项无对应整屏；
+> **整屏逐像素还原仍未通过**）。
 > **IM 图片消息 Phase 1 已实现（2026-10-18，站主拍板方案 A）**：剧本图片卡
 > （`image`/`album_photo`）+ 白框拍立得 + 灯箱 + 撤回/失效降级；后端 9 / 前端 4 /
 > 浏览器 e2e 8/8（`tools/e2e-im-image-card.py`）；Phase 2 AI 选图 / Phase 3 访客引用相册仍未做。
@@ -119,8 +120,9 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 > 管理列表 limit=50 超后端上限 30 的 422、画廊写接口 CSRF body 字段导致的 422/500。
 > **请先读 `docs/agent-deliveries/HANDOFF-ADDENDUM-2026-10-17.md`**（状态增量与未完成项），
 > 再读 `docs/agent-deliveries/P4-final-state.md`（一页纸速览）与本文其余部分。
-> 重要：B1 **整屏还原仍不可判定**（缺 G2/G3 与各界面整屏参考帧），不要把元件级 v1
-> 读成整屏验收通过；B4 图片消息仍需产品拍板。
+> 重要：**整屏逐像素还原验收仍未通过**——17 张参考帧已补齐，13 个可映射界面完成
+> 第一轮视觉语言修形，但尺寸/间距/字体尚未逐像素对照；B4 图片消息 Phase 1 已实现，
+> Phase 2 AI 选图 / Phase 3 访客引用相册仍未做。
 <!-- /PACKAGE-V2 -->
 
 """
@@ -152,6 +154,29 @@ def file_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+# 视觉证据（本地工作区截图；存在才随包分发，缺失不阻塞打包/校验）。
+# 这些图片是文档里引用路径的实体，让接手者不必先重跑浏览器就能看到修形结果。
+VISUAL_EVIDENCE = [
+    (".dsh/screenshots/visual-comparison/comparison-1.png", "visual-evidence/comparison-1-phone-home-im.png"),
+    (".dsh/screenshots/visual-comparison/comparison-2.png", "visual-evidence/comparison-2-journal-about-map.png"),
+    (".dsh/screenshots/visual-comparison/comparison-3.png", "visual-evidence/comparison-3-coop-palace-velvet-mementos-leisure.png"),
+    (".dsh/screenshots/phone-about-map-visual/01-phone-home.png", "visual-evidence/phone-home.png"),
+    (".dsh/screenshots/phone-about-map-visual/02b-about-stats.png", "visual-evidence/about-stats.png"),
+    (".dsh/screenshots/phone-about-map-visual/03-map.png", "visual-evidence/tokyo-map.png"),
+    (".dsh/screenshots/im-visual/01-im-list.png", "visual-evidence/im-list.png"),
+    (".dsh/screenshots/im-visual/02-im-conversation-start.png", "visual-evidence/im-conversation.png"),
+    (".dsh/screenshots/im-visual/03-im-conversation-image.png", "visual-evidence/im-photo-message.png"),
+    (".dsh/screenshots/im-image-card/01-conversation-image-card.png", "visual-evidence/im-image-card-e2e.png"),
+    (".dsh/screenshots/journal-visual/01-journal-list.png", "visual-evidence/journal-save-slots.png"),
+    (".dsh/screenshots/journal-visual/02-journal-calendar.png", "visual-evidence/journal-calendar.png"),
+    (".dsh/screenshots/coop-visual/01-coop.png", "visual-evidence/coop.png"),
+    (".dsh/screenshots/showcase-visual/01-showcase.png", "visual-evidence/showcase.png"),
+    (".dsh/screenshots/velvet-visual/01-velvet.png", "visual-evidence/velvet.png"),
+    (".dsh/screenshots/mementos-visual/01-mementos.png", "visual-evidence/mementos.png"),
+    (".dsh/screenshots/leisure-visual/01-leisure.png", "visual-evidence/leisure.png"),
+]
+
+
 def collect() -> list[tuple[Path, str]]:
     """返回 (源文件路径, 包内相对路径) 列表（已排序、已去重）。"""
 
@@ -176,7 +201,36 @@ def collect() -> list[tuple[Path, str]]:
         else:
             add(target, f"tools/{item}")
 
+    # 可选：视觉证据图（本地快照；不存在则跳过，并在 MANIFEST 里注明数量）。
+    for relative, arcname in VISUAL_EVIDENCE:
+        source = REPO / relative
+        if source.is_file():
+            entries.append((source, arcname))
+
     return entries
+
+
+def source_revision_text() -> str:
+    """把当前代码状态写成接手者能核对的一页纸（不包含 diff 正文）。"""
+
+    head = run("git", "rev-parse", "HEAD").strip()
+    branch = run("git", "rev-parse", "--abbrev-ref", "HEAD").strip()
+    remote = run("git", "remote", "get-url", "origin").strip()
+    ahead = run("git", "rev-list", "--count", "origin/main..HEAD").strip()
+    status = run("git", "status", "--short").strip() or "（工作区干净）"
+    log = run("git", "log", "--oneline", "-25").strip()
+    return (
+        "# 源码版本清单（交接包自动生成）\n\n"
+        f"- 仓库：`{REPO}`\n"
+        f"- 分支：`{branch}`\n"
+        f"- HEAD：`{head}`\n"
+        f"- origin：`{remote}`\n"
+        f"- 相对 origin/main：领先 {ahead} 个提交"
+        + ("（**未推送**，完成推送后此数字会变为 0）" if ahead != "0" else "（已同步）") + "\n"
+        "\n## 工作区状态（打包时）\n\n```\n" + status + "\n```\n"
+        "\n## 最近提交\n\n```\n" + log + "\n```\n"
+        "\n> 源码在仓库中；本交接包不包含源码副本。截图证据见 `visual-evidence/`。\n"
+    )
 
 
 def build(out: Path) -> tuple[int, int, str]:
@@ -188,16 +242,18 @@ def build(out: Path) -> tuple[int, int, str]:
     now = datetime.now(timezone.utc).astimezone()
     stamp = now.strftime("%Y-%m-%d %H:%M:%S %z")
 
-    manifest_lines = ["./HANDOFF.md", "./MANIFEST.txt", "./SHA256SUMS"]
+    source_info = source_revision_text()
+    manifest_lines = ["./HANDOFF.md", "./MANIFEST.txt", "./SHA256SUMS", "./SOURCE-REVISION.md"]
     manifest_lines += [f"./{arcname}" for _, arcname in entries]
     manifest = "\n".join(manifest_lines) + "\n"
     manifest += (
         "\n--- 说明 ---\n"
         "交接包 · 怪盗手机 P5 第二轮 UI（v2，打包后更新版）\n"
         f"打包时间 {stamp}；代码状态 HEAD {head}（分支 main，未推送）\n"
-        "内容：HANDOFF.md（v2 更新横幅 + 原文）+ MANIFEST.txt + SHA256SUMS + "
-        "docs/agent-deliveries/ + docs/design-references/ + tools/\n"
-        "未包含（有意）：源代码（在仓库里）、.dsh/ 下的截图与分析产物（工作区外，未入库）、任何凭据。\n"
+        "内容：HANDOFF.md（v2 更新横幅 + 原文）+ MANIFEST.txt + SHA256SUMS + SOURCE-REVISION.md + "
+        "docs/agent-deliveries/ + docs/design-references/ + tools/ + visual-evidence/（本地视觉证据快照）\n"
+        "未包含（有意）：源代码（在仓库里，见 SOURCE-REVISION.md）、任何凭据；"
+        ".dsh/ 下未列入 visual-evidence 的临时分析产物不随包分发。\n"
         f"文件数：{len(entries) + 3}（含 HANDOFF/MANIFEST/SHA256SUMS）\n"
     )
 
@@ -205,6 +261,7 @@ def build(out: Path) -> tuple[int, int, str]:
     for source, arcname in entries:
         sums.append(f"{file_sha256(source)}  {arcname}")
     sums.append(f"{hashlib.sha256(handoff_v2.encode('utf-8')).hexdigest()}  HANDOFF.md")
+    sums.append(f"{hashlib.sha256(source_info.encode('utf-8')).hexdigest()}  SOURCE-REVISION.md")
     sums_text = "\n".join(sorted(sums)) + "\n"
 
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -212,9 +269,10 @@ def build(out: Path) -> tuple[int, int, str]:
         archive.writestr(f"{PACKAGE_DIR}/HANDOFF.md", handoff_v2)
         archive.writestr(f"{PACKAGE_DIR}/MANIFEST.txt", manifest)
         archive.writestr(f"{PACKAGE_DIR}/SHA256SUMS", sums_text)
+        archive.writestr(f"{PACKAGE_DIR}/SOURCE-REVISION.md", source_info)
         for source, arcname in entries:
             archive.write(source, f"{PACKAGE_DIR}/{arcname}")
-    return len(entries) + 3, out.stat().st_size, head
+    return len(entries) + 4, out.stat().st_size, head
 
 
 def check(out: Path) -> int:
