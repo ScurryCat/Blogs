@@ -167,3 +167,73 @@ npx eslint features/media-picker features/ins app/admin/moments app/apps/ins    
   明确提示「还没有任何内容：先写点文字或选一张图，再保存草稿」。有文字（未选图）即可保存草稿。
 - 最后一次验证（本文件写完后复跑）：`npx vitest run features/media-picker features/ins` → **190/190 通过**；
   `npx tsc --noEmit` 全树 0 错误；`npx eslint features/media-picker features/ins app/admin/moments app/apps/ins` 0 问题。
+
+## 10. C5 验收反馈修复：图片选择器被浮动投票卡遮挡（2026-10-19）
+
+**缺陷（C5 隔离栈真实浏览器，1440×1000）**：打开 `/admin/moments/new` 的图片选择器后，
+右下角浮动投票卡 `.poll--floating`（`styles/legacy/poll.css`，z-index **500**）盖在选择器弹层上方；
+Playwright 判定「确定（N 张）」的 pointer-events 被 `.poll-fill` 拦截 —— 真实用户同样会先点到投票卡。
+
+**根因**：`features/media-picker/media-picker.css` 的 `.mpx-overlay` z-index 只有 **90**，而站内层级约定是
+手机宿主 880 / 过场 899–902 / 手机编辑器 940 / Toast 950。
+
+**修复（我的作用域，只改层级与弹层语义，不动交互/属性）**：
+1. `.mpx-overlay` z-index `90 → 960`（遮罩本身盖住投票卡 500、也高于手机宿主 880 与手机编辑器 940；
+   面板 `.mpx-panel` 是遮罩子元素，随遮罩一起在最上层，无需单独 z-index）。CSS 注释写清层级依据。
+2. 复用全局弹层机制：对话框打开时 `useOverlay({id:"media-picker-dialog", lockScroll:true}, open)`，
+   锁滚动交给 OverlayManager（关闭/卸载自动解除）；Escape 仍保留自身的 document 监听（无宿主/单测环境
+   也能关闭，有宿主时只是幂等调用 onClose）。
+3. `data-media-picker-*` 全部保持不变；手机宿主场景下弹层 960 > `.pw-wrap` 880，关闭只调 `onClose`，
+   不触碰宿主状态。
+
+**复测（代码层）**：`npx vitest run features/media-picker features/ins` → **18 文件 / 190 用例全部通过**；
+`npx eslint features/media-picker features/ins` → 0 问题。真实浏览器 e2e 由 C5 重跑
+`media-picker-pagination` / `ins-editor-autosave` 场景复验（本文件不声称已复验浏览器结果）。
+
+**第二处（lead 批准，同一类真实遮挡风险）**：`features/ins/ins.css` 的 `.ins-preview`
+（INS 详情/手机 INS 视图的图片预览弹层）z-index 由 **90 → 960**，理由同上（投票卡 500 / 手机宿主 880 /
+手机编辑器 940 / Toast 950）。两处互斥说明：`.ins-preview` 只在公开详情/手机 INS 视图渲染，
+媒体选择器只在 `/admin/*` 编辑器渲染 —— 按路由与功能**互斥**，不会同时打开。
+
+**C3 作用域内模态/浮层排查结论（只列不改）**：
+- `features/ins + features/media-picker` 内的 `position: fixed` 模态层只有 `.mpx-overlay` 与 `.ins-preview`
+  两处，均已抬到 960；**没有其它 <500 的固定浮层/菜单/预览**。
+- `.mpx-panel` 内 sticky 底栏 `z-index: 2`、`.ins-preview-backdrop` `z-index: -1` 都是所在堆叠上下文内的子层，
+  不是独立浮层，无需调整。
+- 扫描相邻域时发现一处**不属于 C3 作用域**的同类风险（未改、仅上报）：`features/gallery/gallery.css`
+  的 `.plg-lightbox` z-index 80（画廊灯箱），理论上同样会被 500 的浮动投票卡覆盖；需要时由对应 owner 决定。
+- 本文件不声称真实浏览器/e2e 已复验：代码层复跑 `npx vitest run features/ins features/media-picker` →
+  **18 文件 / 190 用例通过**、`npx eslint features/media-picker features/ins` → 0 问题；
+  浏览器复验由 C5 在重建的隔离栈上重跑 `media-picker-pagination` / `ins-editor-autosave` 完成。
+
+## 11. C5 e2e A6 冲突恢复缺陷修复（moment 编辑器，2026-10-19）
+
+**缺陷（C5 隔离栈真实浏览器，场景 `[draft-recovery-conflict]`）**：412 冲突出现 `ConflictNotice` 后，
+点「放弃本机修改，载入最新版本」(`[data-workspace-conflict-reload]`)，20s 内编辑器 textarea 仍是本机冲突输入，
+不显示服务端最新草稿内容（请求与状态本身正确：C2 `resolveConflict("reload-latest")` 已取回最新草稿并
+把 hook 状态置为 `synced`）。
+
+**根因**：`features/ins/editor/moment-editor.tsx` 的「服务端草稿 → 可编辑 state」回填 effect 带一次性守卫
+（`seededRef.current || touchedRef.current`），挂载回填后不再执行；而 `resolveConflict` 只更新 hook 内部的
+`contentRef` / `draft` / 本机副本，**不会**主动刷新编辑器自己的 React state，于是界面停在冲突时的本机输入。
+
+**修复（最小、不 reload 页面）**：
+- 监听「冲突 → 成功解决（`synced`/`idle`）」的状态转换：用 hook 已经取回并应用的最新 `draft`
+  （没有则用本机副本）**显式重新回填**编辑器 state（文本/标签/图片顺序与 alt/收录选择），
+  重置 `touchedRef/seededRef`，清空字段错误，并给出准确提示
+  （reload-latest →「已载入服务器上的最新版本，本机冲突修改已放弃。」；
+  save-as-new →「已另存为新的工作草稿，编辑器继续使用本机内容。」）。
+- 复用 hook 已应用的 `draft` 而不是再发一次 `getWorkDraft`（与 lead 建议的 A 等价，少一次往返）；
+  不采用 `window.location.reload()`（避免整页重载、也不会在 reload 后再弹「采用本机副本」）。
+- 失败（解决后仍 `failed`/`conflict`）**不**重新回填：本机输入保留，等用户重试。
+- 只改 `features/ins/editor/moment-editor.tsx`（+ 新增单测），不动 C2 的 hook 与契约。
+
+**新增单测（fetch-stub 模拟 412 → reload 动作）**：`features/ins/editor/moment-editor.test.tsx`
+「点『放弃本机修改，载入最新版本』后，表单显示服务端最新草稿内容（不再停留在本机冲突输入）」：
+编辑已有动态 → 自动保存 412 → 断言冲突提示与本机输入保留 → 点 reload → 断言 textarea 变为
+「服务器最新文字」、冲突提示消失、出现「已载入服务器上的最新版本」。
+
+**复测（代码层真实结果）**：`npx vitest run features/ins features/media-picker` →
+**18 文件 / 191 用例全部通过**（moment-editor 12/12）；`npx eslint features/media-picker features/ins
+app/admin/moments app/apps/ins` → 0 问题；`npx tsc --noEmit` → 0 错误。
+真实浏览器 e2e 由 C5 强制重建隔离栈后复跑 `draft-recovery-conflict` 复验（本文件不声称已复验浏览器结果）。

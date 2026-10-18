@@ -24,7 +24,7 @@ import { parseContent } from "@/features/legacy/markdown";
 import { MarkdownView } from "@/features/legacy/markdown/view";
 import { MediaPickerDialog, MediaThumb, type PickedImage } from "@/features/media-picker";
 import { SiteLink } from "@/features/runtime/navigation/site-link";
-import { commitWorkDraft } from "@/features/workspace/api";
+import { commitWorkDraft, getWorkDraft } from "@/features/workspace/api";
 import { ConflictNotice } from "@/features/workspace/conflict-notice";
 import { EditorShell } from "@/features/workspace/editor-shell";
 import { withReturnTo } from "@/features/workspace/return-context";
@@ -297,10 +297,33 @@ export function JournalEditor(props: JournalEditorProps): ReactNode {
     work.adoptLocalCopy();
   };
 
+  /**
+   * 「放弃本机修改，载入最新版本」（A6 冲突恢复）。
+   *
+   * C2 的 hook 会 applyDraft(latest) 并把状态恢复成 synced，但**编辑器自己的表单 state
+   * 不会自动跟着变**（一次性 seed 守卫只为首次挂载设计）。这里在 resolve 之后显式读取
+   * 服务端最新工作草稿，再用同一套 `formFromData` 回填 date/title/content/mood/location/
+   * post_id 与图片，保证界面上看到的就是「最新版本」而不是冲突时的本机输入。
+   */
   const reloadLatest = async () => {
+    const draftId = work.draft?.id ?? null;
     adoptedRef.current = false;
     dirtyRef.current = false;
     await work.resolveConflict("reload-latest");
+    if (draftId) {
+      try {
+        const latest = await getWorkDraft(draftId);
+        setForm(formFromData(latest.data, formRef.current));
+        setImages(latest.images);
+        dirtyRef.current = false;
+        adoptedRef.current = true;
+        // 本机副本已无意义（内容就是服务端最新版本）：丢掉，避免下次误报未同步修改。
+        work.discardLocalCopy();
+      } catch {
+        // 读取失败时不假装已恢复：保留当前表单，hook 的同步状态/冲突提示会继续反映真实情况。
+      }
+    }
+    setError(null);
   };
 
   const saveAsNew = async () => {

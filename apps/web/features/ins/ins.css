@@ -511,7 +511,12 @@
 .ins-preview {
   position: fixed;
   inset: 0;
-  z-index: 90;
+  /* 层级约定与共享选择器一致：站内浮动卡 `.poll--floating` 是 500，
+     手机宿主 880 / 过场 899–902 / 手机编辑器 940 / Toast 950。
+     公开详情页的图片预览也是模态层，必须盖住投票卡等浮动卡，故为 960。
+     （`.ins-preview` 只在公开详情/手机 INS 视图渲染；媒体选择器只在 /admin 编辑器渲染，
+     两者按路由/功能互斥，不会同时打开。） */
+  z-index: 960;
   display: grid;
   grid-template-rows: auto 1fr auto;
   gap: 10px;

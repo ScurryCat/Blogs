@@ -71,6 +71,9 @@
   唯一提交按钮是「更新正式内容」（`commit update`，带打开时的正式版本做乐观并发检查）。
 - **提交失败/冲突**：412/422/409/428/401 分别给出可行动文案；输入保留、不显示成功；
   同步冲突（草稿版本 412）用 C2 的 `ConflictNotice`（载入最新 / 另存为新草稿）。
+  「放弃本机修改，载入最新版本」在 hook resolve 之后**显式读取服务端最新工作草稿并重新
+  seed 表单**（date/title/content/mood/location/post_id + 图片），因为一次性 seed 守卫只服务
+  首次挂载；随后丢弃无意义的本机副本。见 §三「A6 冲突恢复缺陷修复」。
 - **本机恢复副本**（契约 §9.4，不静默选择）：`recoveryNotice` 出现时页面顶部渲染
   `data-editor-recovery` 动作块：「采用本机修改」「放弃本机修改」；采用后表单如实切到本机内容。
 - **成功后**：显示服务端返回的真实结果（草稿/已公开、版本号、幂等回放说明），输入区进入只读，
@@ -187,6 +190,26 @@ npx tsc --noEmit
 npx eslint features/journal features/leisure features/leblanc app/admin/journal app/admin/leisure
 # → 0 error / 0 warning
 ```
+
+### A6 冲突恢复缺陷修复（2026-10-19，C5 e2e 发现）
+
+**现象（隔离栈真实浏览器 A6 场景）**：412 版本冲突后点「放弃本机修改，载入最新版本」
+（`[data-workspace-conflict-reload]`），C2 hook 状态已恢复 `synced`，但编辑器可见表单
+（标题/正文/日期等）仍是冲突时的本机输入。
+
+**根因**：`journal-editor.tsx::reloadLatest()` 只 `await work.resolveConflict("reload-latest")`；
+hook 内部 `applyDraft(latest)` 更新了草稿内容，但编辑器的表单 state 由「一次性 seed 守卫」
+（`adoptedRef`/`dirtyRef`，只服务首次挂载）保护，不会在 resolve 之后重新回填。
+
+**修复**（Lead 方案 A）：resolve 之后用 `work.draft.id` 调 C2 的 `getWorkDraft(id)` 取服务端
+最新工作草稿，再用编辑器自己的 `formFromData` 回填 date/title/content/mood/location/post_id
+与图片（绕过一次性 seed 守卫），随后调用 `work.discardLocalCopy()` 丢弃已无意义的本机副本
+（内容就是最新版本），并清空错误提示；读取失败时保留当前表单、不假装已恢复。
+
+**单测**：`journal-editor.test.tsx`「冲突时展示 ConflictNotice；『载入最新版本』会把表单刷新成
+服务端最新内容（A6）」——断言 `resolveConflict("reload-latest")`、`getWorkDraft("draft-1")`、
+标题/正文切换为服务端最新文本、本机副本被丢弃。复测：C4 三域 **12 files / 155 tests 全绿**、
+eslint/tsc 我域 0。真实浏览器复跑由 C5 强制重建隔离栈执行（`draft-recovery-conflict`）。
 
 ### `next build`（B3 阻断修复后，2026-10-19 实测）
 

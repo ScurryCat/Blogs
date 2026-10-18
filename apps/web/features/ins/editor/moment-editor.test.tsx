@@ -290,6 +290,76 @@ describe("MomentEditor · 发布阻塞与失败保留", () => {
   });
 });
 
+describe("MomentEditor · 412 冲突恢复", () => {
+  it("点「放弃本机修改，载入最新版本」后，表单显示服务端最新草稿内容（不再停留在本机冲突输入）", async () => {
+    const initialDraft = workDraftBody({
+      target_id: MOMENT_ID,
+      target_version: 2,
+      draft_version: 1,
+      data: { text: "初始草稿文字", tags: [], album_links: [] },
+      images: [],
+    });
+    const latestDraft = workDraftBody({
+      target_id: MOMENT_ID,
+      target_version: 2,
+      draft_version: 2,
+      data: { text: "服务器最新文字", tags: [], album_links: [] },
+      images: [],
+    });
+    stub = stubFetch([
+      {
+        match: "/admin/work-drafts/",
+        method: "PATCH",
+        status: 412,
+        body: {
+          error: {
+            code: "VERSION_CONFLICT",
+            message: "内容已在别处更新",
+            fields: { version: ["当前版本为 2"] },
+          },
+          request_id: "r",
+        },
+      },
+      { match: /\/admin\/work-drafts\/[0-9a-f-]+$/, body: latestDraft },
+      {
+        match: "/admin/work-drafts",
+        method: "POST",
+        body: { draft: initialDraft, reused: true },
+      },
+      { match: MEDIA_DETAIL_ROUTE, body: makeMedia() },
+    ]);
+    const view = render(
+      <MomentEditor
+        {...baseProps({
+          targetId: MOMENT_ID,
+          targetStatus: "draft",
+          targetVersion: 2,
+          initialData: { text: "正式内容", tags: [], album_links: [] },
+          initialImages: [{ media_id: MEDIA_ID, alt: "旧图", media: makeMedia() } as PickedImage],
+        })}
+      />,
+    );
+    await advance(120);
+    // 编辑已有内容会先回填服务端工作草稿。
+    expect(getTextarea(view.container).value).toBe("初始草稿文字");
+
+    // 输入触发自动保存 → 服务端 412（另一台设备已更新）→ 冲突态，本机输入保留。
+    await typeInto(getTextarea(view.container), "本机冲突输入");
+    await advance(1400);
+    expect(view.container.querySelector("[data-workspace-conflict]")).not.toBeNull();
+    expect(getTextarea(view.container).value).toBe("本机冲突输入");
+
+    // 用户选择「放弃本机修改，载入最新版本」→ 表单必须显示服务端最新草稿内容。
+    click(buttonBy(view.container, "[data-workspace-conflict-reload]"));
+    await advance(400);
+
+    expect(view.container.querySelector("[data-workspace-conflict]")).toBeNull();
+    expect(getTextarea(view.container).value).toBe("服务器最新文字");
+    expect(view.container.textContent).toContain("已载入服务器上的最新版本");
+    view.unmount();
+  });
+});
+
 describe("MomentEditor · 提交成功", () => {
   it("发布成功提供「查看动态」与「再发一条」，状态区标记 published", async () => {
     stub = stubFetch([

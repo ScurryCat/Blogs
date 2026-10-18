@@ -105,6 +105,10 @@ export function MomentEditor({
   const commitKeyRef = useRef<{ key: string; action: DraftAction } | null>(null);
   /** 已补取过详情的图片（缩略图用；避免反复请求）。 */
   const attemptedMediaRef = useRef<Set<string>>(new Set());
+  /** 出现过 412 冲突（自动保存已暂停）；用户选择解决后需要把最新草稿回填到可编辑 state。 */
+  const wasConflictRef = useRef(false);
+  /** 用户在 ConflictNotice 里点的动作，用于回填后给出准确提示。 */
+  const pendingConflictChoiceRef = useRef<"reload-latest" | "save-as-new" | null>(null);
 
   const workDraft = useWorkDraft({
     contentType: "moment",
@@ -118,17 +122,12 @@ export function MomentEditor({
     entryId,
   });
 
-  // 工作草稿 / 本机副本比初始内容新时做一次回填（只回填一次，之后用户输入优先）。
-  useEffect(() => {
-    if (seededRef.current || touchedRef.current) return;
-    // 编辑已有内容：优先服务端工作草稿（跨设备继续编辑），否则本机副本；
-    // 新建内容：本机副本才是「同一入口的未同步修改」，服务端草稿在首次输入后才创建、
-    // 内容与界面一致，不需要回填（也避免把刚保存在的草稿当成恢复内容覆盖首帧）。
-    const snapshot = targetId ? (workDraft.draft ?? workDraft.localCopy) : workDraft.localCopy;
-    if (!snapshot) return;
-    seededRef.current = true;
+  /** 把一份工作草稿 / 本机副本的内容回填到可编辑 state（首次打开与冲突解决后共用）。 */
+  const applySnapshotToState = (snapshot: {
+    data: Record<string, unknown>;
+    images?: PickedImage[];
+  }): void => {
     const data = readMomentDraftData(snapshot.data);
-    /* eslint-disable react-hooks/set-state-in-effect -- 一次性把「服务端工作草稿 / 本机恢复副本」同步进可编辑 state（外部状态 → React state），不是渲染期派生；seededRef 保证只发生一次。 */
     setText(data.text);
     setTagsInput(data.tags.join(" "));
     setAlbumLinks(data.album_links);
@@ -141,8 +140,60 @@ export function MomentEditor({
         })),
       );
     }
+  };
+
+  // 工作草稿 / 本机副本比初始内容新时做一次回填（只回填一次，之后用户输入优先）。
+  useEffect(() => {
+    if (seededRef.current || touchedRef.current) return;
+    // 编辑已有内容：优先服务端工作草稿（跨设备继续编辑），否则本机副本；
+    // 新建内容：本机副本才是「同一入口的未同步修改」，服务端草稿在首次输入后才创建、
+    // 内容与界面一致，不需要回填（也避免把刚保存在的草稿当成恢复内容覆盖首帧）。
+    const snapshot = targetId ? (workDraft.draft ?? workDraft.localCopy) : workDraft.localCopy;
+    if (!snapshot) return;
+    seededRef.current = true;
+    /* eslint-disable react-hooks/set-state-in-effect -- 一次性把「服务端工作草稿 / 本机恢复副本」同步进可编辑 state（外部状态 → React state），不是渲染期派生；seededRef 保证只发生一次。 */
+    applySnapshotToState(snapshot);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [targetId, workDraft.draft, workDraft.localCopy]);
+
+  /**
+   * 412 冲突解决后重新回填（C5 e2e A6 缺陷修复）。
+   *
+   * 为什么需要：首帧回填有一次性守卫（用户输入后不能再被覆盖），而
+   * `resolveConflict("reload-latest")` 只是在 hook 内把最新服务端草稿应用到 `draft`/本机副本，
+   * 不会自动刷新编辑器自己的 state —— 于是「放弃本机修改，载入最新版本」点了没反应。
+   * 这里监听「冲突 → 非冲突（synced/idle）」的成功转换，用 hook 已经取回的最新草稿
+   * **显式重新 seed**（绕过一次性守卫），并给出与用户选择一致的提示。
+   * 失败（仍 failed）不重新 seed：本机输入必须保留，等用户重试。
+   */
+  useEffect(() => {
+    if (workDraft.state === "conflict") {
+      wasConflictRef.current = true;
+      return;
+    }
+    if (!wasConflictRef.current) return;
+    if (workDraft.state !== "synced" && workDraft.state !== "idle") return;
+    wasConflictRef.current = false;
+    const choice = pendingConflictChoiceRef.current;
+    pendingConflictChoiceRef.current = null;
+    const snapshot = workDraft.draft ?? workDraft.localCopy;
+    /* eslint-disable react-hooks/set-state-in-effect -- 冲突解决完成后把服务端最新草稿同步进可编辑 state（外部状态 → React state），这是用户显式选择后的唯一刷新时机。 */
+    if (!snapshot) {
+      setNotice("服务器上没有可载入的草稿；本机输入保持不变。");
+    } else {
+      applySnapshotToState(snapshot);
+      setNotice(
+        choice === "save-as-new"
+          ? "已另存为新的工作草稿，编辑器继续使用本机内容。"
+          : "已载入服务器上的最新版本，本机冲突修改已放弃。",
+      );
+    }
+    setError(null);
+    setFieldErrors({});
+    touchedRef.current = false;
+    seededRef.current = true;
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [workDraft.state, workDraft.draft, workDraft.localCopy]);
 
   // 编辑已有动态 / 从草稿恢复时，草稿里只有 media_id：补取详情渲染缩略图（不阻断编辑）。
   useEffect(() => {
@@ -472,8 +523,14 @@ export function MomentEditor({
       {conflict ? (
         <ConflictNotice
           message={workDraft.syncMessage}
-          onReload={() => void workDraft.resolveConflict("reload-latest")}
-          onSaveAsNew={() => void workDraft.resolveConflict("save-as-new")}
+          onReload={() => {
+            pendingConflictChoiceRef.current = "reload-latest";
+            void workDraft.resolveConflict("reload-latest");
+          }}
+          onSaveAsNew={() => {
+            pendingConflictChoiceRef.current = "save-as-new";
+            void workDraft.resolveConflict("save-as-new");
+          }}
         />
       ) : null}
 

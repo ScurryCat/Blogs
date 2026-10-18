@@ -22,6 +22,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { ApiClientError } from "@/lib/api/client";
+import { useOverlay } from "@/features/runtime/overlay-manager";
 
 import { describeMediaUploadError, getAdminMedia, listAdminMedia, uploadMedia } from "./api";
 import { MediaThumb } from "./media-thumb";
@@ -390,6 +391,13 @@ export function MediaPickerDialog({
     },
     [csrfToken, max],
   );
+
+  /**
+   * 复用全局弹层栈：打开时锁滚动（`html.ov-lock`），关闭/卸载自动解除。
+   * Escape 仍由上面的 document 监听处理：没有 OverlayProvider 的测试/独立渲染也能关闭，
+   * 有宿主时两层都只是幂等地调用 onClose，不会破坏宿主状态。
+   */
+  useOverlay({ id: "media-picker-dialog", lockScroll: true }, open);
 
   const confirm = useCallback(() => {
     onConfirm(

@@ -11,7 +11,10 @@
 .mpx-overlay {
   position: fixed;
   inset: 0;
-  z-index: 90;
+  /* 层级约定（app/globals.css）：手机宿主 880 / 过场 899–902 / 手机编辑器 940 / toast 950；
+     浮动投票卡 `.poll--floating` 是 500。图片选择器是模态操作层，必须盖住投票卡等
+     站内浮动卡（否则「确定」会被投票卡拦截 pointer-events），因此取 960（高于 poll 与编辑器层）。 */
+  z-index: 960;
   display: flex;
   align-items: center;
   justify-content: center;

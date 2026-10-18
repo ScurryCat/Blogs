@@ -24,6 +24,7 @@ import type { PostOption } from "./model";
 
 const mockUseWorkDraft = vi.hoisted(() => vi.fn());
 const mockCommitWorkDraft = vi.hoisted(() => vi.fn());
+const mockGetWorkDraft = vi.hoisted(() => vi.fn());
 
 vi.mock("@/features/workspace/use-work-draft", () => ({
   useWorkDraft: mockUseWorkDraft,
@@ -31,6 +32,7 @@ vi.mock("@/features/workspace/use-work-draft", () => ({
 
 vi.mock("@/features/workspace/api", () => ({
   commitWorkDraft: mockCommitWorkDraft,
+  getWorkDraft: mockGetWorkDraft,
 }));
 
 vi.mock("next/navigation", () => ({
@@ -185,6 +187,7 @@ beforeEach(() => {
   resetDocument();
   mockUseWorkDraft.mockReset();
   mockCommitWorkDraft.mockReset();
+  mockGetWorkDraft.mockReset();
   mockUseWorkDraft.mockReturnValue(workStub());
 });
 
@@ -531,15 +534,42 @@ describe("Markdown 预览与次要信息", () => {
     view.unmount();
   });
 
-  it("冲突时展示 ConflictNotice（自动保存由 C2 暂停，这里给两个明确选择）", async () => {
+  it("冲突时展示 ConflictNotice；「载入最新版本」会把表单刷新成服务端最新内容（A6）", async () => {
     const work = workStub({ state: "conflict", syncMessage: "草稿已在其他设备更新，自动保存已暂停" });
     mockUseWorkDraft.mockReturnValue(work);
+    // 本机冲突输入（还没被服务端接受）
     const view = renderEditor();
+    setInput(view.container, '[data-editor-field="title"]', "冲突时的本机输入");
+    // 服务端最新工作草稿（另一台设备保存过）
+    mockGetWorkDraft.mockResolvedValue({
+      ...draft(),
+      data: {
+        entry_date: "2026-10-09",
+        title: "服务器最新标题",
+        content_md: "服务器最新正文",
+        mood: "平静",
+        location: "四轩茶屋",
+        post_id: null,
+      },
+      images: [],
+    });
+
     const notice = view.container.querySelector("[data-workspace-conflict]");
     expect(notice).not.toBeNull();
     click(view.container.querySelector("[data-workspace-conflict-reload]"));
-    await advance(10);
+    await advance(20);
+
     expect(work.resolveConflict).toHaveBeenCalledWith("reload-latest");
+    expect(mockGetWorkDraft).toHaveBeenCalledWith("draft-1");
+    // 关键断言（C5 A6）：表单必须显示服务端最新文本，而不是冲突时的本机输入。
+    const title = view.container.querySelector<HTMLInputElement>('[data-editor-field="title"]');
+    const content = view.container.querySelector<HTMLTextAreaElement>(
+      '[data-editor-field="content"]',
+    );
+    expect(title?.value).toBe("服务器最新标题");
+    expect(content?.value).toBe("服务器最新正文");
+    // 本机副本已丢弃（内容就是最新版本，不应再被当成未同步修改）
+    expect(work.discardLocalCopy).toHaveBeenCalled();
 
     click(view.container.querySelector("[data-workspace-conflict-save-as-new]"));
     await advance(10);

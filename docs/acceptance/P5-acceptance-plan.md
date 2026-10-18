@@ -6,7 +6,7 @@
 > - 集成契约 `docs/agent-deliveries/P5-C0-integration-contract.md` §6（验收映射）、§7（命令与环境）、§9.5（data-* 选择器）
 > - 验证体系与踩坑：`docs/agent-deliveries/HANDOFF.md`、`docs/agent-deliveries/P4-final-state.md`
 >
-> **本文件是计划，不是结论。** 任何条目在真实命令跑出证据之前都只能是「未验证」；
+> **本文件是计划，不是结论。C5b 执行结果见 `docs/acceptance/P5-acceptance-report.md`（2026-10-19）。** 任何条目在真实命令跑出证据之前都只能是「未验证」；
 > 禁止把「单测覆盖了」「看代码像是对的」写成「通过」。
 
 ## 0. 状态图例与判定规则
