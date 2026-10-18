@@ -127,6 +127,12 @@
 深红大序号（阿卡那装饰数字，不是 rank）；COOP 测试 79/79；仍标部分还原
 （`P4-coop-visual-refinement.md`；RANK/NEW ABILITY 无数据不伪造）。
 
+## 五之一之五、我的殿堂 Showcase 整屏视觉修形第一轮（2026-10-18）
+
+对照 `p5-palace-treasure` 完整帧：暗红/黑斜切宝库墙 + 金色宝箱辉光 + 金色 TREASURE 贴牌 +
+纸白宝物卡（黑厚框/硬阴影/EXHIBIT 编号）+ 金色页签；Showcase 测试 50/50；仍标部分还原
+（`P4-showcase-visual-refinement.md`；CSS 色块替代 3D 宝库，不做 3D 漫游）。
+
 ## 五之二、视觉对照证据（2026-10-18）
 
 - `tools/capture-visual-comparison.py`：真实浏览器截图 11 个站点界面，与 17 张参考帧并排对照
