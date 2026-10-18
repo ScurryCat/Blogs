@@ -51,7 +51,7 @@
     来源/哈希/画面复核见 `reference-frame-gaps.md` §7 与 `P4-reference-frames-round3.md`；
     `verify-reference-frames.py` **21/21** 通过；来源核实见 `reference-frame-sources.md`
     （官方 3 张：PlayStation CDN 1 + Steam 官方截图 2；可追溯非官方 12；未核实 2）。
-    整屏参考帧缺口已收口；剩余为真实设备与 IM 图片消息。
+    整屏参考帧已补齐并完成 R1 纠正；剩余为真实设备、G2 IM 回复选择帧、部分原作图标。
   - **IM 整屏视觉修形（2026-10-18，站主指令 IM 优先，已两轮）**：会话列表/会话页改为
     纸白宽消息条 + 白纸黑框拍立得头像 + 放大 IM wordmark + 底部红点操作提示 +
     4:3 大图片卡（白框+外黑框）；黑字/白字对比度与语义不变，messaging 测试 71/71；
@@ -91,7 +91,7 @@
     站点 11 个界面并排对照；结论见 `P4-visual-comparison-evidence.md`
     （13 项语言级部分对照 / 2 项未实现（图片消息、楼层图）/ 2 项无对应整屏；
     **整屏逐像素还原仍未通过**）。
-  - **完整验收仍不通过**：整屏视觉对照（部分）、真机、IM 图片消息仍未收口。
+  - **完整验收仍不通过**：整屏逐像素视觉对照（部分）、真机验证、G2 参考帧、剩余 8 枚原作图标未收口。
 - **验证基建**：`audit-contrast.py` / `audit-structure.py` / `audit-failure-states.py` /
   `verify-home-refresh.py` / `verify-demo-content.py` / `seed-demo-content.py` /
   `verify-reference-entry.py` / `verify-reference-frames.py` / `verify-phone-icons.py` /
@@ -121,9 +121,9 @@ python3 tools/verify-demo-content.py http://127.0.0.1:3100 --api http://127.0.0.
 | **首页排版（可选后续）** | 已还原为原本布局；若要重排，等站主给方向后单独做 | 站主 |
 | ~~整屏视觉参考帧~~ | **已收口**：21 张完整帧覆盖 G1/G2/IM/HUD/存档读取/手机主屏/日历/五维/地图/天鹅绒/印象空间/COOP/殿堂/放课后（`P4-reference-frames-round3.md`） | — |
 | ~~B4 图片消息 Phase 1~~ | **已实现**（方案 A，见 `P4-im-image-messages-result.md`）；Phase 2 AI 选图 / Phase 3 访客引用相册仍可选 | — |
-| **P4 原版应用图标（部分完成）** | `metanav` / `ins` 已接入已审核原版（清理版，来源/证据见 `original-app-icons.md`）；其余 8 个 App 仍为适配设计（AI 位图/自绘 SVG） | 其余 App 的官方素材 |
+| **P4 原版应用图标（部分完成）** | `metanav` / `ins` 已接入已审核原版（清理版，来源/证据见 `original-app-icons.md`）；其余 8 个 App 为自绘 SVG 适配；**AI 位图默认回退已移除** | 其余 App 的官方素材 |
 | ~~管理端收录 UI 真流程~~ | **已补齐**（`e2e-ins-album-links-ui.py` 9/9，浏览器截图） | — |
-| **真机验证（部分证据）** | 无设备；已补 **WebKit 引擎 + iPhone 视口 24/24**（`P4-mobile-engine-evidence.md`），**不等于真机**；软键盘/中文输入法/真实触控仍需真机 | 有 iPhone/Android 的人 |
+| **真机验证（部分证据）** | 无设备；已补 **WebKit 引擎 + iPhone 视口 28/28**（`P4-mobile-engine-evidence.md`），**不等于真机**；软键盘/中文输入法/真实触控仍需真机 | 有 iPhone/Android 的人 |
 | **品牌红面板黑字对比度** | 4.23:1（AA 需 4.5），需设计折中 | 设计/站主 |
 
 ## 4. 下一步建议
@@ -131,7 +131,7 @@ python3 tools/verify-demo-content.py http://127.0.0.1:3100 --api http://127.0.0.
 1. **首页排版**：已按站主指令还原原本布局（只修字体）；如要重排，请给出具体方向。
 2. **替换演示内容**：`python3 tools/seed-demo-content.py --backup` 先备份，
    然后直接改内容 / 或改种子清单；`--clean` 删除本脚本创建条目，`--restore <dump>` 回滚。
-3. **产品拍板 B4** → 按提案 Phase 1 实现（剧本图片消息，零迁移）。
+3. ~~产品拍板 B4~~ → **已拍板方案 A，Phase 1 已实现**；Phase 2/3 仍未做（可选）。
 4. **补参考帧**（G2/G3/整屏）→ 继续整屏级还原与对照验收。
 5. **重新打包**：任何文档变更后跑 `python3 tools/package-handoff.py`。
 
