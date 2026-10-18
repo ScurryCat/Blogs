@@ -93,8 +93,11 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 > 但**不等于真机**；软键盘/中文输入法/真实触控仍需真机（`P4-mobile-engine-evidence.md`）。
 > **IM 整屏视觉修形（2026-10-18，两轮，站主指令 IM 优先）**：纸白宽消息条 + 白纸黑框拍立得头像 +
 > 放大 IM wordmark + 红点操作提示 + 4:3 大图片卡（`P4-im-visual-refinement.md`；仍部分还原）。
+> **手记整屏视觉修形第一轮（2026-10-18）**：存档列表纸白/深红大槽位 + SAVE DATA 大字；
+> 日历黑底大字网格（周日红/周六青）、记录日红数字+下划线、TODAY 贴纸
+> （`P4-journal-visual-refinement.md`；仍部分还原）。
 > **视觉对照证据（2026-10-18）**：`tools/capture-visual-comparison.py` 把 17 张参考帧与
-> 站点 12 个界面并排对照，逐项结论见 `P4-visual-comparison-evidence.md`
+> 站点 13 个界面并排对照，逐项结论见 `P4-visual-comparison-evidence.md`
 > （13 项语言级部分对照 / 2 项未实现（图片消息、楼层图）/ 2 项无对应整屏；**整屏还原仍未通过**）。
 > **IM 图片消息 Phase 1 已实现（2026-10-18，站主拍板方案 A）**：剧本图片卡
 > （`image`/`album_photo`）+ 白框拍立得 + 灯箱 + 撤回/失效降级；后端 9 / 前端 4 /

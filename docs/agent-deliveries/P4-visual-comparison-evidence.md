@@ -10,7 +10,7 @@
 ```bash
 python3 tools/capture-visual-comparison.py http://127.0.0.1:3100
 # 输出：.dsh/screenshots/visual-comparison/
-#   site-<界面>.png      站点截图（1440×900；含 IM 列表/会话/会话-图片卡）
+#   site-<界面>.png      站点截图（1440×900；含 IM 列表/会话/会话-图片卡、手记列表/日历）
 #   comparison-{1..3}.png 参考帧 | 站点界面 并排对照图
 ```
 
@@ -26,8 +26,8 @@ python3 tools/capture-visual-comparison.py http://127.0.0.1:3100
 | 3 | `p5r-im-groupchat-fullframe`（IM 群聊） | `/?phone=ins&screen=messages` IM 列表 | **2026-10-18 两轮整屏修形**：IM 顶条/放大 wordmark、纸白会话条、白纸黑框拍立得头像、底部红点提示已对齐参考语言；手机外框/多气泡群聊/逐像素比例仍未复刻 | 已对照（部分，两轮修形） |
 | 4 | `p5r-im-photo-fullframe`（图片消息） | `/?phone=ins&screen=conversation&item=morgana`（剧本 `map` 节点） | **Phase 1 已实现**：白框拍立得图片卡 + 灯箱；**2026-10-18 两轮整屏修形**：宽纸白消息条、黑板白字我方消息、发言人黑标签、4:3 大图卡（白框+外黑框+硬阴影）、底部红点提示；手机外框与逐像素比例仍未复刻 | 已实现（Phase 1）/ 视觉部分对照（两轮修形） |
 | 5 | `p5r-dialogue-choice-fullframe`（回复选择） | `/?phone=ins&screen=conversation&item=morgana` | 站点剧本会话有回复选项（交互结构存在）；**2026-10-18 IM 修形后**：消息条/选项条已用黑白纸条语言，但 P5 对话框 + 场景人物构图未复刻 | 已对照（部分） |
-| 6 | `p5-load-save-fullframe`（Load 存档槽） | `/apps/journal` 手记 | 站点手记为存档式列表 + SAVE DATA 卡；**存档槽整屏视觉未复刻** | 已对照（部分） |
-| 7 | `p5-calendar-fullframe`（日历） | `/apps/journal` 手记日历屏 | 站点有日历屏（月历/日期格）；**P5 日历整屏字体与布局未复刻** | 已对照（部分） |
+| 6 | `p5-load-save-fullframe`（Load 存档槽） | `/apps/journal` 手记 | **2026-10-18 第一轮修形**：大字号 SAVE DATA、纸白/深红存档大槽位、黑硬边/投影、预览面板红黑层次；参考帧的游玩时长/难度字段本站无数据（不伪造），整屏比例仍未逐像素 | 已对照（部分，已修形） |
+| 7 | `p5-calendar-fullframe`（日历） | `/apps/journal` → 日历 | **2026-10-18 第一轮修形**：黑底大字网格、周日红/周六青、记录日红色数字+下划线、TODAY 贴纸、选中青色；右侧 Day/Night Job 栏与顶部 L1/R1 切换未复刻（本站无对应数据/交互） | 已对照（部分，已修形） |
 | 8 | `p5-status-fullframe`（五维状态） | `/about` 人物档案 | 站点有五维雷达/属性；**P5 五维星图布局未复刻** | 已对照（部分） |
 | 9 | `p5-map-school-fullframe`（校内楼层图） | `/map` 东京漫游 | 站点为东京城市地图；**无校内楼层图**（对象不同） | 不适用/未实现 |
 | 10 | `p5-tokyo-map-fullframe`（东京城市地图） | `/map` 东京漫游 | 站点地图为黑白插画城市图 + 地点针；对照帧语言相近，**日期覆盖层/剪影未复刻** | 已对照（部分） |
@@ -39,7 +39,7 @@ python3 tools/capture-visual-comparison.py http://127.0.0.1:3100
 | 16 | `p5r-dialogue-normal-fullframe`（普通对话，Kamoshida） | — | 站点无游戏对话整屏；IM 会话属不同语言 | 不适用 |
 | 17 | `p5r-dialogue-maruki-fullframe`（普通对话，Maruki） | — | 同上 | 不适用 |
 
-汇总：17 帧中 **站点有对应界面 14 项**（13 项语言级部分对照 + 1 项对象不适用；IM 两项已完成第一轮整屏修形），
+汇总：17 帧中 **站点有对应界面 14 项**（13 项语言级部分对照 + 1 项对象不适用；IM 两项、手记两项已完成整屏语言修形第一轮），
 **2 项明确未实现**（图片消息、楼层图），2 项无对应整屏（普通对话）。
 
 ## 3. 诚实结论

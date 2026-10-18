@@ -115,6 +115,12 @@
 `P4-im-visual-refinement.md`。messaging 测试 71/71；仍标「部分还原」，
 逐像素与手机外框/多图叠放未复刻。
 
+## 五之一之三、手记整屏视觉修形第一轮（2026-10-18）
+
+对照 `p5-load-save` 与 `p5-calendar` 完整帧：存档列表大字号 SAVE DATA + 纸白/深红存档槽 +
+预览面板红黑层次；日历黑底大字网格（周日红/周六青）、记录日红数字+下划线、TODAY 贴纸。
+手记测试 55/55；仍标部分还原（`P4-journal-visual-refinement.md`）。
+
 ## 五之二、视觉对照证据（2026-10-18）
 
 - `tools/capture-visual-comparison.py`：真实浏览器截图 11 个站点界面，与 17 张参考帧并排对照

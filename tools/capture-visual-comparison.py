@@ -29,7 +29,8 @@ SITES = [
     ("im-list", "/?phone=ins&screen=messages", ["p5r-im-groupchat-fullframe.jpg"]),
     ("im-conversation", "/?phone=ins&screen=conversation&item=morgana", ["p5r-dialogue-choice-fullframe.jpg"]),
     ("im-conversation-photo", "/?phone=ins&screen=conversation&item=morgana", ["p5r-im-photo-fullframe.jpg"]),
-    ("journal", "/apps/journal", ["p5-load-save-fullframe.jpg", "p5-calendar-fullframe.jpg"]),
+    ("journal", "/apps/journal", ["p5-load-save-fullframe.jpg"]),
+    ("journal-calendar", "/apps/journal", ["p5-calendar-fullframe.jpg"]),
     ("about", "/about", ["p5-status-fullframe.jpg"]),
     ("map", "/map", ["p5-map-school-fullframe.jpg", "p5-tokyo-map-fullframe.jpg"]),
     ("velvet", "/velvet", ["p5r-velvet-room-fullframe.jpg"]),
@@ -66,6 +67,12 @@ def main() -> int:
             boot(page)
             page.wait_for_timeout(1800)
             # IM 图片消息对照：进入「这地方是什么」节点，让图片卡出现在截图里。
+            if slug == "journal-calendar":
+                try:
+                    page.get_by_role("button", name="日历", exact=True).click(timeout=5000)
+                    page.wait_for_timeout(1800)
+                except Exception:  # noqa: BLE001
+                    pass
             if slug == "im-conversation-photo":
                 try:
                     page.get_by_role("button", name="这地方是什么").click(timeout=5000)
