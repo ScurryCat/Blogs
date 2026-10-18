@@ -48,6 +48,15 @@
 截图：`.dsh/screenshots/im-visual-v2/05-pixel-round2.png`；
 对照：`.dsh/screenshots/visual-comparison/comparison-2.png` 首行（G2 ↔ 站点回复选择）。
 
+## 2.7 第三轮（2026-10-19，wordmark 占位）
+
+对照 G2：参考帧左上角是占主导的大 wordmark（SNS），不是「头像 + 名字」横条。
+
+- 对话页头部去掉头像，IM wordmark 放大到 38px（手机 30px），纸白底 + 红侧条 + 红硬阴影、旋转 -2deg；
+- 名字保留 18px，标签 9px，详情按钮右上；
+- 消息区整体上移，头部高度进一步接近参考帧；
+- 截图：`.dsh/screenshots/im-visual-v2/06-wordmark.png`。
+
 ## 3. 仍未对齐（下一轮可继续）
 
 1. 参考帧是倾斜手机/手部持机，本站是正置手机壳；整屏构图无法逐像素等同比；

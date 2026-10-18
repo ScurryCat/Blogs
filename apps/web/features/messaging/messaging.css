@@ -2076,3 +2076,53 @@
     width: 90%;
   }
 }
+
+/* IM 逐像素第三轮：参考 G2 的巨型 wordmark 占位，放大 IM logo、去掉头部头像，
+   让消息区整体上移（信息仍在：标题/标签/详情按钮保留）。 */
+.msg-thread-bar {
+  padding: 8px 12px 7px;
+  gap: 10px;
+}
+
+.msg-thread-bar .msg-avatar-lg {
+  display: none;
+}
+
+.msg-thread-bar .msg-logo {
+  padding: 5px 12px 3px 10px;
+  background: var(--msg-paper);
+  color: var(--msg-ink);
+  font-size: 38px;
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  transform: rotate(-2deg);
+  box-shadow: 5px 5px 0 var(--msg-red);
+}
+
+.msg-thread-bar .msg-logo::before {
+  width: 8px;
+  height: 30px;
+}
+
+.msg-thread-name {
+  font-size: 18px;
+  letter-spacing: 0.03em;
+}
+
+.msg-thread-tags {
+  font-size: 9px;
+}
+
+.msg-thread-actions {
+  align-self: start;
+}
+
+@media (max-width: 480px) {
+  .msg-thread-bar .msg-logo {
+    font-size: 30px;
+  }
+
+  .msg-thread-actions {
+    align-self: center;
+  }
+}
