@@ -52,9 +52,10 @@
     `verify-reference-frames.py` **17/17** 通过；来源核实见 `reference-frame-sources.md`
     （官方 3 张：PlayStation CDN 1 + Steam 官方截图 2；可追溯非官方 12；未核实 2）。
     整屏参考帧缺口已收口；剩余为真实设备与 IM 图片消息。
-  - **IM 整屏视觉修形第一轮（2026-10-18，站主指令 IM 优先）**：会话列表/会话页改为
-    纸白消息条 + 拍立得头像 + IM 顶条 + 底部操作提示 + 放大图片卡；黑字/白字对比度与语义不变，
-    messaging 测试 71/71；剩余差距见 `P4-im-visual-refinement.md`（仍标部分还原，非逐像素）。
+  - **IM 整屏视觉修形（2026-10-18，站主指令 IM 优先，已两轮）**：会话列表/会话页改为
+    纸白宽消息条 + 白纸黑框拍立得头像 + 放大 IM wordmark + 底部红点操作提示 +
+    4:3 大图片卡（白框+外黑框）；黑字/白字对比度与语义不变，messaging 测试 71/71；
+    剩余差距见 `P4-im-visual-refinement.md`（仍标部分还原，非逐像素）。
   - **视觉对照证据（2026-10-18）**：`tools/capture-visual-comparison.py` 把 17 张参考帧与
     站点 11 个界面并排对照；结论见 `P4-visual-comparison-evidence.md`
     （13 项语言级部分对照 / 2 项未实现（图片消息、楼层图）/ 2 项无对应整屏；

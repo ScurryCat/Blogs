@@ -1504,3 +1504,130 @@
   color: var(--msg-ink);
   font-weight: 700;
 }
+
+/* ==========================================================================
+   IM 整屏视觉修形 · 第二轮（2026-10-18）
+   参考帧：p5r-im-groupchat-fullframe / p5r-im-photo-fullframe
+   重点：消息条更宽/更斜、头像加内黑边、图片卡 4:3 大画幅、底栏改参考帧的
+   「红底白字 + 红点」语言、IM wordmark 放大。只动视觉，不动结构与语义。
+   ========================================================================== */
+
+.msg-thread-bar {
+  border-left: 7px solid var(--msg-red);
+  padding: 10px 12px;
+}
+
+.msg-thread-bar .msg-logo {
+  font-size: 30px;
+  padding: 9px 13px 7px;
+  transform: rotate(-5deg);
+}
+
+.msg-thread-bar .msg-logo::before {
+  width: 9px;
+  height: 27px;
+}
+
+.msg-list-head .msg-logo {
+  font-size: 28px;
+}
+
+.msg-list {
+  gap: 12px;
+}
+
+.msg-bubble-wrap {
+  max-width: min(86%, 560px);
+}
+
+.msg-bubble {
+  transform: rotate(-1.1deg);
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.4);
+  padding: 11px 15px;
+}
+
+.msg-bubble-out {
+  transform: rotate(1deg);
+}
+
+/* 拍立得头像：白边 + 内黑框 + 硬阴影（参考帧头像的「白纸黑框」层次）。 */
+.msg-row .msg-avatar,
+.msg-role .msg-role-avatar {
+  border: 4px solid var(--msg-paper);
+  box-shadow:
+    0 0 0 2px var(--msg-ink),
+    4px 4px 0 rgba(0, 0, 0, 0.5);
+}
+
+.msg-avatar {
+  width: 48px;
+  height: 48px;
+}
+
+.msg-role-avatar {
+  width: 64px;
+  height: 64px;
+}
+
+/* 底栏：参考帧的「红底白字 + 红点」操作提示（不再是黑色方块）。 */
+.msg-op-hints {
+  background: transparent;
+  border: 0;
+  padding: 2px 0;
+  transform: none;
+  color: var(--msg-paper);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+}
+
+.msg-op-hints > span::before {
+  background: var(--msg-red);
+  width: 8px;
+  height: 8px;
+}
+
+/* 图片消息：大幅 4:3 照片 + 内外双层边框 + 倾斜，贴近参考帧的照片消息。 */
+.msg-photo {
+  max-width: min(86%, 360px);
+  padding: 7px;
+  border: 4px solid var(--msg-paper);
+  outline: 3px solid var(--msg-ink);
+  box-shadow: 9px 9px 0 rgba(0, 0, 0, 0.45);
+  transform: rotate(-2.2deg);
+}
+
+.msg-photo-img {
+  aspect-ratio: 4 / 3;
+  max-height: 280px;
+  width: 100%;
+  object-fit: cover;
+}
+
+.msg-photo-caption {
+  margin-top: 7px;
+  padding: 4px 8px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+/* 390/320：消息占满可用宽度、减少倾斜，避免边缘被裁。 */
+@media (max-width: 480px) {
+  .msg-bubble-wrap {
+    max-width: 92%;
+  }
+
+  .msg-photo {
+    max-width: 100%;
+  }
+
+  .msg-thread-bar .msg-logo {
+    font-size: 24px;
+    padding: 7px 10px 5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .msg-photo {
+    transform: none;
+  }
+}
