@@ -52,3 +52,23 @@ bash tools/e2e-stack.sh up && E2E_ADMIN_USER=owner E2E_ADMIN_PASSWORD=e2e-passwo
   python3 tools/e2e-ins-draft-album-flow.py http://127.0.0.1:3130 && bash tools/e2e-stack.sh down
 python3 tools/acceptance/verify-reference-frames.py
 ```
+
+
+## 5. 最终收口（2026-10-19）
+
+按站主 2026-10-18/19 的决定，完整验收报告的可执行返工项已全部关闭：
+
+| 报告项 | 收口结果 |
+| --- | --- |
+| R1 错标参考帧 / G2 | 3 张错标帧已重标；正确 P5R 天鹅绒/东京地点/IM 帧已补；**G2 回复选择帧由站主提供**，22/22 校验通过 |
+| R2 灯箱 Escape 退出 App | OverlayManager + Portal + 焦点恢复；手机宿主/独立页 e2e 60/60 |
+| R3 灯箱图片失败降级 | 可读失败态 + 可关闭；单测/浏览器覆盖 |
+| §5 WebKit 断言 / 管理端流程 | WebKit 28/28；管理端隔离栈草稿保留/图库/撤回联动 19/19 |
+| §6 遗留项 | 相册 1200 提示、pending 中性标题、历史文档标注、精选库摘要、IM 阶段边界均已处理 |
+| 手机图标 | 2 枚原版 + 10 枚站主授权的 AI 同风格图标（`ai-app-icons.md`），旧 AI 位图默认回退已移除 |
+| IM / 存档视觉对照 | IM 黑底白边/回复箭头/wordmark 三轮；手记 SAVE DATA/槽位/日历第二轮；均有对照截图 |
+| 真机验证 | 站主 2026-10-18 明确「暂时跳过」；WebKit 证据仍标「非真机」 |
+| 交接包 / 推送 | 179 文件 / 14.8 MiB；main 与 origin 同步 |
+
+**结论口径**：报告要求的自动化门禁与可执行返工项已闭环；不宣称真实设备验证通过，
+也不宣称与游戏原画面跨设备逐像素一致（验收报告本身不要求跨设备逐像素）。
