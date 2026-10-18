@@ -1,7 +1,7 @@
 # 整屏视觉修形第一轮 · 汇总（2026-10-18）
 
 > 站主指令：按 `P4-visual-comparison-evidence.md` 的对照表开始整屏视觉修形，**IM 优先**。
-> 本文件汇总 2026-10-18 完成的 7 个界面 / 8 轮修形（含 IM 两轮），作为阶段交付索引。
+> 本文件汇总 2026-10-18 完成的 10 个界面 / 9 轮修形（含 IM 两轮），作为阶段交付索引。
 
 ## 1. 已完成的整屏语言修形
 
@@ -14,6 +14,9 @@
 | 5 | 天鹅绒房间 Velvet | `p5r-velvet-room` | `P4-velvet-visual-refinement.md` | `.dsh/screenshots/velvet-visual/` |
 | 6 | 印象空间 Mementos | `p5-mementos` | `P4-mementos-visual-refinement.md` | `.dsh/screenshots/mementos-visual/` |
 | 7 | 放课后 Leisure | `p5-leisure-batting` | `P4-leisure-visual-refinement.md` | `.dsh/screenshots/leisure-visual/` |
+| 8 | 手机主屏 Phone Home | `p5-phone-home` / `p5r-street-hud` | `P4-legacy-visual-refinement.md` | `.dsh/screenshots/phone-about-map-visual/` |
+| 9 | 关于 About（五维状态） | `p5-status` | `P4-legacy-visual-refinement.md` | `.dsh/screenshots/phone-about-map-visual/` |
+| 10 | 东京地图 Map | `p5-tokyo-map` | `P4-legacy-visual-refinement.md` | `.dsh/screenshots/phone-about-map-visual/` |
 
 另有 IM 图片消息 Phase 1（`P4-im-image-messages-result.md`）与视觉对照证据
 （`P4-visual-comparison-evidence.md`，17 帧 ↔ 13 个站点界面）。

@@ -12,6 +12,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { SiteLink } from "@/features/runtime/navigation/site-link";
+import "@/features/legacy/pages/legacy-visual-refinement.css";
 import { CoopLinksSection } from "@/features/coop/coop-links-section";
 import { site } from "@/features/legacy/config";
 import { rn } from "@/features/legacy/text/ransom";

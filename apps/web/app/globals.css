@@ -868,3 +868,58 @@ html.ov-lock body {
   .isekai { display: none !important; }
   .isekai-skip { display: none !important; }
 }
+
+/* ==========================================================================
+   2026-10-18 手机主屏整屏视觉修形（对照 p5-phone-home / p5r-street-hud）
+   只做覆盖：磁贴/状态栏/翻页条视觉更接近原作首页；结构、点击语义不变。
+   ========================================================================== */
+
+.pw-status {
+  border-bottom: 2px solid rgb(244 241 234 / 0.18);
+  padding-bottom: 9px;
+}
+
+.pw-status .pw-date {
+  padding: 1px 7px;
+  background: #f4f1ea;
+  color: #0a0a0b;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  transform: skewX(-7deg);
+}
+
+.pw-status .pw-sig {
+  color: #ff4b4f;
+  opacity: 1;
+}
+
+.pw-app {
+  border: 2px solid rgb(244 241 234 / 0.16);
+  box-shadow: 4px 4px 0 rgb(0 0 0 / 0.45);
+}
+
+.pw-app:hover,
+.pw-app:focus-visible {
+  border-color: #f4f1ea;
+  box-shadow: 6px 6px 0 #e5191c;
+}
+
+.pw-app .g-img {
+  width: 42px;
+  height: 42px;
+}
+
+.pw-app .c {
+  font-size: 18px;
+}
+
+.pw-pager {
+  border-top: 2px solid rgb(244 241 234 / 0.18);
+  padding-top: 8px;
+}
+
+.pw-page-num {
+  font-family: var(--f-disp);
+  letter-spacing: 0.12em;
+  color: #ff4b4f;
+}

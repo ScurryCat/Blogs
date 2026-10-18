@@ -6,6 +6,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
+import "@/features/legacy/pages/legacy-visual-refinement.css";
 import { MapView } from "@/features/legacy/pages/map-view";
 
 export const metadata: Metadata = {

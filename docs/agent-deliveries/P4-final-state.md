@@ -74,8 +74,10 @@
   - **放课后 Leisure 整屏视觉修形第一轮（2026-10-18）**：黑暗击球笼 + 黄灯管排 + 笼网斜纹 +
     BATTING CAGE 贴牌 + 黄色霓虹记分板卡片；Leisure 测试 27/27；仍标部分还原
     （`P4-leisure-visual-refinement.md`；CSS 色块替代 3D 场景）。
-  - **整屏视觉修形第一轮汇总（2026-10-18）**：7 个界面 / 8 轮全部完成，索引见
-    `P4-visual-refinement-summary.md`；下一阶段为逐像素第二轮。
+  - **手机主屏/关于/东京地图修形第一轮（2026-10-18）**：手机状态栏与磁贴、五维白纸状态卡 +
+    黑底状态面板、东京地图裱框与档案卡；`P4-legacy-visual-refinement.md`。
+  - **整屏视觉修形第一轮汇总（2026-10-18）**：10 个界面 / 9 轮完成（对照表 13 个可映射界面
+    全部完成，1 个对象不适用），索引见 `P4-visual-refinement-summary.md`；下一阶段为逐像素第二轮。
   - **视觉对照证据（2026-10-18）**：`tools/capture-visual-comparison.py` 把 17 张参考帧与
     站点 11 个界面并排对照；结论见 `P4-visual-comparison-evidence.md`
     （13 项语言级部分对照 / 2 项未实现（图片消息、楼层图）/ 2 项无对应整屏；
