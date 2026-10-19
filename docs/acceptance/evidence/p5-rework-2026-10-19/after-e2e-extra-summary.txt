@@ -1,0 +1,22 @@
+# after-extra e2e 关键摘要（来自 e2e-p5-rework-extra.json）
+phase: after-extra
+summary: {"pass": 208, "fail": 0, "skip": 1, "environment_error": false, "exit_code": 0}
+source: {"head": "b6ef3581b70f02ee4bcd8d516afd88950a2aed6b", "build_id": "x46VxuFXLS83Km5gubNnP", "build_time": "2026-10-19T08:59:57"}
+browser: {"engine": "chromium", "version": "148.0.7778.96", "headless": true, "viewports": ["1440x1000", "390x844", "320x700"]}
+scenario r1-ins PASS 14/0/0
+scenario r1-journal PASS 15/0/0
+scenario r2-moment PASS 26/0/0
+scenario r2-journal PASS 23/0/0
+scenario r3-phone PASS 44/0/0
+scenario r1-guards PASS 40/0/0
+scenario r2-save-as-new PASS 16/0/0
+scenario r3-extra PASS 28/0/1
+unverified:
+ - 真机 / iOS / Android 浏览器、真实触控命中与软键盘遮挡：未验证（本脚本只有桌面 chromium，390/320 只是视口，不是真机）
+ - 中文/日文输入法 composition 真机行为：未验证（Composer 的 IME 逻辑只有单测；本脚本不模拟真实输入法）
+ - R2 真实双物理设备并发：跨设备恢复用「第二浏览器上下文（复制 cookie、无 localStorage）」，非两台物理设备
+ - 弱网/长时间输入稳定性：只做短时故障注入（PATCH 500/401/412、commit 延迟、发送 500），未做长时弱网
+ - R3 自由聊天额度耗尽/不可发送态的端到端复现：需真实耗尽每日额度（20 次/访客/天），本轮不真实耗尽，只验证 usage 展示与格式
+ - R3 音乐在真机/WebKit 及静音策略下的行为：只验证桌面 chromium 下手机会话内继续播放；真机与自动播放策略差异未验证
+ - R1 412/401/相册/提交期输入只做前端故障注入（真实隔离 API + Playwright route），未做真实网络分区/多物理设备并发
+ - D1 Docker 健康检查错配、生产部署、迁移 round-trip、OpenAPI/gen:api 漂移：本轮不改后端/契约，未重跑（D1 未获授权）

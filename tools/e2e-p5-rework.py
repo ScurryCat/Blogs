@@ -73,15 +73,40 @@ WORK_DRAFT_PATCH_ROUTE = re.compile(r"/api/v1/admin/work-drafts/[0-9a-fA-F-]+$")
 USER = os.environ.get("E2E_ADMIN_USER", "owner")
 PASSWORD = os.environ.get("E2E_ADMIN_PASSWORD", "e2e-password-123")
 HEADLESS = os.environ.get("E2E_HEADLESS", "1").strip() != "0"
-SCENARIO_ORDER = ["r1-ins", "r1-journal", "r2-moment", "r2-journal", "r3-phone"]
+SCENARIO_ORDER = [
+    "r1-ins",
+    "r1-journal",
+    "r2-moment",
+    "r2-journal",
+    "r3-phone",
+    # task-4 补证场景
+    "r1-guards",
+    "r2-save-as-new",
+    "r3-extra",
+]
 REQUIRED_VIEWPORTS = ["1440x1000", "390x844", "320x700"]
+COVERAGE_ADDED = [
+    "R1 412 冲突（真实浏览器）：API 推前草稿版本 → 自动保存 412 → conflict 暂停 + ConflictNotice + 提交按钮 disabled + commit 0 + 输入/本机副本保留（真实服务端 412，不是 route 假造）",
+    "R1 401 登录失效（真实浏览器）：注入 PATCH 401 → failed + data-editor-auth-expired + 点保存 commit 0 + 本机副本保留",
+    "R1 相册新建 saveNow 调用方（真实浏览器）：PATCH 500 下点「新建相册」→ data-editor-error 真实提示、无 unhandled rejection、页面未崩溃、无虚假成功、新标签页行为记录",
+    "R1 提交期间更晚输入（真实浏览器）：延迟 commit 响应在途时继续输入 → 放行成功 → 正式内容=提交快照、更晚输入本机副本未被成功回调清除",
+    "R2 另存为新草稿（真实浏览器 UI）：412 冲突 → 点「另存为新草稿」→ 新 draft(target_id=null) → 设备 B 无 localStorage 用 ?draft= 恢复正文与图片顺序；原草稿未被覆盖",
+    "R3 草稿保留（真实浏览器）：手机会话输入不发送 → .pw-back 返回列表再进入 / 收起手机重开 / 「展开查看」进 canonical 再返回手机，均按 drafts.ts 的 sessionStorage 约定恢复",
+    "R3 发送失败重试（真实浏览器）：拦截 POST /messaging/conversations/<id>/messages 返回 500 → 错误反馈 + 草稿不丢 → 解除拦截重试成功并清空草稿",
+    "R3 用量展示（真实浏览器）：.msg-usage 可见且文案符合「今天已用 x / y 次自由聊天 | 自由聊天每天最多 y 次」格式（额度耗尽态仍未覆盖）",
+    "R3 音乐继续播放（真实浏览器，资源可用时）：手机桌面播放后进入 INS 会话，audio[data-pl-music] 未暂停且 currentTime 前进、.pw-tab.playing 保持",
+]
+
+
 UNVERIFIED = [
-    "真机 / iOS / Android 浏览器：未验证（本脚本只有桌面 chromium，390/320 只是视口，不是真机）",
-    "中文输入法组合过程（composition）不会因快捷键误发送：未验证（只验证了 Enter 换行、按钮发送的可用性）",
-    "R1 的 412 / 401 / 暂停状态旁路提交、相册新建 saveNow 调用方、提交期间更晚输入不被清：未覆盖（本脚本只做 PATCH 500 故障注入）",
-    "R2「另存为新草稿」生成的草稿跨设备恢复：未覆盖（脚本覆盖新建动态/新手记、多个同类不串稿、错误 ID/类型/已丢弃）",
-    "R3 草稿在 App 内切换/返回/展开后的保留、发送失败重试、限额耗尽提示：仅部分覆盖（脚本验证入口、输入、发送与展开 href）",
-    "R3 音乐继续播放与软键盘遮挡：未验证（无真机、无软键盘）",
+    "真机 / iOS / Android 浏览器、真实触控命中与软键盘遮挡：未验证（本脚本只有桌面 chromium，390/320 只是视口，不是真机）",
+    "中文/日文输入法 composition 真机行为：未验证（Composer 的 IME 逻辑只有单测；本脚本不模拟真实输入法）",
+    "R2 真实双物理设备并发：跨设备恢复用「第二浏览器上下文（复制 cookie、无 localStorage）」，非两台物理设备",
+    "弱网/长时间输入稳定性：只做短时故障注入（PATCH 500/401/412、commit 延迟、发送 500），未做长时弱网",
+    "R3 自由聊天额度耗尽/不可发送态的端到端复现：需真实耗尽每日额度（20 次/访客/天），本轮不真实耗尽，只验证 usage 展示与格式",
+    "R3 音乐在真机/WebKit 及静音策略下的行为：只验证桌面 chromium 下手机会话内继续播放；真机与自动播放策略差异未验证",
+    "R1 412/401/相册/提交期输入只做前端故障注入（真实隔离 API + Playwright route），未做真实网络分区/多物理设备并发",
+    "D1 Docker 健康检查错配、生产部署、迁移 round-trip、OpenAPI/gen:api 漂移：本轮不改后端/契约，未重跑（D1 未获授权）",
 ]
 
 
@@ -1909,6 +1934,880 @@ def scenario_r3_phone(browser: Any, cookies: list[dict]) -> None:
         r3_small_viewport(browser, cookies, character, viewport)
 
 
+# ═══════════════════════════════════════════════════════════════════════════
+# task-4 补证场景：R1 guards / R2 save-as-new / R3 extra
+# 目标：把《P5 返工复验报告》§8 的「R1 412/401/相册/提交期输入」「R2 另存为新草稿」
+#       「R3 草稿保留/发送失败重试/限额展示/音乐继续播放」从单测覆盖补成真实浏览器证据。
+# ═══════════════════════════════════════════════════════════════════════════
+
+UNHANDLED_INIT_SCRIPT = """
+window.__p5rwUnhandled = [];
+window.addEventListener('unhandledrejection', function (event) {
+  try {
+    var reason = event.reason;
+    window.__p5rwUnhandled.push(String((reason && (reason.message || reason)) || 'unknown'));
+  } catch (error) {
+    window.__p5rwUnhandled.push('unknown');
+  }
+});
+"""
+COMMIT_ROUTE = re.compile(r"/api/v1/admin/work-drafts/[0-9a-fA-F-]+/commit$")
+MESSAGES_POST_ROUTE = re.compile(r"/api/v1/messaging/conversations/[0-9a-fA-F-]+/messages$")
+
+
+def unhandled_errors(page: Any) -> list[str]:
+    try:
+        return page.evaluate("() => (window.__p5rwUnhandled || []).slice()")
+    except Exception:  # noqa: BLE001
+        return []
+
+
+def wait_new_draft(api: Api, content_type: str, marker: str, timeout_ms: int = 25000) -> dict[str, Any] | None:
+    deadline = time.time() + timeout_ms / 1000
+    while time.time() < deadline:
+        draft = find_new_draft(api, content_type, marker)
+        if draft is not None:
+            return draft
+        time.sleep(0.7)
+    return None
+
+
+def editor_error_text(page: Any) -> str:
+    locator = find(page, "[data-editor-error]")
+    try:
+        return (locator.inner_text() or "").strip() if locator else ""
+    except Exception:  # noqa: BLE001
+        return ""
+
+
+def text_of(page: Any, selector: str) -> str:
+    locator = find(page, selector)
+    try:
+        return (locator.inner_text() or "").strip() if locator else ""
+    except Exception:  # noqa: BLE001
+        return ""
+
+
+@contextmanager
+def prepared_moment_editor(
+    browser: Any, cookies: list[dict], prefix: str, viewport: tuple[int, int] | None = None
+) -> Iterator[dict[str, Any] | None]:
+    """准备「已发布动态 + 已有 target 工作草稿 + 编辑器 synced」的 R1 前置现场。"""
+    with open_page(browser, cookies=cookies, viewport=viewport) as (context, page):
+        api = Api(page)
+        published = api_publish_moment(api, unique(prefix + "-anchor"))
+        if not published or not published.get("target_id"):
+            REPORT.info("准备失败", f"{prefix}: 无法发布锚点动态")
+            yield None
+            return
+        moment_id = str(published["target_id"])
+        page.goto(BASE + f"/admin/moments/{moment_id}/edit", wait_until="load", timeout=60000)
+        boot(page)
+        if not (wait_editor_ready(page, "moment") and wait_editor_fields(page)):
+            REPORT.info("准备失败", f"{prefix}: 编辑页未就绪 {page.url}")
+            yield None
+            return
+        seed_text = unique(prefix + "-seed")
+        fill_editor(page, seed_text, '[data-editor-field="text"]', "[data-editor] textarea")
+        if not wait_sync(page, ("synced",), 25000):
+            REPORT.info("准备失败", f"{prefix}: 种子内容未同步 {sync_state(page)}")
+            yield None
+            return
+        draft = find_existing_draft(api, "moment", moment_id)
+        if draft is None:
+            REPORT.info("准备失败", f"{prefix}: 未找到 target 工作草稿")
+            yield None
+            return
+        yield {
+            "page": page,
+            "api": api,
+            "moment_id": moment_id,
+            "draft": draft,
+            "seed_text": seed_text,
+        }
+
+
+# ── R1 guards：412 冲突 ────────────────────────────────────────────────────
+
+
+def r1_guard_412(browser: Any, cookies: list[dict]) -> None:
+    scenario = "r1-guards"
+    with prepared_moment_editor(browser, cookies, "guard412") as prep:
+        if prep is None:
+            REPORT.check("412：准备已发布动态 + 工作草稿", False)
+            return
+        REPORT.check("412：准备已发布动态 + 工作草稿", True)
+        page, api = prep["page"], prep["api"]
+        moment_id = prep["moment_id"]
+        draft = prep["draft"]
+        draft_id = str(draft["id"])
+        version = int(draft.get("draft_version") or 1)
+
+        other_text = unique("guard412-other")
+        response = api.patch_draft(draft_id, {"data": {"text": other_text}}, version)
+        REPORT.check(
+            "412：API 把工作草稿版本推前（模拟另一设备已保存）",
+            response.status == 200,
+            f"HTTP {response.status}",
+        )
+        if response.status != 200:
+            return
+
+        commit_requests: list[str] = []
+        patch_412: list[str] = []
+
+        def on_request(request: Any) -> None:
+            if request.method == "POST" and "/api/v1/admin/work-drafts/" in request.url and request.url.endswith("/commit"):
+                commit_requests.append(request.url)
+
+        def on_response(response: Any) -> None:
+            try:
+                if response.request.method == "PATCH" and response.status == 412:
+                    patch_412.append(response.url)
+            except Exception:  # noqa: BLE001
+                pass
+
+        page.on("request", on_request)
+        page.on("response", on_response)
+
+        conflict_text = unique("guard412-local")
+        fill_editor(page, conflict_text, '[data-editor-field="text"]', "[data-editor] textarea")
+        conflicted = wait_for(page, lambda: sync_state(page) == "conflict", 30000)
+        REPORT.check("412：自动保存收到 412 后进入 conflict 并暂停", conflicted, f"sync_state={sync_state(page)}")
+        REPORT.check("412：确实发生了 412 响应", len(patch_412) >= 1, f"412 次数={len(patch_412)}")
+        REPORT.check("412：ConflictNotice 出现", wait_for(page, lambda: visible(page, "[data-workspace-conflict]"), 10000))
+        REPORT.check("412：本机最新输入保留", conflict_text in editor_text(page), editor_text(page)[:60])
+        REPORT.check(
+            "412：本机恢复副本保留最新输入",
+            local_copy_contains(page, conflict_text),
+            f"keys={[key for key, _ in local_copies(page)]}",
+        )
+        save_button = find(page, "[data-editor-save]")
+        REPORT.check(
+            "412：提交按钮进入禁用（冲突时禁止提交）",
+            bool(save_button and save_button.is_disabled()),
+        )
+        if save_button is not None:
+            try:
+                save_button.evaluate("el => el.click()")
+            except Exception:  # noqa: BLE001
+                pass
+        page.wait_for_timeout(2000)
+        REPORT.check("412：点保存不产生 commit 请求（0 次）", len(commit_requests) == 0, f"commit={len(commit_requests)}")
+        REPORT.check("412：无虚假成功提示", not visible(page, "[data-editor-success]"))
+        shot(page, scenario, "guard-412-conflict")
+
+
+# ── R1 guards：401 登录失效 ────────────────────────────────────────────────
+
+
+def r1_guard_401(browser: Any, cookies: list[dict]) -> None:
+    """401：模拟真实会话失效（PATCH 401 + 页面会话接口 401），验证不旁路提交且本机输入保留。
+
+    说明：只让 PATCH 返回 401 时，页面会用仍然有效的 /auth/owner-status 重新确认会话并
+    重挂编辑器（本机副本恢复为 local-only），这是「会话其实没失效」的模拟失真。真实的
+    会话失效会连 owner-status 一起 401 —— 所以这里同时把页面会话接口注入 401，复现真实
+    的「需要站主登录」页面状态；断言以**页面级登录提示**为准（data-editor-auth-expired
+    只是编辑器内瞬时提示，页面随后会被登录引导替换）。
+    """
+    scenario = "r1-guards"
+    with prepared_moment_editor(browser, cookies, "guard401") as prep:
+        if prep is None:
+            REPORT.check("401：准备已发布动态 + 工作草稿", False)
+            return
+        REPORT.check("401：准备已发布动态 + 工作草稿", True)
+        page, api = prep["page"], prep["api"]
+
+        unauthorized: list[tuple[str, str]] = []
+        commit_requests: list[str] = []
+
+        def fail_401(route: Any, request: Any) -> None:
+            unauthorized.append((request.method, request.url))
+            route.fulfill(
+                status=401,
+                content_type="application/json",
+                body=json.dumps(
+                    {"error": {"code": "UNAUTHORIZED", "message": "p5rw 注入：会话已失效"}, "request_id": "p5rw"},
+                    ensure_ascii=False,
+                ),
+            )
+
+        def on_request(request: Any) -> None:
+            if request.method == "POST" and "/api/v1/admin/work-drafts/" in request.url and request.url.endswith("/commit"):
+                commit_requests.append(request.url)
+
+        page.route(WORK_DRAFT_PATCH_ROUTE, fail_401)
+        page.route(re.compile(r".*/api/v1/auth/owner-status$"), fail_401)
+        page.route(re.compile(r".*/api/v1/auth/session$"), fail_401)
+        page.on("request", on_request)
+
+        fail_text = unique("guard401-local")
+        fill_editor(page, fail_text, '[data-editor-field="text"]', "[data-editor] textarea")
+
+        def auth_expired_ui() -> bool:
+            if visible(page, "[data-editor-auth-expired]"):
+                return True
+            body = ""
+            try:
+                body = page.inner_text("body")
+            except Exception:  # noqa: BLE001
+                return False
+            return ("需要站主登录" in body) or ("登录已失效" in body) or ("重新登录" in body)
+
+        expired_ui = wait_for(page, auth_expired_ui, 30000)
+        REPORT.check("401：保存被拒后页面给出「需要站主登录 / 登录已失效」类提示", expired_ui)
+        REPORT.check(
+            "401：保存路径确实收到注入的 401",
+            any(method == "PATCH" for method, _ in unauthorized),
+            f"401 请求={[(m, u.split('/api/v1')[-1]) for m, u in unauthorized[:5]]}",
+        )
+        body_text = page.inner_text("body")
+        auth_prompt = ""
+        for marker in ("需要站主登录", "登录已失效", "重新登录", "无法确认站主身份"):
+            if marker in body_text:
+                auth_prompt = marker
+                break
+        REPORT.check("401：提示文案准确（不是静默失败）", bool(auth_prompt), auth_prompt or body_text[:120])
+        REPORT.check(
+            "401：会话失效后编辑器不可继续提交（编辑器被登录引导替换或 auth-expired 可见）",
+            (not visible(page, '[data-editor="moment"]')) or visible(page, "[data-editor-auth-expired]"),
+            f"editor={page.locator('[data-editor="moment"]').count()}",
+        )
+        REPORT.check("401：点保存不产生 commit 请求（0 次）", len(commit_requests) == 0, f"commit={len(commit_requests)}")
+        REPORT.check("401：无虚假成功提示", not visible(page, "[data-editor-success]"))
+        REPORT.check(
+            "401：本机恢复副本保留最新输入（未因登录失效被清）",
+            local_copy_contains(page, fail_text),
+            str([key for key, _ in local_copies(page)]),
+        )
+        shot(page, scenario, "guard-401-auth-expired")
+
+
+# ── R1 guards：相册新建 saveNow 调用方 ────────────────────────────────────
+
+
+def r1_guard_album_caller(browser: Any, cookies: list[dict]) -> None:
+    scenario = "r1-guards"
+    with open_page(browser, cookies=cookies) as (context, page):
+        page.add_init_script(UNHANDLED_INIT_SCRIPT)
+        page.goto(BASE + "/admin/moments/new?returnTo=%2Fadmin", wait_until="load", timeout=60000)
+        boot(page)
+        if not (wait_editor_ready(page, "moment") and wait_editor_fields(page)):
+            REPORT.check("相册调用方：新动态编辑页可用", False, page.url)
+            return
+        REPORT.check("相册调用方：新动态编辑页可用", True)
+        base_text = unique("guardalbum")
+        fill_editor(page, base_text, '[data-editor-field="text"]', "[data-editor] textarea")
+        REPORT.check("相册调用方：准备选中 1 张图（相册区才出现）", pick_images(page, [PNG_RED], ["guardalbum-alt"]))
+        REPORT.check("相册调用方：准备内容 synced", wait_sync(page, ("synced",), 30000), f"sync_state={sync_state(page)}")
+        api = Api(page)
+        draft = find_new_draft(api, "moment", base_text)
+        REPORT.check("相册调用方：服务端已有该新草稿", draft is not None)
+
+        patch_fail_count: list[str] = []
+        block = {"on": False}
+
+        def handle_patch(route: Any, request: Any) -> None:
+            if block["on"]:
+                patch_fail_count.append(request.url)
+                route.fulfill(
+                    status=500,
+                    content_type="application/json",
+                    body=json.dumps(
+                        {"error": {"code": "E2E_INJECTED", "message": "p5rw 注入：保存失败"}, "request_id": "p5rw"},
+                        ensure_ascii=False,
+                    ),
+                )
+            else:
+                route.continue_()
+
+        page.route(WORK_DRAFT_PATCH_ROUTE, handle_patch)
+        block["on"] = True
+        extra_text = base_text + "-相册前未保存修改"
+        fill_editor(page, extra_text, '[data-editor-field="text"]', "[data-editor] textarea")
+        wait_for(page, lambda: sync_state(page) == "failed", 25000)
+
+        popup = None
+        clicked = False
+        try:
+            with page.expect_popup(timeout=12000) as popup_info:
+                clicked = click_first(page, "[data-album-admin-link]", 'button:has-text("新建相册")')
+            popup = popup_info.value
+        except Exception as error:  # noqa: BLE001
+            REPORT.info("相册调用方：新标签页未捕获", str(error)[:120])
+            if not clicked:
+                clicked = click_first(page, "[data-album-admin-link]", 'button:has-text("新建相册")')
+
+        error_visible = wait_for(page, lambda: visible(page, "[data-editor-error]"), 15000)
+        error_text = editor_error_text(page)
+        REPORT.check("相册调用方：点「新建相册」触发 saveNow 失败后有真实错误提示", error_visible, error_text[:160])
+        REPORT.check(
+            "相册调用方：错误提示与保存失败对应（非虚假成功）",
+            bool(error_text) and not visible(page, "[data-editor-success]"),
+            error_text[:160],
+        )
+        REPORT.check(
+            "相册调用方：saveNow 确实重发了 PATCH（失败路径被调用）",
+            len(patch_fail_count) >= 2,
+            f"PATCH 失败次数={len(patch_fail_count)}",
+        )
+        REPORT.check(
+            "相册调用方：无未处理 Promise rejection",
+            len(unhandled_errors(page)) == 0,
+            str(unhandled_errors(page)),
+        )
+        REPORT.check(
+            "相册调用方：页面未崩溃且输入保留",
+            visible(page, '[data-editor="moment"]') and extra_text in editor_text(page),
+            editor_text(page)[:80],
+        )
+        popup_url = ""
+        if popup is not None:
+            popup_url = popup.url or ""
+            REPORT.check(
+                "相册调用方：新标签页打开相册管理页（按实际记录）",
+                "/admin/albums" in popup_url,
+                popup_url,
+            )
+            try:
+                popup.close()
+            except Exception:  # noqa: BLE001
+                pass
+        else:
+            REPORT.skip("相册调用方：新标签页打开相册管理页", "headless 下未捕获 popup（行为已记录，不影响 saveNow 失败断言）")
+        shot(page, scenario, "guard-album-caller")
+
+
+# ── R1 guards：提交期间更晚输入不被清 ─────────────────────────────────────
+
+
+def r1_guard_late_input(browser: Any, cookies: list[dict]) -> None:
+    scenario = "r1-guards"
+    with prepared_moment_editor(browser, cookies, "guardlate") as prep:
+        if prep is None:
+            REPORT.check("提交期输入：准备已发布动态 + 工作草稿", False)
+            return
+        REPORT.check("提交期输入：准备已发布动态 + 工作草稿", True)
+        page, api = prep["page"], prep["api"]
+        moment_id = prep["moment_id"]
+
+        commit_text = unique("guardlate-commit")
+        fill_editor(page, commit_text, '[data-editor-field="text"]', "[data-editor] textarea")
+        REPORT.check("提交期输入：提交前内容已 synced", wait_sync(page, ("synced",), 25000))
+
+        held_commits: list[Any] = []
+        commit_requests: list[str] = []
+        patch_block = {"on": False}
+        patch_fail: list[str] = []
+
+        def hold_commit(route: Any, request: Any) -> None:
+            commit_requests.append(request.url)
+            held_commits.append(route)
+
+        def handle_patch(route: Any, request: Any) -> None:
+            if patch_block["on"]:
+                patch_fail.append(request.url)
+                route.fulfill(
+                    status=500,
+                    content_type="application/json",
+                    body=json.dumps(
+                        {"error": {"code": "E2E_INJECTED", "message": "p5rw 注入：更晚输入的保存被阻断"}, "request_id": "p5rw"},
+                        ensure_ascii=False,
+                    ),
+                )
+            else:
+                route.continue_()
+
+        page.route(COMMIT_ROUTE, hold_commit)
+        page.route(WORK_DRAFT_PATCH_ROUTE, handle_patch)
+
+        clicked = click_first(page, "[data-editor-update]", "[data-editor-save]")
+        REPORT.check("提交期输入：点击「更新正式内容」", clicked)
+        commit_inflight = wait_for(page, lambda: len(held_commits) >= 1, 25000)
+        REPORT.check("提交期输入：commit 请求已发出并被延迟（在途）", commit_inflight, f"held={len(held_commits)}")
+        if not commit_inflight:
+            return
+
+        # commit 在途：阻止更晚输入触发的自动保存 PATCH（避免版本推进干扰 commit 语义）
+        patch_block["on"] = True
+        later_text = unique("guardlate-later")
+        textarea = find(page, '[data-editor-field="text"]')
+        editable = bool(textarea and textarea.is_visible() and not textarea.is_disabled())
+        REPORT.check("提交期输入：commit 在途时正文仍可输入（busy 未禁用输入）", editable)
+        if editable:
+            textarea.click()
+            page.keyboard.press("End")
+            page.keyboard.type(later_text, delay=15)
+        typed = bool(textarea and later_text in (textarea.input_value() or ""))
+        REPORT.check("提交期输入：更晚输入已进入编辑器", typed)
+        REPORT.check(
+            "提交期输入：更晚输入已写入 localStorage 本机副本",
+            typed and wait_for(page, lambda: local_copy_contains(page, later_text), 8000),
+            str([key for key, _ in local_copies(page)]),
+        )
+
+        # 放行 commit（route.fetch 把挂起的请求真正发给服务端）
+        released = False
+        try:
+            response = held_commits[0].fetch()
+            held_commits[0].fulfill(response=response)
+            released = True
+        except Exception as error:  # noqa: BLE001
+            REPORT.info("提交期输入：放行 commit 失败", str(error)[:200])
+        REPORT.check("提交期输入：放行延迟的 commit 响应", released)
+        success = wait_for(page, lambda: visible(page, "[data-editor-success]"), 25000)
+        REPORT.check("提交期输入：延迟响应放行后提交成功", success)
+        official = str(api_admin_moment(api, moment_id).get("text") or "")
+        REPORT.check(
+            "提交期输入：正式内容 = 提交快照文字（不含更晚输入）",
+            success and commit_text in official and later_text not in official,
+            official[:100],
+        )
+        REPORT.check(
+            "提交期输入：更晚输入的本机副本未被成功回调清除",
+            local_copy_contains(page, later_text),
+            str([key for key, _ in local_copies(page)]),
+        )
+        REPORT.check("提交期输入：commit 请求恰好 1 次", len(commit_requests) == 1, f"commit={len(commit_requests)}")
+        shot(page, scenario, "guard-late-input")
+
+
+def scenario_r1_guards(browser: Any, cookies: list[dict]) -> None:
+    REPORT.begin("r1-guards")
+    print("\n── [r1-guards] R1 补证：412 冲突 / 401 登录失效 / 相册 saveNow 调用方 / 提交期间更晚输入")
+    r1_guard_412(browser, cookies)
+    r1_guard_401(browser, cookies)
+    r1_guard_album_caller(browser, cookies)
+    r1_guard_late_input(browser, cookies)
+
+
+# ── R2 save-as-new：另存为新草稿跨设备恢复 ────────────────────────────────
+
+
+def scenario_r2_save_as_new(browser: Any, cookies: list[dict]) -> None:
+    scenario = "r2-save-as-new"
+    REPORT.begin(scenario)
+    print("\n── [r2-save-as-new] R2 补证：UI 触发 412 →「另存为新草稿」→ 无 localStorage 设备恢复")
+
+    new_text = unique("saveas-local")
+    new_draft: dict[str, Any] | None = None
+    original_draft_id = ""
+    original_target_text = ""
+    target_images: list[str] = []
+
+    with prepared_moment_editor(browser, cookies, "saveas") as prep:
+        if prep is None:
+            REPORT.check("另存为新草稿：准备已发布动态 + 工作草稿", False)
+            return
+        REPORT.check("另存为新草稿：准备已发布动态 + 工作草稿", True)
+        page, api = prep["page"], prep["api"]
+        draft = prep["draft"]
+        original_draft_id = str(draft["id"])
+        version = int(draft.get("draft_version") or 1)
+        target_images = [str(item.get("media_id")) for item in (draft.get("images") or [])]
+
+        original_target_text = unique("saveas-other")
+        response = api.patch_draft(original_draft_id, {"data": {"text": original_target_text}}, version)
+        REPORT.check("另存为新草稿：API 推前原草稿版本（触发 412）", response.status == 200, f"HTTP {response.status}")
+        if response.status != 200:
+            return
+
+        fill_editor(page, new_text, '[data-editor-field="text"]', "[data-editor] textarea")
+        conflicted = wait_for(page, lambda: sync_state(page) == "conflict" and visible(page, "[data-workspace-conflict]"), 30000)
+        REPORT.check("另存为新草稿：页面进入 conflict 并出现 ConflictNotice", conflicted, f"sync_state={sync_state(page)}")
+        if not conflicted:
+            return
+        REPORT.check(
+            "另存为新草稿：本机最新输入在冲突时保留",
+            new_text in editor_text(page),
+            editor_text(page)[:80],
+        )
+        clicked = click_first(page, "[data-workspace-conflict-save-as-new]")
+        REPORT.check("另存为新草稿：点击「另存为新草稿」", clicked)
+        if not clicked:
+            return
+        new_draft = wait_new_draft(api, "moment", new_text, 30000)
+        REPORT.check("另存为新草稿：服务端出现新的无 target 工作草稿", new_draft is not None)
+        if new_draft is None:
+            return
+        REPORT.check("另存为新草稿：新草稿 target_id 为空", new_draft.get("target_id") is None, str(new_draft.get("target_id")))
+        REPORT.check(
+            "另存为新草稿：页面提示「已另存为新的工作草稿」",
+            "另存" in page.inner_text("body")[:6000],
+        )
+        last_original = {"status": 0, "text": ""}
+
+        def original_still_intact() -> bool:
+            response = api.get(f"/admin/work-drafts/{original_draft_id}")
+            payload = safe_json(response) or {}
+            last_original["status"] = response.status
+            last_original["text"] = str((payload.get("data") or {}).get("text") or "")
+            return last_original["text"] == original_target_text
+
+        original_intact = wait_for(page, original_still_intact, 10000)
+        REPORT.check(
+            "另存为新草稿：原 target 草稿内容未被覆盖",
+            original_intact,
+            f"HTTP {last_original['status']} text={last_original['text'][:80]!r}",
+        )
+        shot(page, scenario, "save-as-new-created")
+
+    if new_draft is None:
+        return
+    new_draft_id = str(new_draft["id"])
+    server_images = [str(item.get("media_id")) for item in (new_draft.get("images") or [])]
+    REPORT.info("另存产物 draft id", new_draft_id)
+
+    # 设备 B：仅 cookie、无 localStorage，从创作台恢复「另存产物」
+    with open_page(browser, cookies=cookies) as (context_b, page_b):
+        REPORT.check("设备 B：新 context 本机缓存为空", len(local_copies(page_b)) == 0, str([key for key, _ in local_copies(page_b)]))
+        page_b.goto(BASE + "/admin", wait_until="load", timeout=60000)
+        boot(page_b)
+        row = row_for_draft(page_b, new_draft_id)
+        wait_for(page_b, lambda: row_for_draft(page_b, new_draft_id).count() > 0, 25000)
+        REPORT.check("设备 B：创作台列出「另存为新草稿」产物", row_for_draft(page_b, new_draft_id).count() == 1)
+        if row_for_draft(page_b, new_draft_id).count() == 0:
+            return
+        href = row_for_draft(page_b, new_draft_id).get_attribute("href") or ""
+        REPORT.check("设备 B：该草稿行 href 带 draft=<id>", f"draft={new_draft_id}" in href, f"href={href}")
+        row_for_draft(page_b, new_draft_id).first.click()
+        opened = wait_editor_ready(page_b, "moment", 25000)
+        REPORT.check("设备 B：点该草稿进入编辑器（非空白新建）", opened, page_b.url)
+        if not opened:
+            return
+        REPORT.check("设备 B：URL 带所选草稿 ID（?draft=）", query_one(page_b, "draft") == new_draft_id, page_b.url)
+        restored = wait_for(page_b, lambda: new_text in editor_text(page_b), 25000)
+        REPORT.check("设备 B：恢复另存草稿的正文", restored, editor_text(page_b)[:80])
+        REPORT.check(
+            "设备 B：恢复另存草稿的图片（顺序）",
+            editor_image_ids(page_b) == server_images,
+            f"{editor_image_ids(page_b)} vs {server_images}",
+        )
+        shot(page_b, scenario, "device-b-save-as-new-restored")
+
+
+# ── R3 extra：草稿保留 / 发送失败重试 / 限额展示 / 音乐继续播放 ───────────
+
+
+def audio_is_playing(page: Any) -> bool:
+    try:
+        return bool(
+            page.evaluate(
+                "() => { const el = document.querySelector('audio[data-pl-music]'); return el ? (!el.paused && !el.ended) : false; }"
+            )
+        )
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def audio_current_time(page: Any) -> float:
+    try:
+        return float(
+            page.evaluate("() => { const el = document.querySelector('audio[data-pl-music]'); return el ? el.currentTime : -1; }")
+        )
+    except Exception:  # noqa: BLE001
+        return -1.0
+
+
+def tab_playing(page: Any) -> bool:
+    try:
+        locator = page.locator(".pw-tab")
+        return locator.count() > 0 and "playing" in (locator.first.get_attribute("class") or "")
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def session_draft(page: Any, character: str) -> str:
+    try:
+        return page.evaluate("(key) => sessionStorage.getItem(key) || ''", f"msg.draft.v1:{character}") or ""
+    except Exception:  # noqa: BLE001
+        return ""
+
+
+def composer_value(page: Any) -> str:
+    textarea = find(page, ".msg-composer textarea")
+    try:
+        return textarea.input_value() if textarea else ""
+    except Exception:  # noqa: BLE001
+        return ""
+
+
+def expand_composer(page: Any) -> bool:
+    if visible(page, ".msg-composer textarea"):
+        return True
+    clicked = click_first(page, ".msg-btn-say", 'button:has-text("自己说一句")')
+    return clicked and wait_for(page, lambda: visible(page, ".msg-composer textarea"), 8000)
+
+
+def open_character_in_phone(page: Any, character: str) -> bool:
+    """在手机消息列表里点开指定角色（点错则返回列表再试）。"""
+    if not wait_for(page, lambda: page.locator(".msg-role").count() > 0, 20000):
+        return False
+    total = page.locator(".msg-role").count()
+    for index in range(min(total, 6)):
+        role = page.locator(".msg-role").nth(index)
+        try:
+            role.click(timeout=5000)
+        except Exception:  # noqa: BLE001
+            continue
+        if wait_for(page, lambda: query_one(page, "item") == character, 15000):
+            return True
+        click_first(page, ".pw-back")
+        wait_for(page, lambda: page.locator(".msg-role").count() > 0, 15000)
+    return False
+
+
+def phone_open_ins_messages(page: Any, character: str | None = None) -> bool:
+    """手机内：INS 应用 → 消息 → 指定角色会话（默认第一个）。"""
+    if not visible(page, '[data-phone-app="ins"]'):
+        if not click_first(page, '[data-app-id="ins"]'):
+            return False
+        if not wait_for(page, lambda: visible(page, '.pw-appview[data-phone-app="ins"]'), 20000):
+            return False
+    if not page.locator(".msg-role").count():
+        click_first(page, '.ins-tab:has-text("消息")', '[role=tab]:has-text("消息")')
+        if not wait_for(page, lambda: page.locator(".msg-role").count() > 0, 25000):
+            return False
+    if character is None:
+        return click_first(page, ".msg-role")
+    return open_character_in_phone(page, character)
+
+
+def scenario_r3_extra(browser: Any, cookies: list[dict]) -> None:
+    scenario = "r3-extra"
+    REPORT.begin(scenario)
+    print("\n── [r3-extra] R3 补证：草稿保留 / 发送失败重试 / 限额展示 / 音乐继续播放")
+
+    character: str | None = None
+    music_ok = False
+
+    with open_page(browser, cookies=cookies, viewport=(1440, 1000)) as (context, page):
+        page.goto(BASE + "/", wait_until="load", timeout=60000)
+        boot(page, 2500)
+        if not (click_first(page, ".pw-tab") and wait_for(page, lambda: visible(page, "[data-phone-host]"), 15000)):
+            REPORT.check("R3-extra：手机宿主可打开", False)
+            return
+        REPORT.check("R3-extra：手机宿主可打开", True)
+
+        # ── 音乐：手机桌面播放 ───────────────────────────────────────────
+        music_state = ""
+        music_card = find(page, "[data-music-state]")
+        if music_card is not None:
+            music_state = music_card.get_attribute("data-music-state") or ""
+        REPORT.info("音乐卡片状态", music_state)
+        if music_state == "ready":
+            if not audio_is_playing(page):
+                play_button = page.locator(".pw-btn.play")
+                if play_button.count():
+                    try:
+                        play_button.first.click(timeout=5000)
+                    except Exception as error:  # noqa: BLE001
+                        REPORT.info("音乐：点击播放异常", str(error)[:120])
+            music_ok = wait_for(page, lambda: audio_is_playing(page), 12000)
+            REPORT.check("音乐：手机桌面可开始播放（audio[data-pl-music] 未暂停）", music_ok)
+            if music_ok:
+                t0 = audio_current_time(page)
+                page.wait_for_timeout(1500)
+                t1 = audio_current_time(page)
+                REPORT.check("音乐：播放进度在前进", t1 - t0 > 0.3, f"{t0:.2f} -> {t1:.2f}")
+                REPORT.check("音乐：.pw-tab 显示 playing 状态", tab_playing(page))
+        else:
+            REPORT.skip("音乐：手机桌面播放", f"music_state={music_state!r}（隔离栈下音频资源不可用）")
+
+        # ── 进入 INS → 消息 → 角色会话 ───────────────────────────────────
+        entered = phone_open_ins_messages(page)
+        REPORT.check("R3-extra：手机内可达消息角色列表", entered)
+        if not entered:
+            return
+        if not wait_for(page, lambda: query_one(page, "screen") == "conversation", 20000):
+            REPORT.check("R3-extra：进入角色会话", False, page.url)
+            return
+        character = query_one(page, "item")
+        REPORT.check("R3-extra：进入角色会话", bool(character), page.url)
+        if not character:
+            return
+        wait_for(page, lambda: page.locator(".msg-app").count() > 0, 20000)
+        page.wait_for_timeout(2500)
+        REPORT.check("R3-extra：自由输入区可用", expand_composer(page))
+        if not visible(page, ".msg-composer textarea"):
+            REPORT.check("R3-extra：展开输入框", False)
+            return
+        REPORT.check("R3-extra：展开输入框", True)
+
+        # ── 草稿保留：输入不发送 ─────────────────────────────────────────
+        draft_a = unique("r3x-draft")
+        composer = find(page, ".msg-composer textarea")
+        composer.fill(draft_a)
+        page.wait_for_timeout(800)
+        REPORT.check(
+            "草稿保留：输入写入 sessionStorage（drafts.ts 约定）",
+            draft_a in session_draft(page, character),
+            f"key=msg.draft.v1:{character}",
+        )
+        if music_ok:
+            now_playing = audio_is_playing(page)
+            t_before = audio_current_time(page)
+            page.wait_for_timeout(1200)
+            t_after = audio_current_time(page)
+            REPORT.check(
+                "音乐：进入手机会话后仍在播放且进度前进",
+                now_playing and t_after > t_before,
+                f"{t_before:.2f} -> {t_after:.2f}",
+            )
+        else:
+            REPORT.skip("音乐：进入手机会话后仍在播放", "音频资源不可用")
+        shot(page, scenario, "phone-draft-typed")
+
+        # 返回（手机 back）→ 实际落点如实记录 → 再从 UI 进入消息列表并重新进入同一角色
+        back_clicked = click_first(page, ".pw-back", 'button[aria-label="返回"]')
+        app_back = back_clicked and wait_for(
+            page, lambda: visible(page, '.pw-appview[data-phone-app="ins"]'), 20000
+        )
+        back_url = page.url
+        messages_tab = page.locator('.ins-tab:has-text("消息")')
+        if app_back and messages_tab.count():
+            try:
+                messages_tab.first.click(timeout=5000)
+            except Exception:  # noqa: BLE001
+                click_first(page, '.ins-tab:has-text("消息")', '[role=tab]:has-text("消息")')
+        list_back = app_back and wait_for(page, lambda: page.locator(".msg-role").count() > 0, 20000)
+        REPORT.info(
+            "草稿保留：.pw-back 实际落点",
+            f"URL={back_url}（消息页签是 INS 应用内状态，history 返回后回到动态页签；再次点「消息」可回到列表）",
+        )
+        REPORT.check("草稿保留：.pw-back 返回手机 INS 应用并可从 UI 再进消息列表", list_back, back_url)
+        reopened = list_back and open_character_in_phone(page, character)
+        REPORT.check("草稿保留：返回列表后重新进入同一角色", reopened)
+        if reopened:
+            wait_for(page, lambda: page.locator(".msg-app").count() > 0, 20000)
+            page.wait_for_timeout(1500)
+            expand_composer(page)
+            restored = composer_value(page)
+            REPORT.check("草稿保留：返回/重新进入后输入框恢复草稿", restored == draft_a, repr(restored[:80]))
+
+        # 收起手机 → 重新打开 → 再进同一角色
+        close_clicked = click_first(page, ".pw-close", 'button[aria-label="收起手机"]')
+        page.wait_for_timeout(700)
+        reopen_phone = bool(close_clicked and click_first(page, ".pw-tab") and wait_for(page, lambda: visible(page, "[data-phone-host]"), 15000))
+        REPORT.check("草稿保留：收起手机后可重新打开手机", reopen_phone)
+        desktop_restored_ok = False
+        if reopen_phone:
+            if phone_open_ins_messages(page, character):
+                wait_for(page, lambda: page.locator(".msg-app").count() > 0, 20000)
+                page.wait_for_timeout(1500)
+                expand_composer(page)
+                desktop_restored_ok = composer_value(page) == draft_a
+        REPORT.check("草稿保留：切回桌面再进入手机同一角色后仍保留", desktop_restored_ok, repr(composer_value(page)[:80]))
+
+        # 展开查看 → canonical（同标签 sessionStorage）
+        expanded = False
+        expand = find(page, ".pw-expand")
+        if expand is not None and expand.is_visible():
+            try:
+                expand.click(timeout=5000)
+                expanded = wait_for(page, lambda: "/apps/ins/messages/" in page.url, 20000)
+            except Exception as error:  # noqa: BLE001
+                REPORT.info("展开查看点击异常", str(error)[:120])
+        REPORT.check("草稿保留：点击「展开查看」进入 canonical 会话", expanded, page.url)
+        if expanded:
+            wait_for(page, lambda: page.locator(".msg-app").count() > 0, 20000)
+            page.wait_for_timeout(1500)
+            expand_composer(page)
+            canonical_value = composer_value(page)
+            REPORT.check(
+                "草稿保留：canonical 页面读到同一 sessionStorage 草稿",
+                canonical_value == draft_a,
+                repr(canonical_value[:80]),
+            )
+            page.goto(BASE + f"/?phone=ins&screen=conversation&item={character}", wait_until="load", timeout=60000)
+            boot(page, 2000)
+            wait_for(page, lambda: page.locator(".msg-app").count() > 0, 20000)
+            page.wait_for_timeout(1500)
+            expand_composer(page)
+            returned_value = composer_value(page)
+            REPORT.check(
+                "草稿保留：展开后返回手机内仍保留草稿",
+                returned_value == draft_a,
+                repr(returned_value[:80]),
+            )
+
+        # ── 发送失败重试 ─────────────────────────────────────────────────
+        expand_composer(page)
+        if not visible(page, ".msg-composer textarea"):
+            REPORT.check("发送失败重试：输入框可见", False)
+            return
+        send_text = unique("r3x-send")
+        composer = find(page, ".msg-composer textarea")
+        composer.fill(send_text)
+        injected: list[str] = []
+
+        def fail_send(route: Any, request: Any) -> None:
+            injected.append(request.url)
+            route.fulfill(
+                status=500,
+                content_type="application/json",
+                body=json.dumps(
+                    {"error": {"code": "E2E_INJECTED", "message": "p5rw 注入：发送失败"}, "request_id": "p5rw"},
+                    ensure_ascii=False,
+                ),
+            )
+
+        page.route(MESSAGES_POST_ROUTE, fail_send)
+        send_button = find(page, ".msg-btn-send")
+        sent_clicked = False
+        if send_button is not None:
+            try:
+                send_button.click(timeout=5000)
+                sent_clicked = True
+            except Exception as error:  # noqa: BLE001
+                REPORT.info("发送按钮点击异常", str(error)[:120])
+        REPORT.check("发送失败：点击发送（被注入 500）", sent_clicked)
+        notice_visible = wait_for(page, lambda: visible(page, '[data-testid="msg-notice"]'), 15000)
+        REPORT.check(
+            "发送失败：出现明确错误反馈",
+            notice_visible,
+            text_of(page, '[data-testid="msg-notice"]')[:160],
+        )
+        REPORT.check("发送失败：确实命中注入的发送请求", len(injected) >= 1, str(injected[:2]))
+        after_fail_value = composer_value(page)
+        REPORT.check("发送失败：输入草稿不丢", send_text in after_fail_value, repr(after_fail_value[:80]))
+        REPORT.check(
+            "发送失败：sessionStorage 草稿仍在（可重试）",
+            send_text in session_draft(page, character),
+        )
+        shot(page, scenario, "phone-send-failed")
+        page.unroute(MESSAGES_POST_ROUTE)
+        retry_button = find(page, ".msg-btn-send")
+        if retry_button is not None:
+            try:
+                retry_button.click(timeout=5000)
+            except Exception as error:  # noqa: BLE001
+                REPORT.info("重试发送点击异常", str(error)[:120])
+        sent_ok = wait_for(page, lambda: send_text in page.locator(".msg-list").inner_text(), 25000)
+        REPORT.check("发送失败重试：解除拦截后再次发送成功", sent_ok)
+        if sent_ok:
+            REPORT.check("发送成功后：输入框清空", composer_value(page) == "", repr(composer_value(page)[:40]))
+            REPORT.check("发送成功后：sessionStorage 草稿被清除", session_draft(page, character) == "")
+        shot(page, scenario, "phone-send-retried")
+
+        # ── 限额 / usage 展示 ────────────────────────────────────────────
+        usage_text = text_of(page, ".msg-usage")
+        usage_visible = visible(page, ".msg-usage")
+        usage_pattern = re.search(r"(今天已用\s*\d+\s*/\s*\d+\s*次自由聊天|自由聊天每天最多\s*\d+\s*次)", usage_text)
+        REPORT.check("限额：.msg-usage 可见", usage_visible)
+        REPORT.check("限额：usage 文案符合约定格式（已用/上限或每日上限）", bool(usage_pattern), usage_text[:160])
+        REPORT.info("限额：usage 实际文案", usage_text[:200] or "（空）")
+        REPORT.skip("限额耗尽/不可发送态的端到端复现", "需真实耗尽每日额度（20 次/访客/天），本次不真实耗尽；只验证展示与格式")
+        shot(page, scenario, "phone-usage")
+
+
+SCENARIO_FUNCS_EXTRA: dict[str, Callable[[Any, list[dict]], None]] = {
+    "r1-guards": scenario_r1_guards,
+    "r2-save-as-new": scenario_r2_save_as_new,
+    "r3-extra": scenario_r3_extra,
+}
+
+
 SCENARIO_FUNCS: dict[str, Callable[[Any, list[dict]], None]] = {
     "r1-ins": scenario_r1_ins,
     "r1-journal": scenario_r1_journal,
@@ -1916,6 +2815,7 @@ SCENARIO_FUNCS: dict[str, Callable[[Any, list[dict]], None]] = {
     "r2-journal": scenario_r2_journal,
     "r3-phone": scenario_r3_phone,
 }
+SCENARIO_FUNCS.update(SCENARIO_FUNCS_EXTRA)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -1929,6 +2829,23 @@ def run_command(*args: str) -> str:
         return (result.stdout or result.stderr or "").strip()
     except Exception:  # noqa: BLE001
         return ""
+
+
+def build_tree_diff() -> list[str]:
+    """隔离构建副本 apps/web/features、apps/web/app 与当前工作树的差异（空=一致）。"""
+    pairs = [
+        (REPO / "apps/web/features", WORK / "web/apps/web/features"),
+        (REPO / "apps/web/app", WORK / "web/apps/web/app"),
+    ]
+    differences: list[str] = []
+    for left, right in pairs:
+        if not right.exists():
+            differences.append(f"构建副本缺少目录：{right}")
+            continue
+        text = run_command("diff", "-rq", str(left), str(right))
+        if text:
+            differences.extend(text.splitlines()[:8])
+    return differences
 
 
 def build_provenance() -> dict[str, Any]:
@@ -1994,9 +2911,15 @@ def source_info() -> dict[str, Any]:
         )
     provenance = build_provenance()
     only_head = provenance.get("build_has_only_head_web_sources")
+    tree_diff = build_tree_diff()
     build_note = (
-        f"隔离构建 BUILD_ID={build_id}（{build_mtime}）；构建副本 vs git HEAD 逐文件核对："
-        + ("全部一致 → 该构建来自基线源码" if only_head else "存在非 HEAD web 源码，见 build_provenance")
+        f"隔离构建 BUILD_ID={build_id}（{build_mtime}）；构建副本 vs 当前工作树/HEAD 核对："
+        + (
+            "apps/web/features、apps/web/app 与工作树逐文件一致 → 该构建包含当前源码"
+            if not tree_diff
+            else "存在与工作树不同的 web 源码，见 build_tree_diff"
+        )
+        + ("" if only_head else "；注意：运行开始时工作树存在未提交 web 修改，详见 build_provenance")
     )
     return {
         "repo": str(REPO),
@@ -2009,6 +2932,8 @@ def source_info() -> dict[str, Any]:
         "source_newer_than_build": bool(newer),
         "source_newer_example": newer,
         "build_provenance": provenance,
+        "build_tree_matches_worktree": not tree_diff,
+        "build_tree_diff": tree_diff[:10],
         "build_note": build_note,
     }
 
@@ -2181,6 +3106,7 @@ def main() -> int:
         "skips": REPORT.skips,
         "info": REPORT.infos,
         "screenshots": REPORT.screenshots,
+        "coverage_added": COVERAGE_ADDED,
         "unverified": UNVERIFIED,
     }
     write_output(payload, json_path)

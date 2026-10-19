@@ -6,7 +6,7 @@
 
 - 返工基线：`9917890f001ac055280c48c31d50671821e7c929`
 - 修复提交：`afafdf8`（R1+R2）、`8b826c9`（R3）、`7a19eb2`（R2 已丢弃/已提交草稿校验）
-- 最终状态：**返工 e2e 124/0 pass、P5 全量 e2e 219/0、六项回归 6/6 exit 0**；D1 未修、真机未验证
+- 最终状态：**返工 e2e 124/0 pass、继续轮补证 8 场景 208/0/1、P5 全量 e2e 219/0、六项回归 6/6 exit 0、后端全树隔离 1025/0**；D1 未修、真机未验证
 - 复验报告：`../P5-rework-verification-2026-10-19.md`
 - 返工任务书/独立验收：`/Users/v/Documents/ChatGPT/Blog开发/docs/handoff/2026-10-19-p5-rework/`
 
@@ -19,6 +19,10 @@
 | `after-e2e-summary.txt` / `e2e-final-summary.md` | 改后 e2e 场景明细、构建来源、回归与未验证项摘要 |
 | `after-regression-summary.json` | 改后同构建回归：`e2e-p5-workspace.py` 219/0、六项脚本全部 exit 0、旧管理端收录 9/0 |
 | `port-check-after-down.txt` | 隔离栈 down 前后共享端口 PID 核对（共享服务未受影响） |
+| `after-e2e-p5-rework-extra.json` / `after-e2e-extra-summary.txt` | **继续轮补证**：8 场景 208 pass / 0 fail / 1 skip（r1-guards 40、r2-save-as-new 16、r3-extra 28+1 skip；原 5 场景无回归） |
+| `TASK4-COVERAGE.md` | 继续轮「§8 未验证项 → 真实浏览器证据」逐项映射与仍不可测原因 |
+| `port-check-task4-{before,after}-down.txt` | 继续轮隔离栈 down 前后共享端口 PID 核对 |
+| `after-backend-isolated-summary.txt` | 继续轮后端全树在隔离集群 55450 实跑：1025 通过 / 0 失败，exit 0（集群已清理） |
 | `baseline-frontend-vitest-summary.txt` | 改前全量单测：110 文件 / 1123 用例通过 |
 | `after-frontend-vitest-summary.txt` | 改后全量单测：113 文件 / 1182 用例通过；含 1 次既有 timing flake 说明 |
 | `isolated-build-summary.txt` | 隔离副本生产构建：exit 0，37/37 静态页，BUILD_ID `saPw1tf0nfpULa2_uuztT` |

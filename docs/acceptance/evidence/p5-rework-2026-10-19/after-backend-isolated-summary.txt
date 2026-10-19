@@ -1,0 +1,9 @@
+# backend full suite (isolated cluster) — run in continuation round
+timestamp: 2026-10-19T12:00:04+08:00
+repo HEAD: b6ef3581b70f02ee4bcd8d516afd88950a2aed6b
+command: bash tools/verify-backend-isolated.sh 55450
+isolated port: 55450 (cluster stopped & removed by script trap)
+  进度点（通过用例数）: 1025　失败/错误进度行: 0
+  pytest 退出码: 0
+PASS: 后端整树在独立集群上通过（日志 /tmp/pl-backend-isolated-55450.log）
+exit: 0

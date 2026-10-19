@@ -1,0 +1,1459 @@
+{
+  "tool": "tools/e2e-p5-rework.py",
+  "script_sha256": "db14d9058e6d8f6a998391dfa5e943cd0704540b9bf1d3c9f5385cb05079134f",
+  "phase": "after-extra",
+  "base": "http://127.0.0.1:3130",
+  "api": "http://127.0.0.1:3130/api/v1",
+  "timestamp": "2026-10-19T12:15:50+0800",
+  "duration_seconds": 267,
+  "environment_error": false,
+  "source": {
+    "repo": "/Users/学习/blog/Blogs",
+    "head": "b6ef3581b70f02ee4bcd8d516afd88950a2aed6b",
+    "dirty": true,
+    "dirty_files": [
+      "M tools/e2e-p5-rework.py",
+      "?? docs/acceptance/evidence/p5-rework-2026-10-19/after-backend-isolated-summary.txt"
+    ],
+    "isolated_workdir": "/tmp/pl-e2e-stack",
+    "build_id": "x46VxuFXLS83Km5gubNnP",
+    "build_time": "2026-10-19T08:59:57",
+    "source_newer_than_build": false,
+    "source_newer_example": "",
+    "build_provenance": {
+      "modified_web_files": [],
+      "untracked_web_files": [],
+      "build_copy_checks": [],
+      "build_has_only_head_web_sources": true
+    },
+    "build_tree_matches_worktree": true,
+    "build_tree_diff": [],
+    "build_note": "隔离构建 BUILD_ID=x46VxuFXLS83Km5gubNnP（2026-10-19T08:59:57，来自修复源码 7a19eb2）；本轮 HEAD=b6ef358 相对 7a19eb2 的 apps/web 差异为空（git diff 7a19eb2..HEAD -- apps/web 为空），且构建副本 apps/web/features、apps/web/app 与工作树逐文件一致 → 该构建包含当前 HEAD 的全部产品源码。",
+    "apps_web_unchanged_since_7a19eb2": true,
+    "apps_web_diff_7a19eb2_to_head": ""
+  },
+  "stack": {
+    "command": "tools/e2e-stack.sh status",
+    "output": "集群: 127.0.0.1:55434 - accepting connections\n  API: 200\n  前端: 200",
+    "ports": {
+      "web": 3130,
+      "api": 8130,
+      "postgres": 55434
+    },
+    "workdir": "/tmp/pl-e2e-stack"
+  },
+  "browser": {
+    "engine": "chromium",
+    "version": "148.0.7778.96",
+    "headless": true,
+    "viewports": [
+      "1440x1000",
+      "390x844",
+      "320x700"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "r1-ins",
+      "status": "PASS",
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "id": "r1-journal",
+      "status": "PASS",
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "id": "r2-moment",
+      "status": "PASS",
+      "passed": 26,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "id": "r2-journal",
+      "status": "PASS",
+      "passed": 23,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "id": "r3-phone",
+      "status": "PASS",
+      "passed": 44,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "id": "r1-guards",
+      "status": "PASS",
+      "passed": 40,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "id": "r2-save-as-new",
+      "status": "PASS",
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "id": "r3-extra",
+      "status": "PASS",
+      "passed": 28,
+      "failed": 0,
+      "skipped": 1
+    }
+  ],
+  "summary": {
+    "pass": 208,
+    "fail": 0,
+    "skip": 1,
+    "environment_error": false,
+    "exit_code": 0
+  },
+  "checks": [
+    {
+      "scenario": "global",
+      "label": "环境：站主单次登录成功（cookie 供全部场景复用）",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/admin"
+    },
+    {
+      "scenario": "global",
+      "label": "环境：登录后 /auth/session 为站主会话",
+      "ok": true,
+      "detail": "{\"authenticated\": true, \"user\": {\"id\": \"d536ccb0-d1be-43ae-a7ed-bfa89ea6d2ea\", \"username\": \"owner\"}, \"csrf_token\": \"dbcd4c760b913b0c64dfd9c60038e380a35f4a050790c20ef858e57d0769e62d\", \"expires_at\": \"20"
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "准备：发布一条已有动态（产生已有 target）",
+      "ok": true,
+      "detail": "69f143d1-f55a-4103-968a-e7f4d03f23cc"
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "已发布动态编辑页可用（data-editor=moment）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "准备：旧版本内容已同步到工作草稿",
+      "ok": true,
+      "detail": "sync_state=synced"
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "准备：服务端存在该 target 的工作草稿",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "故障注入确实命中了 PATCH（moment）",
+      "ok": true,
+      "detail": "PATCH 次数=1"
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "PATCH 失败后点保存，commit 请求次数为 0（moment）",
+      "ok": true,
+      "detail": "commit 次数=0，URL=[]"
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "PATCH 失败后没有显示成功提示（moment）",
+      "ok": true,
+      "detail": "data-editor-success=不可见"
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "最新输入仍保留在编辑器（moment）",
+      "ok": true,
+      "detail": "编辑器正文='p5rw-r1-ins-latest-20261019-121123-c8a233a7'"
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "本机恢复副本包含最新输入、未被清除（moment）",
+      "ok": true,
+      "detail": "localStorage keys=['pl.workdraft.v1.d536ccb0-d1be-43ae-a7ed-bfa89ea6d2ea.moment.69f143d1-f55a-4103-968a-e7f4d03f23cc.69f143d1-f55a-4103-968a-e7f4d03f23cc']"
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "正式内容未被旧草稿覆盖（PATCH 失败期间）（moment）",
+      "ok": true,
+      "detail": "正式内容='p5rw-r1-ins-anchor-20261019-121123-4777f7fe'，期望='p5rw-r1-ins-anchor-20261019-121123-4777f7fe'"
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "解除阻断后可以重试「更新正式内容」",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "解除阻断后重试 commit 成功（data-editor-success）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "重试时确实发出了 commit 请求",
+      "ok": true,
+      "detail": "commit 次数 0→1"
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "重试后正式内容等于最新输入（不是旧服务端内容）",
+      "ok": true,
+      "detail": "正式内容='p5rw-r1-ins-latest-20261019-121123-c8a233a7'"
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "准备：新手记工作草稿已同步",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "准备：保存正式手记草稿成功",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "准备：管理端能查到刚保存的手记",
+      "ok": true,
+      "detail": "f73738cc-50f6-4066-bd4d-241bcd2d1674"
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "已有手记编辑页可用",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "准备：旧版本内容已同步到工作草稿",
+      "ok": true,
+      "detail": "sync_state=synced"
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "故障注入确实命中了 PATCH（journal）",
+      "ok": true,
+      "detail": "PATCH 次数=1"
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "PATCH 失败后点保存，commit 请求次数为 0（journal）",
+      "ok": true,
+      "detail": "commit 次数=0，URL=[]"
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "PATCH 失败后没有显示成功提示（journal）",
+      "ok": true,
+      "detail": "data-editor-success=不可见"
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "最新输入仍保留在编辑器（journal）",
+      "ok": true,
+      "detail": "编辑器正文='p5rw-r1-journal-latest-20261019-121123-1976948a'"
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "本机恢复副本包含最新输入、未被清除（journal）",
+      "ok": true,
+      "detail": "localStorage keys=['pl.workdraft.v1.d536ccb0-d1be-43ae-a7ed-bfa89ea6d2ea.journal.f73738cc-50f6-4066-bd4d-241bcd2d1674.f73738cc-50f6-4066-bd4d-241bcd2d1674']"
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "正式内容未被旧草稿覆盖（PATCH 失败期间）（journal）",
+      "ok": true,
+      "detail": "正式内容='p5rw-r1-journal-official-20261019-121123-5a6c2943'，期望='p5rw-r1-journal-official-20261019-121123-5a6c2943'"
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "解除阻断后可以重试保存",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "解除阻断后重试保存成功（data-editor-success）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "重试时确实发出了 commit 请求",
+      "ok": true,
+      "detail": "commit 次数 0→1"
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "重试后正式内容等于最新输入（不是旧服务端内容）",
+      "ok": true,
+      "detail": "正式内容='p5rw-r1-journal-latest-20261019-121123-1976948a'"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 A：新动态编辑页可用",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "准备：API 创建并公开测试相册（收录选择断言用）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 A：上传并选中 2 张图（含替代文本）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 A：自动保存到达 synced",
+      "ok": true,
+      "detail": "sync_state=synced"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 A：synced 文案说明可跨设备继续（「另一设备」）",
+      "ok": true,
+      "detail": "跳到正文\nP\nPHANTOMLOG\n文章\n情报档案\n生活\n勒布朗\n作品\n我的殿堂\n地图\n东京漫游\n关于\n人物档案\n2026 年 10 月 19 日\n10/19\nMON\nLUNCHTIME\n♪\n\n// ADMIN\n\n怪盗手记 · 管理\n创作台"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "服务端出现无 target 的新动态工作草稿",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "服务端草稿图片顺序 = 编辑器顺序（顺序即发布顺序）",
+      "ok": true,
+      "detail": "['0dea395b-53ff-44f4-a817-f4ef1cfe747e', '69c91838-cdb5-4551-904e-fab24e1db79d'] vs ['0dea395b-53ff-44f4-a817-f4ef1cfe747e', '69c91838-cdb5-4551-904e-fab24e1db79d']"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "服务端草稿保留替代文本",
+      "ok": true,
+      "detail": "['p5rw-r2-alt-one-20261019-121123-bc20d7d3', 'p5rw-r2-alt-two-20261019-121123-2c454dc1']"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 A：动态草稿可添加「同时收录到相册」选择",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 A：服务端草稿 data.album_links 反映收录选择",
+      "ok": true,
+      "detail": "[{'album_id': '65db7a69-e016-4bcd-bdb3-edb8df864f2c', 'media_ids': ['0dea395b-53ff-44f4-a817-f4ef1cfe747e']}]"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 A：第二份新动态草稿已同步",
+      "ok": true,
+      "detail": "sync_state=synced"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "服务端出现第二份无 target 新动态草稿",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：新 context 本机缓存为空（localStorage 无本机副本）",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：创作台「继续编辑」列出该新草稿",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "「继续编辑」链接唯一标识所选工作草稿（href 带 draft=<id>）",
+      "ok": true,
+      "detail": "href=/admin/moments/new?draft=77bce55f-d3f9-4eea-ae0e-ec094712a45f"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：点该草稿进入编辑器",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/admin/moments/new?draft=77bce55f-d3f9-4eea-ae0e-ec094712a45f&entry=5d91451b-20f2-4660-87ad-a253e52c09c2"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：URL 带所选草稿 ID（?draft=）",
+      "ok": true,
+      "detail": "url=http://127.0.0.1:3130/admin/moments/new?draft=77bce55f-d3f9-4eea-ae0e-ec094712a45f&entry=5d91451b-20f2-4660-87ad-a253e52c09c2"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：恢复设备 A 的正文（无本机缓存）",
+      "ok": true,
+      "detail": "编辑器正文='p5rw-r2-moment-one-20261019-121123-dfd244d8'"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：恢复图片数量与顺序",
+      "ok": true,
+      "detail": "['0dea395b-53ff-44f4-a817-f4ef1cfe747e', '69c91838-cdb5-4551-904e-fab24e1db79d'] vs ['0dea395b-53ff-44f4-a817-f4ef1cfe747e', '69c91838-cdb5-4551-904e-fab24e1db79d']"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：恢复图片替代文本",
+      "ok": true,
+      "detail": "['p5rw-r2-alt-one-20261019-121123-bc20d7d3', 'p5rw-r2-alt-two-20261019-121123-2c454dc1']"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：恢复「同时收录到相册」选择",
+      "ok": true,
+      "detail": "links=1"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：刷新指定草稿 URL 后仍恢复内容（无本机缓存）",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/admin/moments/new?draft=77bce55f-d3f9-4eea-ae0e-ec094712a45f&entry=5d91451b-20f2-4660-87ad-a253e52c09c2"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：刷新后 URL 仍带草稿 ID",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/admin/moments/new?draft=77bce55f-d3f9-4eea-ae0e-ec094712a45f&entry=5d91451b-20f2-4660-87ad-a253e52c09c2"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：打开第二份新草稿",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "同类两份草稿不串稿：点第二份恢复第二份",
+      "ok": true,
+      "detail": "正文='p5rw-r2-moment-two-20261019-121123-717c3888'"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "同类两份草稿不串稿：点第一份恢复第一份",
+      "ok": true,
+      "detail": "正文='p5rw-r2-moment-one-20261019-121123-dfd244d8'"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 A：新手记默认状态 draft / 私密",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 A：新手记已上传 1 张图（含替代文本）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 A：自动保存到达 synced",
+      "ok": true,
+      "detail": "sync_state=synced"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "服务端出现无 target 的新手记工作草稿",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "服务端手记草稿保留日期字段",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：新 context 本机缓存为空",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：创作台列出该新手记草稿",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "新手记「继续编辑」链接带 draft=<id>",
+      "ok": true,
+      "detail": "href=/admin/journal/new?draft=84cb8908-683c-450d-befd-240c2e6a8af8"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：点该手记草稿进入编辑器",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/admin/journal/new?draft=84cb8908-683c-450d-befd-240c2e6a8af8&entry=5ca57a1e-d185-4ca7-90be-9721c04426e2"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：URL 带所选手记草稿 ID（?draft=）",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/admin/journal/new?draft=84cb8908-683c-450d-befd-240c2e6a8af8&entry=5ca57a1e-d185-4ca7-90be-9721c04426e2"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：恢复标题",
+      "ok": true,
+      "detail": "p5rw-r2-journal-title-20261019-121123-d7b6b837"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：恢复正文",
+      "ok": true,
+      "detail": "p5rw-r2-journal-body-20261019-121123-1473b9a5"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：恢复手记日期",
+      "ok": true,
+      "detail": "2026-10-02"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：恢复图片数量与顺序",
+      "ok": true,
+      "detail": "['217e41fb-4d62-455d-adad-0acb245c7019'] vs ['217e41fb-4d62-455d-adad-0acb245c7019']"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：恢复图片替代文本",
+      "ok": true,
+      "detail": "#1\n p5rw-r2-journal-alt-20261019-121123-018c7831"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：恢复默认私密（不因普通恢复变公开）",
+      "ok": true,
+      "detail": "private"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：无缓存刷新指定草稿 URL 后仍恢复标题",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/admin/journal/new?draft=84cb8908-683c-450d-befd-240c2e6a8af8&entry=5ca57a1e-d185-4ca7-90be-9721c04426e2"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "跨内容类型草稿 ID 给出准确错误提示（不静默空白新建）",
+      "ok": true,
+      "detail": "提示='这份工作草稿是「动态」，不能当作手记继续编辑（类型不匹配）。\\n\\n这份草稿没有被加载；新建空白内容会打开一份新的编辑会话（不会覆盖原草稿）。\\n\\n新建空白内容\\n返回创作台 | 公开前还需要：还没有标题\\n公开前还需要：还没有正文 | 这份工作草稿是「动态」，不能当作手记继续编辑（类型不匹配）。'"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "跨类型错误时不把另一类型内容加载进手记编辑器",
+      "ok": true,
+      "detail": "未泄露 moment 草稿正文"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "不存在的草稿 ID 给出准确错误提示（不静默空白新建）",
+      "ok": true,
+      "detail": "提示='工作草稿不存在或已被丢弃（404），没有可恢复的内容。请从创作台重新选择，或新建空白内容。\\n\\n这份草稿没有被加载；新建空白内容会打开一份新的编辑会话（不会覆盖原草稿）。\\n\\n新建空白内容\\n返回创作台 | 公开前还需要：还没有标题\\n公开前还需要：还没有正文 | 工作草稿不存在或已被丢弃（404），没有可恢复的内容。请从创作'"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "准备：丢弃测试用工作草稿（204）",
+      "ok": true,
+      "detail": "HTTP 204"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "已丢弃草稿给出准确错误提示（不静默空白新建）",
+      "ok": true,
+      "detail": "提示='这份工作草稿已被丢弃，不能继续编辑。请从创作台重新选择，或新建空白内容。\\n\\n这份草稿没有被加载；新建空白内容会打开一份新的编辑会话（不会覆盖原草稿）。\\n\\n新建空白内容\\n返回创作台 | 公开前还需要：还没有标题\\n公开前还需要：还没有正文 | 这份工作草稿已被丢弃，不能继续编辑。请从创作台重新选择，或新建空白内容。'"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "已丢弃草稿不会把旧正文当新内容加载",
+      "ok": true,
+      "detail": "正文=''"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面：手机 launcher（.pw-tab）可见",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面：点击手机 launcher 打开手机宿主",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面：从手机桌面进入 INS 应用",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/?phone=ins"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面：INS 内有「消息」入口且可到达角色列表",
+      "ok": true,
+      "detail": "tabs=True"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面：点角色后进入手机内会话（screen=conversation）",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/?phone=ins&screen=conversation&item=futaba"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面：会话 URL 带角色 ID（item=<character>）",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/?phone=ins&screen=conversation&item=futaba"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面手机内：自由聊天输入区 .msg-composer 可见",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面手机内：「展开查看」入口 .pw-expand 可见",
+      "ok": true,
+      "detail": "href=/apps/ins/messages/futaba"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面手机内：「展开查看」href 指向当前会话 canonical",
+      "ok": true,
+      "detail": "href=/apps/ins/messages/futaba，期望=/apps/ins/messages/futaba"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面手机内：「自己说一句」入口可见",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面手机内：点「自己说一句」后 textarea 可见",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面手机内：输入框/发送按钮中心点未被遮挡（elementFromPoint 命中自身）",
+      "ok": true,
+      "detail": "{\".msg-composer textarea\": {\"ok\": true, \"point\": [750, 666], \"hit\": \"msg-input\"}, \".msg-btn-send\": {\"ok\": true, \"point\": [898, 740], \"hit\": \"msg-btn msg-btn-send\"}}"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面手机内：发送按钮可见",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面手机内：发送后消息进入会话列表（或明确失败反馈）",
+      "ok": true,
+      "detail": "outgoing=1，notice=''"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面手机内：发送后输入框清空（不重复发送）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面手机内：自由聊天用量提示 .msg-usage 可见（初始或展开后）",
+      "ok": true,
+      "detail": "初始=True，当前=True"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面手机内：点「展开查看」进入 canonical 会话页",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/apps/ins/messages/futaba"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "展开后 canonical 会话页仍有自由输入区",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "390×844：手机内会话可打开",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/?phone=ins&screen=conversation&item=futaba"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "390×844：自由聊天输入区 .msg-composer 可见",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "390×844：折叠态「自己说一句」入口默认可见可点",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "390×844：点「自己说一句」后 textarea 可见",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "390×844：用量提示 .msg-usage 可见（初始或展开后）",
+      "ok": true,
+      "detail": "初始=True，当前=True"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "390×844：输入框可点击并接收输入",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "390×844：发送按钮可见可点",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "390×844：输入框/发送按钮/用量提示中心点未被遮挡（elementFromPoint 命中自身）",
+      "ok": true,
+      "detail": "{\".msg-composer textarea\": {\"ok\": true, \"point\": [195, 664], \"hit\": \"msg-input\"}, \".msg-btn-send\": {\"ok\": true, \"point\": [302, 745], \"hit\": \"msg-btn msg-btn-send\"}, \".msg-usage\": {\"ok\": true, \"point\": [195, 782], \"hit\": \"msg-usage\"}}"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "390×844：输入区完整落在视口内（不被裁切）",
+      "ok": true,
+      "detail": "composer={'x': 46, 'y': 519.140625, 'width': 298, 'height': 247.46875, 'bottom': 766.609375, 'right': 344, 'display': 'flex', 'visibility': 'visible', 'opacity': '1', 'inViewport': True}"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "390×844：发送按钮完整落在视口内",
+      "ok": true,
+      "detail": "send={'x': 260, 'y': 722.609375, 'width': 84, 'height': 44, 'bottom': 766.609375, 'right': 344, 'display': 'block', 'visibility': 'visible', 'opacity': '1', 'inViewport': True}"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "390×844：输入区不被用量提示/底部操作提示遮挡",
+      "ok": true,
+      "detail": "overlapping=[]，usage=774.609375，hints=317.015625"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "390×844：控件不互相遮挡（composer/usage/hints/choices 两两不相交）",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "390×844：发送后消息进入会话列表（或明确失败反馈）",
+      "ok": true,
+      "detail": "notice=''"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "320×700：手机内会话可打开",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/?phone=ins&screen=conversation&item=futaba"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "320×700：自由聊天输入区 .msg-composer 可见",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "320×700：折叠态「自己说一句」入口默认可见可点",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "320×700：点「自己说一句」后 textarea 可见",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "320×700：用量提示 .msg-usage 可见（初始或展开后）",
+      "ok": true,
+      "detail": "初始=True，当前=True"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "320×700：输入框可点击并接收输入",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "320×700：发送按钮可见可点",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "320×700：输入框/发送按钮/用量提示中心点未被遮挡（elementFromPoint 命中自身）",
+      "ok": true,
+      "detail": "{\".msg-composer textarea\": {\"ok\": true, \"point\": [160, 520], \"hit\": \"msg-input\"}, \".msg-btn-send\": {\"ok\": true, \"point\": [232, 601], \"hit\": \"msg-btn msg-btn-send\"}, \".msg-usage\": {\"ok\": true, \"point\": [160, 638], \"hit\": \"msg-usage\"}}"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "320×700：输入区完整落在视口内（不被裁切）",
+      "ok": true,
+      "detail": "composer={'x': 46, 'y': 375.140625, 'width': 228, 'height': 247.46875, 'bottom': 622.609375, 'right': 274, 'display': 'flex', 'visibility': 'visible', 'opacity': '1', 'inViewport': True}"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "320×700：发送按钮完整落在视口内",
+      "ok": true,
+      "detail": "send={'x': 190, 'y': 578.609375, 'width': 84, 'height': 44, 'bottom': 622.609375, 'right': 274, 'display': 'block', 'visibility': 'visible', 'opacity': '1', 'inViewport': True}"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "320×700：输入区不被用量提示/底部操作提示遮挡",
+      "ok": true,
+      "detail": "overlapping=[]，usage=630.609375，hints=252.5625"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "320×700：控件不互相遮挡（composer/usage/hints/choices 两两不相交）",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "320×700：发送后消息进入会话列表（或明确失败反馈）",
+      "ok": true,
+      "detail": "notice=''"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "412：准备已发布动态 + 工作草稿",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "412：API 把工作草稿版本推前（模拟另一设备已保存）",
+      "ok": true,
+      "detail": "HTTP 200"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "412：自动保存收到 412 后进入 conflict 并暂停",
+      "ok": true,
+      "detail": "sync_state=conflict"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "412：确实发生了 412 响应",
+      "ok": true,
+      "detail": "412 次数=1"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "412：ConflictNotice 出现",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "412：本机最新输入保留",
+      "ok": true,
+      "detail": "p5rw-guard412-local-20261019-121123-d52f18d6"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "412：本机恢复副本保留最新输入",
+      "ok": true,
+      "detail": "keys=['pl.workdraft.v1.d536ccb0-d1be-43ae-a7ed-bfa89ea6d2ea.moment.332d0f91-d1b0-4dbb-bb23-57d7b970a142.332d0f91-d1b0-4dbb-bb23-57d7b970a142']"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "412：提交按钮进入禁用（冲突时禁止提交）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "412：点保存不产生 commit 请求（0 次）",
+      "ok": true,
+      "detail": "commit=0"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "412：无虚假成功提示",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "401：准备已发布动态 + 工作草稿",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "401：保存被拒后页面给出「需要站主登录 / 登录已失效」类提示",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "401：保存路径确实收到注入的 401",
+      "ok": true,
+      "detail": "401 请求=[('PATCH', '/admin/work-drafts/4ea27d9e-889a-48ef-83b4-65c77b6398a4'), ('GET', '/auth/owner-status'), ('GET', '/auth/owner-status')]"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "401：提示文案准确（不是静默失败）",
+      "ok": true,
+      "detail": "需要站主登录"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "401：会话失效后编辑器不可继续提交（编辑器被登录引导替换或 auth-expired 可见）",
+      "ok": true,
+      "detail": "editor=0"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "401：点保存不产生 commit 请求（0 次）",
+      "ok": true,
+      "detail": "commit=0"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "401：无虚假成功提示",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "401：本机恢复副本保留最新输入（未因登录失效被清）",
+      "ok": true,
+      "detail": "['pl.workdraft.v1.d536ccb0-d1be-43ae-a7ed-bfa89ea6d2ea.moment.a93400d0-1452-4eb4-bf67-21743df65b5e.a93400d0-1452-4eb4-bf67-21743df65b5e']"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "相册调用方：新动态编辑页可用",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "相册调用方：准备选中 1 张图（相册区才出现）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "相册调用方：准备内容 synced",
+      "ok": true,
+      "detail": "sync_state=synced"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "相册调用方：服务端已有该新草稿",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "相册调用方：点「新建相册」触发 saveNow 失败后有真实错误提示",
+      "ok": true,
+      "detail": "p5rw 注入：保存失败"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "相册调用方：错误提示与保存失败对应（非虚假成功）",
+      "ok": true,
+      "detail": "p5rw 注入：保存失败"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "相册调用方：saveNow 确实重发了 PATCH（失败路径被调用）",
+      "ok": true,
+      "detail": "PATCH 失败次数=2"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "相册调用方：无未处理 Promise rejection",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "相册调用方：页面未崩溃且输入保留",
+      "ok": true,
+      "detail": "p5rw-guardalbum-20261019-121123-ee3ac93a-相册前未保存修改"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "相册调用方：新标签页打开相册管理页（按实际记录）",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/admin/albums"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "提交期输入：准备已发布动态 + 工作草稿",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "提交期输入：提交前内容已 synced",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "提交期输入：点击「更新正式内容」",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "提交期输入：commit 请求已发出并被延迟（在途）",
+      "ok": true,
+      "detail": "held=1"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "提交期输入：commit 在途时正文仍可输入（busy 未禁用输入）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "提交期输入：更晚输入已进入编辑器",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "提交期输入：更晚输入已写入 localStorage 本机副本",
+      "ok": true,
+      "detail": "['pl.workdraft.v1.d536ccb0-d1be-43ae-a7ed-bfa89ea6d2ea.moment.c175e537-894a-42a7-bf69-e0c9a5a64059.c175e537-894a-42a7-bf69-e0c9a5a64059']"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "提交期输入：放行延迟的 commit 响应",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "提交期输入：延迟响应放行后提交成功",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "提交期输入：正式内容 = 提交快照文字（不含更晚输入）",
+      "ok": true,
+      "detail": "p5rw-guardlate-commit-20261019-121123-6d5199ec"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "提交期输入：更晚输入的本机副本未被成功回调清除",
+      "ok": true,
+      "detail": "['pl.workdraft.v1.d536ccb0-d1be-43ae-a7ed-bfa89ea6d2ea.moment.c175e537-894a-42a7-bf69-e0c9a5a64059.c175e537-894a-42a7-bf69-e0c9a5a64059']"
+    },
+    {
+      "scenario": "r1-guards",
+      "label": "提交期输入：commit 请求恰好 1 次",
+      "ok": true,
+      "detail": "commit=1"
+    },
+    {
+      "scenario": "r2-save-as-new",
+      "label": "另存为新草稿：准备已发布动态 + 工作草稿",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-save-as-new",
+      "label": "另存为新草稿：API 推前原草稿版本（触发 412）",
+      "ok": true,
+      "detail": "HTTP 200"
+    },
+    {
+      "scenario": "r2-save-as-new",
+      "label": "另存为新草稿：页面进入 conflict 并出现 ConflictNotice",
+      "ok": true,
+      "detail": "sync_state=conflict"
+    },
+    {
+      "scenario": "r2-save-as-new",
+      "label": "另存为新草稿：本机最新输入在冲突时保留",
+      "ok": true,
+      "detail": "p5rw-saveas-local-20261019-121123-da7421b9"
+    },
+    {
+      "scenario": "r2-save-as-new",
+      "label": "另存为新草稿：点击「另存为新草稿」",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-save-as-new",
+      "label": "另存为新草稿：服务端出现新的无 target 工作草稿",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-save-as-new",
+      "label": "另存为新草稿：新草稿 target_id 为空",
+      "ok": true,
+      "detail": "None"
+    },
+    {
+      "scenario": "r2-save-as-new",
+      "label": "另存为新草稿：页面提示「已另存为新的工作草稿」",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-save-as-new",
+      "label": "另存为新草稿：原 target 草稿内容未被覆盖",
+      "ok": true,
+      "detail": "HTTP 200 text='p5rw-saveas-other-20261019-121123-6018fd5b'"
+    },
+    {
+      "scenario": "r2-save-as-new",
+      "label": "设备 B：新 context 本机缓存为空",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "scenario": "r2-save-as-new",
+      "label": "设备 B：创作台列出「另存为新草稿」产物",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-save-as-new",
+      "label": "设备 B：该草稿行 href 带 draft=<id>",
+      "ok": true,
+      "detail": "href=/admin/moments/new?draft=8320b231-7397-4780-a81f-1dcc7288c433"
+    },
+    {
+      "scenario": "r2-save-as-new",
+      "label": "设备 B：点该草稿进入编辑器（非空白新建）",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/admin/moments/new?draft=8320b231-7397-4780-a81f-1dcc7288c433&entry=59606d34-1ab2-4ccb-8efd-a4b66c07ca2a"
+    },
+    {
+      "scenario": "r2-save-as-new",
+      "label": "设备 B：URL 带所选草稿 ID（?draft=）",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/admin/moments/new?draft=8320b231-7397-4780-a81f-1dcc7288c433&entry=59606d34-1ab2-4ccb-8efd-a4b66c07ca2a"
+    },
+    {
+      "scenario": "r2-save-as-new",
+      "label": "设备 B：恢复另存草稿的正文",
+      "ok": true,
+      "detail": "p5rw-saveas-local-20261019-121123-da7421b9"
+    },
+    {
+      "scenario": "r2-save-as-new",
+      "label": "设备 B：恢复另存草稿的图片（顺序）",
+      "ok": true,
+      "detail": "['0246e407-7bf9-4b95-99a8-460e35c4a4fc'] vs ['0246e407-7bf9-4b95-99a8-460e35c4a4fc']"
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "R3-extra：手机宿主可打开",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "音乐：手机桌面可开始播放（audio[data-pl-music] 未暂停）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "音乐：播放进度在前进",
+      "ok": true,
+      "detail": "1.64 -> 3.15"
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "音乐：.pw-tab 显示 playing 状态",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "R3-extra：手机内可达消息角色列表",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "R3-extra：进入角色会话",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/?phone=ins&screen=conversation&item=futaba"
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "R3-extra：自由输入区可用",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "R3-extra：展开输入框",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "草稿保留：输入写入 sessionStorage（drafts.ts 约定）",
+      "ok": true,
+      "detail": "key=msg.draft.v1:futaba"
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "音乐：进入手机会话后仍在播放且进度前进",
+      "ok": true,
+      "detail": "7.37 -> 8.58"
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "草稿保留：.pw-back 返回手机 INS 应用并可从 UI 再进消息列表",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/?phone=ins"
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "草稿保留：返回列表后重新进入同一角色",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "草稿保留：返回/重新进入后输入框恢复草稿",
+      "ok": true,
+      "detail": "'p5rw-r3x-draft-20261019-121123-a62a8feb'"
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "草稿保留：收起手机后可重新打开手机",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "草稿保留：切回桌面再进入手机同一角色后仍保留",
+      "ok": true,
+      "detail": "'p5rw-r3x-draft-20261019-121123-a62a8feb'"
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "草稿保留：点击「展开查看」进入 canonical 会话",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/apps/ins/messages/futaba"
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "草稿保留：canonical 页面读到同一 sessionStorage 草稿",
+      "ok": true,
+      "detail": "'p5rw-r3x-draft-20261019-121123-a62a8feb'"
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "草稿保留：展开后返回手机内仍保留草稿",
+      "ok": true,
+      "detail": "'p5rw-r3x-draft-20261019-121123-a62a8feb'"
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "发送失败：点击发送（被注入 500）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "发送失败：出现明确错误反馈",
+      "ok": true,
+      "detail": "请求失败（HTTP 500）：p5rw 注入：发送失败"
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "发送失败：确实命中注入的发送请求",
+      "ok": true,
+      "detail": "['http://127.0.0.1:3130/api/v1/messaging/conversations/3a34953f-3831-4fe3-bb92-e1f4bef26c74/messages']"
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "发送失败：输入草稿不丢",
+      "ok": true,
+      "detail": "'p5rw-r3x-send-20261019-121123-8098ef5a'"
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "发送失败：sessionStorage 草稿仍在（可重试）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "发送失败重试：解除拦截后再次发送成功",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "发送成功后：输入框清空",
+      "ok": true,
+      "detail": "''"
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "发送成功后：sessionStorage 草稿被清除",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "限额：.msg-usage 可见",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-extra",
+      "label": "限额：usage 文案符合约定格式（已用/上限或每日上限）",
+      "ok": true,
+      "detail": "今天已用 1 / 20 次自由聊天"
+    }
+  ],
+  "skips": [
+    {
+      "scenario": "r3-extra",
+      "label": "限额耗尽/不可发送态的端到端复现",
+      "reason": "需真实耗尽每日额度（20 次/访客/天），本次不真实耗尽；只验证展示与格式"
+    }
+  ],
+  "info": [
+    {
+      "scenario": "r3-phone",
+      "text": "角色 ID — futaba"
+    },
+    {
+      "scenario": "r2-save-as-new",
+      "text": "另存产物 draft id — 8320b231-7397-4780-a81f-1dcc7288c433"
+    },
+    {
+      "scenario": "r3-extra",
+      "text": "音乐卡片状态 — ready"
+    },
+    {
+      "scenario": "r3-extra",
+      "text": "草稿保留：.pw-back 实际落点 — URL=http://127.0.0.1:3130/?phone=ins（消息页签是 INS 应用内状态，history 返回后回到动态页签；再次点「消息」可回到列表）"
+    },
+    {
+      "scenario": "r3-extra",
+      "text": "限额：usage 实际文案 — 今天已用 1 / 20 次自由聊天"
+    }
+  ],
+  "screenshots": [
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r1-ins--blocked-save.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r1-ins--recovered.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r1-journal--blocked-save.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r1-journal--recovered.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r2-moment--device-a-draft1.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r2-moment--device-b-draft1.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r2-moment--device-b-draft2.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r2-journal--device-a-draft.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r2-journal--device-b-draft.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r3-phone--desktop-phone-home.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r3-phone--desktop-story-state.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r3-phone--desktop-free-input.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r3-phone--desktop-expanded.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r3-phone--small-390x844-story.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r3-phone--small-390x844-free-input.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r3-phone--small-390x844-sent.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r3-phone--small-320x700-story.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r3-phone--small-320x700-free-input.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r3-phone--small-320x700-sent.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r1-guards--guard-412-conflict.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r1-guards--guard-401-auth-expired.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r1-guards--guard-album-caller.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r1-guards--guard-late-input.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r2-save-as-new--save-as-new-created.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r2-save-as-new--device-b-save-as-new-restored.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r3-extra--phone-draft-typed.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r3-extra--phone-send-failed.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r3-extra--phone-send-retried.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/after-extra/r3-extra--phone-usage.png"
+  ],
+  "coverage_added": [
+    "R1 412 冲突（真实浏览器）：API 推前草稿版本 → 自动保存 412 → conflict 暂停 + ConflictNotice + 提交按钮 disabled + commit 0 + 输入/本机副本保留（真实服务端 412，不是 route 假造）",
+    "R1 401 登录失效（真实浏览器）：注入 PATCH 401 → failed + data-editor-auth-expired + 点保存 commit 0 + 本机副本保留",
+    "R1 相册新建 saveNow 调用方（真实浏览器）：PATCH 500 下点「新建相册」→ data-editor-error 真实提示、无 unhandled rejection、页面未崩溃、无虚假成功、新标签页行为记录",
+    "R1 提交期间更晚输入（真实浏览器）：延迟 commit 响应在途时继续输入 → 放行成功 → 正式内容=提交快照、更晚输入本机副本未被成功回调清除",
+    "R2 另存为新草稿（真实浏览器 UI）：412 冲突 → 点「另存为新草稿」→ 新 draft(target_id=null) → 设备 B 无 localStorage 用 ?draft= 恢复正文与图片顺序；原草稿未被覆盖",
+    "R3 草稿保留（真实浏览器）：手机会话输入不发送 → .pw-back 返回列表再进入 / 收起手机重开 / 「展开查看」进 canonical 再返回手机，均按 drafts.ts 的 sessionStorage 约定恢复",
+    "R3 发送失败重试（真实浏览器）：拦截 POST /messaging/conversations/<id>/messages 返回 500 → 错误反馈 + 草稿不丢 → 解除拦截重试成功并清空草稿",
+    "R3 用量展示（真实浏览器）：.msg-usage 可见且文案符合「今天已用 x / y 次自由聊天 | 自由聊天每天最多 y 次」格式（额度耗尽态仍未覆盖）",
+    "R3 音乐继续播放（真实浏览器，资源可用时）：手机桌面播放后进入 INS 会话，audio[data-pl-music] 未暂停且 currentTime 前进、.pw-tab.playing 保持"
+  ],
+  "unverified": [
+    "真机 / iOS / Android 浏览器、真实触控命中与软键盘遮挡：未验证（本脚本只有桌面 chromium，390/320 只是视口，不是真机）",
+    "中文/日文输入法 composition 真机行为：未验证（Composer 的 IME 逻辑只有单测；本脚本不模拟真实输入法）",
+    "R2 真实双物理设备并发：跨设备恢复用「第二浏览器上下文（复制 cookie、无 localStorage）」，非两台物理设备",
+    "弱网/长时间输入稳定性：只做短时故障注入（PATCH 500/401/412、commit 延迟、发送 500），未做长时弱网",
+    "R3 自由聊天额度耗尽/不可发送态的端到端复现：需真实耗尽每日额度（20 次/访客/天），本轮不真实耗尽，只验证 usage 展示与格式",
+    "R3 音乐在真机/WebKit 及静音策略下的行为：只验证桌面 chromium 下手机会话内继续播放；真机与自动播放策略差异未验证",
+    "R1 412/401/相册/提交期输入只做前端故障注入（真实隔离 API + Playwright route），未做真实网络分区/多物理设备并发",
+    "D1 Docker 健康检查错配、生产部署、迁移 round-trip、OpenAPI/gen:api 漂移：本轮不改后端/契约，未重跑（D1 未获授权）"
+  ],
+  "task": "task-4 延续性补证：把《P5 返工复验报告》§8 的未验证项转为真实浏览器证据",
+  "environment_notes": [
+    "本轮 HEAD=b6ef358（docs/tools 提交），apps/web 工作树干净；apps/web 产品源码自 7a19eb2 起未再变化，因此复用隔离构建 BUILD_ID=x46VxuFXLS83Km5gubNnP（构建时间 08:59）并用 diff 验证构建副本与工作树一致。",
+    "e2e-stack.sh 已知坑：必须先 down 再 up（up 步骤 1 无条件 pg-local.sh init 会 rm -rf PGDATA）。本轮固定 down→up；最终证据运行前全新 initdb/迁移/种子，DB 为干净状态。",
+    "最终一次运行前先跑了 r1-guards / r2-save-as-new / r3-extra 的单场景烟雾调试；证据 JSON 是全新 DB 上 8 场景一次性完整运行的结果（208 pass / 0 fail / 1 skip）。",
+    "原有 5 场景断言数量与 7a19eb2 的最终证据完全一致（r1-ins 14、r1-journal 15、r2-moment 26、r2-journal 23、r3-phone 44；加登录 2 项共 124）→ 无回归。",
+    "脚本口径迭代（均在本轮内、未放宽产品断言）：① 401 改为同时注入 PATCH 与页面会话接口 401（只注入 PATCH 会被仍然有效的 owner-status 重新确认并重挂编辑器，属于模拟失真）；② 手机 .pw-back 实际回到 INS 动态页签（消息页签是应用内状态），改为如实记录落点后再从 UI 进消息列表验证草稿；③ 另存后原草稿只读断言加短重试避免瞬时读空。"
+  ]
+}

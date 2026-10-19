@@ -1,0 +1,15 @@
+== AFTER down (2026-10-19 12:16:16) ==
+-- shared 3100/8100/8000/55432（PID 应与 before 相同）--
+COMMAND    PID USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+postgres 14164    v    7u  IPv6 0x14fd53f6ff7e2370      0t0  TCP [::1]:55432 (LISTEN)
+postgres 14164    v    8u  IPv4 0x1918abcc75d4976b      0t0  TCP 127.0.0.1:55432 (LISTEN)
+Python   18631    v    9u  IPv4 0x3c3b3b9505997ca0      0t0  TCP 127.0.0.1:8100 (LISTEN)
+Python   19294    v    3u  IPv4 0x33740d16c1577e86      0t0  TCP 127.0.0.1:8000 (LISTEN)
+node     50666    v   12u  IPv4  0x77b3357945acc7d      0t0  TCP 127.0.0.1:3100 (LISTEN)
+-- isolated 3130/8130/55434（应为空）--
+-- isolated stack status --
+  集群: 127.0.0.1:55434 - no response
+  API: 000
+  API: 未运行
+  前端: 000
+  前端: 未运行

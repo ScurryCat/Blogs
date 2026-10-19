@@ -5,6 +5,7 @@
 > 验收基线：`9917890f001ac055280c48c31d50671821e7c929`（干净工作树）
 > 修复提交：`afafdf8`（R1 + R2）、`8b826c9`（R3）、`7a19eb2`（R2 补充：恢复时拒绝已丢弃/已提交草稿）；文档与证据见本提交
 > 结论：**R1 / R2 / R3 已修复，并按「改前失败 → 改后通过」的真实证据复验；D1 未修（单列上线遗留）；真机项仍未验证。**
+> 修订：2026-10-19 12:20（继续轮补证：新增 §5.5.1 浏览器补充覆盖、§5.4 后端全树实跑、更新 §8 未验证项与 §10 证据索引）。
 
 ---
 
@@ -17,8 +18,10 @@
 | **R3** 手机内自由聊天入口 | ✅ 已修复并复验（桌面/窄视口） | 改前 `.msg-composer`/`.msg-usage`/`.pw-expand` 在手机 ins 内全部不可见、expand href=`/apps/ins`；改后三者可见可点、expand href 保留会话（`/apps/ins/messages/<role>`），1440/390/320 截图与断言通过 |
 | **D1** Docker 健康检查错配 | ⚠️ 未修（单列上线遗留，未获授权） | `deploy/compose.prod.yaml` 检查 `status == "ok"`，API 就绪返回 `"ready"`；本轮未改部署配置、未部署 |
 | **真机** 触控/软键盘/中文输入法 | ❌ 未验证（无设备） | 只有 Chromium headless + 视口证据；不以桌面/WebKit 代替真机 |
-| 集成回归 | ✅ 通过 | tsc 0 / lint 0 / 全量单测 113 文件·1182 用例；隔离生产构建 exit 0（37/37 静态页）；返工 e2e **124/0**；P5 全量 e2e **219/0**；六项回归 6/6 exit 0（见 §5） |
+| 集成回归 | ✅ 通过 | tsc 0 / lint 0 / 全量单测 113 文件·1182 用例；隔离生产构建 exit 0（37/37 静态页）；返工 e2e **124/0**；继续轮补证 8 场景 **208/0/1 skip**；P5 全量 e2e **219/0**；六项回归 6/6 exit 0；后端全树隔离 **1025/0**（见 §5） |
 
+> **继续轮补证（2026-10-19 12:11）**：原 §8 的 8 项「未验证/部分覆盖」中 7 项已转为真实浏览器证据（`r1-guards` 40/40、`r2-save-as-new` 16/16、`r3-extra` 28/28+1 skip；原有 5 场景断言数一致、无回归），后端全树也在隔离集群 55450 实跑通过；仍不可测/未验证项见 §8。
+>
 > **不能声称的内容**：不能声称「A1–A12 全部通过」「真机通过」「D1 已修复」。手机内自由聊天只在桌面浏览器与 1440/390/320 视口下验证；真实软键盘/输入法/触控未验证。
 
 ---
@@ -30,7 +33,7 @@
   - `afafdf8` `fix(p5-rework): R1 保存失败不得提交旧草稿 + R2 新建草稿跨设备恢复`
   - `8b826c9` `fix(p5-rework): R3 恢复手机内自由聊天与展开查看入口`
   - `7a19eb2` `fix(p5-rework): R2 恢复时拒绝已丢弃/已提交的工作草稿`（复验中发现的 R2 残余缺陷，详见 §3.4）
-- 未改后端/契约/部署：`git diff --stat 9917890..HEAD -- apps/api contracts deploy` 为空；因此后端全树不在本轮重复执行，采用 2026-10-19 独立验收在**同一后端源码**上的结果（1025 通过 / 0 失败，隔离集群 55449），范围说明见 §5.4。
+- 未改后端/契约/部署：`git diff --stat 9917890..HEAD -- apps/api contracts deploy` 为空；**后端全树已在继续轮于隔离集群 55450 实跑**（1025 通过 / 0 失败，exit 0，集群用后即焚），见 §5.4。
 - 修改文件（按 R 项）：
   - R1/R2：`apps/web/features/workspace/use-work-draft.ts`、`draft-url.ts`（新增）、`workspace-home.tsx`；`features/ins/editor/moment-editor.tsx`、`moment-editor-page.tsx`；`features/journal/editor/journal-editor.tsx`、`editor-loaders.tsx`；对应单测/组件测试（含新增 `journal-editor-work-draft.test.tsx`）。
   - R3：`apps/web/app/globals.css`（仅 `[data-phone-app="ins"]` 段）、`features/messaging/composer.tsx`、`conversation-view.tsx`、`features/phone/phone-host.tsx`、`features/phone/expand-target.ts`（新增）；新增/更新 `messaging-phone-css.test.ts`、`expand-target.test.ts`、`views.test.tsx`、`phone-host.test.tsx`。
@@ -64,6 +67,7 @@
   - `use-work-draft.test.tsx`：PATCH 500 → `saveNow` 抛 `failed`、本机副本保留；412/401/断网/未启用分别映射 `conflict/auth/unavailable/not-ready` 且不旁路；失败后重试成功返回与当前表单一致的内容；`discardLocalCopyIfUnchanged` 版本不一致时保留。
   - `moment-editor.test.tsx` / `journal-editor-work-draft.test.tsx`：阻断 PATCH 时点「保存草稿 / 发布 / 更新正式内容」，commit 请求 **0 次**、无成功提示、输入保留；解除阻断后重试 commit 内容等于当前输入；相册入口 saveNow 失败有提示、无 unhandled rejection。
 - **真浏览器故障注入（改后）**：r1-ins / r1-journal 场景 **全部断言通过**：阻断期间 commit=0、无成功提示、输入与本机副本保留；解除阻断重试后正式内容=最新输入（不是旧服务端内容）。详见 `rework-evidence/after/e2e-p5-rework.json` 的 r1 场景。
+- **继续轮补充覆盖**（`r1-guards` 40/40，见 §5.5.1）：真实 412/401 旁路 commit=0、相册 saveNow 调用方失败有提示且无 unhandled rejection、提交期间更晚输入的本机副本不被清。
 
 ---
 
@@ -95,6 +99,7 @@
 - Hook 单测：GET 1 次恢复 data/images（顺序/alt/收录）且不发 POST 新建；同类型两份草稿点击哪份恢复哪份；刷新（本机副本较新）保留本机输入；恢复在途输入不被旧响应覆盖；404/403/类型/target 不匹配 → `failed` + `resumeError`、后续输入不再发写请求；**已丢弃 / 已提交（status≠active）→ `failed` + 准确错误、不加载草稿内容**；「另存为新草稿」生成的草稿可用 draftId 恢复。
 - 页面/编辑器测试：创作台新草稿链接含 `?draft=` 且保留 returnTo；页面透传/非法参数状态；编辑器首帧恢复与 resumeError 可见块；非 UUID 不触发编辑器数据请求。
 - 真浏览器（改后）：无 localStorage 的第二上下文从创作台点击 → URL 带 `?draft=` → 文字、图片顺序、alt、相册收录选择完整恢复；刷新仍恢复；两份同类草稿各自恢复不串稿；新手记日期/标题/正文/图片恢复且默认私密；错误 ID/跨类型显示准确错误而不是静默空白。详见 `rework-evidence/after/e2e-p5-rework.json` 的 r2 场景。
+- **继续轮补充覆盖**（`r2-save-as-new` 16/16，见 §5.5.1）：UI 触发 412 →「另存为新草稿」→ 新草稿 `target_id=null`、原草稿未被覆盖 → 无 localStorage 设备从创作台 `?draft=` 恢复正文与图片顺序。
 
 ### 3.4 复验中发现的 R2 残余缺陷与修复（`7a19eb2`）
 
@@ -124,6 +129,7 @@
 
 - jsdom/静态回归：`views.test.tsx` 手机内渲染「自己说一句」折叠条/用量/选择提示，展开后可输入并发送、限额/失败提示保留、IME 组合 Ctrl+Enter 不发送；`messaging-phone-css.test.ts` 断言 ins 段不再 `display:none` 上述控件、列表 flex 占满、底部控件非 fixed/absolute、safe-area/scroll-margin 存在、规则仍限定命名空间；`expand-target.test.ts` 7 组目标计算（会话/列表/canonical/非法 item/特殊字符/归一化/跨应用）；`phone-host.test.tsx` INS 会话 `.pw-expand` href 与点击走 `phone-link`。
 - Chromium（改后）：1440/390/320 三视口下输入入口可见、可展开输入并发送；用量可见；展开按钮可见且 href 保留当前会话（`/apps/ins/messages/<role>`），点击落到对应 canonical 会话页；剧情选择态与自由输入态截图见 `rework-evidence/after` 与 `.dsh/screenshots/p5-rework/after/`。详见 `rework-evidence/after/e2e-p5-rework.json` 的 r3 场景。
+- **继续轮补充覆盖**（`r3-extra` 28/28+1 skip，见 §5.5.1）：手机内输入草稿在返回/收起重开/展开 canonical/返回手机四处保留；发送 500 后错误反馈可见、草稿不丢、解除后重试成功；usage 展示格式实测；音乐在进入会话后继续播放且进度前进。
 
 ---
 
@@ -151,10 +157,10 @@
 - 隔离副本 `/tmp/p5-rework-build`（rsync 自 `8b826c9` 的 `apps/web`，未覆盖共享 `.next`）：`npx next build` **exit 0**，`✓ Compiled successfully`，**37/37 静态页**，BUILD_ID `saPw1tf0nfpULa2_uuztT`。
 - 隔离全栈构建（e2e 用）：见 §5.5 的 BUILD_ID/构建时间。
 
-### 5.4 后端 / 契约 / 迁移（未修改，复用证据）
+### 5.4 后端 / 契约 / 迁移（后端未修改；全树已实跑）
 
 - 本轮 `git diff 9917890..HEAD -- apps/api contracts deploy` 为空；未新增迁移、未改 OpenAPI/生成类型。
-- 复用 2026-10-19 独立验收结果：隔离集群 55449 后端全树 **1025 通过 / 0 失败**、pytest exit 0（源码与返工基线一致）。
+- **继续轮实跑后端全树**：`bash tools/verify-backend-isolated.sh 55450`（独立 Postgres 集群 55450，用后即焚）→ **进度点 1025 通过 / 0 失败进度行，pytest exit 0**；与 2026-10-19 独立验收在同一后端源码上的结果一致（`docs/acceptance/evidence/p5-rework-2026-10-19/after-backend-isolated-summary.txt`）。
 - 未重跑 Docker / 生产部署（D1 未获授权，见 §6）。
 
 ### 5.5 隔离浏览器端到端（Chromium headless）
@@ -175,6 +181,25 @@
 | R2 已丢弃草稿提示（改后新增场景） | PASS：显示「这份工作草稿已被丢弃，不能继续编辑…」，不加载被丢弃内容 |
 
 > 回归口径说明：`e2e-p5-workspace.py` 首次在旧构建（含前序测试数据）上出现过 217/2，经查是前序 e2e 留下的工作草稿/媒体数据导致的空态与选择器口径偏差（这些脚本与 media-picker 本轮未改动，非本返工引入）；在 `7a19eb2` 全新 `down→up` 的干净隔离库上首次运行即 **219/219**。
+
+#### 5.5.1 继续轮补充覆盖（2026-10-19 12:11，8 场景一次完整运行）
+
+在 HEAD `b6ef358`、构建 `BUILD_ID=x46VxuFXLS83Km5gubNnP`（apps/web 与修复源码逐文件一致）、**全新 down→up 隔离库**上运行扩展后的 `tools/e2e-p5-rework.py`：
+
+- **208 pass / 0 fail / 1 skip，exit 0**（8 场景一次运行，chromium 148 headless，视口 1440/390/320）。
+- 原有 5 场景断言数与 `7a19eb2` 证据一致（14/15/26/23/44），**无回归**；新增：`r1-guards` **40/40**、`r2-save-as-new` **16/16**、`r3-extra` **28/28 + 1 skip**。
+- 逐项映射与证据见 `docs/acceptance/evidence/p5-rework-2026-10-19/TASK4-COVERAGE.md`；JSON 为 `after-e2e-p5-rework-extra.json`，截图 29 张（`.dsh/screenshots/p5-rework/after-extra/`）。
+
+新增覆盖要点：
+1. **R1 412**：API 真实推前工作草稿版本 → 服务端真实 412 → conflict + ConflictNotice、提交按钮 disabled、commit **0**、输入/本机副本保留。
+2. **R1 401**：PATCH 与会话接口同时 401（模拟真实会话失效）→ 准确登录失效提示、不可提交、commit **0**、本机副本保留。
+3. **R1 相册 saveNow 调用方**：PATCH 500 下点「新建相册」→ 真实错误提示、**无 unhandled rejection**、页面不崩溃、无虚假成功；新标签页按实际打开 `/admin/albums`。
+4. **R1 提交期间更晚输入**：延迟 commit 响应，在途时继续输入 → 放行成功 → 提交内容为提交时快照、**更晚输入的 localStorage 本机副本未被清**、commit 恰 1 次。
+5. **R2 另存为新草稿**（UI 路径）：412 →「另存为新草稿」→ 新 draft `target_id=null`、原草稿内容未被覆盖 → 设备 B（仅 cookie、无 localStorage）从创作台 `?draft=` 恢复正文与图片顺序。
+6. **R3 草稿保留**：手机内输入不发送 → 返回后从 UI 重进消息列表 / 收起手机重开 /「展开查看」进 canonical / 展开后回手机，四处均按 `msg.draft.v1:<character>` 恢复；如实记录 `.pw-back` 实际落回 INS 动态页签（消息页签是应用内状态，再点「消息」回列表）。
+7. **R3 发送失败重试**：拦截 `POST /api/v1/messaging/conversations/<id>/messages` → 500 → 错误反馈可见、草稿不丢、sessionStorage 草稿仍在 → 解除拦截重试成功并清空。
+8. **R3 usage/限额**：`.msg-usage` 可见且文案格式实测（「今天已用 1 / 20 次自由聊天」）；**额度耗尽态未真实耗尽**（1 skip，见 §8）。
+9. **R3 音乐继续播放**：手机桌面播放（`audio[data-pl-music]` 未暂停、进度前进、`.pw-tab.playing`）→ 进入 INS 会话后仍播放、进度继续前进（桌面 chromium；真机/自动播放策略未验证）。
 
 ---
 
@@ -201,16 +226,17 @@
 
 ## 8. 未验证项与明确风险
 
-1. 真机项（§7）：真机 iOS/Android、软键盘遮挡、触控命中、中文输入法 composition 均未验证；390/320 只是视口，不是真机。
-2. 真实双物理设备并发：跨设备恢复使用「第二浏览器上下文（复制 cookie、无 localStorage）+ 隔离 API」模拟，非两台物理设备。
-3. 弱网长时间输入稳定性：只做短时故障注入与断网/恢复模拟。
-4. R1 的 412/401/暂停状态旁路、相册新建 saveNow 调用方、提交期间更晚输入不被清：**单测/组件测试覆盖**，未纳入真浏览器故障注入（e2e 只做 PATCH 500）。
-5. R2「另存为新草稿」生成的草稿跨设备恢复：**Hook/组件测试覆盖**，未纳入真浏览器 e2e。
-6. R3 草稿在 App 内切换/返回/展开后的保留、发送失败重试、限额耗尽提示：仅部分覆盖（e2e 验证入口/输入/发送/展开 href；草稿保留与限额由组件测试/现有实现覆盖）；音乐继续播放与软键盘遮挡未验证。
-7. 本轮未重跑 Docker、生产部署、迁移 round-trip、OpenAPI/gen:api 漂移（后端与契约未改，复用证据）。
-8. R3 视觉仍为 IM 风格自适配，不宣称逐像素还原参考帧；手机内自由输入区为功能恢复后的折叠条形态。
-9. 同设备从创作台打开新草稿会生成新的 `entry`，创建会话中 <1s 未同步的本机输入以服务端草稿为准；这是本机副本 key 语义，不是跨设备缺陷。
-10. 全量单测在中间一次运行出现 1 个与本改动无关的既有 timing 用例偶发 flake；单文件重跑与最终全量复跑均通过（§5.1 已记录）。
+> 2026-10-19 继续轮补证后更新：原第 4/5/6 项的大部分已转为真实浏览器证据（§5.5.1），下表保留**仍然不可测/未验证**的内容及原因。
+
+1. **真机项（§7）**：真机 iOS/Android、真实触控命中、软键盘遮挡、中文/日文输入法 composition 真实行为 —— 未验证（无设备/无真实输入法；390/320 只是视口）。
+2. **真实双物理设备并发**：跨设备恢复仍用「第二浏览器上下文（复制 cookie、无 localStorage）+ 隔离 API」模拟，非两台物理设备。
+3. **弱网/长时间输入稳定性**：只做短时故障注入（PATCH 500/401/412、commit 延迟、发送 500），未做长时弱网。
+4. **R3 自由聊天额度耗尽/不可发送态**：需真实耗尽每日额度（20 次/访客/天），本轮不真实耗尽；只实测了 usage 展示与格式，耗尽态为 1 skip（未验证）。
+5. **R3 音乐真机/WebKit 行为**：只在桌面 chromium 验证「进入手机会话后继续播放、进度前进」；真机静音键/自动播放策略差异未验证。
+6. **D1 与部署类**：Docker 健康检查错配未修（§6）；生产部署、迁移 round-trip、OpenAPI/gen:api 漂移本轮未重跑（后端/契约未改；D1 未获授权，不擅自部署）。
+7. **R3 视觉**：仍为 IM 风格自适配，不宣称逐像素还原参考帧；手机内自由输入区为功能恢复后的折叠条形态。
+8. **本机副本语义边界**：同设备从创作台打开新草稿会生成新的 `entry`，创建会话中 <1s 未同步的本机输入以服务端草稿为准；这是本机副本 key 语义，不是跨设备缺陷。
+9. **偶发测试 flake**：全量单测在中间一次运行出现 1 个与本改动无关的既有 timing 用例 flake；单文件重跑与最终全量复跑均通过（§5.1 已记录）。
 
 ---
 
@@ -233,6 +259,8 @@
 | 真浏览器 e2e（改前/改后） | `docs/acceptance/evidence/p5-rework-2026-10-19/{baseline,after}-e2e-p5-rework.json`；完整日志与截图在 `/Users/学习/blog/rework-evidence/`、`/Users/学习/blog/.dsh/screenshots/p5-rework/` |
 | e2e 脚本（新增，可复跑） | `tools/e2e-p5-rework.py` |
 | e2e 摘要（改后 124/0、回归 219/0、六项 6/6、相册 9/0） | `docs/acceptance/evidence/p5-rework-2026-10-19/after-e2e-summary.txt`、`after-regression-summary.json` |
+| 继续轮补证（8 场景 208/0/1、§8 映射、端口核对） | `docs/acceptance/evidence/p5-rework-2026-10-19/after-e2e-p5-rework-extra.json`、`after-e2e-extra-summary.txt`、`TASK4-COVERAGE.md`、`port-check-task4-*.txt` |
+| 后端全树（继续轮隔离 55450 实跑） | `docs/acceptance/evidence/p5-rework-2026-10-19/after-backend-isolated-summary.txt`；完整日志 `/Users/学习/blog/rework-evidence/after/backend-isolated-55450.log` |
 | 共享端口核对 | `docs/acceptance/evidence/p5-rework-2026-10-19/port-check-after-down.txt`、`shared-env-check.txt` |
 | 单测/构建摘要 | `docs/acceptance/evidence/p5-rework-2026-10-19/`（vitest/build/shared-env） |
 | 修复提交 | `afafdf8`（R1+R2）、`8b826c9`（R3） |
