@@ -155,8 +155,12 @@ COMPOSE="docker compose -f deploy/compose.prod.yaml --env-file $ENV_FILE"
 
 ## 6. 本机已实测 / 未实测（不要混写）
 
-**已实测**（命令与输出见 [T10 交付单](../agent-deliveries/T10-result.md)）：
+**已实测**（命令与输出见 [T10 交付单](../agent-deliveries/T10-result.md)，D1 补测见
+[P5-D1 验证报告](../acceptance/P5-D1-compose-healthcheck-2026-10-19.md)）：
 
+- **两个生产镜像在本机隔离构建成功**（API 444MB / Web 489MB；Web 需 `--build-context music=assets/music`）；
+- **隔离项目全栈 `docker compose up -d` 启动、健康检查联动、migrate/grants 一次性服务**
+  （28/28 断言：依赖链、四服务 healthy、网关真实 readiness、旧契约对照 exit 1、停 db 故障恢复、非 root）；
 - `docker compose -f deploy/compose.prod.yaml --env-file … config`（渲染成功，退出码 0）；
 - `caddy validate`（Caddy 2.10.2 真实二进制，`Valid configuration`）；
 - 迁移、readiness 五种故障形态、反向代理同源写路径、旧 URL 重定向、音频 Range；
@@ -165,7 +169,6 @@ COMPOSE="docker compose -f deploy/compose.prod.yaml --env-file $ENV_FILE"
 
 **未实测**（原因见 [limitations.md](limitations.md)）：
 
-- `docker build`（两个生产镜像）、`docker compose up`、容器内启动与健康联动；
-  本机 Docker daemon 未运行（`/Users/v/.docker/run/docker.sock` 不存在）；
 - 真实域名下的 TLS / Cookie / ACME；
-- 生产主机上的防火墙、磁盘与内存表现。
+- 生产主机上的部署、防火墙、磁盘与内存表现；
+- CI 远端构建/推送与 digest 镜像、生产回滚演练。

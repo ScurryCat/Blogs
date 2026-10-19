@@ -1,0 +1,308 @@
+name: phantom-log
+services:
+  api:
+    restart: unless-stopped
+    cap_drop:
+      - ALL
+    environment:
+      APP_ENV: prod
+      APP_VERSION: 0.0.0
+      CORS_ORIGINS: ""
+      DATABASE_URL: postgresql+psycopg://pl_app:d1-static-app@db:5432/pl
+      MEDIA_MAX_CONCURRENCY: "2"
+      MEDIA_ROOT: /var/lib/phantom-log/media
+      SECRET_KEY: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+      TRUST_PROXY_HEADERS: "true"
+    image: registry.example.invalid/phantom-log/api@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    networks:
+      data_net: null
+      edge_net: null
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    volumes:
+      - type: volume
+        source: media_data
+        target: /var/lib/phantom-log/media
+        volume: {}
+    depends_on:
+      db:
+        condition: service_healthy
+        required: true
+      grants:
+        condition: service_completed_successfully
+        required: true
+      migrate:
+        condition: service_completed_successfully
+        required: true
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - |
+          import json, sys, urllib.request
+          try:
+              with urllib.request.urlopen("http://127.0.0.1:8000/api/v1/health/ready", timeout=5) as r:
+                  body = json.load(r)
+          except Exception:
+              sys.exit(1)
+          sys.exit(0 if body.get("status") == "ready" else 1)
+      timeout: 10s
+      interval: 15s
+      retries: 5
+      start_period: 30s
+  db:
+    restart: unless-stopped
+    environment:
+      PGTZ: UTC
+      POSTGRES_APP_PASSWORD_FILE: /run/secrets/postgres_app_password
+      POSTGRES_APP_USER: pl_app
+      POSTGRES_DB: pl
+      POSTGRES_MIGRATOR_PASSWORD_FILE: /run/secrets/postgres_migrator_password
+      POSTGRES_MIGRATOR_USER: pl_migrator
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_admin_password
+      POSTGRES_USER: pl_admin
+      TZ: UTC
+    image: postgres:18-alpine
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    networks:
+      data_net: null
+    secrets:
+      - source: postgres_admin_password
+        target: /run/secrets/postgres_admin_password
+      - source: postgres_migrator_password
+        target: /run/secrets/postgres_migrator_password
+      - source: postgres_app_password
+        target: /run/secrets/postgres_app_password
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - type: volume
+        source: pg_data
+        target: /var/lib/postgresql
+        volume: {}
+      - type: bind
+        source: /Users/学习/blog/Blogs/deploy/db/init
+        target: /docker-entrypoint-initdb.d
+        read_only: true
+        bind: {}
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}
+      timeout: 5s
+      interval: 10s
+      retries: 12
+      start_period: 20s
+  gateway:
+    restart: unless-stopped
+    cap_add:
+      - NET_BIND_SERVICE
+    cap_drop:
+      - ALL
+    environment:
+      API_UPSTREAM: api:8000
+      GATEWAY_HTTP_PORT: "80"
+      GATEWAY_HTTPS_PORT: "443"
+      SITE_ADDRESS: http://127.0.0.1:8080
+      WEB_UPSTREAM: web:3000
+    image: caddy:2.10.2-alpine
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    networks:
+      edge_net: null
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    volumes:
+      - type: bind
+        source: /Users/学习/blog/Blogs/deploy/gateway/Caddyfile
+        target: /etc/caddy/Caddyfile
+        read_only: true
+        bind: {}
+      - type: volume
+        source: caddy_data
+        target: /data
+        volume: {}
+      - type: volume
+        source: caddy_config
+        target: /config
+        volume: {}
+    depends_on:
+      api:
+        condition: service_healthy
+        required: true
+      web:
+        condition: service_healthy
+        required: true
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - -q
+        - -O
+        - '-'
+        - http://127.0.0.1:80/gateway-healthz
+      timeout: 5s
+      interval: 15s
+      retries: 5
+      start_period: 15s
+    ports:
+      - mode: ingress
+        target: 80
+        published: "8080"
+        protocol: tcp
+      - mode: ingress
+        target: 443
+        published: "8443"
+        protocol: tcp
+  grants:
+    restart: 'no'
+    cap_drop:
+      - ALL
+    command:
+      - psql
+      - -v
+      - ON_ERROR_STOP=1
+      - -h
+      - db
+      - -U
+      - pl_migrator
+      - -d
+      - pl
+      - -v
+      - app_user=pl_app
+      - -f
+      - /grant-runtime.sql
+    environment:
+      PGPASSWORD: d1-static-migrator
+    image: postgres:18-alpine
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    networks:
+      data_net: null
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - type: bind
+        source: /Users/学习/blog/Blogs/deploy/db/grant-runtime.sql
+        target: /grant-runtime.sql
+        read_only: true
+        bind: {}
+    depends_on:
+      db:
+        condition: service_healthy
+        required: true
+      migrate:
+        condition: service_completed_successfully
+        required: true
+  migrate:
+    restart: 'no'
+    command:
+      - alembic
+      - upgrade
+      - head
+    environment:
+      APP_ENV: prod
+      APP_VERSION: 0.0.0
+      DATABASE_URL: postgresql+psycopg://pl_migrator:d1-static-migrator@db:5432/pl
+      SECRET_KEY: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    image: registry.example.invalid/phantom-log/api@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    networks:
+      data_net: null
+    depends_on:
+      db:
+        condition: service_healthy
+        required: true
+  web:
+    restart: unless-stopped
+    cap_drop:
+      - ALL
+    environment:
+      API_INTERNAL_URL: http://api:8000
+      NODE_ENV: production
+    image: registry.example.invalid/phantom-log/web@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    networks:
+      edge_net: null
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    depends_on:
+      api:
+        condition: service_healthy
+        required: true
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - |
+          fetch("http://127.0.0.1:3000/healthz", { headers: { accept: "application/json" } })
+            .then((r) => process.exit(r.ok ? 0 : 1))
+            .catch(() => process.exit(1));
+      timeout: 10s
+      interval: 15s
+      retries: 5
+      start_period: 30s
+networks:
+  data_net:
+    name: phantom-log_data_net
+    internal: true
+  edge_net:
+    name: phantom-log_edge_net
+volumes:
+  caddy_config:
+    name: phantom-log_caddy_config
+  caddy_data:
+    name: phantom-log_caddy_data
+  media_data:
+    name: phantom-log_media_data
+  pg_data:
+    name: phantom-log_pg_data
+secrets:
+  postgres_admin_password:
+    name: phantom-log_postgres_admin_password
+    file: /tmp/pl-d1-static/secrets/admin
+  postgres_app_password:
+    name: phantom-log_postgres_app_password
+    file: /tmp/pl-d1-static/secrets/app
+  postgres_migrator_password:
+    name: phantom-log_postgres_migrator_password
+    file: /tmp/pl-d1-static/secrets/migrator
+x-logging:
+  driver: json-file
+  options:
+    max-file: "5"
+    max-size: 10m

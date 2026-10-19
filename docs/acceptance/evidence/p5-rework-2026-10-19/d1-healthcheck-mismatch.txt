@@ -1,3 +1,8 @@
+# D1 Docker healthcheck mismatch — 历史证据（2026-10-19 已修复）
+
+> 这份文件记录的是**修复前**的错配，用于追溯；修复提交 `d8c22ae`。
+> 修复后验证：`d1-compose-verify.json`（28/28 通过）、`P5-D1-compose-healthcheck-2026-10-19.md`。
+
 # D1 Docker healthcheck mismatch (still present, not fixed)
 
 ## deploy/compose.prod.yaml

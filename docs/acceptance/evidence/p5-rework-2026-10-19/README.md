@@ -6,7 +6,7 @@
 
 - 返工基线：`9917890f001ac055280c48c31d50671821e7c929`
 - 修复提交：`afafdf8`（R1+R2）、`8b826c9`（R3）、`7a19eb2`（R2 已丢弃/已提交草稿校验）
-- 最终状态：**返工 e2e 124/0 pass、继续轮补证 8 场景 208/0/1、P5 全量 e2e 219/0、六项回归 6/6 exit 0、后端全树隔离 1025/0**；D1 未修、真机未验证
+- 最终状态：**返工 e2e 124/0 pass、继续轮补证 8 场景 208/0/1、P5 全量 e2e 219/0、六项回归 6/6 exit 0、后端全树隔离 1025/0；D1 已修复并完成隔离 Compose 验证（28/28，提交 d8c22ae）**；真机未验证
 - 复验报告：`../P5-rework-verification-2026-10-19.md`
 - 返工任务书/独立验收：`/Users/v/Documents/ChatGPT/Blog开发/docs/handoff/2026-10-19-p5-rework/`
 
@@ -27,7 +27,10 @@
 | `after-frontend-vitest-summary.txt` | 改后全量单测：113 文件 / 1182 用例通过；含 1 次既有 timing flake 说明 |
 | `isolated-build-summary.txt` | 隔离副本生产构建：exit 0，37/37 静态页，BUILD_ID `saPw1tf0nfpULa2_uuztT` |
 | `shared-env-check.txt` | 共享 8000/8100/3100/55432 端点与 PID 未被本轮回工触碰（与隔离 55434/8130/3130 对照） |
-| `d1-healthcheck-mismatch.txt` | D1 错配证据（`compose.prod.yaml` 检查 `"ok"` vs `health.py` 返回 `"ready"`），本轮未修 |
+| `d1-healthcheck-mismatch.txt` | **历史**：D1 修复前的错配证据（`compose.prod.yaml` 检查 `"ok"` vs `health.py` 返回 `"ready"`）；2026-10-19 已修复 |
+| `d1-compose-verify.json` / `d1-compose-verify.log` | **D1 修复后真实隔离 Compose 验证**：`docker compose up` 全栈 + 28/28 断言（依赖链、healthy、网关 readiness、旧契约对照、停 db 故障恢复、非 root、清理） |
+| `d1-static-check.log` / `d1-ci-workflow-check.log` | `check-prod-config.py` 60/60（含 A2 健康契约与依赖链断言）、CI workflow 检查 30/30 |
+| `d1-summary.txt` / `d1-runtime-facts.txt` / `d1-*-image-build.log` / `d1-rendered-compose.yaml` / `d1-code-diff.patch` | D1 摘要、Docker/镜像事实、API/Web 生产镜像构建日志、渲染后编排、修复 diff |
 
 ## 复跑命令（摘要）
 

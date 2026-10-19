@@ -1,0 +1,35 @@
+== CI / 发布工作流 ==
+  ✓ 有工作流文件  ci.yml,release.yml
+  ✓ ci.yml 是合法 YAML
+  ✓ release.yml 是合法 YAML
+-- ci.yml --
+  ✓ ci.yml: 声明了 job  api,web,legacy,deploy-config,container-build,container-build-web
+  ✓ ci.yml: 权限最小化（contents: read）  {'contents': 'read'}
+  ✓ ci.yml: 没有自动部署生产（ssh/scp/rsync）  []
+  ✓ ci.yml: 明确写了不自动部署生产
+-- release.yml --
+  ✓ release.yml: 声明了 job  build
+  ✓ release.yml: 权限最小化（contents: read）  {'contents': 'read'}
+  ✓ release.yml: 没有自动部署生产（ssh/scp/rsync）  []
+  ✓ release.yml: 明确写了不自动部署生产
+  ✓ CI 覆盖：node --test tests/*.test.cjs
+  ✓ CI 覆盖：npm --prefix apps/web run typecheck
+  ✓ CI 覆盖：npm --prefix apps/web run lint
+  ✓ CI 覆盖：npm --prefix apps/web run test -- --run
+  ✓ CI 覆盖：uv run --project apps/api pytest apps/api/tests
+  ✓ CI 覆盖：export_openapi.py
+  ✓ CI 覆盖：npm --prefix apps/web run gen:api
+  ✓ CI 覆盖：docker compose -f deploy/compose.prod.yaml
+  ✓ CI 覆盖：check-prod-config.py
+  ✓ 发布工作流覆盖：docker/build-push-action
+  ✓ 发布工作流覆盖：outputs.digest
+  ✓ 发布工作流覆盖：docker/build-push-action@v6
+  ✓ 发布工作流覆盖：build-contexts
+  ✓ 发布工作流按 digest 记录镜像引用
+  ✓ 发布记录里含提交 SHA 与 schema 版本线索
+  ✓ 发布工作流只在 tag 与手动触发（不随每次 push 发布）  {}
+  ✓ 发布工作流默认不推送镜像（需显式开启）
+  ✓ ci.yml: API 测试用真实 PostgreSQL 服务
+  ✓ ci.yml: 没有把数据库测试降级成 SQLite  []
+
+== 汇总：30/30 通过 ==

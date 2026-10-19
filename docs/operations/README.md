@@ -19,9 +19,13 @@
 迁移 head    528a38f23614（20261016_2155，T09 skills and exploration；单一 head，34 张表）
 本机 PostgreSQL 18.6 @ 127.0.0.1:55432（用户 pl，trust）
 Node 26.8.1 / npm 11.19.0 / Python 3.13.5 / uv 0.9.18
-Docker CLI 29.8.2 / Compose v5.5.1 —— **daemon 未运行**（/Users/v/.docker/run/docker.sock 不存在）
+Docker CLI 29.8.2 / Compose v5.6.0 —— **daemon 可用**（Docker Desktop；2026-10-19 D1 验证时实测）
 Caddy 二进制 2.10.2（仅用于把 Caddyfile validate 跑实，未长期驻留）
 ```
+
+> 2026-10-19 更新：站主授权处理 D1 后，已在**隔离 Compose**（项目 `pl-d1-verify`，端口 18080/18443）
+> 实测生产镜像构建、全栈启动、健康检查联动与 migrate/grants 一次性服务；生产部署/TLS/真实域名仍未验证。
+> 详见 `../acceptance/P5-D1-compose-healthcheck-2026-10-19.md`。
 
 ## 三条硬规则
 

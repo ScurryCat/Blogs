@@ -1,0 +1,67 @@
+== A. 生产编排（/tmp/pl-d1-static/rendered-compose-final.yaml）==
+  ✓ 编排里有 gateway / web / api / db / migrate / grants  api,db,gateway,grants,migrate,web
+  ✓ 只有 gateway 发布宿主端口  发布了端口: ['gateway']
+  ✓ db 在 internal 网络上  db=['data_net'] internal=['data_net']
+  ✓ api 同时接内部数据网络  api=['data_net', 'edge_net']
+  ✓ web 不在数据库网络上  web=['edge_net']
+  ✓ web 不持有任何数据库凭据（环境变量名）  []
+  ✓ web 没有 DATABASE_URL
+  ✓ 没有服务挂载仓库源码目录（生产不挂源码）  []
+  ✓ 没有 privileged 服务  []
+  ✓ 没有挂载 docker socket  []
+  ✓ api: read_only 根文件系统
+  ✓ api: cap_drop ALL  ['ALL']
+  ✓ api: no-new-privileges  ['no-new-privileges:true']
+  ✓ web: read_only 根文件系统
+  ✓ web: cap_drop ALL  ['ALL']
+  ✓ web: no-new-privileges  ['no-new-privileges:true']
+  ✓ gateway: read_only 根文件系统
+  ✓ gateway: cap_drop ALL  ['ALL']
+  ✓ gateway: no-new-privileges  ['no-new-privileges:true']
+  ✓ 没有服务使用 latest 标签  {}
+  ✓ api 镜像按 digest 固定  registry.example.invalid/phantom-log/api@sha256:aaaaaaaaaaaaaaaaaaaaaa
+  ✓ web 镜像按 digest 固定  registry.example.invalid/phantom-log/web@sha256:aaaaaaaaaaaaaaaaaaaaaa
+== A2. 健康检查契约与依赖启动（D1）==
+  ✓ 能从 health.py 读到 readiness 成功/未就绪状态词
+  ✓ readiness 成功状态词是 ready  ready
+  ✓ db: 启用健康检查（未 disable）  healthcheck={'test': ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'], 'timeout': '5s', 'interval': '10s', 'retries': 12, 'start_period': '20s'}
+  ✓ api: 启用健康检查（未 disable）  healthcheck={'test': ['CMD', 'python', '-c', 'import json, sys, urllib.request\ntry:\n    with urllib.request.urlopen("http://127.0.0.1:8000/api/v1/health/ready", timeout=5) as r:\n        body = json.load(r)\nexcept Exception:\n    sys.exit(1)\nsys.exit(0 if body.get("status") == "ready" else 1)\n'], 'timeout': '10s', 'interval': '15s', 'retries': 5, 'start_period': '30s'}
+  ✓ web: 启用健康检查（未 disable）  healthcheck={'test': ['CMD', 'node', '-e', 'fetch("http://127.0.0.1:3000/healthz", { headers: { accept: "application/json" } })\n  .then((r) => process.exit(r.ok ? 0 : 1))\n  .catch(() => process.exit(1));\n'], 'timeout': '10s', 'interval': '15s', 'retries': 5, 'start_period': '30s'}
+  ✓ gateway: 启用健康检查（未 disable）  healthcheck={'test': ['CMD', 'wget', '-q', '-O', '-', 'http://127.0.0.1:80/gateway-healthz'], 'timeout': '5s', 'interval': '15s', 'retries': 5, 'start_period': '15s'}
+  ✓ api 健康检查调用真实 readiness /api/v1/health/ready（不是 liveness）
+  ✓ api 健康检查期望的 status 与后端 readiness 成功状态词一致（D1：不能写死 ok）  healthcheck='ready' backend='ready'
+  ✓ api 健康检查没有把未就绪状态词当成功  not_ready='not_ready'
+  ✓ migrate 等 db 健康后执行  {'db': 'service_healthy'}
+  ✓ grants 等 migrate 成功 + db 健康后才执行（运行账号授权）  {'db': 'service_healthy', 'migrate': 'service_completed_successfully'}
+  ✓ api 等 migrate + grants 成功 + db 健康后才启动  {'db': 'service_healthy', 'grants': 'service_completed_successfully', 'migrate': 'service_completed_successfully'}
+  ✓ web 等 api 健康后才启动  {'api': 'service_healthy'}
+  ✓ gateway 等 web + api 都健康后才启动  {'api': 'service_healthy', 'web': 'service_healthy'}
+== B. Caddyfile ==
+  ✓ API 的 handle 在兜底 handle 之前  顺序 ['handle /api/v1/*', 'handle /assets/music/*', 'handle /gateway-healthz', 'handle']
+  ✓ 音频的 handle 在兜底 handle 之前
+  ✓ 网关自身探针在兜底 handle 之前
+  ✓ 没有改写 Host（同源校验依赖它与 Origin 一致）
+  ✓ 没有删除 Origin 的指令
+  ✓ 明确标注不做业务限流（06 §1）
+  ✓ caddy validate（未提供 --caddy，只做了结构断言）  结构断言已执行；validate 需要 Caddy 二进制
+== C. Dockerfile / 环境变量示例 ==
+  ✓ prod.Dockerfile.api: 构建层没有密钥类 ARG / ENV  []
+  ✓ prod.Dockerfile.api: 声明并切换到非 root 用户
+  ✓ prod.Dockerfile.api: 锁定依赖（npm ci / uv sync --frozen）
+  ✓ prod.Dockerfile.web: 构建层没有密钥类 ARG / ENV  []
+  ✓ prod.Dockerfile.web: 声明并切换到非 root 用户
+  ✓ prod.Dockerfile.web: 锁定依赖（npm ci / uv sync --frozen）
+  ✓ web 镜像显式包含 public 与 .next/static（standalone 不会自动带）
+  ✓ web Dockerfile 用命名构建上下文引用 music（而非复制整个主上下文）
+  ✓ web 构建保留 apps/web 层级且 CMD 与 standalone 路径一致（否则启动即 MODULE_NOT_FOUND）
+  ✓ release workflow 传入 music=assets/music 构建上下文
+  ✓ prod.env.example: 没有像真值的密钥（*_FILE 路径不算密钥）  []
+  ✓ dev.env.example: 没有像真值的密钥（*_FILE 路径不算密钥）  []
+  ✓ .dockerignore 没有排除镜像需要的输入路径（music 走独立上下文）  []
+  ✓ .dockerignore 排除了密钥文件
+  ✓ .dockerignore 排除了 node_modules 与 .venv
+  ✓ .dockerignore 排除了前端测试文件（否则镜像内 tsc 会因缺 tests/ helper 失败）
+== D. 破坏性命令扫描 ==
+  ✓ 脚本与编排里没有可执行的 down -v  []
+
+== 汇总：60/60 通过 ==

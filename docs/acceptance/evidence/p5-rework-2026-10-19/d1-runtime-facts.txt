@@ -1,0 +1,14 @@
+# Docker / Compose 版本
+client=29.8.2 server=29.8.2
+Docker Compose version v5.6.0
+
+# 验证用本机镜像（只本地 tag，未推送）
+phantom-log-web:d1-verify id=f56538fe6d26 size=489MB digest=sha256:f56538fe6d26d310a9cd548215ce3f82d20f79fc36a4321603410fa4291a5f90
+phantom-log-api:d1-verify id=e0ad77e0437d size=444MB digest=sha256:e0ad77e0437d08ce8032308162ef1eb66f340f1a2f5dcc71b7045003012c3c57
+postgres:18-alpine id=77f585114c32 size=425MB digest=sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
+caddy:2.10.2-alpine id=4c6e91c6ed0e size=80.1MB digest=sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d
+
+# 镜像内非 root 与 standalone 布局
+api uid=10001
+web uid=10002
+-rw-r--r-- 1 phantom phantom 8183 Oct 19 04:28 /srv/web/apps/web/server.js

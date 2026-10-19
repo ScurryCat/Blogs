@@ -4,7 +4,8 @@
 > 返工依据：独立验收返工包 `p5-rework-package-2026-10-19.zip` 中的 `REWORK-SPEC.md`、`CHECKLIST.md`、`ACCEPTANCE-REPORT.md`
 > 验收基线：`9917890f001ac055280c48c31d50671821e7c929`（干净工作树）
 > 修复提交：`afafdf8`（R1 + R2）、`8b826c9`（R3）、`7a19eb2`（R2 补充：恢复时拒绝已丢弃/已提交草稿）；文档与证据见本提交
-> 结论：**R1 / R2 / R3 已修复，并按「改前失败 → 改后通过」的真实证据复验；D1 未修（单列上线遗留）；真机项仍未验证。**
+> 结论：**R1 / R2 / R3 已修复，并按「改前失败 → 改后通过」的真实证据复验；D1 已按站主授权修复并完成隔离 Compose 验证；真机项仍未验证。**
+> D1 修复提交：`d8c22ae`；详细证据见 `docs/acceptance/P5-D1-compose-healthcheck-2026-10-19.md`。
 > 修订：2026-10-19 12:20（继续轮补证：新增 §5.5.1 浏览器补充覆盖、§5.4 后端全树实跑、更新 §8 未验证项与 §10 证据索引）。
 
 ---
@@ -16,13 +17,13 @@
 | **R1** 保存失败不得提交旧草稿 | ✅ 已修复并复验 | 随包 Hook 检查 0/2→2/2；真浏览器故障注入：改前 commit=1、虚假成功、正式内容被旧草稿覆盖、本机副本被清；改后 commit=0、无成功提示、输入与本机副本保留；解除阻断重试后正式内容=最新输入 |
 | **R2** 新建草稿跨设备恢复 | ✅ 已修复并复验 | 创作台链接改前 `/new`（无 draft）→ 改后 `?draft=<id>`；无 localStorage 的第二上下文完整恢复文字/图片顺序/alt/相册收录；404/403/已丢弃/已提交/类型不匹配有准确错误且不静默新建 |
 | **R3** 手机内自由聊天入口 | ✅ 已修复并复验（桌面/窄视口） | 改前 `.msg-composer`/`.msg-usage`/`.pw-expand` 在手机 ins 内全部不可见、expand href=`/apps/ins`；改后三者可见可点、expand href 保留会话（`/apps/ins/messages/<role>`），1440/390/320 截图与断言通过 |
-| **D1** Docker 健康检查错配 | ⚠️ 未修（单列上线遗留，未获授权） | `deploy/compose.prod.yaml` 检查 `status == "ok"`，API 就绪返回 `"ready"`；本轮未改部署配置、未部署 |
+| **D1** Docker 健康检查错配 | ✅ **已修复并做隔离 Compose 验证**（提交 `d8c22ae`） | healthcheck 改为期望 `"ready"`（与 health.py 一致）；真实 `docker compose up` 28/28 断言通过（依赖链、四服务 healthy、网关 readiness、旧契约对照 exit 1、停 db→unhealthy→恢复、非 root）；**未部署生产、TLS/域名未验证** |
 | **真机** 触控/软键盘/中文输入法 | ❌ 未验证（无设备） | 只有 Chromium headless + 视口证据；不以桌面/WebKit 代替真机 |
 | 集成回归 | ✅ 通过 | tsc 0 / lint 0 / 全量单测 113 文件·1182 用例；隔离生产构建 exit 0（37/37 静态页）；返工 e2e **124/0**；继续轮补证 8 场景 **208/0/1 skip**；P5 全量 e2e **219/0**；六项回归 6/6 exit 0；后端全树隔离 **1025/0**（见 §5） |
 
 > **继续轮补证（2026-10-19 12:11）**：原 §8 的 8 项「未验证/部分覆盖」中 7 项已转为真实浏览器证据（`r1-guards` 40/40、`r2-save-as-new` 16/16、`r3-extra` 28/28+1 skip；原有 5 场景断言数一致、无回归），后端全树也在隔离集群 55450 实跑通过；仍不可测/未验证项见 §8。
 >
-> **不能声称的内容**：不能声称「A1–A12 全部通过」「真机通过」「D1 已修复」。手机内自由聊天只在桌面浏览器与 1440/390/320 视口下验证；真实软键盘/输入法/触控未验证。
+> **不能声称的内容**：不能声称「A1–A12 全部通过」「真机通过」「生产环境已部署」。D1 的契约修复与隔离 Compose 验证已完成，但生产域名/TLS/真实宿主机部署仍未验证；手机内自由聊天只在桌面浏览器与 1440/390/320 视口下验证；真实软键盘/输入法/触控未验证。
 
 ---
 
@@ -33,11 +34,13 @@
   - `afafdf8` `fix(p5-rework): R1 保存失败不得提交旧草稿 + R2 新建草稿跨设备恢复`
   - `8b826c9` `fix(p5-rework): R3 恢复手机内自由聊天与展开查看入口`
   - `7a19eb2` `fix(p5-rework): R2 恢复时拒绝已丢弃/已提交的工作草稿`（复验中发现的 R2 残余缺陷，详见 §3.4）
-- 未改后端/契约/部署：`git diff --stat 9917890..HEAD -- apps/api contracts deploy` 为空；**后端全树已在继续轮于隔离集群 55450 实跑**（1025 通过 / 0 失败，exit 0，集群用后即焚），见 §5.4。
+  - `d8c22ae` `fix(deploy): 修复 D1 API 健康检查契约错配 + 打通隔离 Compose 健康启动`、`b597576`（检查器路径同步）（§6，站主授权后）
+- 后端起止未改：`git diff --stat 9917890..HEAD -- apps/api contracts` 为空；**后端全树已在继续轮于隔离集群 55450 实跑**（1025 通过 / 0 失败，exit 0），见 §5.4。部署配置在 D1 授权修复中修改（`deploy/**`，见 §6）。
 - 修改文件（按 R 项）：
   - R1/R2：`apps/web/features/workspace/use-work-draft.ts`、`draft-url.ts`（新增）、`workspace-home.tsx`；`features/ins/editor/moment-editor.tsx`、`moment-editor-page.tsx`；`features/journal/editor/journal-editor.tsx`、`editor-loaders.tsx`；对应单测/组件测试（含新增 `journal-editor-work-draft.test.tsx`）。
   - R3：`apps/web/app/globals.css`（仅 `[data-phone-app="ins"]` 段）、`features/messaging/composer.tsx`、`conversation-view.tsx`、`features/phone/phone-host.tsx`、`features/phone/expand-target.ts`（新增）；新增/更新 `messaging-phone-css.test.ts`、`expand-target.test.ts`、`views.test.tsx`、`phone-host.test.tsx`。
-  - 证据工具：`tools/e2e-p5-rework.py`（新增）。
+  - 证据工具：`tools/e2e-p5-rework.py`、`tools/verify-compose-healthcheck.py`（D1，新增）。
+  - D1（`d8c22ae`）：`deploy/compose.prod.yaml`、`deploy/compose.dev.yaml`、`deploy/prod.Dockerfile.web`、`deploy/db/init/*.sh`（mode）、`.dockerignore`、`deploy/check-prod-config.py`、`docs/operations/release.md`。
 
 ---
 
@@ -161,7 +164,7 @@
 
 - 本轮 `git diff 9917890..HEAD -- apps/api contracts deploy` 为空；未新增迁移、未改 OpenAPI/生成类型。
 - **继续轮实跑后端全树**：`bash tools/verify-backend-isolated.sh 55450`（独立 Postgres 集群 55450，用后即焚）→ **进度点 1025 通过 / 0 失败进度行，pytest exit 0**；与 2026-10-19 独立验收在同一后端源码上的结果一致（`docs/acceptance/evidence/p5-rework-2026-10-19/after-backend-isolated-summary.txt`）。
-- 未重跑 Docker / 生产部署（D1 未获授权，见 §6）。
+- Docker 已在后续 D1 修复中于**隔离 Compose** 真实构建/启动/验证（见 §6 与 `P5-D1-compose-healthcheck-2026-10-19.md`）；仍未做生产部署。
 
 ### 5.5 隔离浏览器端到端（Chromium headless）
 
@@ -203,13 +206,21 @@
 
 ---
 
-## 6. D1 · Docker 健康检查错配（未修，单列上线遗留）
+## 6. D1 · Docker 健康检查错配（已按站主授权修复并完成隔离 Compose 验证）
 
-- 现状（本轮复核仍存在，未修改）：
-  - `deploy/compose.prod.yaml` 的 API healthcheck 执行 `sys.exit(0 if body.get("status") == "ok" else 1)`（约 140 行附近）；
-  - `apps/api/app/core/health.py` 就绪成功返回 `"status": "ready"`（约 134 行附近）；
-  - 网关 `depends_on: api: condition: service_healthy`，因此存在明确编排错配。
-- 本轮按任务书**未获得部署修复授权**：未改 compose/健康检查、未部署、未在隔离 Compose 验证。该项保持为上线遗留，不计入 R1–R3 关闭。
+- 根因：`deploy/compose.prod.yaml` 的 API healthcheck 期望 `status == "ok"`，而
+  `apps/api/app/core/health.py` 的 readiness 成功响应是 `status == "ready"`（未就绪 503 `not_ready`）；
+  API 即使就绪也永远 unhealthy，`gateway` 的 `depends_on: api: service_healthy` 永远等不到。
+- 修复（提交 `d8c22ae`）：healthcheck 改为 `status == "ready"`；`deploy/check-prod-config.py`
+  增加跨文件契约断言（从 health.py 解析状态词、禁止禁用健康检查）与依赖链断言；
+  隔离验证中一并修复了 5 个此前未验证的部署配置缺陷（web music 构建上下文、镜像内测试文件排除、
+  standalone 路径、PG18 数据卷挂载、grants 运行账号授权自动化；另修 initdb 脚本可执行位）。
+- 验证：真实 `docker compose up` 全栈（gateway/web/api/db/migrate/grants）+ 网关真实请求 →
+  **28/28 断言通过**；api 容器内执行部署的 healthcheck 命令 exit 0，同一命令改回旧契约
+  `== "ok"` exit 1（证明错配会误判）；停 db 后 api 变 unhealthy，恢复 db 后回 healthy。
+  静态检查 60/60、CI workflow 检查 30/30。
+- 边界：**未部署生产**；生产域名/TLS/ACME、真实宿主机、CI digest 镜像与长跑未验证。
+  详见 `docs/acceptance/P5-D1-compose-healthcheck-2026-10-19.md`。
 
 ---
 
@@ -233,7 +244,7 @@
 3. **弱网/长时间输入稳定性**：只做短时故障注入（PATCH 500/401/412、commit 延迟、发送 500），未做长时弱网。
 4. **R3 自由聊天额度耗尽/不可发送态**：需真实耗尽每日额度（20 次/访客/天），本轮不真实耗尽；只实测了 usage 展示与格式，耗尽态为 1 skip（未验证）。
 5. **R3 音乐真机/WebKit 行为**：只在桌面 chromium 验证「进入手机会话后继续播放、进度前进」；真机静音键/自动播放策略差异未验证。
-6. **D1 与部署类**：Docker 健康检查错配未修（§6）；生产部署、迁移 round-trip、OpenAPI/gen:api 漂移本轮未重跑（后端/契约未改；D1 未获授权，不擅自部署）。
+6. **D1 与部署类**：D1 契约已修复并完成隔离 Compose 验证（§6）；**生产域名/TLS/ACME、真实宿主机部署、CI digest 镜像、迁移 round-trip、OpenAPI/gen:api 漂移未重跑**（本轮未部署生产）。
 7. **R3 视觉**：仍为 IM 风格自适配，不宣称逐像素还原参考帧；手机内自由输入区为功能恢复后的折叠条形态。
 8. **本机副本语义边界**：同设备从创作台打开新草稿会生成新的 `entry`，创建会话中 <1s 未同步的本机输入以服务端草稿为准；这是本机副本 key 语义，不是跨设备缺陷。
 9. **偶发测试 flake**：全量单测在中间一次运行出现 1 个与本改动无关的既有 timing 用例 flake；单文件重跑与最终全量复跑均通过（§5.1 已记录）。
@@ -262,7 +273,9 @@
 | 继续轮补证（8 场景 208/0/1、§8 映射、端口核对） | `docs/acceptance/evidence/p5-rework-2026-10-19/after-e2e-p5-rework-extra.json`、`after-e2e-extra-summary.txt`、`TASK4-COVERAGE.md`、`port-check-task4-*.txt` |
 | 后端全树（继续轮隔离 55450 实跑） | `docs/acceptance/evidence/p5-rework-2026-10-19/after-backend-isolated-summary.txt`；完整日志 `/Users/学习/blog/rework-evidence/after/backend-isolated-55450.log` |
 | 共享端口核对 | `docs/acceptance/evidence/p5-rework-2026-10-19/port-check-after-down.txt`、`shared-env-check.txt` |
+| **D1 修复与隔离 Compose 验证（提交 `d8c22ae`）** | `docs/acceptance/P5-D1-compose-healthcheck-2026-10-19.md`；证据 `docs/acceptance/evidence/p5-rework-2026-10-19/d1-compose-verify.{json,log}`、`d1-static-check.log`、`d1-ci-workflow-check.log`、`d1-summary.txt`、`d1-runtime-facts.txt`、`d1-*-image-build.log`、`d1-rendered-compose.yaml`、`d1-code-diff.patch` |
 | 单测/构建摘要 | `docs/acceptance/evidence/p5-rework-2026-10-19/`（vitest/build/shared-env） |
-| 修复提交 | `afafdf8`（R1+R2）、`8b826c9`（R3） |
+| 修复提交 | `afafdf8`（R1+R2）、`8b826c9`（R3）、`7a19eb2`（R2 补充）、`d8c22ae`（D1） |
 
 > 边界：本报告只对上述基线、提交与隔离环境负责；R1/R2/R3 的关闭条件以真实复跑为准，不以「应当可用」代替实测。
+> D1 的隔离 Compose 验证使用本机 Docker Desktop 构建的镜像与隔离项目/端口；生产部署/TLS/真实宿主机仍未验证。

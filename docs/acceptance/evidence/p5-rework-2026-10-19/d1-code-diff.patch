@@ -1,0 +1,904 @@
+diff --git a/.dockerignore b/.dockerignore
+index 15bcc7c..0ed0057 100644
+--- a/.dockerignore
++++ b/.dockerignore
+@@ -59,6 +59,12 @@ apps/web/tools
+ apps/web/tests
+ apps/web/features/*/tools
+ apps/web/**/__snapshots__
++# 组件/单测文件与 tests/ helper 一起排除：生产镜像不需要，也不能让 `next build` 的
++# `tsc` 去类型检查没有 helper 的测试文件（T10 隔离构建时发现：镜像构建只排除了
++# apps/web/tests，feature 目录下 *.test.tsx 仍会被 COPY 进去，构建因找不到
++# `@/tests/helpers/*` 失败）。测试在仓库/CI 里跑，不随镜像发布。
++apps/web/**/*.test.ts
++apps/web/**/*.test.tsx
+ # 旧站基线资源与测试（镜像里用的是迁移后的 public/assets/legacy）。
+ assets/clip
+ tests
+diff --git a/deploy/check-prod-config.py b/deploy/check-prod-config.py
+index 1127b73..6fb5a48 100644
+--- a/deploy/check-prod-config.py
++++ b/deploy/check-prod-config.py
+@@ -16,6 +16,14 @@
+      6. api / web / gateway 都是非 root 的 read-only 根文件系统 + cap_drop。
+      7. 镜像引用不是 `latest`，且 API / WEB 镜像带 digest（生产要求不可变）。
+      8. 没有 `down -v` 之类的卷删除动作出现在任何编排 / 脚本里。
++  A2. 健康检查契约与依赖启动（D1 回归保护，2026-10-19）
++     15. db / api / web / gateway 都启用健康检查，且没有 `disable: true`。
++     16. api 健康检查打**真实 readiness** `/api/v1/health/ready`（不是 liveness），
++         且期望的 `status` 与 `apps/api/app/core/health.py` 的成功状态词一致
++         （D1 根因就是这里写死成 `"ok"` 而后端返回 `"ready"`）。
++     17. 依赖启动链：migrate 等 db 健康；grants（运行账号授权）等 migrate 成功；
++         api 等 migrate + grants 成功 + db 健康；web 等 api 健康；
++         gateway 等 web + api 健康（06 §3 / D1 隔离验证补全）。
+   B. Caddyfile
+      9. 用真实 Caddy 二进制（若提供 `--caddy`）做 `caddy validate`；
+         没有二进制时退回结构断言，并在输出里明确标注「结构断言，不是 validate」。
+@@ -23,6 +31,8 @@
+     11. 没有把 `Host` 改写成上游地址、没有删 `Origin`（那会破坏同源校验）。
+   C. Dockerfile / 环境变量示例
+     12. 生产 Dockerfile 里没有 `ARG`/`ENV` 形式的密钥，没有 `dev` 阶段的源码挂载。
++    14b. web 镜像的音频必须走独立命名构建上下文 `music=assets/music`（D1 隔离验证时
++         发现旧写法会把整个仓库复制进 public/ 并打挂生产构建）。
+     13. `.env` 示例文件里没有看起来像真实密钥的值。
+     14. `.dockerignore` 没有排除镜像真正需要的输入路径。
+ 
+@@ -98,8 +108,8 @@ def load_yaml(path: Path) -> dict:
+ def check_compose(report: Report, cfg: dict, source: str) -> None:
+     services = cfg.get("services") or {}
+     print(f"== A. 生产编排（{source}）==")
+-    report.check("编排里有 gateway / web / api / db / migrate",
+-                 {"gateway", "web", "api", "db", "migrate"} <= set(services),
++    report.check("编排里有 gateway / web / api / db / migrate / grants",
++                 {"gateway", "web", "api", "db", "migrate", "grants"} <= set(services),
+                  ",".join(sorted(services)))
+ 
+     publishers = {name: svc.get("ports") for name, svc in services.items() if svc.get("ports")}
+@@ -157,6 +167,104 @@ def check_compose(report: Report, cfg: dict, source: str) -> None:
+                      images.get(name, "")[:70])
+ 
+ 
++HEALTH_READY_PATH = "/api/v1/health/ready"
++
++
++def _healthcheck_test(service: dict) -> str:
++    """把渲染后的 healthcheck.test（list 或 str）折成一段可搜索的文本。"""
++    healthcheck = service.get("healthcheck") or {}
++    test = healthcheck.get("test")
++    if isinstance(test, list):
++        return " ".join(str(part) for part in test)
++    return str(test or "")
++
++
++def _depends_conditions(service: dict) -> dict[str, str | None]:
++    deps = service.get("depends_on") or {}
++    out: dict[str, str | None] = {}
++    for name, spec in deps.items():
++        out[name] = spec.get("condition") if isinstance(spec, dict) else None
++    return out
++
++
++def check_health_and_dependencies(report: Report, cfg: dict) -> None:
++    """D1 回归保护：健康检查契约必须与后端 readiness 实际响应一致，依赖链必须显式。"""
++    print("== A2. 健康检查契约与依赖启动（D1）==")
++    services = cfg.get("services") or {}
++
++    health_py = (REPO_ROOT / "apps/api/app/core/health.py").read_text(encoding="utf-8")
++    match = re.search(
++        r'"status"\s*:\s*"([a-z_]+)"\s+if\s+ready\s+else\s+"([a-z_]+)"', health_py
++    )
++    report.check("能从 health.py 读到 readiness 成功/未就绪状态词", match is not None)
++    ready_word = match.group(1) if match else ""
++    not_ready_word = match.group(2) if match else ""
++    report.check("readiness 成功状态词是 ready", ready_word == "ready", ready_word or "未找到")
++
++    # 长驻服务必须启用健康检查；禁用健康检查属于「绕过问题」，不接受。
++    for name in ("db", "api", "web", "gateway"):
++        svc = services.get(name) or {}
++        healthcheck = svc.get("healthcheck") or {}
++        report.check(
++            f"{name}: 启用健康检查（未 disable）",
++            bool(healthcheck) and not bool(healthcheck.get("disable")),
++            f"healthcheck={healthcheck}",
++        )
++
++    api_test = _healthcheck_test(services.get("api") or {})
++    report.check(
++        "api 健康检查调用真实 readiness /api/v1/health/ready（不是 liveness）",
++        HEALTH_READY_PATH in api_test,
++    )
++    expected = re.search(r'body\.get\("status"\)\s*==\s*"([a-z_]+)"', api_test)
++    report.check(
++        "api 健康检查期望的 status 与后端 readiness 成功状态词一致（D1：不能写死 ok）",
++        expected is not None and expected.group(1) == ready_word,
++        f"healthcheck={expected.group(1) if expected else None!r} backend={ready_word!r}",
++    )
++    report.check(
++        "api 健康检查没有把未就绪状态词当成功",
++        expected is not None and expected.group(1) != not_ready_word,
++        f"not_ready={not_ready_word!r}",
++    )
++
++    migrate_deps = _depends_conditions(services.get("migrate") or {})
++    grants_deps = _depends_conditions(services.get("grants") or {})
++    api_deps = _depends_conditions(services.get("api") or {})
++    web_deps = _depends_conditions(services.get("web") or {})
++    gateway_deps = _depends_conditions(services.get("gateway") or {})
++
++    report.check(
++        "migrate 等 db 健康后执行",
++        migrate_deps.get("db") == "service_healthy",
++        str(migrate_deps),
++    )
++    report.check(
++        "grants 等 migrate 成功 + db 健康后才执行（运行账号授权）",
++        grants_deps.get("migrate") == "service_completed_successfully"
++        and grants_deps.get("db") == "service_healthy",
++        str(grants_deps),
++    )
++    report.check(
++        "api 等 migrate + grants 成功 + db 健康后才启动",
++        api_deps.get("migrate") == "service_completed_successfully"
++        and api_deps.get("grants") == "service_completed_successfully"
++        and api_deps.get("db") == "service_healthy",
++        str(api_deps),
++    )
++    report.check(
++        "web 等 api 健康后才启动",
++        web_deps.get("api") == "service_healthy",
++        str(web_deps),
++    )
++    report.check(
++        "gateway 等 web + api 都健康后才启动",
++        gateway_deps.get("web") == "service_healthy"
++        and gateway_deps.get("api") == "service_healthy",
++        str(gateway_deps),
++    )
++
++
+ def check_caddy(r: Report, caddy_binary: str | None) -> None:
+     print("== B. Caddyfile ==")
+     caddyfile = DEPLOY / "gateway" / "Caddyfile"
+@@ -214,7 +322,23 @@ def check_dockerfiles(report: Report) -> None:
+                      "npm ci" in text or "uv sync --frozen" in text)
+     web = (DEPLOY / "prod.Dockerfile.web").read_text(encoding="utf-8")
+     report.check("web 镜像显式包含 public 与 .next/static（standalone 不会自动带）",
+-                 "/srv/web/public" in web and "/.next/static" in web)
++                 "/srv/apps/web/public" in web and "/srv/apps/web/.next/static" in web)
++    # D1 隔离验证时发现的构建缺陷（2026-10-19）：music 必须用独立命名构建上下文，
++    # 不能 `FROM scratch AS music; COPY . /music/`（会把整个仓库复制进 public/ 并打挂 tsc）。
++    release_yml = (REPO_ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
++    report.check(
++        "web Dockerfile 用命名构建上下文引用 music（而非复制整个主上下文）",
++        "COPY --from=music /" in web
++        and re.search(r"^FROM\s+scratch\s+AS\s+music", web, re.MULTILINE) is None,
++    )
++    report.check(
++        "web 构建保留 apps/web 层级且 CMD 与 standalone 路径一致（否则启动即 MODULE_NOT_FOUND）",
++        "WORKDIR /srv\n" in web
++        and "COPY apps/web/ ./apps/web/" in web
++        and 'CMD ["node", "apps/web/server.js"]' in web,
++    )
++    report.check("release workflow 传入 music=assets/music 构建上下文",
++                 "music=assets/music" in release_yml)
+ 
+     for env_name in ("prod.env.example", "dev.env.example"):
+         path = DEPLOY / "env" / env_name
+@@ -252,6 +376,9 @@ def check_dockerfiles(report: Report) -> None:
+     report.check(".dockerignore 排除了 node_modules 与 .venv",
+                  any("node_modules" in pattern for pattern in patterns)
+                  and any(".venv" in pattern for pattern in patterns))
++    report.check(".dockerignore 排除了前端测试文件（否则镜像内 tsc 会因缺 tests/ helper 失败）",
++                 any(pattern.endswith("*.test.ts") for pattern in patterns)
++                 and any(pattern.endswith("*.test.tsx") for pattern in patterns))
+ 
+ 
+ def strip_docstrings_and_comments(text: str, suffix: str) -> str:
+@@ -306,6 +433,7 @@ def main() -> int:
+     config_path = Path(args.compose_config)
+     cfg = load_yaml(config_path)
+     check_compose(report, cfg, str(config_path))
++    check_health_and_dependencies(report, cfg)
+     check_caddy(report, args.caddy or shutil.which("caddy"))
+     check_dockerfiles(report)
+     check_no_down_v(report, Path(args.compose_file))
+diff --git a/deploy/compose.dev.yaml b/deploy/compose.dev.yaml
+index 34129de..279827f 100644
+--- a/deploy/compose.dev.yaml
++++ b/deploy/compose.dev.yaml
+@@ -26,7 +26,9 @@ services:
+       TZ: UTC
+       PGTZ: UTC
+     volumes:
+-      - pg_data:/var/lib/postgresql/data
++      # PostgreSQL 18+ 官方镜像的数据目录在 /var/lib/postgresql/<major>/docker，
++      # 必须挂载 /var/lib/postgresql（旧路径 /var/lib/postgresql/data 在 18+ 会拒绝启动）。
++      - pg_data:/var/lib/postgresql
+     networks:
+       - data_net
+     # 刻意不写 ports：数据库不公开监听。
+diff --git a/deploy/compose.prod.yaml b/deploy/compose.prod.yaml
+index 1491b51..8d8d046 100644
+--- a/deploy/compose.prod.yaml
++++ b/deploy/compose.prod.yaml
+@@ -5,6 +5,11 @@
+ #       web 不持有 DB 凭据，媒体不作为公开静态目录。迁移只执行一次，成功才启动
+ #       依赖新 schema 的服务」。
+ #
++# 2026-10-19 D1 修复/验证补全：`grants` 一次性服务在 migrate 成功后给运行账号补权限，
++# api 依赖 migrate + grants 都成功才启动；否则首次部署时 api 因无表权限永远 unhealthy。
++# 同时修正：API healthcheck 期望 `status == "ready"`（与 health.py 一致）、PG18 数据卷
++# 挂载点、生产镜像的 music 构建上下文与 standalone 路径。
++#
+ # 网络拓扑：
+ #   edge_net : gateway ←→ web / api        （只有 gateway 发布宿主端口）
+ #   data_net : api ←→ db                   （internal: true；web 不在这张网里，也没有 DB 凭据）
+@@ -48,7 +53,11 @@ services:
+       - postgres_migrator_password
+       - postgres_app_password
+     volumes:
+-      - pg_data:/var/lib/postgresql/data
++      # PostgreSQL 18+ 官方镜像把数据目录改到 `/var/lib/postgresql/<major>/docker`，
++      # 推荐挂载 `/var/lib/postgresql`（旧写法 `/var/lib/postgresql/data` 在 18+ 会被
++      # entrypoint 判为「未使用的旧挂载点」并拒绝启动 —— D1 隔离 Compose 验证时实测，
++      # 2026-10-19）。升级到其它大版本前要先按官方方式 pg_upgrade，不能只换 image tag。
++      - pg_data:/var/lib/postgresql
+       - ./db/init:/docker-entrypoint-initdb.d:ro
+     networks:
+       - data_net
+@@ -87,6 +96,48 @@ services:
+       - data_net
+     logging: *default-logging
+ 
++  grants:
++    # 一次性任务：迁移成功后把运行账号的权限补齐（表是 migrate 新建的，owner 是迁移账号；
++    # 运行账号没有表权限，readiness 的 schema/查询检查会失败）。`grant-runtime.sql` 幂等，
++    # 每次部署都可跑。2026-10-19 D1 隔离 Compose 验证时发现：原流程把这一步留给人工在
++    # release.md 里执行，且文档里的容器内路径不存在 —— 首次 `up` 时 api 会因缺权限一直
++    # unhealthy、gateway 永远等不到。这里做成一次性服务，让编排自身可以完成健康启动；
++    # 人工步骤仍保留为排障兜底，见 docs/operations/release.md。
++    image: ${POSTGRES_IMAGE:-postgres:18-alpine}
++    command:
++      - psql
++      - -v
++      - ON_ERROR_STOP=1
++      - -h
++      - db
++      - -U
++      - ${POSTGRES_MIGRATOR_USER:-pl_migrator}
++      - -d
++      - ${POSTGRES_DB:-pl}
++      - -v
++      - app_user=${POSTGRES_APP_USER:-pl_app}
++      - -f
++      - /grant-runtime.sql
++    restart: "no"
++    environment:
++      # 与 migrate 相同的既有取舍：口令经 --env-file 插值进容器环境变量（见文件尾注释）。
++      PGPASSWORD: ${POSTGRES_MIGRATOR_PASSWORD:?}
++    volumes:
++      # 只读挂载幂等授权 SQL（不在镜像里，跟随仓库版本；不含任何密钥）。
++      - ./db/grant-runtime.sql:/grant-runtime.sql:ro
++    depends_on:
++      db:
++        condition: service_healthy
++      migrate:
++        condition: service_completed_successfully
++    networks:
++      - data_net
++    security_opt:
++      - no-new-privileges:true
++    cap_drop:
++      - ALL
++    logging: *default-logging
++
+   api:
+     image: ${API_IMAGE:?}
+     restart: unless-stopped
+@@ -109,6 +160,9 @@ services:
+       migrate:
+         # 迁移成功才启动依赖新 schema 的服务（06 §3）。
+         condition: service_completed_successfully
++      grants:
++        # 运行账号权限补齐后才启动（否则 readiness 必然 503）。
++        condition: service_completed_successfully
+     volumes:
+       # 媒体是**持久卷**，不是网关的公开静态目录（06 §4）。
+       - media_data:/var/lib/phantom-log/media
+@@ -126,6 +180,11 @@ services:
+     healthcheck:
+       # readiness 真的查 DB / schema / 媒体可写；未就绪返回 503（06 §3）。
+       # 未就绪时容器是 unhealthy，而不是「running 就算好」。
++      #
++      # 契约（D1 修复，2026-10-19）：`GET /api/v1/health/ready` 成功时返回
++      # `{"status": "ready", ...}`（见 apps/api/app/core/health.py 的 STATUS_* / 响应体），
++      # 不是 `"ok"`。这里必须与后端实际响应一致；`deploy/check-prod-config.py` 会做跨文件
++      # 契约断言，避免以后只改一边又出现「永远 unhealthy / 把坏状态当健康」的错配。
+       test:
+         - CMD
+         - python
+@@ -137,7 +196,7 @@ services:
+                   body = json.load(r)
+           except Exception:
+               sys.exit(1)
+-          sys.exit(0 if body.get("status") == "ok" else 1)
++          sys.exit(0 if body.get("status") == "ready" else 1)
+       interval: 15s
+       timeout: 10s
+       retries: 5
+diff --git a/deploy/db/init/10-roles.sh b/deploy/db/init/10-roles.sh
+old mode 100644
+new mode 100755
+diff --git a/deploy/db/init/20-grants.sh b/deploy/db/init/20-grants.sh
+old mode 100644
+new mode 100755
+diff --git a/deploy/db/init/_lib/common.sh b/deploy/db/init/_lib/common.sh
+old mode 100644
+new mode 100755
+diff --git a/deploy/prod.Dockerfile.web b/deploy/prod.Dockerfile.web
+index 49dd522..24c7ec1 100644
+--- a/deploy/prod.Dockerfile.web
++++ b/deploy/prod.Dockerfile.web
+@@ -15,28 +15,43 @@
+ # standalone（06 §2）已由 T00 在 `apps/web/next.config.ts` 启用（`output: "standalone"` +
+ # `outputFileTracingRoot` 锁到仓库根），runner 见下方。启用后镜像不再需要 `next start`。
+ 
+-# --- 音频来源：只有音频的那份上下文（`music` → 仓库 assets/music/） ---
+-FROM scratch AS music
+-COPY . /music/
++# --- 音频来源：独立的小构建上下文（CI/release 用 `--build-context music=assets/music`） ---
++#
++# **不要**写成 `FROM scratch AS music; COPY . /music/`：那会把整个仓库上下文复制进
++# `/music`，再塞进 `public/assets/music/`（镜像膨胀，且 tsc 会去类型检查 public/ 下的
++# 重复源码，直接把生产构建打挂）。`assets/music` 被 `.dockerignore` 排除正是为了走这个
++# 独立上下文。构建时必须提供 `--build-context music=assets/music`（CI 见 release.yml；
++# 本机命令见 docs/operations/release.md / T10 交付单）。缺少该上下文时构建会明确报错。
++#
++# 下面的 `COPY --from=music /` 直接复制「music 上下文」的根目录（= 仓库 assets/music/）。
++# `deploy/check-prod-config.py` 会断言 Dockerfile 与 workflow 都确实使用这个命名上下文。
+ 
+ FROM node:26-slim AS builder
+ 
+-WORKDIR /srv/web
++# 必须保留 monorepo 的 `apps/web/` 层级：`next.config.ts` 的
++# `outputFileTracingRoot = path.join(__dirname, "../../")` 以构建时的绝对路径为基准，
++# standalone 会按「追踪根 → 项目」的相对路径产出目录结构。D1 隔离验证实测过两种写法：
++#   - 直接把 apps/web 铺在 /srv/web：__dirname=/srv/web、追踪根=/，产出的
++#     standalone 是 `srv/web/server.js`，Dockerfile 的 COPY/CMD 全部失配（镜像启动即
++#     MODULE_NOT_FOUND）。
++#   - 放在 /srv/apps/web：__dirname=/srv/apps/web、追踪根=/srv，产出的
++#     standalone 是 `apps/web/server.js`，与 runner 的 COPY/CMD 一致。
++WORKDIR /srv
+ 
+ ENV NEXT_TELEMETRY_DISABLED=1
+ 
+ # 先复制依赖描述以利用层缓存；`npm ci` 严格按锁文件安装。
+-COPY apps/web/package.json apps/web/package-lock.json ./
+-RUN npm ci --no-audit --no-fund
++COPY apps/web/package.json apps/web/package-lock.json ./apps/web/
++RUN cd apps/web && npm ci --no-audit --no-fund
+ 
+-COPY apps/web/ ./
++COPY apps/web/ ./apps/web/
+ 
+-# 旧站静态音频沿用原路径。本机仓库里音频在根 `assets/music/`，不在 `apps/web/` 下，
+-# 所以这一步不会覆盖任何已有的 `public/assets/music/`。
+-COPY --from=music /music/ ./public/assets/music/
++# 旧站静态音频沿用原路径。`music` 是独立构建上下文（仓库根 `assets/music/`），
++# 不在 `apps/web/` 下，所以这一步不会覆盖任何已有的 `public/assets/music/`。
++COPY --from=music / ./apps/web/public/assets/music/
+ 
+ # 构建期不需要任何密钥。不传 DEV_API_URL。
+-RUN npm run build
++RUN cd apps/web && npm run build
+ 
+ FROM node:26-slim AS runner
+ 
+@@ -53,13 +68,14 @@ RUN useradd --system --uid 10002 --create-home --home-dir /home/phantom phantom
+ # 少一层依赖安装、少一份重复的 node_modules，也没有 package-lock 需要在 runner 阶段解析。
+ # （T10 原稿在 runner 阶段装生产依赖，那是 `next start` 形态需要的；改用 server.js 后不需要。）
+ 
+-# ⚠️ 路径带 `apps/web/` 前缀：`next.config.ts` 的 `outputFileTracingRoot` 锁定在**仓库根**，
+-# 所以 standalone 目录镜像了 monorepo 结构（实测产出 `.next/standalone/apps/web/server.js`）。
+-# 这两处必须同时改：追踪根与 COPY 路径不一致时，镜像能构建成功但启动即失败。
+-COPY --from=builder --chown=phantom:phantom /srv/web/.next/standalone ./
++# ⚠️ 路径带 `apps/web/` 前缀：重建后的 builder 保持 `/srv/apps/web` 层级，
++# `outputFileTracingRoot` 计算为 `/srv`，standalone 产出 `/srv/apps/web/.next/standalone/apps/web/server.js`。
++# 这两处（builder 的目录层级、runner 的 COPY/CMD 路径）必须同时改：不一致时镜像能构建
++# 成功但启动即 MODULE_NOT_FOUND（D1 隔离验证实测踩过）。
++COPY --from=builder --chown=phantom:phantom /srv/apps/web/.next/standalone ./
+ # standalone **不含** `.next/static` 与 `public`（06 §2 记录过这个坑），必须显式带上。
+-COPY --from=builder --chown=phantom:phantom /srv/web/.next/static ./apps/web/.next/static
+-COPY --from=builder --chown=phantom:phantom /srv/web/public ./apps/web/public
++COPY --from=builder --chown=phantom:phantom /srv/apps/web/.next/static ./apps/web/.next/static
++COPY --from=builder --chown=phantom:phantom /srv/apps/web/public ./apps/web/public
+ 
+ ENV HOME=/home/phantom
+ 
+diff --git a/tools/verify-compose-healthcheck.py b/tools/verify-compose-healthcheck.py
+new file mode 100644
+index 0000000..439df39
+--- /dev/null
++++ b/tools/verify-compose-healthcheck.py
+@@ -0,0 +1,481 @@
++#!/usr/bin/env python3
++"""D1 验证：在**隔离 Compose 环境**里验证生产编排的健康检查契约与依赖启动。
++
++背景（2026-10-19 独立验收 D1）：
++  deploy/compose.prod.yaml 的 API healthcheck 期望 `{"status": "ok"}`，
++  而 apps/api/app/core/health.py 的就绪成功响应是 `{"status": "ready"}`（未就绪 503
++  `not_ready`）。结果是：API 即使完全就绪也会被判 unhealthy，网关的
++  `depends_on: api: condition: service_healthy` 永远等不到 —— 编排错配。
++
++本脚本做的是**真实容器验证**，不是静态审查：
++  1. `docker compose -f deploy/compose.prod.yaml` 用隔离项目名 / 隔离端口起整套
++     （gateway + web + api + db + migrate），镜像由 `--api-image/--web-image` 指定
++     （通常先用 `--build` 从 deploy/prod.Dockerfile.* 构建）；
++  2. 等待 db → migrate → grants（运行账号授权）→ api → web → gateway 的健康/依赖启动链全部就绪；
++  3. 通过网关真实请求 `/api/v1/health/ready`（200 + status=ready）、`/healthz`、`/`；
++  4. 在 api 容器里执行**编排实际部署的 healthcheck 命令**（从 docker inspect 读取），
++     并执行「旧契约（== "ok"）」对照，证明旧配置会误判；
++  5. 失败检测：停掉 db → api 必须变成 unhealthy（不是 running 就算好）→ 重启 db 后恢复；
++  6. 顺带验证容器内非 root uid（api 10001 / web 10002）；
++  7. 结束后清理容器、网络与**本项目专属**卷（不使用 `down -v`）。
++
++环境安全：
++  - 只使用唯一项目名（默认 pl-d1-verify）与宿主端口 18080/18443；不碰共享
++    3100/8100/8000/55432，也不碰任何已存在容器/卷/网络；
++  - 不写生产配置、不部署；只读仓库、写 /tmp 临时目录与 Docker 本机资源；
++  - 需要 Docker daemon；Docker Desktop 的凭据助手可能要 Keychain 权限。
++
++用法：
++  # 1) 构建镜像（仓库根目录；只本地打 tag）
++  DOCKER_CONFIG=... docker build -f deploy/prod.Dockerfile.api -t phantom-log-api:d1-verify .
++  DOCKER_CONFIG=... docker build -f deploy/prod.Dockerfile.web -t phantom-log-web:d1-verify .
++  # 2) 启动隔离 Compose 并验证
++  python3 tools/verify-compose-healthcheck.py
++  # 3) 清理：脚本已自动清理；保留日志与 JSON
++退出码：0 = 全部断言通过；1 = 有断言失败；2 = 环境/前置错误（镜像缺失、端口占用等）。
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import os
++import re
++import secrets
++import socket
++import subprocess
++import sys
++import time
++import urllib.error
++import urllib.request
++from pathlib import Path
++
++REPO = Path(__file__).resolve().parents[1]
++COMPOSE_FILE = REPO / "deploy/compose.prod.yaml"
++READY_PATH = "/api/v1/health/ready"
++DEFAULT_PROJECT = "pl-d1-verify"
++DEFAULT_WORK = Path("/tmp/pl-d1-verify")
++DEFAULT_API_IMAGE = "phantom-log-api:d1-verify"
++DEFAULT_WEB_IMAGE = "phantom-log-web:d1-verify"
++
++
++class Report:
++    def __init__(self) -> None:
++        self.results: list[dict[str, object]] = []
++        self.commands: list[dict[str, object]] = []
++
++    def check(self, label: str, ok: bool, detail: str = "") -> bool:
++        self.results.append({"label": label, "ok": bool(ok), "detail": detail})
++        print(f"  {'✓' if ok else '✗'} {label}" + (f"  — {detail}" if detail else ""))
++        return bool(ok)
++
++    def run(self, argv: list[str], *, timeout: int = 120, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
++        merged = {**os.environ, **(env or {})}
++        started = time.time()
++        result = subprocess.run(argv, cwd=REPO, capture_output=True, text=True, timeout=timeout, env=merged)
++        self.commands.append(
++            {
++                "argv": argv,
++                "returncode": result.returncode,
++                "seconds": round(time.time() - started, 2),
++                "stdout": result.stdout[-4000:],
++                "stderr": result.stderr[-4000:],
++            }
++        )
++        return result
++
++    def summary(self) -> int:
++        failed = [item for item in self.results if not item["ok"]]
++        print(f"\n== 汇总：{len(self.results) - len(failed)}/{len(self.results)} 通过 ==")
++        for item in failed:
++            print(f"  ✗ {item['label']}  {item['detail']}")
++        return 0 if not failed else 1
++
++
++# macOS Python 3.13 的 urllib 会走系统代理且不遵守 ExceptionsList（本机踩过：本地 curl 200、
++# urllib 502）。验证只访问 127.0.0.1，必须显式禁用代理，否则网关检查会假失败。
++_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
++
++
++def http_get(url: str, timeout: float = 10.0) -> tuple[int, str, dict[str, object] | None]:
++    try:
++        with _OPENER.open(url, timeout=timeout) as response:
++            raw = response.read().decode("utf-8", "replace")
++            parsed: dict[str, object] | None = None
++            try:
++                parsed = json.loads(raw)
++            except json.JSONDecodeError:
++                parsed = None
++            return response.status, raw, parsed
++    except urllib.error.HTTPError as error:
++        return error.code, error.read().decode("utf-8", "replace"), None
++    except Exception as error:  # noqa: BLE001 - 连接失败就是检查失败
++        return 0, f"{type(error).__name__}: {error}", None
++
++
++def port_free(host: str, port: int) -> bool:
++    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
++        sock.settimeout(0.5)
++        return sock.connect_ex((host, port)) != 0
++
++
++def write_env_and_secrets(work: Path, api_image: str, web_image: str, http_port: int, https_port: int) -> Path:
++    secrets_dir = work / "secrets"
++    secrets_dir.mkdir(parents=True, exist_ok=True)
++    passwords = {
++        "postgres_admin_password": secrets.token_hex(24),
++        "postgres_migrator_password": secrets.token_hex(24),
++        "postgres_app_password": secrets.token_hex(24),
++    }
++    for name, value in passwords.items():
++        path = secrets_dir / name
++        path.write_text(value, encoding="utf-8")
++        path.chmod(0o600)
++    env = work / "compose.env"
++    lines = [
++        "# D1 隔离 Compose 验证用临时环境（不提交、不含真实生产值）",
++        f"API_IMAGE={api_image}",
++        f"WEB_IMAGE={web_image}",
++        "POSTGRES_IMAGE=postgres:18-alpine",
++        "CADDY_IMAGE=caddy:2.10.2-alpine",
++        "APP_VERSION=d1-verify",
++        # 容器内 gateway 监听 80；宿主端口映射到 http_port，避免与共享 8000 冲突。
++        "SITE_ADDRESS=http://127.0.0.1",
++        f"GATEWAY_HTTP_HOST_PORT={http_port}",
++        f"GATEWAY_HTTPS_HOST_PORT={https_port}",
++        "POSTGRES_DB=pl",
++        "POSTGRES_ADMIN_USER=pl_admin",
++        "POSTGRES_MIGRATOR_USER=pl_migrator",
++        "POSTGRES_APP_USER=pl_app",
++        f"POSTGRES_ADMIN_PASSWORD_FILE={secrets_dir / 'postgres_admin_password'}",
++        f"POSTGRES_MIGRATOR_PASSWORD_FILE={secrets_dir / 'postgres_migrator_password'}",
++        f"POSTGRES_APP_PASSWORD_FILE={secrets_dir / 'postgres_app_password'}",
++        f"POSTGRES_MIGRATOR_PASSWORD={passwords['postgres_migrator_password']}",
++        f"POSTGRES_APP_PASSWORD={passwords['postgres_app_password']}",
++        f"SECRET_KEY={secrets.token_hex(32)}",
++        "MEDIA_MAX_CONCURRENCY=2",
++        "",
++    ]
++    env.write_text("\n".join(lines), encoding="utf-8")
++    env.chmod(0o600)
++    return env
++
++
++def compose_base(project: str, env_file: Path) -> list[str]:
++    return [
++        "docker",
++        "compose",
++        "-f",
++        str(COMPOSE_FILE),
++        "-p",
++        project,
++        "--env-file",
++        str(env_file),
++    ]
++
++
++def clean_project(report: Report, base: list[str], project: str) -> None:
++    """清理**本项目**遗留的容器 / 网络 / 卷（只按 compose project label，不碰其他项目）。
++
++    每次验证都从空库开始：否则上一轮失败留下的卷可能保存着旧口令/旧 schema，
++    下一轮用新随机口令迁移就会 password authentication failed（实测踩过）。
++    """
++    report.run([*base, "down", "--remove-orphans", "--timeout", "20"], timeout=180)
++    volumes = report.run(
++        ["docker", "volume", "ls", "--filter", f"label=com.docker.compose.project={project}", "-q"],
++        timeout=60,
++    )
++    for volume in volumes.stdout.split():
++        report.run(["docker", "volume", "rm", volume], timeout=60)
++    networks = report.run(
++        ["docker", "network", "ls", "--filter", f"label=com.docker.compose.project={project}", "-q"],
++        timeout=60,
++    )
++    for network in networks.stdout.split():
++        report.run(["docker", "network", "rm", network], timeout=60)
++
++
++def compose_json(report: Report, base: list[str]) -> list[dict[str, object]]:
++    result = report.run([*base, "ps", "--all", "--format", "json"], timeout=60)
++    if result.returncode != 0:
++        return []
++    text = result.stdout.strip()
++    if not text:
++        return []
++    # Compose v2 旧版本逐行 JSON，v5 起是一次性 JSON 数组；两种都支持。
++    try:
++        parsed = json.loads(text)
++    except json.JSONDecodeError:
++        parsed = None
++    if isinstance(parsed, list):
++        return [item for item in parsed if isinstance(item, dict)]
++    items: list[dict[str, object]] = []
++    for line in text.splitlines():
++        line = line.strip()
++        if not line:
++            continue
++        try:
++            item = json.loads(line)
++        except json.JSONDecodeError:
++            continue
++        if isinstance(item, dict):
++            items.append(item)
++    return items
++
++
++def service_container(report: Report, base: list[str], service: str) -> str:
++    # `--all` 必须加：migrate/grants 是一次性服务，跑完就是 exited，默认 ps 不列。
++    result = report.run([*base, "ps", "--all", "-q", service], timeout=60)
++    return result.stdout.strip().splitlines()[0] if result.stdout.strip() else ""
++
++
++def docker_inspect(report: Report, container: str, fmt: str) -> str:
++    if not container:
++        return ""
++    result = report.run(["docker", "inspect", "--format", fmt, container], timeout=60)
++    return result.stdout.strip() if result.returncode == 0 else ""
++
++
++def wait_until(predicate, *, timeout: float, interval: float = 2.0, describe: str = "") -> bool:
++    deadline = time.time() + timeout
++    while time.time() < deadline:
++        if predicate():
++            return True
++        time.sleep(interval)
++    print(f"  … 等待超时：{describe or 'condition'}（{int(timeout)}s）")
++    return False
++
++
++def health_status(report: Report, container: str) -> str:
++    return docker_inspect(report, container, "{{.State.Health.Status}}")
++
++
++def container_status(report: Report, container: str) -> str:
++    return docker_inspect(report, container, "{{.State.Status}}")
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser(description="D1：隔离 Compose 健康检查与依赖启动验证")
++    parser.add_argument("--project", default=DEFAULT_PROJECT)
++    parser.add_argument("--work-dir", default=str(DEFAULT_WORK))
++    parser.add_argument("--api-image", default=DEFAULT_API_IMAGE)
++    parser.add_argument("--web-image", default=DEFAULT_WEB_IMAGE)
++    parser.add_argument("--http-port", type=int, default=18080)
++    parser.add_argument("--https-port", type=int, default=18443)
++    parser.add_argument("--json", default="")
++    parser.add_argument("--keep", action="store_true", help="失败时保留容器便于排查（默认仍会清理）")
++    args = parser.parse_args()
++
++    project = args.project
++    if "verify" not in project:
++        print("✗ 项目名必须包含 'verify'（避免误碰生产/共享资源）")
++        return 2
++    if not project.startswith("pl-"):
++        print("✗ 项目名必须以 'pl-' 开头")
++        return 2
++
++    work = Path(args.work_dir)
++    work.mkdir(parents=True, exist_ok=True)
++    report = Report()
++    env_file = write_env_and_secrets(work, args.api_image, args.web_image, args.http_port, args.https_port)
++    base = compose_base(project, env_file)
++    gateway_url = f"http://127.0.0.1:{args.http_port}"
++    evidence: dict[str, object] = {
++        "tool": "tools/verify-compose-healthcheck.py",
++        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
++        "project": project,
++        "compose_file": str(COMPOSE_FILE),
++        "api_image": args.api_image,
++        "web_image": args.web_image,
++        "gateway_url": gateway_url,
++        "repo_head": subprocess.run(
++            ["git", "-C", str(REPO), "rev-parse", "HEAD"], capture_output=True, text=True
++        ).stdout.strip(),
++        "checks": report.results,
++        "commands": report.commands,
++    }
++
++    print("== 0. 清理本项目遗留资源（只按 pl-d1-verify 项目标签） ==")
++    clean_project(report, base, project)
++    print("  已清理（先清再查端口：上一轮失败后可能还留着容器占着 18080）")
++
++    for port in (args.http_port, args.https_port):
++        if not port_free("127.0.0.1", port):
++            print(f"✗ 宿主端口 {port} 已被占用；换 --http-port/--https-port 或先释放（不要动共享服务）")
++            return 2
++    for image in (args.api_image, args.web_image):
++        result = report.run(["docker", "image", "inspect", image], timeout=60)
++        if result.returncode != 0:
++            print(f"✗ 镜像不存在：{image}；先按 docstring 用 deploy/prod.Dockerfile.* 构建")
++            return 2
++
++    code = 2
++    try:
++        print("== 1. 渲染编排 ==")
++        rendered = report.run([*base, "config", "--format", "yaml"], timeout=120)
++        report.check("docker compose config 渲染成功", rendered.returncode == 0, rendered.stderr[-200:])
++        (work / "rendered-compose.yaml").write_text(rendered.stdout, encoding="utf-8")
++        if rendered.returncode != 0:
++            code = 1
++            return code
++
++        print("== 2. 启动隔离 Compose（gateway/web/api/db/migrate） ==")
++        up = report.run([*base, "up", "-d", "--remove-orphans"], timeout=900)
++        report.check("docker compose up 成功", up.returncode == 0, up.stderr[-300:])
++        if up.returncode != 0:
++            logs = report.run([*base, "logs", "--no-color", "--tail", "120"], timeout=120)
++            (work / "compose-logs-on-failure.txt").write_text(logs.stdout, encoding="utf-8")
++            print("  （已保存容器日志到 compose-logs-on-failure.txt）")
++            code = 1
++            return code
++        (work / "compose-ps-after-up.json").write_text(
++            json.dumps(compose_json(report, base), ensure_ascii=False, indent=2), encoding="utf-8"
++        )
++
++        db = service_container(report, base, "db")
++        migrate = service_container(report, base, "migrate")
++        grants = service_container(report, base, "grants")
++        api = service_container(report, base, "api")
++        web = service_container(report, base, "web")
++        gateway = service_container(report, base, "gateway")
++        report.check("六个服务容器都已创建（db/migrate/grants/api/web/gateway）",
++                     all((db, migrate, grants, api, web, gateway)),
++                     f"db={bool(db)} migrate={bool(migrate)} grants={bool(grants)} api={bool(api)} web={bool(web)} gateway={bool(gateway)}")
++
++        print("== 3. 依赖启动链 ==")
++        db_healthy = wait_until(lambda: health_status(report, db) == "healthy", timeout=180, describe="db healthy")
++        report.check("db 达到 healthy", db_healthy, f"health={health_status(report, db)}")
++
++        def migrate_done() -> bool:
++            status = container_status(report, migrate)
++            exit_code = docker_inspect(report, migrate, "{{.State.ExitCode}}")
++            return status == "exited" and exit_code == "0"
++
++        migrate_ok = wait_until(migrate_done, timeout=300, describe="migrate 退出码 0")
++        report.check("migrate 一次性任务退出码 0（迁移成功才启动 api）", migrate_ok,
++                     f"status={container_status(report, migrate)} exit={docker_inspect(report, migrate, '{{.State.ExitCode}}')}")
++
++        def grants_done() -> bool:
++            status = container_status(report, grants)
++            exit_code = docker_inspect(report, grants, "{{.State.ExitCode}}")
++            return status == "exited" and exit_code == "0"
++
++        grants_ok = wait_until(grants_done, timeout=180, describe="grants 退出码 0")
++        report.check("grants 一次性任务退出码 0（运行账号授权成功才启动 api）", grants_ok,
++                     f"status={container_status(report, grants)} exit={docker_inspect(report, grants, '{{.State.ExitCode}}')}")
++
++        api_healthy = wait_until(lambda: health_status(report, api) == "healthy", timeout=300, describe="api healthy")
++        report.check("api 达到 healthy（说明 healthcheck 契约与 readiness 一致）", api_healthy,
++                     f"health={health_status(report, api)}")
++
++        web_healthy = wait_until(lambda: health_status(report, web) == "healthy", timeout=240, describe="web healthy")
++        report.check("web 达到 healthy（依赖 api healthy 后启动）", web_healthy,
++                     f"health={health_status(report, web)}")
++
++        gateway_healthy = wait_until(lambda: health_status(report, gateway) == "healthy", timeout=180, describe="gateway healthy")
++        report.check("gateway 达到 healthy（依赖 web + api healthy 后启动）", gateway_healthy,
++                     f"health={health_status(report, gateway)}")
++
++        print("== 4. 通过网关的真实 HTTP 检查 ==")
++        status, body, parsed = http_get(f"{gateway_url}/gateway-healthz")
++        report.check("GET /gateway-healthz → 200", status == 200 and body.strip() == "ok",
++                     f"HTTP {status} body={body[:80]!r}")
++        status, body, parsed = http_get(f"{gateway_url}{READY_PATH}")
++        checks = (parsed or {}).get("checks") if isinstance(parsed, dict) else None
++        report.check(
++            "GET /api/v1/health/ready → 200 且 status=ready、三项检查全 ok",
++            status == 200 and isinstance(parsed, dict) and parsed.get("status") == "ready"
++            and isinstance(checks, dict) and all(value == "ok" for value in checks.values()),
++            f"HTTP {status} body={body[:200]!r}",
++        )
++        status, body, _ = http_get(f"{gateway_url}/healthz")
++        report.check("GET /healthz（web）→ 200", status == 200, f"HTTP {status} body={body[:80]!r}")
++        status, body, _ = http_get(f"{gateway_url}/")
++        report.check("GET /（web 首页）→ 200", status == 200, f"HTTP {status} body={body[:60]!r}")
++
++        print("== 5. 在 api 容器里执行“编排实际部署的 healthcheck” ==")
++        test_json = docker_inspect(report, api, "{{json .Config.Healthcheck.Test}}")
++        deployed = json.loads(test_json) if test_json else []
++        report.check("能从容器 inspect 读到已部署的 healthcheck 命令", len(deployed) >= 4 and deployed[0] == "CMD",
++                     str(deployed)[:200])
++        script = deployed[-1] if len(deployed) >= 4 else ""
++        report.check("已部署 healthcheck 调用 /api/v1/health/ready", READY_PATH in script)
++        exec_ok = report.run(["docker", "exec", api, "python", "-c", script], timeout=60)
++        report.check("执行已部署 healthcheck 命令 → 退出码 0", exec_ok.returncode == 0,
++                     f"exit={exec_ok.returncode} stderr={exec_ok.stderr[-160:]!r}")
++
++        legacy_script = script.replace('== "ready"', '== "ok"')
++        report.check("对照脚本成功替换成旧契约（== \"ok\"）", legacy_script != script)
++        legacy = report.run(["docker", "exec", api, "python", "-c", legacy_script], timeout=60)
++        report.check("旧契约（== \"ok\"）在同一健康 API 上退出码非 0（证明 D1 错配会误判）",
++                     legacy.returncode != 0, f"exit={legacy.returncode}")
++
++        print("== 6. 非 root 运行 ==")
++        api_uid = report.run(["docker", "exec", api, "id", "-u"], timeout=30)
++        web_uid = report.run(["docker", "exec", web, "id", "-u"], timeout=30)
++        report.check("api 容器内 uid=10001（非 root）", api_uid.stdout.strip() == "10001",
++                     api_uid.stdout.strip())
++        report.check("web 容器内 uid=10002（非 root）", web_uid.stdout.strip() == "10002",
++                     web_uid.stdout.strip())
++
++        print("== 7. 失败检测：停 db → api 必须 unhealthy → 重启恢复 ==")
++        stop_db = report.run([*base, "stop", "db"], timeout=120)
++        report.check("停止 db 服务", stop_db.returncode == 0, stop_db.stderr[-160:])
++        api_unhealthy = wait_until(lambda: health_status(report, api) == "unhealthy", timeout=260,
++                                   interval=3, describe="api unhealthy")
++        report.check("db 停止后 api 变为 unhealthy（不是 running 就算好）", api_unhealthy,
++                     f"health={health_status(report, api)}")
++        report.check("db 故障期间 api 容器仍在运行（未崩溃）", container_status(report, api) == "running",
++                     container_status(report, api))
++        report.check("db 故障期间 web 容器未受影响（仍在运行）", container_status(report, web) == "running",
++                     container_status(report, web))
++
++        start_db = report.run([*base, "start", "db"], timeout=120)
++        report.check("重启 db 服务", start_db.returncode == 0, start_db.stderr[-160:])
++        recovered = wait_until(lambda: health_status(report, api) == "healthy", timeout=240,
++                               interval=3, describe="api recovered")
++        report.check("db 恢复后 api 重新变为 healthy", recovered, f"health={health_status(report, api)}")
++        status, body, parsed = http_get(f"{gateway_url}{READY_PATH}")
++        report.check("恢复后网关读 readiness 仍为 200 ready",
++                     status == 200 and isinstance(parsed, dict) and parsed.get("status") == "ready",
++                     f"HTTP {status} body={body[:160]!r}")
++
++        print("== 8. 记录最终状态 ==")
++        final_ps = compose_json(report, base)
++        (work / "compose-ps-final.json").write_text(json.dumps(final_ps, ensure_ascii=False, indent=2), encoding="utf-8")
++        for row in final_ps:
++            name = row.get("Service") or row.get("Name")
++            print(f"  - {name}: state={row.get('State')} health={row.get('Health')}")
++        statuses = {str(row.get("Service")): str(row.get("Health") or "") for row in final_ps}
++        report.check("最终 db/api/web/gateway 全部 healthy（migrate/grants 为 Exited(0)）",
++                     all(statuses.get(name) == "healthy" for name in ("db", "api", "web", "gateway")),
++                     json.dumps(statuses, ensure_ascii=False))
++        code = report.summary()
++    finally:
++        evidence["checks"] = report.results
++        evidence["commands"] = report.commands
++        evidence["summary"] = {
++            "total": len(report.results),
++            "passed": sum(1 for item in report.results if item["ok"]),
++            "failed": sum(1 for item in report.results if not item["ok"]),
++        }
++        if args.json:
++            Path(args.json).write_text(json.dumps(evidence, ensure_ascii=False, indent=2), encoding="utf-8")
++        print("== 9. 清理隔离资源（只清本项目） ==")
++        clean_project(report, base, project)
++        remaining = report.run(
++            ["docker", "ps", "-a", "--filter", f"label=com.docker.compose.project={project}", "-q"], timeout=60
++        )
++        print(f"  剩余本项目容器：{len(remaining.stdout.split())} 个（应为 0）")
++        evidence["cleanup"] = {
++            "project": project,
++            "remaining_containers": len(remaining.stdout.split()),
++        }
++        if args.json:
++            Path(args.json).write_text(json.dumps(evidence, ensure_ascii=False, indent=2), encoding="utf-8")
++
++    return code
++
++
++if __name__ == "__main__":
++    sys.exit(main())

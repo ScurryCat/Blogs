@@ -1,0 +1,60 @@
+== 0. 清理本项目遗留资源（只按 pl-d1-verify 项目标签） ==
+  已清理（先清再查端口：上一轮失败后可能还留着容器占着 18080）
+== 1. 渲染编排 ==
+  ✓ docker compose config 渲染成功
+== 2. 启动隔离 Compose（gateway/web/api/db/migrate） ==
+  ✓ docker compose up 成功  — y-web-1 Starting 
+ Container pl-d1-verify-web-1 Started 
+ Container pl-d1-verify-web-1 Waiting 
+ Container pl-d1-verify-api-1 Waiting 
+ Container pl-d1-verify-api-1 Healthy 
+ Container pl-d1-verify-web-1 Healthy 
+ Container pl-d1-verify-gateway-1 Starting 
+ Container pl-d1-verify-gateway-1 Started 
+
+  ✓ 六个服务容器都已创建（db/migrate/grants/api/web/gateway）  — db=True migrate=True grants=True api=True web=True gateway=True
+== 3. 依赖启动链 ==
+  ✓ db 达到 healthy  — health=healthy
+  ✓ migrate 一次性任务退出码 0（迁移成功才启动 api）  — status=exited exit=0
+  ✓ grants 一次性任务退出码 0（运行账号授权成功才启动 api）  — status=exited exit=0
+  ✓ api 达到 healthy（说明 healthcheck 契约与 readiness 一致）  — health=healthy
+  ✓ web 达到 healthy（依赖 api healthy 后启动）  — health=healthy
+  ✓ gateway 达到 healthy（依赖 web + api healthy 后启动）  — health=healthy
+== 4. 通过网关的真实 HTTP 检查 ==
+  ✓ GET /gateway-healthz → 200  — HTTP 200 body='ok'
+  ✓ GET /api/v1/health/ready → 200 且 status=ready、三项检查全 ok  — HTTP 200 body='{"status":"ready","service":"phantom-log-api","version":"d1-verify","checks":{"database":"ok","schema":"ok","media_storage":"ok"},"checked_at":"2026-10-19T04:40:59.495227Z"}'
+  ✓ GET /healthz（web）→ 200  — HTTP 200 body='{"status":"ok","service":"phantom-log-web","scope":"web-liveness","note":"仅表示 Ne'
+  ✓ GET /（web 首页）→ 200  — HTTP 200 body='<!DOCTYPE html><html lang="zh-CN"><head><meta charSet="utf-8'
+== 5. 在 api 容器里执行“编排实际部署的 healthcheck” ==
+  ✓ 能从容器 inspect 读到已部署的 healthcheck 命令  — ['CMD', 'python', '-c', 'import json, sys, urllib.request\ntry:\n    with urllib.request.urlopen("http://127.0.0.1:8000/api/v1/health/ready", timeout=5) as r:\n        body = json.load(r)\nexcept Exce
+  ✓ 已部署 healthcheck 调用 /api/v1/health/ready
+  ✓ 执行已部署 healthcheck 命令 → 退出码 0  — exit=0 stderr=''
+  ✓ 对照脚本成功替换成旧契约（== "ok"）
+  ✓ 旧契约（== "ok"）在同一健康 API 上退出码非 0（证明 D1 错配会误判）  — exit=1
+== 6. 非 root 运行 ==
+  ✓ api 容器内 uid=10001（非 root）  — 10001
+  ✓ web 容器内 uid=10002（非 root）  — 10002
+== 7. 失败检测：停 db → api 必须 unhealthy → 重启恢复 ==
+  ✓ 停止 db 服务  —  Container pl-d1-verify-db-1 Stopping 
+ Container pl-d1-verify-db-1 Stopped 
+
+  ✓ db 停止后 api 变为 unhealthy（不是 running 就算好）  — health=unhealthy
+  ✓ db 故障期间 api 容器仍在运行（未崩溃）  — running
+  ✓ db 故障期间 web 容器未受影响（仍在运行）  — running
+  ✓ 重启 db 服务  —  Container pl-d1-verify-db-1 Starting 
+ Container pl-d1-verify-db-1 Started 
+
+  ✓ db 恢复后 api 重新变为 healthy  — health=healthy
+  ✓ 恢复后网关读 readiness 仍为 200 ready  — HTTP 200 body='{"status":"ready","service":"phantom-log-api","version":"d1-verify","checks":{"database":"ok","schema":"ok","media_storage":"ok"},"checked_at":"2026-10-19T04:42'
+== 8. 记录最终状态 ==
+  - api: state=running health=healthy
+  - db: state=running health=healthy
+  - gateway: state=running health=healthy
+  - grants: state=exited health=
+  - migrate: state=exited health=
+  - web: state=running health=healthy
+  ✓ 最终 db/api/web/gateway 全部 healthy（migrate/grants 为 Exited(0)）  — {"api": "healthy", "db": "healthy", "gateway": "healthy", "grants": "", "migrate": "", "web": "healthy"}
+
+== 汇总：28/28 通过 ==
+== 9. 清理隔离资源（只清本项目） ==
+  剩余本项目容器：0 个（应为 0）

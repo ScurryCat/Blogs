@@ -1,0 +1,153 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from prod.Dockerfile.api
+#1 transferring dockerfile: 2.40kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/python:3.13-slim
+#2 DONE 0.0s
+
+#3 [internal] load metadata for ghcr.io/astral-sh/uv:0.9
+#3 DONE 5.5s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2.00kB done
+#4 DONE 0.0s
+
+#5 [base 1/9] FROM docker.io/library/python:3.13-slim@sha256:70729b46c69b4f1e97c4822c1af3df53a1476cf5ddc6c087c0c10bc3a5678c2f
+#5 resolve docker.io/library/python:3.13-slim@sha256:70729b46c69b4f1e97c4822c1af3df53a1476cf5ddc6c087c0c10bc3a5678c2f 0.0s done
+#5 DONE 0.2s
+
+#6 [internal] load build context
+#6 transferring context: 1.50MB 0.0s done
+#6 DONE 0.1s
+
+#7 FROM ghcr.io/astral-sh/uv:0.9@sha256:538e0b39736e7feae937a65983e49d2ab75e1559d35041f9878b7b7e51de91e4
+#7 resolve ghcr.io/astral-sh/uv:0.9@sha256:538e0b39736e7feae937a65983e49d2ab75e1559d35041f9878b7b7e51de91e4 0.0s done
+#7 sha256:597c034a97ce4bf4c99a8bed53cfeb67bc186e49f5cc84a1090eb9b7e661a4a3 0B / 98B 0.2s
+#7 sha256:42006da38f928f0b8e4dee2797da8e1e00389a680b41a27234a2aae8cd930844 0B / 21.48MB 0.2s
+#7 sha256:597c034a97ce4bf4c99a8bed53cfeb67bc186e49f5cc84a1090eb9b7e661a4a3 98B / 98B 0.6s done
+#7 ...
+
+#5 [base 1/9] FROM docker.io/library/python:3.13-slim@sha256:70729b46c69b4f1e97c4822c1af3df53a1476cf5ddc6c087c0c10bc3a5678c2f
+#5 extracting sha256:a2c5ac708d8b046b36bb9ff13512a4ebb02740989de6f68337004fe5473a996d 0.1s done
+#5 DONE 0.3s
+
+#5 [base 1/9] FROM docker.io/library/python:3.13-slim@sha256:70729b46c69b4f1e97c4822c1af3df53a1476cf5ddc6c087c0c10bc3a5678c2f
+#5 extracting sha256:e41644b4b81a155dbd3f55fa04a37386bf9cc6c5fcb5d9470f604e5f6531259b
+#5 extracting sha256:e41644b4b81a155dbd3f55fa04a37386bf9cc6c5fcb5d9470f604e5f6531259b 0.4s done
+#5 DONE 0.7s
+
+#7 FROM ghcr.io/astral-sh/uv:0.9@sha256:538e0b39736e7feae937a65983e49d2ab75e1559d35041f9878b7b7e51de91e4
+#7 ...
+
+#5 [base 1/9] FROM docker.io/library/python:3.13-slim@sha256:70729b46c69b4f1e97c4822c1af3df53a1476cf5ddc6c087c0c10bc3a5678c2f
+#5 extracting sha256:74202e18a58bbfeb8aa453d39c9f10218cfd1afc69e81a2b29e40913c69f56b9 0.0s done
+#5 DONE 0.7s
+
+#7 FROM ghcr.io/astral-sh/uv:0.9@sha256:538e0b39736e7feae937a65983e49d2ab75e1559d35041f9878b7b7e51de91e4
+#7 sha256:42006da38f928f0b8e4dee2797da8e1e00389a680b41a27234a2aae8cd930844 2.10MB / 21.48MB 2.9s
+#7 sha256:42006da38f928f0b8e4dee2797da8e1e00389a680b41a27234a2aae8cd930844 4.19MB / 21.48MB 3.3s
+#7 sha256:42006da38f928f0b8e4dee2797da8e1e00389a680b41a27234a2aae8cd930844 6.29MB / 21.48MB 3.8s
+#7 sha256:42006da38f928f0b8e4dee2797da8e1e00389a680b41a27234a2aae8cd930844 8.39MB / 21.48MB 4.1s
+#7 sha256:42006da38f928f0b8e4dee2797da8e1e00389a680b41a27234a2aae8cd930844 10.49MB / 21.48MB 4.4s
+#7 sha256:42006da38f928f0b8e4dee2797da8e1e00389a680b41a27234a2aae8cd930844 12.58MB / 21.48MB 4.8s
+#7 sha256:42006da38f928f0b8e4dee2797da8e1e00389a680b41a27234a2aae8cd930844 14.68MB / 21.48MB 5.0s
+#7 sha256:42006da38f928f0b8e4dee2797da8e1e00389a680b41a27234a2aae8cd930844 16.78MB / 21.48MB 5.4s
+#7 sha256:42006da38f928f0b8e4dee2797da8e1e00389a680b41a27234a2aae8cd930844 18.87MB / 21.48MB 5.7s
+#7 sha256:42006da38f928f0b8e4dee2797da8e1e00389a680b41a27234a2aae8cd930844 20.97MB / 21.48MB 6.0s
+#7 sha256:42006da38f928f0b8e4dee2797da8e1e00389a680b41a27234a2aae8cd930844 21.48MB / 21.48MB 6.2s done
+#7 extracting sha256:42006da38f928f0b8e4dee2797da8e1e00389a680b41a27234a2aae8cd930844
+#7 extracting sha256:42006da38f928f0b8e4dee2797da8e1e00389a680b41a27234a2aae8cd930844 0.3s done
+#7 DONE 6.7s
+
+#7 FROM ghcr.io/astral-sh/uv:0.9@sha256:538e0b39736e7feae937a65983e49d2ab75e1559d35041f9878b7b7e51de91e4
+#7 extracting sha256:597c034a97ce4bf4c99a8bed53cfeb67bc186e49f5cc84a1090eb9b7e661a4a3 done
+#7 DONE 6.7s
+
+#8 [base 2/9] COPY --from=ghcr.io/astral-sh/uv:0.9 /uv /usr/local/bin/uv
+#8 DONE 1.2s
+
+#9 [base 3/9] WORKDIR /srv/api
+#9 DONE 0.0s
+
+#10 [base 4/9] COPY apps/api/pyproject.toml apps/api/uv.lock ./
+#10 DONE 0.0s
+
+#11 [base 5/9] RUN uv sync --frozen --no-dev --no-install-project
+#11 0.203 Using CPython 3.13.16 interpreter at: /usr/local/bin/python3
+#11 0.203 Creating virtual environment at: /opt/venv
+#11 2.262 Downloading sqlalchemy (4.4MiB)
+#11 2.266 Downloading pydantic-core (2.0MiB)
+#11 2.266 Downloading psycopg-binary (6.5MiB)
+#11 2.267 Downloading pillow (6.0MiB)
+#11 2.268 Downloading uvloop (4.2MiB)
+#11 4.682  Downloaded pydantic-core
+#11 5.760  Downloaded uvloop
+#11 5.786  Downloaded sqlalchemy
+#11 6.318  Downloaded pillow
+#11 6.413  Downloaded psycopg-binary
+#11 6.413 Prepared 33 packages in 6.20s
+#11 6.454 Installed 33 packages in 41ms
+#11 6.870 Bytecode compiled 1077 files in 415ms
+#11 6.870  + alembic==1.20.0
+#11 6.870  + annotated-doc==0.0.5
+#11 6.870  + annotated-types==0.8.0
+#11 6.870  + anyio==4.15.1
+#11 6.870  + argon2-cffi==25.1.0
+#11 6.870  + argon2-cffi-bindings==26.1.0
+#11 6.870  + cffi==2.1.1
+#11 6.870  + click==8.5.0
+#11 6.870  + fastapi==0.143.2
+#11 6.870  + h11==0.16.0
+#11 6.870  + httptools==0.9.0
+#11 6.870  + idna==3.20
+#11 6.870  + mako==1.4.3
+#11 6.870  + markupsafe==3.0.4
+#11 6.870  + opentelemetry-api==1.45.1
+#11 6.870  + pillow==12.3.0
+#11 6.870  + psycopg==3.3.6
+#11 6.870  + psycopg-binary==3.3.6
+#11 6.870  + pycparser==3.11
+#11 6.870  + pydantic==2.14.1
+#11 6.870  + pydantic-core==2.50.1
+#11 6.870  + pydantic-settings==2.16.0
+#11 6.870  + python-dotenv==1.2.4
+#11 6.870  + python-multipart==0.0.32
+#11 6.870  + pyyaml==6.0.3
+#11 6.870  + sqlalchemy==2.1.4
+#11 6.870  + starlette==1.8.0
+#11 6.870  + typing-extensions==4.16.0
+#11 6.870  + typing-inspection==0.4.4
+#11 6.870  + uvicorn==0.54.0
+#11 6.870  + uvloop==0.23.0
+#11 6.870  + watchfiles==1.3.0
+#11 6.870  + websockets==17.2
+#11 DONE 7.0s
+
+#12 [base 6/9] COPY apps/api/app ./app
+#12 DONE 0.0s
+
+#13 [base 7/9] COPY apps/api/migrations ./migrations
+#13 DONE 0.0s
+
+#14 [base 8/9] COPY apps/api/alembic.ini ./alembic.ini
+#14 DONE 0.0s
+
+#15 [base 9/9] RUN useradd --system --uid 10001 --create-home --home-dir /home/phantom phantom     && mkdir -p /var/lib/phantom-log/media     && chown -R phantom:phantom /srv/api /var/lib/phantom-log /home/phantom
+#15 0.057 useradd warning: phantom's uid 10001 is greater than SYS_UID_MAX 999
+#15 DONE 0.1s
+
+#16 exporting to image
+#16 exporting layers
+#16 exporting layers 2.4s done
+#16 exporting manifest sha256:5fb17d80eb9656ae80e60adffcb95dc4dfd4e101c820128d1d7c0cb309f0306c done
+#16 exporting config sha256:db0c3850ee38659440fc2f347d3a7b03277ca34ad3a1bf85c14b58a779d2035d done
+#16 exporting attestation manifest sha256:e24f284b2314ce9781631da818c19fcdf89e5fd8789fbcdeb45d9e66531d51f2 done
+#16 exporting manifest list sha256:e0ad77e0437d08ce8032308162ef1eb66f340f1a2f5dcc71b7045003012c3c57 done
+#16 naming to docker.io/library/phantom-log-api:d1-verify done
+#16 unpacking to docker.io/library/phantom-log-api:d1-verify
+#16 unpacking to docker.io/library/phantom-log-api:d1-verify 0.8s done
+#16 DONE 3.2s
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/7cesr66eg6oqa226fncq1kz6k

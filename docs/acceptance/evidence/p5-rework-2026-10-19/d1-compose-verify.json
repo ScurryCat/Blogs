@@ -1,0 +1,1383 @@
+{
+  "tool": "tools/verify-compose-healthcheck.py",
+  "timestamp": "2026-10-19T12:40:32+0800",
+  "project": "pl-d1-verify",
+  "compose_file": "/Users/学习/blog/Blogs/deploy/compose.prod.yaml",
+  "api_image": "phantom-log-api:d1-verify",
+  "web_image": "phantom-log-web:d1-verify",
+  "gateway_url": "http://127.0.0.1:18080",
+  "repo_head": "c2a3de7cdf0791857a9d7a1acbf80cb473d0bf8b",
+  "checks": [
+    {
+      "label": "docker compose config 渲染成功",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "docker compose up 成功",
+      "ok": true,
+      "detail": "y-web-1 Starting \n Container pl-d1-verify-web-1 Started \n Container pl-d1-verify-web-1 Waiting \n Container pl-d1-verify-api-1 Waiting \n Container pl-d1-verify-api-1 Healthy \n Container pl-d1-verify-web-1 Healthy \n Container pl-d1-verify-gateway-1 Starting \n Container pl-d1-verify-gateway-1 Started \n"
+    },
+    {
+      "label": "六个服务容器都已创建（db/migrate/grants/api/web/gateway）",
+      "ok": true,
+      "detail": "db=True migrate=True grants=True api=True web=True gateway=True"
+    },
+    {
+      "label": "db 达到 healthy",
+      "ok": true,
+      "detail": "health=healthy"
+    },
+    {
+      "label": "migrate 一次性任务退出码 0（迁移成功才启动 api）",
+      "ok": true,
+      "detail": "status=exited exit=0"
+    },
+    {
+      "label": "grants 一次性任务退出码 0（运行账号授权成功才启动 api）",
+      "ok": true,
+      "detail": "status=exited exit=0"
+    },
+    {
+      "label": "api 达到 healthy（说明 healthcheck 契约与 readiness 一致）",
+      "ok": true,
+      "detail": "health=healthy"
+    },
+    {
+      "label": "web 达到 healthy（依赖 api healthy 后启动）",
+      "ok": true,
+      "detail": "health=healthy"
+    },
+    {
+      "label": "gateway 达到 healthy（依赖 web + api healthy 后启动）",
+      "ok": true,
+      "detail": "health=healthy"
+    },
+    {
+      "label": "GET /gateway-healthz → 200",
+      "ok": true,
+      "detail": "HTTP 200 body='ok'"
+    },
+    {
+      "label": "GET /api/v1/health/ready → 200 且 status=ready、三项检查全 ok",
+      "ok": true,
+      "detail": "HTTP 200 body='{\"status\":\"ready\",\"service\":\"phantom-log-api\",\"version\":\"d1-verify\",\"checks\":{\"database\":\"ok\",\"schema\":\"ok\",\"media_storage\":\"ok\"},\"checked_at\":\"2026-10-19T04:40:59.495227Z\"}'"
+    },
+    {
+      "label": "GET /healthz（web）→ 200",
+      "ok": true,
+      "detail": "HTTP 200 body='{\"status\":\"ok\",\"service\":\"phantom-log-web\",\"scope\":\"web-liveness\",\"note\":\"仅表示 Ne'"
+    },
+    {
+      "label": "GET /（web 首页）→ 200",
+      "ok": true,
+      "detail": "HTTP 200 body='<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charSet=\"utf-8'"
+    },
+    {
+      "label": "能从容器 inspect 读到已部署的 healthcheck 命令",
+      "ok": true,
+      "detail": "['CMD', 'python', '-c', 'import json, sys, urllib.request\\ntry:\\n    with urllib.request.urlopen(\"http://127.0.0.1:8000/api/v1/health/ready\", timeout=5) as r:\\n        body = json.load(r)\\nexcept Exce"
+    },
+    {
+      "label": "已部署 healthcheck 调用 /api/v1/health/ready",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "执行已部署 healthcheck 命令 → 退出码 0",
+      "ok": true,
+      "detail": "exit=0 stderr=''"
+    },
+    {
+      "label": "对照脚本成功替换成旧契约（== \"ok\"）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "旧契约（== \"ok\"）在同一健康 API 上退出码非 0（证明 D1 错配会误判）",
+      "ok": true,
+      "detail": "exit=1"
+    },
+    {
+      "label": "api 容器内 uid=10001（非 root）",
+      "ok": true,
+      "detail": "10001"
+    },
+    {
+      "label": "web 容器内 uid=10002（非 root）",
+      "ok": true,
+      "detail": "10002"
+    },
+    {
+      "label": "停止 db 服务",
+      "ok": true,
+      "detail": " Container pl-d1-verify-db-1 Stopping \n Container pl-d1-verify-db-1 Stopped \n"
+    },
+    {
+      "label": "db 停止后 api 变为 unhealthy（不是 running 就算好）",
+      "ok": true,
+      "detail": "health=unhealthy"
+    },
+    {
+      "label": "db 故障期间 api 容器仍在运行（未崩溃）",
+      "ok": true,
+      "detail": "running"
+    },
+    {
+      "label": "db 故障期间 web 容器未受影响（仍在运行）",
+      "ok": true,
+      "detail": "running"
+    },
+    {
+      "label": "重启 db 服务",
+      "ok": true,
+      "detail": " Container pl-d1-verify-db-1 Starting \n Container pl-d1-verify-db-1 Started \n"
+    },
+    {
+      "label": "db 恢复后 api 重新变为 healthy",
+      "ok": true,
+      "detail": "health=healthy"
+    },
+    {
+      "label": "恢复后网关读 readiness 仍为 200 ready",
+      "ok": true,
+      "detail": "HTTP 200 body='{\"status\":\"ready\",\"service\":\"phantom-log-api\",\"version\":\"d1-verify\",\"checks\":{\"database\":\"ok\",\"schema\":\"ok\",\"media_storage\":\"ok\"},\"checked_at\":\"2026-10-19T04:42'"
+    },
+    {
+      "label": "最终 db/api/web/gateway 全部 healthy（migrate/grants 为 Exited(0)）",
+      "ok": true,
+      "detail": "{\"api\": \"healthy\", \"db\": \"healthy\", \"gateway\": \"healthy\", \"grants\": \"\", \"migrate\": \"\", \"web\": \"healthy\"}"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "-f",
+        "/Users/学习/blog/Blogs/deploy/compose.prod.yaml",
+        "-p",
+        "pl-d1-verify",
+        "--env-file",
+        "/tmp/pl-d1-verify/compose.env",
+        "down",
+        "--remove-orphans",
+        "--timeout",
+        "20"
+      ],
+      "returncode": 0,
+      "seconds": 1.07,
+      "stdout": "",
+      "stderr": " Container pl-d1-verify-gateway-1 Stopping \n Container pl-d1-verify-gateway-1 Stopped \n Container pl-d1-verify-gateway-1 Removing \n Container pl-d1-verify-gateway-1 Removed \n Container pl-d1-verify-web-1 Stopping \n Container pl-d1-verify-web-1 Stopped \n Container pl-d1-verify-web-1 Removing \n Container pl-d1-verify-web-1 Removed \n Container pl-d1-verify-api-1 Stopping \n Container pl-d1-verify-api-1 Stopped \n Container pl-d1-verify-api-1 Removing \n Container pl-d1-verify-api-1 Removed \n Container pl-d1-verify-grants-1 Stopping \n Container pl-d1-verify-grants-1 Stopped \n Container pl-d1-verify-grants-1 Removing \n Container pl-d1-verify-grants-1 Removed \n Container pl-d1-verify-migrate-1 Stopping \n Container pl-d1-verify-migrate-1 Stopped \n Container pl-d1-verify-migrate-1 Removing \n Container pl-d1-verify-migrate-1 Removed \n Container pl-d1-verify-db-1 Stopping \n Container pl-d1-verify-db-1 Stopped \n Container pl-d1-verify-db-1 Removing \n Container pl-d1-verify-db-1 Removed \n Network pl-d1-verify_data_net Removing \n Network pl-d1-verify_edge_net Removing \n Network pl-d1-verify_edge_net Removed \n Network pl-d1-verify_data_net Removed \n"
+    },
+    {
+      "argv": [
+        "docker",
+        "volume",
+        "ls",
+        "--filter",
+        "label=com.docker.compose.project=pl-d1-verify",
+        "-q"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "pl-d1-verify_caddy_config\npl-d1-verify_caddy_data\npl-d1-verify_media_data\npl-d1-verify_pg_data\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "volume",
+        "rm",
+        "pl-d1-verify_caddy_config"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "pl-d1-verify_caddy_config\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "volume",
+        "rm",
+        "pl-d1-verify_caddy_data"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "pl-d1-verify_caddy_data\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "volume",
+        "rm",
+        "pl-d1-verify_media_data"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "pl-d1-verify_media_data\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "volume",
+        "rm",
+        "pl-d1-verify_pg_data"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "pl-d1-verify_pg_data\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "network",
+        "ls",
+        "--filter",
+        "label=com.docker.compose.project=pl-d1-verify",
+        "-q"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "image",
+        "inspect",
+        "phantom-log-api:d1-verify"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "[\n    {\n        \"Id\": \"sha256:e0ad77e0437d08ce8032308162ef1eb66f340f1a2f5dcc71b7045003012c3c57\",\n        \"RepoTags\": [\n            \"phantom-log-api:d1-verify\"\n        ],\n        \"RepoDigests\": [\n            \"phantom-log-api@sha256:e0ad77e0437d08ce8032308162ef1eb66f340f1a2f5dcc71b7045003012c3c57\"\n        ],\n        \"Comment\": \"buildkit.dockerfile.v0\",\n        \"Created\": \"2026-10-19T04:21:43.897246798Z\",\n        \"Config\": {\n            \"User\": \"phantom\",\n            \"ExposedPorts\": {\n                \"8000/tcp\": {}\n            },\n            \"Env\": [\n                \"PATH=/opt/venv/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\",\n                \"GPG_KEY=7169605F62C751356D054A26A821E680E5FA6305\",\n                \"PYTHON_VERSION=3.13.16\",\n                \"PYTHON_SHA256=f4b1bfb3c79b5bb11b8d228a12504163b4c0dab4d679828d8f5f26b6cb6ab35d\",\n                \"PYTHONDONTWRITEBYTECODE=1\",\n                \"PYTHONUNBUFFERED=1\",\n                \"PYTHONPATH=/srv/api\",\n                \"UV_PROJECT_ENVIRONMENT=/opt/venv\",\n                \"UV_COMPILE_BYTECODE=1\",\n                \"HOME=/home/phantom\",\n                \"MEDIA_ROOT=/var/lib/phantom-log/media\"\n            ],\n            \"Cmd\": [\n                \"uvicorn\",\n                \"app.main:app\",\n                \"--host\",\n                \"0.0.0.0\",\n                \"--port\",\n                \"8000\",\n                \"--workers\",\n                \"1\"\n            ],\n            \"WorkingDir\": \"/srv/api\",\n            \"ArgsEscaped\": true\n        },\n        \"Architecture\": \"arm64\",\n        \"Os\": \"linux\",\n        \"Size\": 444455990,\n        \"RootFS\": {\n            \"Type\": \"layers\",\n            \"Layers\": [\n                \"sha256:258ba1f62b513e7bb7492d3cc8ce445e4ef176a14980f193f789b6d7270ae61c\",\n                \"sha256:23d7a75a2d0c2d4e7d19d49098b6e0fb21715f5d63a36eb579bb45325856e1ca\",\n                \"sha256:a69d76acf458356809d4f43cc9bb5b8eeff45d047e478e08e3137a9ca12eb17e\",\n                \"sha256:cd97ea47e2b0fb46a5ae64ddae3e31ed883da90d33635bcfec6432111e891558\",\n                \"sha256:71a12fa99ce6d59db631b52c9ff59939a912700efbfd6b47b7b0519a1db3be88\",\n                \"sha256:07d5ef795e081447d8f78000e8042bc34e545fb0998bbd5e31959ca6b8eeabd3\",\n                \"sha256:bab4028be053c3417b8537bba9d130e7da9fb1c9af63de411146a9af98a7f9e4\",\n                \"sha256:813948ed29c2620d6f5208cc1cb355c99ec020ee247fe8ddef93468ed9bf9096\",\n                \"sha256:f4dfca1bbe8290f14fd1a03b117dcc33f152bb08ed5c59839799983d5410e627\",\n                \"sha256:fc58752a64d937857a1a2f31ad6b6ba7a177e61a6014d3739af72143ea376168\",\n                \"sha256:23b7901c45ab586cd0c9a290e962972f22dd74cf0cc719348417291dcea6b532\",\n                \"sha256:1da40f5d5536e2388747e9daf80e8bbadd47e4812cb382e6b4cf9ec73bc189f9\"\n            ]\n        },\n        \"Metadata\": {\n            \"LastTagTime\": \"2026-10-19T04:21:46.334231091Z\"\n        },\n        \"Descriptor\": {\n            \"mediaType\": \"application/vnd.oci.image.index.v1+json\",\n            \"digest\": \"sha256:e0ad77e0437d08ce8032308162ef1eb66f340f1a2f5dcc71b7045003012c3c57\",\n            \"size\": 856\n        },\n        \"Identity\": {\n            \"Build\": [\n                {\n                    \"Ref\": \"7cesr66eg6oqa226fncq1kz6k\",\n                    \"CreatedAt\": \"2026-10-19T04:21:47.091773092Z\"\n                }\n            ]\n        }\n    }\n]\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "image",
+        "inspect",
+        "phantom-log-web:d1-verify"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "[\n    {\n        \"Id\": \"sha256:f56538fe6d26d310a9cd548215ce3f82d20f79fc36a4321603410fa4291a5f90\",\n        \"RepoTags\": [\n            \"phantom-log-web:d1-verify\"\n        ],\n        \"RepoDigests\": [\n            \"phantom-log-web@sha256:f56538fe6d26d310a9cd548215ce3f82d20f79fc36a4321603410fa4291a5f90\"\n        ],\n        \"Comment\": \"buildkit.dockerfile.v0\",\n        \"Created\": \"2026-10-19T04:29:09.079236046Z\",\n        \"Config\": {\n            \"User\": \"phantom\",\n            \"ExposedPorts\": {\n                \"3000/tcp\": {}\n            },\n            \"Env\": [\n                \"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\",\n                \"NODE_VERSION=26.12.0\",\n                \"NODE_ENV=production\",\n                \"NEXT_TELEMETRY_DISABLED=1\",\n                \"PORT=3000\",\n                \"HOSTNAME=0.0.0.0\",\n                \"HOME=/home/phantom\"\n            ],\n            \"Entrypoint\": [\n                \"docker-entrypoint.sh\"\n            ],\n            \"Cmd\": [\n                \"node\",\n                \"apps/web/server.js\"\n            ],\n            \"WorkingDir\": \"/srv/web\",\n            \"ArgsEscaped\": true\n        },\n        \"Architecture\": \"arm64\",\n        \"Os\": \"linux\",\n        \"Size\": 489289016,\n        \"RootFS\": {\n            \"Type\": \"layers\",\n            \"Layers\": [\n                \"sha256:258ba1f62b513e7bb7492d3cc8ce445e4ef176a14980f193f789b6d7270ae61c\",\n                \"sha256:36eee991e56368d694b783bd21d01fabcd8c448ca6b63a810a2421862545422d\",\n                \"sha256:075ec6d42cca9da36d07c92fc80b762d3a8a256a7713a6fe49264d130cc65352\",\n                \"sha256:e746f2e5a864764b20ddab10bcdcc1380bf285f3b6c28bcaded289caaf9ac790\",\n                \"sha256:2d8338e154fd7edd349becab5dee3286fa7207736859b70246ef4207793ce327\",\n                \"sha256:36d454b8148f70eda0cd46285e7fabc06c25befb1339f54bba7f04ffd15c1988\",\n                \"sha256:7b3f84f013d5db0fa53e6b2fd4ce7fa463217fc1a31b17f1026e19f2dc1c3edc\",\n                \"sha256:8d8d53d4ff9a8b14fbe4e81301cdcb98d74492be6f1e7539621d2785af22515b\",\n                \"sha256:8f0e2fa01dbe7feff145f307ba0f32d1e34313db9168a6cb75c5cdc5d1521225\"\n            ]\n        },\n        \"Metadata\": {\n            \"LastTagTime\": \"2026-10-19T04:29:09.758928505Z\"\n        },\n        \"Descriptor\": {\n            \"mediaType\": \"application/vnd.oci.image.index.v1+json\",\n            \"digest\": \"sha256:f56538fe6d26d310a9cd548215ce3f82d20f79fc36a4321603410fa4291a5f90\",\n            \"size\": 856\n        },\n        \"Identity\": {\n            \"Build\": [\n                {\n                    \"Ref\": \"w4byqolwt0plrbx37m1zi6z5q\",\n                    \"CreatedAt\": \"2026-10-19T04:29:10.101272421Z\"\n                }\n            ]\n        }\n    }\n]\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "-f",
+        "/Users/学习/blog/Blogs/deploy/compose.prod.yaml",
+        "-p",
+        "pl-d1-verify",
+        "--env-file",
+        "/tmp/pl-d1-verify/compose.env",
+        "config",
+        "--format",
+        "yaml"
+      ],
+      "returncode": 0,
+      "seconds": 0.05,
+      "stdout": "teway/Caddyfile\n        target: /etc/caddy/Caddyfile\n        read_only: true\n        bind: {}\n      - type: volume\n        source: caddy_data\n        target: /data\n        volume: {}\n      - type: volume\n        source: caddy_config\n        target: /config\n        volume: {}\n    depends_on:\n      api:\n        condition: service_healthy\n        required: true\n      web:\n        condition: service_healthy\n        required: true\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - -q\n        - -O\n        - '-'\n        - http://127.0.0.1:80/gateway-healthz\n      timeout: 5s\n      interval: 15s\n      retries: 5\n      start_period: 15s\n    ports:\n      - mode: ingress\n        target: 80\n        published: \"18080\"\n        protocol: tcp\n      - mode: ingress\n        target: 443\n        published: \"18443\"\n        protocol: tcp\n  grants:\n    restart: 'no'\n    cap_drop:\n      - ALL\n    command:\n      - psql\n      - -v\n      - ON_ERROR_STOP=1\n      - -h\n      - db\n      - -U\n      - pl_migrator\n      - -d\n      - pl\n      - -v\n      - app_user=pl_app\n      - -f\n      - /grant-runtime.sql\n    environment:\n      PGPASSWORD: 78b230cdf811ceb279c0c2f303d0c01683748c6273de9f16\n    image: postgres:18-alpine\n    logging:\n      driver: json-file\n      options:\n        max-file: \"5\"\n        max-size: 10m\n    networks:\n      data_net: null\n    security_opt:\n      - no-new-privileges:true\n    volumes:\n      - type: bind\n        source: /Users/学习/blog/Blogs/deploy/db/grant-runtime.sql\n        target: /grant-runtime.sql\n        read_only: true\n        bind: {}\n    depends_on:\n      db:\n        condition: service_healthy\n        required: true\n      migrate:\n        condition: service_completed_successfully\n        required: true\n  migrate:\n    restart: 'no'\n    command:\n      - alembic\n      - upgrade\n      - head\n    environment:\n      APP_ENV: prod\n      APP_VERSION: d1-verify\n      DATABASE_URL: postgresql+psycopg://pl_migrator:78b230cdf811ceb279c0c2f303d0c01683748c6273de9f16@db:5432/pl\n      SECRET_KEY: cd6e495053242063c49336e586af3180ccbbb926d6912174f9254fe3a253678e\n    image: phantom-log-api:d1-verify\n    logging:\n      driver: json-file\n      options:\n        max-file: \"5\"\n        max-size: 10m\n    networks:\n      data_net: null\n    depends_on:\n      db:\n        condition: service_healthy\n        required: true\n  web:\n    restart: unless-stopped\n    cap_drop:\n      - ALL\n    environment:\n      API_INTERNAL_URL: http://api:8000\n      NODE_ENV: production\n    image: phantom-log-web:d1-verify\n    logging:\n      driver: json-file\n      options:\n        max-file: \"5\"\n        max-size: 10m\n    networks:\n      edge_net: null\n    read_only: true\n    security_opt:\n      - no-new-privileges:true\n    tmpfs:\n      - /tmp\n    depends_on:\n      api:\n        condition: service_healthy\n        required: true\n    healthcheck:\n      test:\n        - CMD\n        - node\n        - -e\n        - |\n          fetch(\"http://127.0.0.1:3000/healthz\", { headers: { accept: \"application/json\" } })\n            .then((r) => process.exit(r.ok ? 0 : 1))\n            .catch(() => process.exit(1));\n      timeout: 10s\n      interval: 15s\n      retries: 5\n      start_period: 30s\nnetworks:\n  data_net:\n    name: pl-d1-verify_data_net\n    internal: true\n  edge_net:\n    name: pl-d1-verify_edge_net\nvolumes:\n  caddy_config:\n    name: pl-d1-verify_caddy_config\n  caddy_data:\n    name: pl-d1-verify_caddy_data\n  media_data:\n    name: pl-d1-verify_media_data\n  pg_data:\n    name: pl-d1-verify_pg_data\nsecrets:\n  postgres_admin_password:\n    name: pl-d1-verify_postgres_admin_password\n    file: /tmp/pl-d1-verify/secrets/postgres_admin_password\n  postgres_app_password:\n    name: pl-d1-verify_postgres_app_password\n    file: /tmp/pl-d1-verify/secrets/postgres_app_password\n  postgres_migrator_password:\n    name: pl-d1-verify_postgres_migrator_password\n    file: /tmp/pl-d1-verify/secrets/postgres_migrator_password\nx-logging:\n  driver: json-file\n  options:\n    max-file: \"5\"\n    max-size: 10m\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "-f",
+        "/Users/学习/blog/Blogs/deploy/compose.prod.yaml",
+        "-p",
+        "pl-d1-verify",
+        "--env-file",
+        "/tmp/pl-d1-verify/compose.env",
+        "up",
+        "-d",
+        "--remove-orphans"
+      ],
+      "returncode": 0,
+      "seconds": 18.89,
+      "stdout": "",
+      "stderr": " Volume pl-d1-verify_caddy_config Creating \n Network pl-d1-verify_edge_net Creating \n Volume pl-d1-verify_caddy_config Creating \n Volume pl-d1-verify_pg_data Creating \n Volume pl-d1-verify_pg_data Creating \n Network pl-d1-verify_edge_net Creating \n Volume pl-d1-verify_caddy_data Creating \n Volume pl-d1-verify_caddy_data Creating \n Volume pl-d1-verify_media_data Creating \n Volume pl-d1-verify_media_data Creating \n Network pl-d1-verify_data_net Creating \n Network pl-d1-verify_data_net Creating \n Volume pl-d1-verify_caddy_config Created \n Volume pl-d1-verify_caddy_config Created \n Volume pl-d1-verify_media_data Created \n Volume pl-d1-verify_media_data Created \n Volume pl-d1-verify_pg_data Created \n Volume pl-d1-verify_pg_data Created \n Volume pl-d1-verify_caddy_data Created \n Volume pl-d1-verify_caddy_data Created \n Network pl-d1-verify_edge_net Created \n Network pl-d1-verify_edge_net Created \n Network pl-d1-verify_data_net Created \n Network pl-d1-verify_data_net Created \n Container pl-d1-verify-db-1 Creating \n Container pl-d1-verify-db-1 Created \n Container pl-d1-verify-migrate-1 Creating \n Container pl-d1-verify-migrate-1 Created \n Container pl-d1-verify-grants-1 Creating \n Container pl-d1-verify-grants-1 Created \n Container pl-d1-verify-api-1 Creating \n Container pl-d1-verify-api-1 Created \n Container pl-d1-verify-web-1 Creating \n Container pl-d1-verify-web-1 Created \n Container pl-d1-verify-gateway-1 Creating \n Container pl-d1-verify-gateway-1 Created \n Container pl-d1-verify-db-1 Starting \n Container pl-d1-verify-db-1 Started \n Container pl-d1-verify-db-1 Waiting \n Container pl-d1-verify-db-1 Healthy \n Container pl-d1-verify-migrate-1 Starting \n Container pl-d1-verify-migrate-1 Started \n Container pl-d1-verify-migrate-1 Waiting \n Container pl-d1-verify-db-1 Waiting \n Container pl-d1-verify-db-1 Healthy \n Container pl-d1-verify-migrate-1 Exited \n Container pl-d1-verify-grants-1 Starting \n Container pl-d1-verify-grants-1 Started \n Container pl-d1-verify-grants-1 Waiting \n Container pl-d1-verify-db-1 Waiting \n Container pl-d1-verify-migrate-1 Waiting \n Container pl-d1-verify-migrate-1 Exited \n Container pl-d1-verify-grants-1 Exited \n Container pl-d1-verify-db-1 Healthy \n Container pl-d1-verify-api-1 Starting \n Container pl-d1-verify-api-1 Started \n Container pl-d1-verify-api-1 Waiting \n Container pl-d1-verify-api-1 Healthy \n Container pl-d1-verify-web-1 Starting \n Container pl-d1-verify-web-1 Started \n Container pl-d1-verify-web-1 Waiting \n Container pl-d1-verify-api-1 Waiting \n Container pl-d1-verify-api-1 Healthy \n Container pl-d1-verify-web-1 Healthy \n Container pl-d1-verify-gateway-1 Starting \n Container pl-d1-verify-gateway-1 Started \n"
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "-f",
+        "/Users/学习/blog/Blogs/deploy/compose.prod.yaml",
+        "-p",
+        "pl-d1-verify",
+        "--env-file",
+        "/tmp/pl-d1-verify/compose.env",
+        "ps",
+        "--all",
+        "--format",
+        "json"
+      ],
+      "returncode": 0,
+      "seconds": 0.09,
+      "stdout": ",\"PublishedPort\":18443,\"Protocol\":\"tcp\"}],\"RunningFor\":\"18 seconds ago\",\"Service\":\"gateway\",\"Size\":\"0B\",\"State\":\"running\",\"Status\":\"Up Less than a second (health: starting)\"}\n{\"Command\":\"\\\"docker-entrypoint.s…\\\"\",\"CreatedAt\":\"2026-10-19 12:40:33 +0800 CST\",\"Engine\":\"\",\"ExitCode\":0,\"Health\":\"\",\"ID\":\"b1c2756d1d97\",\"Image\":\"postgres:18-alpine\",\"Labels\":\"com.docker.compose.config-hash=5734591fd385ddb4e57f22877c98ab5d887196e0e1bfc4714816d051098348bf,desktop.docker.io/binds/0/SourceKind=hostFile,desktop.docker.io/binds/0/Target=/grant-runtime.sql,desktop.docker.io/ports.scheme=v2,com.docker.compose.container-number=1,com.docker.compose.service=grants,com.docker.compose.depends_on=migrate:service_completed_successfully:false,db:service_healthy:false,com.docker.compose.oneoff=False,com.docker.compose.project.environment_file=/tmp/pl-d1-verify/compose.env,com.docker.compose.project.working_dir=/Users/学习/blog/Blogs/deploy,desktop.docker.io/binds/0/Source=/Users/学习/blog/Blogs/deploy/db/grant-runtime.sql,com.docker.compose.image=sha256:89f747171c4b0af0eacf5984550060be79786dbe286eb60cfa691d79d1e8b23f,com.docker.compose.project=pl-d1-verify,com.docker.compose.project.config_files=/Users/学习/blog/Blogs/deploy/compose.prod.yaml,com.docker.compose.version=5.6.0\",\"LocalVolumes\":\"1\",\"Mounts\":\"/host_mnt/User…,befd00fabe5507…\",\"Name\":\"pl-d1-verify-grants-1\",\"Names\":\"pl-d1-verify-grants-1\",\"Networks\":\"pl-d1-verify_data_net\",\"Ports\":\"\",\"Project\":\"pl-d1-verify\",\"Publishers\":[],\"RunningFor\":\"19 seconds ago\",\"Service\":\"grants\",\"Size\":\"0B\",\"State\":\"exited\",\"Status\":\"Exited (0) 11 seconds ago\"}\n{\"Command\":\"\\\"alembic upgrade head\\\"\",\"CreatedAt\":\"2026-10-19 12:40:33 +0800 CST\",\"Engine\":\"\",\"ExitCode\":0,\"Health\":\"\",\"ID\":\"650491e8332a\",\"Image\":\"phantom-log-api:d1-verify\",\"Labels\":\"com.docker.compose.project.working_dir=/Users/学习/blog/Blogs/deploy,com.docker.compose.service=migrate,com.docker.compose.version=5.6.0,desktop.docker.io/ports.scheme=v2,com.docker.compose.config-hash=24506ac6e255d95b0b02bb6a1cb36620841d7b88b78f470649f4af0aeb1acca6,com.docker.compose.container-number=1,com.docker.compose.depends_on=db:service_healthy:false,com.docker.compose.image=sha256:5fb17d80eb9656ae80e60adffcb95dc4dfd4e101c820128d1d7c0cb309f0306c,com.docker.compose.oneoff=False,com.docker.compose.project=pl-d1-verify,com.docker.compose.project.config_files=/Users/学习/blog/Blogs/deploy/compose.prod.yaml,com.docker.compose.project.environment_file=/tmp/pl-d1-verify/compose.env\",\"LocalVolumes\":\"0\",\"Mounts\":\"\",\"Name\":\"pl-d1-verify-migrate-1\",\"Names\":\"pl-d1-verify-migrate-1\",\"Networks\":\"pl-d1-verify_data_net\",\"Ports\":\"\",\"Project\":\"pl-d1-verify\",\"Publishers\":[],\"RunningFor\":\"19 seconds ago\",\"Service\":\"migrate\",\"Size\":\"0B\",\"State\":\"exited\",\"Status\":\"Exited (0) 12 seconds ago\"}\n{\"Command\":\"\\\"docker-entrypoint.s…\\\"\",\"CreatedAt\":\"2026-10-19 12:40:33 +0800 CST\",\"Engine\":\"\",\"ExitCode\":0,\"Health\":\"healthy\",\"ID\":\"1d62f55c673d\",\"Image\":\"phantom-log-web:d1-verify\",\"Labels\":\"com.docker.compose.project.working_dir=/Users/学习/blog/Blogs/deploy,com.docker.compose.service=web,com.docker.compose.version=5.6.0,com.docker.compose.config-hash=9131eb495c22b5567677661a6d6486756d4a9f8b9d78679292ae7bb16b70e703,com.docker.compose.container-number=1,com.docker.compose.project=pl-d1-verify,desktop.docker.io/ports.scheme=v2,com.docker.compose.depends_on=api:service_healthy:false,com.docker.compose.image=sha256:e91738c51d4104ab96403bbd4eb80d6d33bef197bcceeead8624bec95421d1ab,com.docker.compose.oneoff=False,com.docker.compose.project.config_files=/Users/学习/blog/Blogs/deploy/compose.prod.yaml,com.docker.compose.project.environment_file=/tmp/pl-d1-verify/compose.env\",\"LocalVolumes\":\"0\",\"Mounts\":\"\",\"Name\":\"pl-d1-verify-web-1\",\"Names\":\"pl-d1-verify-web-1\",\"Networks\":\"pl-d1-verify_edge_net\",\"Ports\":\"3000/tcp\",\"Project\":\"pl-d1-verify\",\"Publishers\":[{\"URL\":\"\",\"TargetPort\":3000,\"PublishedPort\":0,\"Protocol\":\"tcp\"}],\"RunningFor\":\"19 seconds ago\",\"Service\":\"web\",\"Size\":\"0B\",\"State\":\"running\",\"Status\":\"Up 5 seconds (healthy)\"}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "-f",
+        "/Users/学习/blog/Blogs/deploy/compose.prod.yaml",
+        "-p",
+        "pl-d1-verify",
+        "--env-file",
+        "/tmp/pl-d1-verify/compose.env",
+        "ps",
+        "--all",
+        "-q",
+        "db"
+      ],
+      "returncode": 0,
+      "seconds": 0.06,
+      "stdout": "576dd4867a7d214432dc17a8bc1128927a9b4f0f83fc7abaca3d50cc410fd533\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "-f",
+        "/Users/学习/blog/Blogs/deploy/compose.prod.yaml",
+        "-p",
+        "pl-d1-verify",
+        "--env-file",
+        "/tmp/pl-d1-verify/compose.env",
+        "ps",
+        "--all",
+        "-q",
+        "migrate"
+      ],
+      "returncode": 0,
+      "seconds": 0.06,
+      "stdout": "650491e8332a495aca443766875529912ce443c8c2b37ea94f2668407263f653\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "-f",
+        "/Users/学习/blog/Blogs/deploy/compose.prod.yaml",
+        "-p",
+        "pl-d1-verify",
+        "--env-file",
+        "/tmp/pl-d1-verify/compose.env",
+        "ps",
+        "--all",
+        "-q",
+        "grants"
+      ],
+      "returncode": 0,
+      "seconds": 0.06,
+      "stdout": "b1c2756d1d978fa7678b0445e638c757a58acaa9a373aab31be0b6815bc27d7e\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "-f",
+        "/Users/学习/blog/Blogs/deploy/compose.prod.yaml",
+        "-p",
+        "pl-d1-verify",
+        "--env-file",
+        "/tmp/pl-d1-verify/compose.env",
+        "ps",
+        "--all",
+        "-q",
+        "api"
+      ],
+      "returncode": 0,
+      "seconds": 0.06,
+      "stdout": "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "-f",
+        "/Users/学习/blog/Blogs/deploy/compose.prod.yaml",
+        "-p",
+        "pl-d1-verify",
+        "--env-file",
+        "/tmp/pl-d1-verify/compose.env",
+        "ps",
+        "--all",
+        "-q",
+        "web"
+      ],
+      "returncode": 0,
+      "seconds": 0.08,
+      "stdout": "1d62f55c673dfe1a95b6a1aaa692303d9cc7b7dfa5ce81d4af8178c85ecd8525\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "-f",
+        "/Users/学习/blog/Blogs/deploy/compose.prod.yaml",
+        "-p",
+        "pl-d1-verify",
+        "--env-file",
+        "/tmp/pl-d1-verify/compose.env",
+        "ps",
+        "--all",
+        "-q",
+        "gateway"
+      ],
+      "returncode": 0,
+      "seconds": 0.06,
+      "stdout": "ad2ecb5ff2f93a9b62105021a6ac4aac73b179170e9376fdab6a9f65f57a6edc\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "576dd4867a7d214432dc17a8bc1128927a9b4f0f83fc7abaca3d50cc410fd533"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "576dd4867a7d214432dc17a8bc1128927a9b4f0f83fc7abaca3d50cc410fd533"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Status}}",
+        "650491e8332a495aca443766875529912ce443c8c2b37ea94f2668407263f653"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "exited\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.ExitCode}}",
+        "650491e8332a495aca443766875529912ce443c8c2b37ea94f2668407263f653"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "0\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Status}}",
+        "650491e8332a495aca443766875529912ce443c8c2b37ea94f2668407263f653"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "exited\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.ExitCode}}",
+        "650491e8332a495aca443766875529912ce443c8c2b37ea94f2668407263f653"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "0\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Status}}",
+        "b1c2756d1d978fa7678b0445e638c757a58acaa9a373aab31be0b6815bc27d7e"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "exited\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.ExitCode}}",
+        "b1c2756d1d978fa7678b0445e638c757a58acaa9a373aab31be0b6815bc27d7e"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "0\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Status}}",
+        "b1c2756d1d978fa7678b0445e638c757a58acaa9a373aab31be0b6815bc27d7e"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "exited\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.ExitCode}}",
+        "b1c2756d1d978fa7678b0445e638c757a58acaa9a373aab31be0b6815bc27d7e"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "0\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "1d62f55c673dfe1a95b6a1aaa692303d9cc7b7dfa5ce81d4af8178c85ecd8525"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "1d62f55c673dfe1a95b6a1aaa692303d9cc7b7dfa5ce81d4af8178c85ecd8525"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "ad2ecb5ff2f93a9b62105021a6ac4aac73b179170e9376fdab6a9f65f57a6edc"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "starting\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "ad2ecb5ff2f93a9b62105021a6ac4aac73b179170e9376fdab6a9f65f57a6edc"
+      ],
+      "returncode": 0,
+      "seconds": 0.04,
+      "stdout": "starting\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "ad2ecb5ff2f93a9b62105021a6ac4aac73b179170e9376fdab6a9f65f57a6edc"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "starting\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "ad2ecb5ff2f93a9b62105021a6ac4aac73b179170e9376fdab6a9f65f57a6edc"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "ad2ecb5ff2f93a9b62105021a6ac4aac73b179170e9376fdab6a9f65f57a6edc"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{json .Config.Healthcheck.Test}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "[\"CMD\",\"python\",\"-c\",\"import json, sys, urllib.request\\ntry:\\n    with urllib.request.urlopen(\\\"http://127.0.0.1:8000/api/v1/health/ready\\\", timeout=5) as r:\\n        body = json.load(r)\\nexcept Exception:\\n    sys.exit(1)\\nsys.exit(0 if body.get(\\\"status\\\") == \\\"ready\\\" else 1)\\n\"]\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "exec",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f",
+        "python",
+        "-c",
+        "import json, sys, urllib.request\ntry:\n    with urllib.request.urlopen(\"http://127.0.0.1:8000/api/v1/health/ready\", timeout=5) as r:\n        body = json.load(r)\nexcept Exception:\n    sys.exit(1)\nsys.exit(0 if body.get(\"status\") == \"ready\" else 1)\n"
+      ],
+      "returncode": 0,
+      "seconds": 0.17,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "exec",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f",
+        "python",
+        "-c",
+        "import json, sys, urllib.request\ntry:\n    with urllib.request.urlopen(\"http://127.0.0.1:8000/api/v1/health/ready\", timeout=5) as r:\n        body = json.load(r)\nexcept Exception:\n    sys.exit(1)\nsys.exit(0 if body.get(\"status\") == \"ok\" else 1)\n"
+      ],
+      "returncode": 1,
+      "seconds": 0.15,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "exec",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f",
+        "id",
+        "-u"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "10001\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "exec",
+        "1d62f55c673dfe1a95b6a1aaa692303d9cc7b7dfa5ce81d4af8178c85ecd8525",
+        "id",
+        "-u"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "10002\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "-f",
+        "/Users/学习/blog/Blogs/deploy/compose.prod.yaml",
+        "-p",
+        "pl-d1-verify",
+        "--env-file",
+        "/tmp/pl-d1-verify/compose.env",
+        "stop",
+        "db"
+      ],
+      "returncode": 0,
+      "seconds": 0.17,
+      "stdout": "",
+      "stderr": " Container pl-d1-verify-db-1 Stopping \n Container pl-d1-verify-db-1 Stopped \n"
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.04,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.04,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.04,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.04,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.04,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.04,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.04,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.04,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.04,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "unhealthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "unhealthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "running\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "running\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Status}}",
+        "1d62f55c673dfe1a95b6a1aaa692303d9cc7b7dfa5ce81d4af8178c85ecd8525"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "running\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Status}}",
+        "1d62f55c673dfe1a95b6a1aaa692303d9cc7b7dfa5ce81d4af8178c85ecd8525"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "running\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "-f",
+        "/Users/学习/blog/Blogs/deploy/compose.prod.yaml",
+        "-p",
+        "pl-d1-verify",
+        "--env-file",
+        "/tmp/pl-d1-verify/compose.env",
+        "start",
+        "db"
+      ],
+      "returncode": 0,
+      "seconds": 0.19,
+      "stdout": "",
+      "stderr": " Container pl-d1-verify-db-1 Starting \n Container pl-d1-verify-db-1 Started \n"
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "unhealthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "unhealthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "unhealthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "unhealthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.04,
+      "stdout": "unhealthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Health.Status}}",
+        "d8bfd83df9bde69aa9e34bb22a0e2ec878fcd6cb1342e6315f1c9a5666dccf6f"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "healthy\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "-f",
+        "/Users/学习/blog/Blogs/deploy/compose.prod.yaml",
+        "-p",
+        "pl-d1-verify",
+        "--env-file",
+        "/tmp/pl-d1-verify/compose.env",
+        "ps",
+        "--all",
+        "--format",
+        "json"
+      ],
+      "returncode": 0,
+      "seconds": 0.14,
+      "stdout": ":18443,\"Protocol\":\"tcp\"}],\"RunningFor\":\"About a minute ago\",\"Service\":\"gateway\",\"Size\":\"0B\",\"State\":\"running\",\"Status\":\"Up About a minute (healthy)\"}\n{\"Command\":\"\\\"docker-entrypoint.s…\\\"\",\"CreatedAt\":\"2026-10-19 12:40:33 +0800 CST\",\"Engine\":\"\",\"ExitCode\":0,\"Health\":\"\",\"ID\":\"b1c2756d1d97\",\"Image\":\"postgres:18-alpine\",\"Labels\":\"com.docker.compose.service=grants,com.docker.compose.config-hash=5734591fd385ddb4e57f22877c98ab5d887196e0e1bfc4714816d051098348bf,com.docker.compose.image=sha256:89f747171c4b0af0eacf5984550060be79786dbe286eb60cfa691d79d1e8b23f,com.docker.compose.project.config_files=/Users/学习/blog/Blogs/deploy/compose.prod.yaml,com.docker.compose.project.environment_file=/tmp/pl-d1-verify/compose.env,com.docker.compose.version=5.6.0,com.docker.compose.container-number=1,desktop.docker.io/binds/0/SourceKind=hostFile,desktop.docker.io/ports.scheme=v2,desktop.docker.io/binds/0/Target=/grant-runtime.sql,com.docker.compose.depends_on=migrate:service_completed_successfully:false,db:service_healthy:false,com.docker.compose.project.working_dir=/Users/学习/blog/Blogs/deploy,desktop.docker.io/binds/0/Source=/Users/学习/blog/Blogs/deploy/db/grant-runtime.sql,com.docker.compose.oneoff=False,com.docker.compose.project=pl-d1-verify\",\"LocalVolumes\":\"1\",\"Mounts\":\"/host_mnt/User…,befd00fabe5507…\",\"Name\":\"pl-d1-verify-grants-1\",\"Names\":\"pl-d1-verify-grants-1\",\"Networks\":\"pl-d1-verify_data_net\",\"Ports\":\"\",\"Project\":\"pl-d1-verify\",\"Publishers\":[],\"RunningFor\":\"About a minute ago\",\"Service\":\"grants\",\"Size\":\"0B\",\"State\":\"exited\",\"Status\":\"Exited (0) About a minute ago\"}\n{\"Command\":\"\\\"alembic upgrade head\\\"\",\"CreatedAt\":\"2026-10-19 12:40:33 +0800 CST\",\"Engine\":\"\",\"ExitCode\":0,\"Health\":\"\",\"ID\":\"650491e8332a\",\"Image\":\"phantom-log-api:d1-verify\",\"Labels\":\"com.docker.compose.image=sha256:5fb17d80eb9656ae80e60adffcb95dc4dfd4e101c820128d1d7c0cb309f0306c,com.docker.compose.project.config_files=/Users/学习/blog/Blogs/deploy/compose.prod.yaml,com.docker.compose.project.environment_file=/tmp/pl-d1-verify/compose.env,com.docker.compose.project.working_dir=/Users/学习/blog/Blogs/deploy,com.docker.compose.service=migrate,com.docker.compose.version=5.6.0,com.docker.compose.depends_on=db:service_healthy:false,com.docker.compose.oneoff=False,com.docker.compose.project=pl-d1-verify,desktop.docker.io/ports.scheme=v2,com.docker.compose.config-hash=24506ac6e255d95b0b02bb6a1cb36620841d7b88b78f470649f4af0aeb1acca6,com.docker.compose.container-number=1\",\"LocalVolumes\":\"0\",\"Mounts\":\"\",\"Name\":\"pl-d1-verify-migrate-1\",\"Names\":\"pl-d1-verify-migrate-1\",\"Networks\":\"pl-d1-verify_data_net\",\"Ports\":\"\",\"Project\":\"pl-d1-verify\",\"Publishers\":[],\"RunningFor\":\"About a minute ago\",\"Service\":\"migrate\",\"Size\":\"0B\",\"State\":\"exited\",\"Status\":\"Exited (0) About a minute ago\"}\n{\"Command\":\"\\\"docker-entrypoint.s…\\\"\",\"CreatedAt\":\"2026-10-19 12:40:33 +0800 CST\",\"Engine\":\"\",\"ExitCode\":0,\"Health\":\"healthy\",\"ID\":\"1d62f55c673d\",\"Image\":\"phantom-log-web:d1-verify\",\"Labels\":\"com.docker.compose.project.config_files=/Users/学习/blog/Blogs/deploy/compose.prod.yaml,com.docker.compose.project.environment_file=/tmp/pl-d1-verify/compose.env,com.docker.compose.version=5.6.0,com.docker.compose.config-hash=9131eb495c22b5567677661a6d6486756d4a9f8b9d78679292ae7bb16b70e703,com.docker.compose.container-number=1,com.docker.compose.project=pl-d1-verify,com.docker.compose.project.working_dir=/Users/学习/blog/Blogs/deploy,com.docker.compose.service=web,desktop.docker.io/ports.scheme=v2,com.docker.compose.depends_on=api:service_healthy:false,com.docker.compose.image=sha256:e91738c51d4104ab96403bbd4eb80d6d33bef197bcceeead8624bec95421d1ab,com.docker.compose.oneoff=False\",\"LocalVolumes\":\"0\",\"Mounts\":\"\",\"Name\":\"pl-d1-verify-web-1\",\"Names\":\"pl-d1-verify-web-1\",\"Networks\":\"pl-d1-verify_edge_net\",\"Ports\":\"3000/tcp\",\"Project\":\"pl-d1-verify\",\"Publishers\":[{\"URL\":\"\",\"TargetPort\":3000,\"PublishedPort\":0,\"Protocol\":\"tcp\"}],\"RunningFor\":\"About a minute ago\",\"Service\":\"web\",\"Size\":\"0B\",\"State\":\"running\",\"Status\":\"Up About a minute (healthy)\"}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "-f",
+        "/Users/学习/blog/Blogs/deploy/compose.prod.yaml",
+        "-p",
+        "pl-d1-verify",
+        "--env-file",
+        "/tmp/pl-d1-verify/compose.env",
+        "down",
+        "--remove-orphans",
+        "--timeout",
+        "20"
+      ],
+      "returncode": 0,
+      "seconds": 1.06,
+      "stdout": "",
+      "stderr": " Container pl-d1-verify-gateway-1 Stopping \n Container pl-d1-verify-gateway-1 Stopped \n Container pl-d1-verify-gateway-1 Removing \n Container pl-d1-verify-gateway-1 Removed \n Container pl-d1-verify-web-1 Stopping \n Container pl-d1-verify-web-1 Stopped \n Container pl-d1-verify-web-1 Removing \n Container pl-d1-verify-web-1 Removed \n Container pl-d1-verify-api-1 Stopping \n Container pl-d1-verify-api-1 Stopped \n Container pl-d1-verify-api-1 Removing \n Container pl-d1-verify-api-1 Removed \n Container pl-d1-verify-grants-1 Stopping \n Container pl-d1-verify-grants-1 Stopped \n Container pl-d1-verify-grants-1 Removing \n Container pl-d1-verify-grants-1 Removed \n Container pl-d1-verify-migrate-1 Stopping \n Container pl-d1-verify-migrate-1 Stopped \n Container pl-d1-verify-migrate-1 Removing \n Container pl-d1-verify-migrate-1 Removed \n Container pl-d1-verify-db-1 Stopping \n Container pl-d1-verify-db-1 Stopped \n Container pl-d1-verify-db-1 Removing \n Container pl-d1-verify-db-1 Removed \n Network pl-d1-verify_data_net Removing \n Network pl-d1-verify_edge_net Removing \n Network pl-d1-verify_edge_net Removed \n Network pl-d1-verify_data_net Removed \n"
+    },
+    {
+      "argv": [
+        "docker",
+        "volume",
+        "ls",
+        "--filter",
+        "label=com.docker.compose.project=pl-d1-verify",
+        "-q"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "pl-d1-verify_caddy_config\npl-d1-verify_caddy_data\npl-d1-verify_media_data\npl-d1-verify_pg_data\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "volume",
+        "rm",
+        "pl-d1-verify_caddy_config"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "pl-d1-verify_caddy_config\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "volume",
+        "rm",
+        "pl-d1-verify_caddy_data"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "pl-d1-verify_caddy_data\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "volume",
+        "rm",
+        "pl-d1-verify_media_data"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "pl-d1-verify_media_data\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "volume",
+        "rm",
+        "pl-d1-verify_pg_data"
+      ],
+      "returncode": 0,
+      "seconds": 0.03,
+      "stdout": "pl-d1-verify_pg_data\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "network",
+        "ls",
+        "--filter",
+        "label=com.docker.compose.project=pl-d1-verify",
+        "-q"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "docker",
+        "ps",
+        "-a",
+        "--filter",
+        "label=com.docker.compose.project=pl-d1-verify",
+        "-q"
+      ],
+      "returncode": 0,
+      "seconds": 0.02,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "summary": {
+    "total": 28,
+    "passed": 28,
+    "failed": 0
+  },
+  "cleanup": {
+    "project": "pl-d1-verify",
+    "remaining_containers": 0
+  }
+}

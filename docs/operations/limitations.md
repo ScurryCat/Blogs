@@ -2,23 +2,26 @@
 
 这份文件的作用是**不让人把「没验证」读成「已上线」**（ACCEPTANCE §3）。
 左边是事实，右边是原因和「要破除它需要什么」。所有条目都取自各包交付单的未验证清单汇总，
-不是新发现，但在这里集中披露一次。
+不是新发现，但在这里集中披露一次。**2026-10-19 更新**：站主授权处理 D1 后，本机 Docker Desktop
+可用，容器构建/启动/健康联动已补做隔离 Compose 实测（见 `../acceptance/P5-D1-compose-healthcheck-2026-10-19.md`）；
+下表相应条目已更新，生产部署与 TLS 仍未验证。
 
 ## 1. 容器与部署（最大的一块）
 
 | 项 | 状态 | 原因 / 破除条件 |
 | --- | --- | --- |
-| `docker build` 两个生产镜像 | **未验证** | 本机 Docker daemon 未运行（`/Users/v/.docker/run/docker.sock` 不存在），`docker info` 的 Server 段直接报连接失败 |
-| `docker compose up` 起整套 | **未验证** | 同上 |
-| 容器内启动、健康检查联动、`migrate` 一次性任务 | **未验证** | 同上。`compose.prod.yaml` 的 `condition: service_healthy` / `service_completed_successfully` 只做了渲染与人工审阅 |
-| 镜像层无密钥、非 root 运行 | **静态审查通过，运行时未验证** | `deploy/check-prod-config.py` 审了 Dockerfile 与渲染后的编排；容器内 `id -u` 没跑过 |
+| `docker build` 两个生产镜像 | **本机隔离实测通过（2026-10-19）** | Docker Desktop 29.8.2 下从仓库 Dockerfile 构建 API/Web 镜像成功（Web 需 `--build-context music=assets/music`）；**CI 远端构建与 digest 镜像仍未验证** |
+| `docker compose up` 起整套 | **本机隔离实测通过（2026-10-19）** | 隔离项目 `pl-d1-verify`（18080/18443）全栈启动；28/28 断言（依赖链/健康/网关请求/故障恢复/非 root） |
+| 容器内启动、健康检查联动、`migrate` + `grants` 一次性任务 | **本机隔离实测通过（2026-10-19）** | db→migrate→grants→api→web→gateway 依赖链实测；停 db 后 api 变 unhealthy、恢复 db 后回 healthy |
+| 镜像层无密钥、非 root 运行 | **静态审查 + 容器内实测通过** | `deploy/check-prod-config.py` 60/60；容器内 `id -u`：api=10001、web=10002 |
 | 生产 TLS / Cookie `Secure` / ACME | **未验证** | 没有域名、没有 80/443、没有 daemon；`caddy validate` 只证明配置能被解析 |
 | 真实域名下的同源 Cookie 行为 | **未验证** | 本机用 `127.0.0.1` 的 HTTP 代理形态验证了同源写路径；`__Host-` + `Secure` 在真实 HTTPS 域名下的行为未测 |
 
 **已用等价手段补上的部分**：`docker compose config`（真实渲染）、`caddy validate`
 （真实 Caddy 2.10.2 二进制）、透明反向代理 + 真实 Chromium 的端到端登录
 （`tests/e2e/integration/verify-proxy-same-origin.py`）、真实 uvicorn 的 readiness 五形态
-（`verify-health-drills.py`）。**这些不能替代容器验证**，只是把能验的部分验实。
+（`verify-health-drills.py`）。**2026-10-19 起**，容器构建/启动/健康联动不再只有等价手段，
+已在隔离 Compose 中做成真实容器证据（D1 验证）；但生产域名/TLS/真实宿主机部署仍未验证。
 
 ## 2. 素材许可（发布限制，必须由站主决定）
 

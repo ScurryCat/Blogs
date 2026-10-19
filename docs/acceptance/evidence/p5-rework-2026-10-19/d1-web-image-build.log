@@ -1,0 +1,75 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from prod.Dockerfile.web
+#1 transferring dockerfile: 4.82kB done
+#1 DONE 0.0s
+
+#2 [context music] load .dockerignore
+#2 transferring music: 2B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:26-slim
+#3 DONE 1.7s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2.43kB done
+#4 DONE 0.0s
+
+#5 [builder 1/7] FROM docker.io/library/node:26-slim@sha256:0d1e33586362bb9e608c4e751e7a9e7edb55c9ac11461ed5666af696cc461dd4
+#5 resolve docker.io/library/node:26-slim@sha256:0d1e33586362bb9e608c4e751e7a9e7edb55c9ac11461ed5666af696cc461dd4 done
+#5 DONE 0.0s
+
+#6 [context music] load from client
+#6 transferring music: 135B done
+#6 DONE 0.0s
+
+#7 [internal] load build context
+#7 transferring context: 42.51kB 0.4s done
+#7 DONE 0.4s
+
+#8 [builder 5/7] COPY apps/web/ ./apps/web/
+#8 CACHED
+
+#9 [builder 2/7] WORKDIR /srv
+#9 CACHED
+
+#10 [builder 4/7] RUN cd apps/web && npm ci --no-audit --no-fund
+#10 CACHED
+
+#11 [builder 6/7] COPY --from=music / ./apps/web/public/assets/music/
+#11 CACHED
+
+#12 [builder 3/7] COPY apps/web/package.json apps/web/package-lock.json ./apps/web/
+#12 CACHED
+
+#13 [builder 7/7] RUN cd apps/web && npm run build
+#13 CACHED
+
+#14 [runner 2/6] WORKDIR /srv/web
+#14 CACHED
+
+#15 [runner 3/6] RUN useradd --system --uid 10002 --create-home --home-dir /home/phantom phantom
+#15 CACHED
+
+#16 [runner 4/6] COPY --from=builder --chown=phantom:phantom /srv/apps/web/.next/standalone ./
+#16 DONE 0.2s
+
+#17 [runner 5/6] COPY --from=builder --chown=phantom:phantom /srv/apps/web/.next/static ./apps/web/.next/static
+#17 DONE 0.0s
+
+#18 [runner 6/6] COPY --from=builder --chown=phantom:phantom /srv/apps/web/public ./apps/web/public
+#18 DONE 0.0s
+
+#19 exporting to image
+#19 exporting layers
+#19 exporting layers 0.7s done
+#19 exporting manifest sha256:e91738c51d4104ab96403bbd4eb80d6d33bef197bcceeead8624bec95421d1ab done
+#19 exporting config sha256:4e2b680f9c8e5d9afaa00edbdf3cce71cf8d16b94dc9e6752cb847dd154d2bf9 done
+#19 exporting attestation manifest sha256:5a7bd726c78b756120250fb3f72e8261c466ab3fda6df8a3a31f3fb4fb4cc5cc done
+#19 exporting manifest list sha256:f56538fe6d26d310a9cd548215ce3f82d20f79fc36a4321603410fa4291a5f90 done
+#19 naming to docker.io/library/phantom-log-web:d1-verify done
+#19 unpacking to docker.io/library/phantom-log-web:d1-verify
+#19 unpacking to docker.io/library/phantom-log-web:d1-verify 0.3s done
+#19 DONE 1.0s
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/w4byqolwt0plrbx37m1zi6z5q
