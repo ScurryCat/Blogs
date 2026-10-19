@@ -73,11 +73,17 @@ function draftTypeLabel(contentType: WorkDraft["content_type"]): string {
   return contentType === "moment" ? "动态" : "手记";
 }
 
-/** 工作草稿 → 对应独立编辑页（路由由 C3/C4 建，契约 §4.1）。 */
+/**
+ * 工作草稿 → 对应独立编辑页（路由由 C3/C4 建，契约 §4.1）。
+ *
+ * R2：尚无正式内容（`target_id === null`）的草稿必须**唯一指定**草稿身份，
+ * 否则「继续编辑」只会打开空白新建页（新建草稿无法跨设备恢复）。
+ * 已有 target 的草稿维持原路径（编辑页自己会复用/创建该内容的工作草稿）。
+ */
 function draftHref(draft: WorkDraft): string {
   const base = draft.content_type === "moment" ? "/admin/moments" : "/admin/journal";
   if (draft.target_id) return `${base}/${draft.target_id}/edit`;
-  return `${base}/new`;
+  return `${base}/new?draft=${encodeURIComponent(draft.id)}`;
 }
 
 function describeHomeError(error: unknown): string {

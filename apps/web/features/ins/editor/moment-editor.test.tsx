@@ -562,3 +562,257 @@ describe("MomentEditor · 返回上下文", () => {
     view.unmount();
   });
 });
+
+describe("R1：保存失败不得提交旧草稿", () => {
+  const OLD_DRAFT = workDraftBody({
+    target_id: MOMENT_ID,
+    target_version: 2,
+    draft_version: 1,
+    data: { text: "OLD SERVER TEXT", tags: [], album_links: [] },
+    images: [{ media_id: MEDIA_ID, position: 0, alt: "操场" }],
+  });
+
+  function editProps() {
+    return baseProps({
+      targetId: MOMENT_ID,
+      targetStatus: "draft",
+      targetVersion: 2,
+      initialData: { text: "正式内容", tags: [], album_links: [] },
+      initialImages: [{ media_id: MEDIA_ID, alt: "操场", media: makeMedia() } as PickedImage],
+    });
+  }
+
+  it("PATCH 500：commit 请求为 0、无成功提示、保留最新文字与本机副本；恢复后重试提交当前输入", async () => {
+    stub = stubFetch([
+      { match: COMMIT_ROUTE, method: "POST", body: commitResultBody() },
+      { ...CREATE_ROUTE, body: { draft: OLD_DRAFT, reused: true } },
+      {
+        ...PATCH_ROUTE,
+        status: 500,
+        body: { error: { code: "INTERNAL", message: "模拟 PATCH 500", fields: {} }, request_id: "r" },
+      },
+      { match: MEDIA_DETAIL_ROUTE, body: makeMedia() },
+    ]);
+    const view = render(<MomentEditor {...editProps()} />);
+    await advance(140);
+    expect(getTextarea(view.container).value).toBe("OLD SERVER TEXT");
+
+    await typeInto(getTextarea(view.container), "LATEST UNSAVED TEXT");
+    click(buttonBy(view.container, "[data-editor-save]"));
+    await advance(300);
+
+    // 阻断 PATCH 时：绝不 commit、不显示成功、最新输入与本机副本都在
+    expect(
+      stub.requests.filter((request) => request.method === "POST" && COMMIT_ROUTE.test(request.url)),
+    ).toHaveLength(0);
+    expect(view.container.querySelector("[data-editor-success]")).toBeNull();
+    expect(getTextarea(view.container).value).toBe("LATEST UNSAVED TEXT");
+    expect(view.container.querySelector("[data-editor-error]")?.textContent ?? "").toContain(
+      "模拟 PATCH 500",
+    );
+    const localKeys = Object.keys(window.localStorage).filter((key) =>
+      key.startsWith("pl.workdraft.v1."),
+    );
+    expect(localKeys).toHaveLength(1);
+    expect(window.localStorage.getItem(localKeys[0] ?? "") ?? "").toContain("LATEST UNSAVED TEXT");
+
+    // 解除阻断后重试：PATCH 带的是当前输入，commit 用同一份快照
+    stub.restore();
+    stub = stubFetch([
+      { match: COMMIT_ROUTE, method: "POST", body: commitResultBody() },
+      {
+        ...PATCH_ROUTE,
+        body: workDraftBody({
+          target_id: MOMENT_ID,
+          target_version: 2,
+          draft_version: 2,
+          data: { text: "LATEST UNSAVED TEXT", tags: [], album_links: [] },
+          images: [{ media_id: MEDIA_ID, position: 0, alt: "操场" }],
+        }),
+      },
+    ]);
+    click(buttonBy(view.container, "[data-editor-save]"));
+    await advance(300);
+    const patches = stub.requests.filter((request) => request.method === "PATCH");
+    const lastPatch = patches.at(-1);
+    expect((lastPatch?.body as { data?: { text?: string } }).data?.text).toBe("LATEST UNSAVED TEXT");
+    const commits = stub.requests.filter(
+      (request) => request.method === "POST" && COMMIT_ROUTE.test(request.url),
+    );
+    expect(commits).toHaveLength(1);
+    expect((commits[0]?.body as Record<string, unknown>)?.action).toBe("save");
+    expect(view.container.querySelector("[data-editor-success]")?.textContent).toContain("草稿已保存");
+    // 提交内容与快照一致：成功后清掉本机恢复副本
+    expect(
+      Object.keys(window.localStorage).filter((key) => key.startsWith("pl.workdraft.v1.")),
+    ).toHaveLength(0);
+    view.unmount();
+  }, 20000);
+
+  it("412 冲突：点发布不旁路 commit（自动保存暂停时也不能提交）", async () => {
+    stub = stubFetch([
+      { match: COMMIT_ROUTE, method: "POST", body: commitResultBody({ action: "publish", status: "published" }) },
+      { ...CREATE_ROUTE, body: { draft: OLD_DRAFT, reused: true } },
+      { ...PATCH_ROUTE, status: 412, body: { error: { code: "VERSION_CONFLICT", message: "草稿版本冲突", fields: {} }, request_id: "r" } },
+      { match: MEDIA_DETAIL_ROUTE, body: makeMedia() },
+    ]);
+    const view = render(<MomentEditor {...editProps()} />);
+    await advance(140);
+
+    // 输入后直接点发布：saveNow 的 PATCH 返回 412 → 必须中止提交并提示冲突
+    await typeInto(getTextarea(view.container), "本机冲突输入");
+    click(buttonBy(view.container, "[data-editor-publish]"));
+    await advance(300);
+    expect(
+      stub.requests.filter((request) => request.method === "POST" && COMMIT_ROUTE.test(request.url)),
+    ).toHaveLength(0);
+    expect(view.container.querySelector("[data-editor-success]")).toBeNull();
+    expect(getTextarea(view.container).value).toBe("本机冲突输入");
+    expect(view.container.querySelector("[data-editor-error]")?.textContent ?? "").toContain(
+      "自动保存已暂停",
+    );
+    // 冲突暂停后按钮禁用：再点也不会旁路提交
+    expect(view.container.querySelector("[data-workspace-conflict]")).not.toBeNull();
+    expect(buttonBy(view.container, "[data-editor-publish]")?.disabled).toBe(true);
+    expect(buttonBy(view.container, "[data-editor-save]")?.disabled).toBe(true);
+    click(buttonBy(view.container, "[data-editor-publish]"));
+    await advance(200);
+    expect(
+      stub.requests.filter((request) => request.method === "POST" && COMMIT_ROUTE.test(request.url)),
+    ).toHaveLength(0);
+    view.unmount();
+  }, 20000);
+
+  it("401 登录失效：点保存不旁路 commit", async () => {
+    stub = stubFetch([
+      {
+        match: "/admin/work-drafts",
+        method: "POST",
+        status: 401,
+        body: { error: { code: "UNAUTHORIZED", message: "登录已失效", fields: {} }, request_id: "r" },
+      },
+      { match: COMMIT_ROUTE, method: "POST", body: commitResultBody() },
+    ]);
+    const view = render(<MomentEditor {...baseProps()} />);
+    await advance(60);
+    await typeInto(getTextarea(view.container), "登录失效前的输入");
+    await advance(1400);
+    expect(view.container.querySelector("[data-editor-auth-expired]")).not.toBeNull();
+
+    click(buttonBy(view.container, "[data-editor-save]"));
+    await advance(200);
+    expect(
+      stub.requests.filter((request) => request.method === "POST" && COMMIT_ROUTE.test(request.url)),
+    ).toHaveLength(0);
+    expect(view.container.querySelector("[data-editor-success]")).toBeNull();
+    expect(getTextarea(view.container).value).toBe("登录失效前的输入");
+    view.unmount();
+  }, 20000);
+
+  it("新建相册前的 saveNow 失败不会产生未处理 rejection，并显示真实错误", async () => {
+    const openSpy = vi.spyOn(window, "open").mockReturnValue(null);
+    stub = stubFetch([
+      { match: "/admin/albums", body: { items: [], next_cursor: null } },
+      { ...CREATE_ROUTE, status: 500, body: { error: { code: "INTERNAL", message: "相册前保存失败", fields: {} }, request_id: "r" } },
+    ]);
+    const view = render(
+      <MomentEditor
+        {...baseProps({
+          initialData: { text: "相册往返文字", tags: [], album_links: [] },
+          initialImages: [{ media_id: MEDIA_ID, alt: "操场" }],
+        })}
+      />,
+    );
+    await advance(140);
+    click(buttonBy(view.container, "[data-album-admin-link]"));
+    await advance(300);
+
+    expect(openSpy).toHaveBeenCalled();
+    expect(getTextarea(view.container).value).toBe("相册往返文字");
+    // 未处理的 rejection 会让 vitest 直接失败；这里再确认错误被如实显示、没有虚假成功。
+    expect(view.container.querySelector("[data-editor-success]")).toBeNull();
+    expect(view.container.querySelector("[data-editor-error]")?.textContent ?? "").toContain(
+      "相册前保存失败",
+    );
+    openSpy.mockRestore();
+    view.unmount();
+  }, 20000);
+});
+
+describe("R2：新建页指定草稿恢复（?draft=）", () => {
+  const RESUMED_DRAFT_ID = "22222222-2222-4222-8222-222222222222";
+
+  it("新建页 + draftId：首帧回填服务端草稿文字/标签/图片顺序与 alt，且不新建空草稿", async () => {
+    stub = stubFetch([
+      {
+        match: `/admin/work-drafts/${RESUMED_DRAFT_ID}`,
+        method: "GET",
+        body: workDraftBody({
+          id: RESUMED_DRAFT_ID,
+          content_type: "moment",
+          target_id: null,
+          draft_version: 3,
+          data: {
+            text: "跨设备恢复的动态文字",
+            tags: ["校园", "傍晚"],
+            album_links: [{ album_id: "album-1", media_ids: [MEDIA_ID] }],
+          },
+          images: [{ media_id: MEDIA_ID, position: 0, alt: "操场" }],
+        }),
+      },
+      { match: "/admin/albums", body: { items: [], next_cursor: null } },
+      { match: MEDIA_DETAIL_ROUTE, body: makeMedia() },
+    ]);
+    const view = render(
+      <MomentEditor {...baseProps({ draftId: RESUMED_DRAFT_ID })} />,
+    );
+    await advance(240);
+
+    expect(getTextarea(view.container).value).toBe("跨设备恢复的动态文字");
+    expect(view.container.querySelector<HTMLInputElement>("[data-editor-tags]")?.value).toBe(
+      "校园 傍晚",
+    );
+    expect(view.container.querySelectorAll("[data-editor-image]")).toHaveLength(1);
+    expect(view.container.querySelector("[data-editor-image]")?.getAttribute("data-editor-image")).toBe(
+      MEDIA_ID,
+    );
+    expect(view.container.textContent ?? "").toContain("操场");
+    // 恢复指定草稿不新建空草稿（POST /admin/work-drafts 只在首次真实输入时才允许）
+    expect(stub.requests.filter((request) => request.method === "POST")).toHaveLength(0);
+    view.unmount();
+  }, 20000);
+
+  it("resumeError（404）：可见 role=alert + 「新建空白内容」入口（不含 draft），禁止提交", async () => {
+    stub = stubFetch([
+      {
+        match: `/admin/work-drafts/${RESUMED_DRAFT_ID}`,
+        method: "GET",
+        status: 404,
+        body: { error: { code: "NOT_FOUND", message: "工作草稿不存在", fields: {} }, request_id: "r" },
+      },
+      { match: COMMIT_ROUTE, method: "POST", body: commitResultBody() },
+    ]);
+    const view = render(
+      <MomentEditor
+        {...baseProps({ draftId: RESUMED_DRAFT_ID, newDraftHref: "/admin/moments/new" })}
+      />,
+    );
+    await advance(200);
+
+    const alert = view.container.querySelector("[data-editor-resume-error]");
+    expect(alert?.getAttribute("role")).toBe("alert");
+    expect(alert?.textContent ?? "").toContain("不存在");
+    const blank = view.container.querySelector<HTMLAnchorElement>("[data-editor-resume-blank]");
+    expect(blank?.getAttribute("href")).toBe("/admin/moments/new");
+    expect(blank?.getAttribute("href") ?? "").not.toContain("draft=");
+    // 不能静默当空白页正常提交
+    click(buttonBy(view.container, "[data-editor-save]"));
+    await advance(200);
+    expect(
+      stub.requests.filter((request) => request.method === "POST" && COMMIT_ROUTE.test(request.url)),
+    ).toHaveLength(0);
+    expect(stub.requests.filter((request) => request.method === "POST")).toHaveLength(0);
+    expect(view.container.querySelector("[data-editor-success]")).toBeNull();
+    view.unmount();
+  }, 20000);
+});

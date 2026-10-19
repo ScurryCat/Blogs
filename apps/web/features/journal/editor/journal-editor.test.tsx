@@ -15,6 +15,7 @@ import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PickedImage } from "@/features/media-picker";
+import { WorkDraftSaveError } from "@/features/workspace/use-work-draft";
 import { ApiClientError } from "@/lib/api/client";
 import { render, advance, click, resetDocument } from "@/tests/helpers/render";
 
@@ -26,9 +27,13 @@ const mockUseWorkDraft = vi.hoisted(() => vi.fn());
 const mockCommitWorkDraft = vi.hoisted(() => vi.fn());
 const mockGetWorkDraft = vi.hoisted(() => vi.fn());
 
-vi.mock("@/features/workspace/use-work-draft", () => ({
-  useWorkDraft: mockUseWorkDraft,
-}));
+vi.mock("@/features/workspace/use-work-draft", async () => {
+  // 只替换 Hook 本身；WorkDraftSaveError 等真实导出继续用（R1 的失败分类要靠 instanceof）。
+  const actual = await vi.importActual<typeof import("@/features/workspace/use-work-draft")>(
+    "@/features/workspace/use-work-draft",
+  );
+  return { ...actual, useWorkDraft: mockUseWorkDraft };
+});
 
 vi.mock("@/features/workspace/api", () => ({
   commitWorkDraft: mockCommitWorkDraft,
@@ -95,14 +100,18 @@ function workStub(overrides: Record<string, unknown> = {}) {
     syncMessage: "已同步 · 可在另一设备继续编辑",
     recoveryNotice: null,
     update: vi.fn(),
-    saveNow: vi.fn(async () => saved),
+    // R1 契约：saveNow 返回 {draft, contentVersion}；失败必须抛 WorkDraftSaveError。
+    saveNow: vi.fn(async () => ({ draft: saved, contentVersion: 0 })),
+    contentVersion: vi.fn(() => 0),
     discard: vi.fn(async () => undefined),
     resolveConflict: vi.fn(async () => undefined),
     lastSyncedAt: "2026-10-18T00:00:00Z",
     localCopy: null,
     adoptLocalCopy: vi.fn(),
     discardLocalCopy: vi.fn(),
+    discardLocalCopyIfUnchanged: vi.fn(() => true),
     authExpired: false,
+    resumeError: null,
     ...overrides,
   };
 }
@@ -137,6 +146,8 @@ interface EditorOptions {
   posts?: PostOption[] | null;
   postsError?: string | null;
   returnTo?: string | null;
+  draftId?: string | null;
+  newDraftHref?: string | null;
 }
 
 function renderEditor(options: EditorOptions = {}) {
@@ -155,6 +166,8 @@ function renderEditor(options: EditorOptions = {}) {
       timezone="Asia/Shanghai"
       today="2026-10-18"
       entryId="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+      draftId={options.draftId ?? null}
+      newDraftHref={options.newDraftHref ?? null}
     />,
   );
 }
@@ -247,8 +260,10 @@ describe("新建手记：默认私密，保存 ≠ 公开", () => {
     expect(body.expectedTargetVersion).toBeNull();
     expect(body.commitKey.length).toBeGreaterThan(8);
 
-    // 已提交后清理本机恢复副本（否则下次打开会被误报成「本机有未同步修改」）
-    expect(work.discardLocalCopy).toHaveBeenCalled();
+    // 已提交后清理本机恢复副本（否则下次打开会被误报成「本机有未同步修改」）；
+    // R1：必须用版本守卫版（提交期间用户又输入时保留本机副本）。
+    expect(work.discardLocalCopyIfUnchanged).toHaveBeenCalledWith(0);
+    expect(work.discardLocalCopy).not.toHaveBeenCalled();
     const success = view.container.querySelector("[data-editor-success]");
     expect(success?.textContent ?? "").toContain("仅自己可见");
     expect(success?.textContent ?? "").toContain("要公开请单独点「公开这篇」");
@@ -639,6 +654,201 @@ describe("图片接入共享选择器（C3）", () => {
     expect(row?.textContent ?? "").toContain("街景");
     // 旧工作台那套「输入媒体 ID」的 textarea 不再出现在编辑页
     expect(view.container.querySelector('textarea[aria-label="每行一条：媒体 UUID 与替代文本"]')).toBeNull();
+    view.unmount();
+  });
+});
+
+describe("R1：saveNow 失败必须中止提交（不得提交旧草稿）", () => {
+  function renderEditWithWork(work: ReturnType<typeof workStub>) {
+    mockUseWorkDraft.mockReturnValue(work);
+    return renderEditor({ entry: entry({ status: "draft" }) });
+  }
+
+  function fill(view: ReturnType<typeof renderEditor>): void {
+    setInput(view.container, '[data-editor-field="title"]', "最新输入标题");
+    setInput(view.container, '[data-editor-field="content"]', "最新输入正文");
+  }
+
+  it("failed：commit 请求为 0，保留表单、不显示成功、不清本机副本", async () => {
+    const work = workStub({
+      saveNow: vi.fn(async () => {
+        throw new WorkDraftSaveError("failed", "同步失败（HTTP 500），本机输入已保留。");
+      }),
+    });
+    const view = renderEditWithWork(work);
+    fill(view);
+    click(view.container.querySelector('[data-editor-submit-action="save"]'));
+    await advance(20);
+
+    expect(work.saveNow).toHaveBeenCalledTimes(1);
+    expect(mockCommitWorkDraft).not.toHaveBeenCalled();
+    expect(work.discardLocalCopyIfUnchanged).not.toHaveBeenCalled();
+    expect(view.container.querySelector("[data-editor-error]")?.textContent ?? "").toContain(
+      "本机输入已保留",
+    );
+    expect(view.container.querySelector("[data-editor-success]")).toBeNull();
+    // 表单内容没有被清掉（用户最新输入还在）
+    expect(
+      view.container.querySelector<HTMLInputElement>('[data-editor-field="title"]')?.value,
+    ).toBe("最新输入标题");
+    expect(
+      view.container.querySelector<HTMLTextAreaElement>('[data-editor-field="content"]')?.value,
+    ).toBe("最新输入正文");
+    view.unmount();
+  });
+
+  it("412 冲突 / 401 登录失效同样中止提交（不旁路 commit）", async () => {
+    const cases: Array<[string, WorkDraftSaveError, string]> = [
+      [
+        "conflict",
+        new WorkDraftSaveError("conflict", "草稿已在其他设备或标签页更新，自动保存已暂停。"),
+        "自动保存已暂停",
+      ],
+      [
+        "auth",
+        new WorkDraftSaveError("auth", "登录已失效，本机输入已保留。请重新登录后再继续。"),
+        "登录已失效",
+      ],
+    ];
+    for (const [, failure, expectedText] of cases) {
+      mockCommitWorkDraft.mockReset();
+      const work = workStub({
+        saveNow: vi.fn(async () => {
+          throw failure;
+        }),
+      });
+      const view = renderEditWithWork(work);
+      fill(view);
+      click(view.container.querySelector('[data-editor-submit-action="save"]'));
+      await advance(20);
+      expect(mockCommitWorkDraft).not.toHaveBeenCalled();
+      expect(view.container.querySelector("[data-editor-error]")?.textContent ?? "").toContain(
+        expectedText,
+      );
+      expect(view.container.querySelector("[data-editor-success]")).toBeNull();
+      view.unmount();
+    }
+  });
+
+  it("提交成功只用版本守卫清本机副本（提交期间又有输入时保留）", async () => {
+    mockCommitWorkDraft.mockResolvedValue({
+      draft_id: "draft-1",
+      content_type: "journal",
+      target_id: "entry-1",
+      target_version: 1,
+      status: "draft",
+      visibility: "private",
+      action: "save",
+      idempotent_replay: false,
+    });
+    const work = workStub({
+      saveNow: vi.fn(async () => ({ draft: draft(), contentVersion: 7 })),
+      discardLocalCopyIfUnchanged: vi.fn(() => false),
+    });
+    const view = renderEditWithWork(work);
+    fill(view);
+    click(view.container.querySelector('[data-editor-submit-action="save"]'));
+    await advance(20);
+
+    expect(mockCommitWorkDraft).toHaveBeenCalledTimes(1);
+    expect(work.discardLocalCopyIfUnchanged).toHaveBeenCalledWith(7);
+    // 不再无条件调用旧 discardLocalCopy（那会清掉提交期间产生的新输入）
+    expect(work.discardLocalCopy).not.toHaveBeenCalled();
+    expect(view.container.querySelector("[data-editor-success]")).not.toBeNull();
+    view.unmount();
+  });
+});
+
+describe("R2：指定草稿恢复与 resumeError", () => {
+  it("新建手记通过 draftId 恢复日期/标题/正文/图片，私密状态不变", () => {
+    const restored = draft({
+      data: {
+        entry_date: "2026-10-05",
+        title: "跨设备恢复的标题",
+        content_md: "跨设备恢复的正文。",
+        mood: "专注",
+        location: "四轩茶屋",
+        post_id: null,
+      },
+      images: [
+        { media_id: MEDIA.id, position: 0, alt: "街景" },
+      ],
+    });
+    mockUseWorkDraft.mockReturnValue(workStub({ draft: restored }));
+    const view = renderEditor({
+      draftId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      newDraftHref: "/admin/journal/new?date=2026-10-05",
+    });
+
+    expect(
+      view.container.querySelector<HTMLInputElement>('[data-editor-field="date"]')?.value,
+    ).toBe("2026-10-05");
+    expect(
+      view.container.querySelector<HTMLInputElement>('[data-editor-field="title"]')?.value,
+    ).toBe("跨设备恢复的标题");
+    expect(
+      view.container.querySelector<HTMLTextAreaElement>('[data-editor-field="content"]')?.value,
+    ).toBe("跨设备恢复的正文。");
+    expect(view.container.querySelector("[data-journal-image]")?.getAttribute("data-journal-image")).toBe(
+      MEDIA.id,
+    );
+    // 恢复不改变「新建默认私密」的语义
+    const status = view.container.querySelector("[data-editor-status]");
+    expect(status?.getAttribute("data-editor-status")).toBe("draft");
+    expect(status?.getAttribute("data-editor-visibility")).toBe("private");
+    view.unmount();
+  });
+
+  it("同类型两份草稿各自恢复（点击哪份恢复哪份，不串稿）", () => {
+    const first = draft({ id: "draft-a", data: { title: "草稿 A" } });
+    const second = draft({ id: "draft-b", data: { title: "草稿 B" } });
+
+    mockUseWorkDraft.mockReturnValue(workStub({ draft: first }));
+    const viewA = renderEditor({ draftId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa" });
+    expect(
+      viewA.container.querySelector<HTMLInputElement>('[data-editor-field="title"]')?.value,
+    ).toBe("草稿 A");
+    viewA.unmount();
+
+    mockUseWorkDraft.mockReturnValue(workStub({ draft: second }));
+    const viewB = renderEditor({ draftId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb" });
+    expect(
+      viewB.container.querySelector<HTMLInputElement>('[data-editor-field="title"]')?.value,
+    ).toBe("草稿 B");
+    viewB.unmount();
+  });
+
+  it("resumeError：可见 role=alert 错误块 + 「新建空白内容」入口（不含 draft），且禁止提交", async () => {
+    const work = workStub({
+      draft: null,
+      state: "failed",
+      resumeError:
+        "工作草稿不存在或已被丢弃（404），没有可恢复的内容。请从创作台重新选择，或新建空白内容。",
+    });
+    mockUseWorkDraft.mockReturnValue(work);
+    const view = renderEditor({
+      draftId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      newDraftHref: "/admin/journal/new?date=2026-10-05",
+    });
+
+    const alert = view.container.querySelector("[data-editor-resume-error]");
+    expect(alert?.getAttribute("role")).toBe("alert");
+    expect(alert?.textContent ?? "").toContain("工作草稿不存在或已被丢弃");
+    const blank = view.container.querySelector<HTMLAnchorElement>("[data-editor-resume-blank]");
+    expect(blank?.getAttribute("href")).toBe("/admin/journal/new?date=2026-10-05");
+    expect(blank?.getAttribute("href") ?? "").not.toContain("draft=");
+    // 表单被禁用，不能静默当空白页正常编辑/提交
+    expect(
+      view.container.querySelector<HTMLFieldSetElement>("fieldset")?.disabled,
+    ).toBe(true);
+    expect(
+      view.container.querySelector<HTMLButtonElement>('[data-editor-submit-action="save"]')?.disabled,
+    ).toBe(true);
+
+    click(view.container.querySelector('[data-editor-submit-action="save"]'));
+    await advance(20);
+    expect(work.saveNow).not.toHaveBeenCalled();
+    expect(mockCommitWorkDraft).not.toHaveBeenCalled();
     view.unmount();
   });
 });

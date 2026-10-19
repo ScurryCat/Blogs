@@ -30,7 +30,7 @@ import { EditorShell } from "@/features/workspace/editor-shell";
 import { withReturnTo } from "@/features/workspace/return-context";
 import { SyncStatus } from "@/features/workspace/sync-status";
 import type { DraftAction } from "@/features/workspace/types";
-import { useWorkDraft } from "@/features/workspace/use-work-draft";
+import { useWorkDraft, WorkDraftSaveError } from "@/features/workspace/use-work-draft";
 import { ApiClientError } from "@/lib/api/client";
 
 import styles from "../journal.module.css";
@@ -80,6 +80,16 @@ export interface JournalEditorProps {
    * 必填：刷新后要能恢复本机副本，key 必须稳定（契约 §9.4）。
    */
   entryId: string;
+  /**
+   * 「继续编辑」指定的工作草稿 id（URL `?draft=<uuid>`；R2）。
+   * 新建页恢复尚无正式内容的新手记；编辑页要求草稿的 target_id 与 entry.id 匹配。
+   */
+  draftId?: string | null;
+  /**
+   * 指定草稿恢复失败时「新建空白内容」的跳转地址（已去掉 draft 参数、换新 entry）。
+   * 页面在解析 URL 时算好传入；缺省时回落到手记新建页。
+   */
+  newDraftHref?: string | null;
 }
 
 interface SuccessState {
@@ -116,6 +126,17 @@ function describeCommitError(error: unknown): string {
   return "连不上服务，内容没有提交（工作副本与本机内容已保留）。";
 }
 
+/**
+ * 保存（`saveNow()`）或提交失败的展示文案（R1）。
+ *
+ * `WorkDraftSaveError` 已带准确中文文案（412→冲突、401→登录失效、断网→本机保留…），
+ * 直接展示；其它错误才走提交失败文案（422 字段等）。
+ */
+function describeEditorFailureMessage(error: unknown): string {
+  if (error instanceof WorkDraftSaveError) return error.message;
+  return describeCommitError(error);
+}
+
 export function JournalEditor(props: JournalEditorProps): ReactNode {
   const {
     mode,
@@ -131,6 +152,8 @@ export function JournalEditor(props: JournalEditorProps): ReactNode {
     timezone,
     today,
     entryId,
+    draftId = null,
+    newDraftHref = null,
   } = props;
 
   /** 页面初值（只算一次）：服务端草稿/本机副本回填之前的表单基准。 */
@@ -173,6 +196,7 @@ export function JournalEditor(props: JournalEditorProps): ReactNode {
     returnTo,
     csrfToken,
     entryId,
+    draftId,
   });
 
   // 服务端草稿 / 本机副本比页面初值更新时回填一次；用户一旦开始输入就不再覆盖。
@@ -221,6 +245,10 @@ export function JournalEditor(props: JournalEditorProps): ReactNode {
   const canUpdate = actions.includes("update");
   const publishedHint = publishedEditHint(entry);
   const state = targetState(entry);
+  /** R2：指定草稿恢复失败（404/403/类型或 target 不匹配）时，页面不是「空白新建」。 */
+  const resumeBlocked = Boolean(work.resumeError);
+  /** 恢复失败时的「新建空白内容」入口：由页面按 URL 算好（已去掉 draft 参数、换新 entry）。 */
+  const blankHref = newDraftHref ?? "/admin/journal/new";
 
   const changeForm = (patch: Partial<JournalForm>) => {
     if (committed) return;
@@ -242,6 +270,11 @@ export function JournalEditor(props: JournalEditorProps): ReactNode {
   const submit = async (action: DraftAction) => {
     if (submitting !== null || committed) return;
     setError(null);
+    if (work.resumeError) {
+      // R2：指定草稿没有恢复成功时，页面不是「空白新建」，不能静默继续编辑/提交。
+      setError(work.resumeError);
+      return;
+    }
     const found = validateEditorForm(form);
     setFieldErrors(found);
     if (Object.keys(found).length) {
@@ -259,21 +292,23 @@ export function JournalEditor(props: JournalEditorProps): ReactNode {
     setSubmitting(action);
     try {
       // 先确保工作副本是最新内容；自动保存不碰正式内容。
-      const saved = await work.saveNow();
-      if (!saved) {
+      // R1：saveNow 在保存失败/412/401/暂停/未就绪时抛错 → 这里直接中止，绝不 commit 旧草稿。
+      const outcome = await work.saveNow();
+      if (!outcome) {
         setError("还没有可提交的内容：先写一点正文或标题（自动保存会先建立工作副本）。");
         return;
       }
       const commitKey = commitKeyRef.current ?? newCommitKey();
       commitKeyRef.current = commitKey;
-      const result = await commitWorkDraft(csrfToken, saved.id, saved.draft_version, {
+      const result = await commitWorkDraft(csrfToken, outcome.draft.id, outcome.draft.draft_version, {
         action,
         expectedTargetVersion: expectedTargetVersion(entry),
         commitKey,
       });
       commitKeyRef.current = null;
       // 已提交：本机恢复副本不该再被当成「未同步修改」提示（正式内容已是这份内容）。
-      work.discardLocalCopy();
+      // R1：只有内容版本仍等于提交快照时才清；提交期间又输入的新内容必须保留本机副本。
+      work.discardLocalCopyIfUnchanged(outcome.contentVersion);
       setSuccess({
         message: describeCommitSuccess(result),
         targetId: result.target_id,
@@ -282,7 +317,7 @@ export function JournalEditor(props: JournalEditorProps): ReactNode {
         action: result.action,
       });
     } catch (failure) {
-      setError(describeCommitError(failure));
+      setError(describeEditorFailureMessage(failure));
     } finally {
       setSubmitting(null);
     }
@@ -379,7 +414,7 @@ export function JournalEditor(props: JournalEditorProps): ReactNode {
         <button
           className={styles.button}
           type="button"
-          disabled={submitting !== null || committed}
+          disabled={submitting !== null || committed || resumeBlocked}
           data-editor-save
           data-editor-submit-action="save"
           onClick={() => void submit("save")}
@@ -391,7 +426,7 @@ export function JournalEditor(props: JournalEditorProps): ReactNode {
         <button
           className={`${styles.button} ${styles.buttonGhost}`}
           type="button"
-          disabled={submitting !== null || committed}
+          disabled={submitting !== null || committed || resumeBlocked}
           data-editor-publish
           data-editor-submit-action="publish"
           onClick={() => void submit("publish")}
@@ -403,7 +438,7 @@ export function JournalEditor(props: JournalEditorProps): ReactNode {
         <button
           className={styles.button}
           type="button"
-          disabled={submitting !== null || committed}
+          disabled={submitting !== null || committed || resumeBlocked}
           data-editor-update
           data-editor-submit-action="update"
           onClick={() => void submit("update")}
@@ -463,7 +498,32 @@ export function JournalEditor(props: JournalEditorProps): ReactNode {
               onSaveAsNew={() => void saveAsNew()}
             />
           ) : null}
-          <fieldset className={styles.editorFieldset} disabled={committed}>
+          {/* R2：指定草稿没有恢复成功 —— 必须可见，且不能静默当空白页正常编辑/提交。 */}
+          {resumeBlocked ? (
+            <div className={styles.notice} role="alert" data-editor-resume-error>
+              <p>{work.resumeError}</p>
+              <p>
+                这份草稿没有被加载；新建空白内容会打开一份新的编辑会话（不会覆盖原草稿）。
+              </p>
+              <div className={styles.actions}>
+                <SiteLink className={styles.button} href={blankHref} source="top-nav" data-editor-resume-blank>
+                  新建空白内容
+                </SiteLink>
+                <SiteLink
+                  className={`${styles.button} ${styles.buttonGhost}`}
+                  href={returnTo ?? "/admin"}
+                  source="top-nav"
+                  data-editor-resume-back
+                >
+                  返回创作台
+                </SiteLink>
+              </div>
+            </div>
+          ) : null}
+          <fieldset
+            className={styles.editorFieldset}
+            disabled={committed || resumeBlocked}
+          >
             <div className={styles.editorMain}>
               <div className={styles.editorMainRow}>
                 <label className={styles.field}>

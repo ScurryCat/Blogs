@@ -19,6 +19,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 
 import { ApiClientError, ApiTransportError } from "@/lib/api/client";
 import type { PickedImage } from "@/features/media-picker";
+import { blankContentHref, parseDraftParam } from "@/features/workspace/draft-url";
 import { readReturnTo, withReturnTo } from "@/features/workspace/return-context";
 import { useOwnerSession } from "@/features/workspace/session";
 import { createEntryId, useEntryId, withEntryId } from "@/features/workspace/use-entry-id";
@@ -87,6 +88,13 @@ export function MomentEditorPage({ targetId }: MomentEditorPageProps): ReactNode
   const searchParams = useSearchParams();
   const returnTo = readReturnTo(searchParams);
   const owner = useOwnerSession();
+  // R2：「继续编辑」指定草稿 → URL `?draft=<uuid>`。非法值显示准确错误，绝不静默新建。
+  const parsedDraft = parseDraftParam(searchParams);
+  const draftId = parsedDraft.draftId;
+  const newDraftHref = blankContentHref(
+    targetId ? `/admin/moments/${targetId}/edit` : "/admin/moments/new",
+    searchParams,
+  );
 
   const [seed, setSeed] = useState<EditorSeed | null>(targetId ? null : EMPTY_SEED);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -146,6 +154,28 @@ export function MomentEditorPage({ targetId }: MomentEditorPageProps): ReactNode
         <Link className="ins-btn" href="/admin/moments">
           回到动态管理
         </Link>
+      </section>
+    );
+  }
+
+  // R2：`?draft=` 不是 UUID 时不能静默当空白新建（那会让人以为已恢复草稿）。
+  if (parsedDraft.invalid) {
+    return (
+      <section className="ins-state" role="status" data-editor-bad-draft>
+        <p className="ins-state-kicker">BAD DRAFT</p>
+        <h1>草稿编号不合法</h1>
+        <p>
+          继续编辑链接里的工作草稿 ID 必须是 UUID，这份草稿没有被加载；请回到创作台重新选择，
+          或新建空白内容。
+        </p>
+        <div className="ins-admin-act">
+          <Link className="ins-btn" href={newDraftHref}>
+            新建空白内容
+          </Link>
+          <Link className="ins-btn" href="/admin">
+            回到创作台
+          </Link>
+        </div>
       </section>
     );
   }
@@ -235,7 +265,7 @@ export function MomentEditorPage({ targetId }: MomentEditorPageProps): ReactNode
 
   return (
     <MomentEditor
-      key={`${targetId ?? "new"}:${epoch}`}
+      key={`${targetId ?? "new"}:${draftId ?? "blank"}:${epoch}`}
       targetId={targetId}
       targetStatus={seed.targetStatus}
       targetVersion={seed.targetVersion}
@@ -245,6 +275,8 @@ export function MomentEditorPage({ targetId }: MomentEditorPageProps): ReactNode
       csrfToken={csrfToken}
       ownerId={ownerId}
       entryId={entryId}
+      draftId={draftId}
+      newDraftHref={newDraftHref}
       onStartAnother={() => {
         if (targetId) {
           // 编辑页「再发一条」：去新建页（不带 target，避免继续写同一个正式内容）。
@@ -254,13 +286,12 @@ export function MomentEditorPage({ targetId }: MomentEditorPageProps): ReactNode
         }
         // 新建页「再发一条」：换入口 id + 重挂编辑器 → 全新本机副本与本机草稿，
         // 不会把上一条提交过的内容串到新会话里。
+        // R2：同时**去掉 `?draft=`**，否则新会话会继续恢复上一条草稿（不是空白内容）。
         const nextEntry = createEntryId();
         setEntryOverride(nextEntry);
         setEpoch((value) => value + 1);
         if (typeof window !== "undefined") {
-          router.replace(
-            withEntryId(`${window.location.pathname}${window.location.search}`, nextEntry),
-          );
+          router.replace(withEntryId(withReturnTo("/admin/moments/new", returnTo), nextEntry));
         }
       }}
     />

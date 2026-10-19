@@ -208,9 +208,12 @@ describe("WorkspaceHome", () => {
     expect(rows).toHaveLength(2);
     expect(rows[0]?.getAttribute("data-workspace-draft-row")).toBe("moment");
     expect(rows[0]?.textContent).toContain("未发出的动态文字");
+    // 已有正式内容：维持原编辑页路径（编辑页自己复用该内容的工作草稿）。
     expect(rows[0]?.getAttribute("href")).toBe("/admin/moments/moment-1/edit");
     expect(rows[1]?.getAttribute("data-workspace-draft-row")).toBe("journal");
-    expect(rows[1]?.getAttribute("href")).toBe("/admin/journal/new");
+    // R2：尚无正式内容（target_id=null）的草稿必须带 `?draft=` 唯一标识，
+    // 否则「继续编辑」只会打开空白新建页，新草稿无法跨设备恢复。
+    expect(rows[1]?.getAttribute("href")).toBe("/admin/journal/new?draft=draft-journal");
     expect(rows[0]?.textContent).toContain("最近同步");
 
     const recentRows = Array.from(container.querySelectorAll("[data-workspace-recent-row]"));
@@ -246,6 +249,46 @@ describe("WorkspaceHome", () => {
     expect(row?.getAttribute("href")).toBe(
       "/admin/moments/moment-1/edit?returnTo=%2Fapps%2Fins",
     );
+    window.history.replaceState(null, "", "/admin");
+  });
+
+  it("R2：尚无 target 的新动态/新手记草稿链接带 ?draft= 且保留 returnTo；已有 target 不带", async () => {
+    window.history.replaceState(null, "", "/admin?returnTo=%2Fapps%2Fjournal");
+    stub = stubFetch(
+      ownerRoutes({
+        drafts: {
+          items: [
+            makeWorkDraft({
+              id: "draft-new-moment",
+              content_type: "moment",
+              target_id: null,
+              draft_version: 3,
+            }),
+            makeWorkDraft({
+              id: "draft-new-journal",
+              content_type: "journal",
+              target_id: null,
+              draft_version: 1,
+            }),
+            makeWorkDraft({
+              id: "draft-existing-moment",
+              content_type: "moment",
+              target_id: "moment-9",
+            }),
+          ],
+          next_cursor: null,
+        },
+      }),
+    );
+    const container = await renderHome();
+    const hrefs = Array.from(container.querySelectorAll("[data-workspace-draft-row]")).map(
+      (element) => element.getAttribute("href"),
+    );
+    expect(hrefs).toEqual([
+      "/admin/moments/new?draft=draft-new-moment&returnTo=%2Fapps%2Fjournal",
+      "/admin/journal/new?draft=draft-new-journal&returnTo=%2Fapps%2Fjournal",
+      "/admin/moments/moment-9/edit?returnTo=%2Fapps%2Fjournal",
+    ]);
     window.history.replaceState(null, "", "/admin");
   });
 

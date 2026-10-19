@@ -21,6 +21,7 @@ import {
   LOCAL_COPY_PREFIX,
   workDraftLocalCopyKey,
   useWorkDraft,
+  WorkDraftSaveError,
   type UseWorkDraftOptions,
   type UseWorkDraftResult,
 } from "./use-work-draft";
@@ -578,4 +579,528 @@ describe("useWorkDraft · 新内容懒创建 / saveNow / discard", () => {
     expect(stub.requests.filter((request) => request.method === "POST")).toHaveLength(1);
     expect(expose.current?.draft?.id).toBe("new-draft");
   }, 15000);
+});
+
+/** 从 localStorage 读出当前唯一的工作草稿本机副本（断言「最新输入仍在」用）。 */
+function storedLocalCopyText(): string {
+  const keys = Object.keys(window.localStorage);
+  const key = keys.find((item) => item.startsWith(LOCAL_COPY_PREFIX));
+  return key ? (window.localStorage.getItem(key) ?? "") : "";
+}
+
+describe("useWorkDraft · R1 saveNow 失败契约（不得返回旧草稿冒充成功）", () => {
+  it("PATCH 500：saveNow 抛 failed、保留最新本机副本与表单；重试成功返回当前内容", async () => {
+    let patchFails = true;
+    stub = stubFetch(
+      reuseRoutes({
+        draft: { data: { text: "OLD SERVER TEXT" }, updated_at: "2026-10-18T09:00:00Z" },
+        onPatch: (request) =>
+          patchFails
+            ? errorResponse(500, "INTERNAL", "模拟 PATCH 500")
+            : jsonResponse(
+                targetDraft({
+                  draft_version: 2,
+                  data: (request.body as { data?: Record<string, unknown> }).data ?? {},
+                  updated_at: "2026-10-18T10:00:10Z",
+                }),
+              ),
+      }),
+    );
+    const { expose, container } = mount(baseOptions({ targetId: TARGET_ID }));
+    await advance(120);
+    expect(expose.current?.draft?.data).toMatchObject({ text: "OLD SERVER TEXT" });
+
+    await actCall(() => expose.current?.update({ data: { text: "LATEST UNSAVED TEXT" } }));
+    let failure: unknown;
+    await actCall(async () => {
+      try {
+        await expose.current?.saveNow();
+      } catch (error) {
+        failure = error;
+      }
+    });
+
+    expect(failure).toBeInstanceOf(WorkDraftSaveError);
+    expect((failure as WorkDraftSaveError).code).toBe("failed");
+    // 真实错误文案（服务端 message 原样展示，不编造成功）
+    expect((failure as WorkDraftSaveError).message).toContain("模拟 PATCH 500");
+    expect(stateOf(container)).toBe("failed");
+    // 本机副本与界面内容都保留最新输入，且 localStorage 里也是最新文字
+    expect(expose.current?.localCopy?.data).toMatchObject({ text: "LATEST UNSAVED TEXT" });
+    expect(storedLocalCopyText()).toContain("LATEST UNSAVED TEXT");
+    // draft 仍是旧服务端内容（saveNow 没有把它当成成功结果返回，调用方只能拿到异常）
+    expect(expose.current?.draft?.data).toMatchObject({ text: "OLD SERVER TEXT" });
+
+    // 解除阻断后重试：返回与当前表单一致的快照（不是旧服务端内容）
+    patchFails = false;
+    const result: { outcome: Awaited<ReturnType<UseWorkDraftResult["saveNow"]>> } = {
+      outcome: null,
+    };
+    await actCall(async () => {
+      result.outcome = (await expose.current?.saveNow()) ?? null;
+    });
+    expect(result.outcome?.draft.data).toMatchObject({ text: "LATEST UNSAVED TEXT" });
+    expect(result.outcome?.contentVersion).toBe(expose.current?.contentVersion());
+    expect(stateOf(container)).toBe("synced");
+    expect(expose.current?.localCopy?.data).toMatchObject({ text: "LATEST UNSAVED TEXT" });
+  }, 20000);
+
+  it("412 / 401 / 断网 / 未启用：分别映射 conflict / auth / unavailable / not-ready，且都不旁路", async () => {
+    // 412 冲突
+    stub = stubFetch([
+      ...reuseRoutes({ onPatch: () => errorResponse(412, "VERSION_CONFLICT", "草稿版本冲突") }),
+    ]);
+    const conflictMount = mount(baseOptions({ targetId: TARGET_ID }));
+    await advance(120);
+    await actCall(() => conflictMount.expose.current?.update({ data: { text: "本机修改" } }));
+    let conflictFailure: unknown;
+    await actCall(async () => {
+      try {
+        await conflictMount.expose.current?.saveNow();
+      } catch (error) {
+        conflictFailure = error;
+      }
+    });
+    expect((conflictFailure as WorkDraftSaveError).code).toBe("conflict");
+    expect(stateOf(conflictMount.container)).toBe("conflict");
+    stub.restore();
+
+    // 401 登录失效
+    stub = stubFetch([
+      { match: "/admin/work-drafts", method: "POST", respond: () => errorResponse(401, "UNAUTHORIZED", "登录已失效") },
+    ]);
+    const authMount = mount(baseOptions());
+    await advance(80);
+    await actCall(() => authMount.expose.current?.update({ data: { text: "别丢了我" } }));
+    let authFailure: unknown;
+    await actCall(async () => {
+      try {
+        await authMount.expose.current?.saveNow();
+      } catch (error) {
+        authFailure = error;
+      }
+    });
+    expect((authFailure as WorkDraftSaveError).code).toBe("auth");
+    expect(attr(authMount.container, "data-hook-auth-expired")).toBe("1");
+    stub.restore();
+
+    // 断网
+    stub = stubFetch([
+      ...reuseRoutes({
+        onPatch: () => {
+          throw new TypeError("Failed to fetch");
+        },
+      }),
+    ]);
+    const offlineMount = mount(baseOptions({ targetId: TARGET_ID }));
+    await advance(120);
+    await actCall(() => offlineMount.expose.current?.update({ data: { text: "断网也要保留" } }));
+    let offlineFailure: unknown;
+    await actCall(async () => {
+      try {
+        await offlineMount.expose.current?.saveNow();
+      } catch (error) {
+        offlineFailure = error;
+      }
+    });
+    expect((offlineFailure as WorkDraftSaveError).code).toBe("unavailable");
+    expect(offlineMount.expose.current?.localCopy?.data).toMatchObject({ text: "断网也要保留" });
+    stub.restore();
+
+    // 未启用（未登录/会话未就绪）
+    stub = stubFetch([]);
+    const idleMount = mount(baseOptions({ enabled: false }));
+    await advance(60);
+    let notReadyFailure: unknown;
+    await actCall(async () => {
+      try {
+        await idleMount.expose.current?.saveNow();
+      } catch (error) {
+        notReadyFailure = error;
+      }
+    });
+    expect((notReadyFailure as WorkDraftSaveError).code).toBe("not-ready");
+    expect(stub.requests).toHaveLength(0);
+  }, 20000);
+
+  it("干净的空编辑器：saveNow 返回 null（唯一允许的 null 场景）", async () => {
+    stub = stubFetch([]);
+    const { expose } = mount(baseOptions());
+    await advance(80);
+    let outcome: Awaited<ReturnType<UseWorkDraftResult["saveNow"]>> | "unset" = "unset";
+    await actCall(async () => {
+      outcome = await expose.current?.saveNow() ?? null;
+    });
+    expect(outcome).toBeNull();
+    expect(stub.requests).toHaveLength(0);
+  });
+
+  it("contentVersion + discardLocalCopyIfUnchanged：版本一致才清本机副本，提交期间新输入保留", async () => {
+    stub = stubFetch([...reuseRoutes()]);
+
+    const first = mount(baseOptions({ targetId: TARGET_ID }));
+    await advance(120);
+    await actCall(() => first.expose.current?.update({ data: { text: "要提交的内容" } }));
+    const firstResult: { outcome: Awaited<ReturnType<UseWorkDraftResult["saveNow"]>> } = {
+      outcome: null,
+    };
+    await actCall(async () => {
+      firstResult.outcome = (await first.expose.current!.saveNow()) ?? null;
+    });
+    expect(first.expose.current?.localCopy).not.toBeNull();
+    let firstCleared = false;
+    await actCall(() => {
+      firstCleared = first.expose.current!.discardLocalCopyIfUnchanged(
+        firstResult.outcome!.contentVersion,
+      );
+    });
+    expect(firstCleared).toBe(true);
+    expect(first.expose.current?.localCopy).toBeNull();
+
+    const second = mount(
+      baseOptions({ targetId: TARGET_ID, entryId: "22222222-2222-4222-8222-222222222222" }),
+    );
+    await advance(120);
+    await actCall(() => second.expose.current?.update({ data: { text: "提交快照" } }));
+    const secondResult: { outcome: Awaited<ReturnType<UseWorkDraftResult["saveNow"]>> } = {
+      outcome: null,
+    };
+    await actCall(async () => {
+      secondResult.outcome = (await second.expose.current!.saveNow()) ?? null;
+    });
+    // 提交期间用户又输入：版本前进 → 守卫返回 false，本机副本保留新输入
+    await actCall(() => second.expose.current?.update({ data: { text: "提交期间的新输入" } }));
+    let secondKept = true;
+    await actCall(() => {
+      secondKept = second.expose.current!.discardLocalCopyIfUnchanged(
+        secondResult.outcome!.contentVersion,
+      );
+    });
+    expect(secondKept).toBe(false);
+    expect(second.expose.current?.localCopy?.data).toMatchObject({ text: "提交期间的新输入" });
+    expect(storedLocalCopyText()).toContain("提交期间的新输入");
+  }, 20000);
+});
+
+const RESUMED_ID = "draft-resume-1";
+
+function resumedDraft(overrides: Record<string, unknown> = {}) {
+  return makeWorkDraft({
+    id: RESUMED_ID,
+    content_type: "moment",
+    target_id: null,
+    draft_version: 2,
+    data: {
+      text: "服务器草稿文字",
+      tags: ["校园"],
+      album_links: [{ album_id: "album-1", media_ids: ["media-1", "media-2"] }],
+    },
+    images: [
+      { media_id: "media-1", alt: "第一张", position: 0 },
+      { media_id: "media-2", alt: "第二张", position: 1 },
+    ],
+    updated_at: "2026-10-19T00:00:00Z",
+    ...overrides,
+  });
+}
+
+/** 指定草稿恢复用的 GET 路由（其余请求由调用方配置；未配置会返回 404 并记录）。 */
+function resumeGetRoute(draft = resumedDraft()) {
+  return {
+    match: `/admin/work-drafts/${draft.id}`,
+    method: "GET",
+    respond: () => jsonResponse(structuredClone(draft)),
+  };
+}
+
+/** 不该被调用的「自动新建」路由：一旦被调用会留下 POST 记录（断言用）。 */
+const NO_CREATE_ROUTE = {
+  match: "/admin/work-drafts",
+  method: "POST",
+  respond: () => errorResponse(500, "INTERNAL", "恢复失败时不得自动新建草稿"),
+};
+
+describe("useWorkDraft · R2 指定草稿恢复（新建内容，不依赖本机缓存）", () => {
+  it("无本机缓存：GET 1 次恢复 data/images（含顺序/alt/收录），state=synced，不发 POST 新建", async () => {
+    stub = stubFetch([resumeGetRoute(), NO_CREATE_ROUTE]);
+    const { expose, container } = mount(baseOptions({ draftId: RESUMED_ID }));
+    await advance(120);
+
+    expect(stub.requests.filter((request) => request.method === "GET")).toHaveLength(1);
+    expect(stub.requests.filter((request) => request.method === "POST")).toHaveLength(0);
+    expect(expose.current?.draft?.id).toBe(RESUMED_ID);
+    expect(expose.current?.draft?.data).toMatchObject({
+      text: "服务器草稿文字",
+      tags: ["校园"],
+      album_links: [{ album_id: "album-1", media_ids: ["media-1", "media-2"] }],
+    });
+    expect(
+      expose.current?.draft?.images.map((image) => ({ media_id: image.media_id, alt: image.alt })),
+    ).toEqual([
+      { media_id: "media-1", alt: "第一张" },
+      { media_id: "media-2", alt: "第二张" },
+    ]);
+    expect(stateOf(container)).toBe("synced");
+    // 本机副本同时写入 draftId/version（刷新后可继续）
+    expect(expose.current?.localCopy?.draftId).toBe(RESUMED_ID);
+    expect(expose.current?.localCopy?.draftVersion).toBe(2);
+    expect(jsonAttr(container, "data-hook-local-copy")).toMatchObject({ text: "服务器草稿文字" });
+  });
+
+  it("同类型两份草稿：点击哪份恢复哪份，互不串稿", async () => {
+    stub = stubFetch([
+      {
+        match: "/admin/work-drafts/draft-a",
+        method: "GET",
+        respond: () =>
+          jsonResponse(
+            makeWorkDraft({ id: "draft-a", data: { text: "草稿 A" }, updated_at: "2026-10-19T00:00:00Z" }),
+          ),
+      },
+      {
+        match: "/admin/work-drafts/draft-b",
+        method: "GET",
+        respond: () =>
+          jsonResponse(
+            makeWorkDraft({ id: "draft-b", data: { text: "草稿 B" }, updated_at: "2026-10-19T00:00:00Z" }),
+          ),
+      },
+      NO_CREATE_ROUTE,
+    ]);
+    const first = mount(baseOptions({ draftId: "draft-a" }));
+    await advance(120);
+    expect(first.expose.current?.draft?.id).toBe("draft-a");
+    expect(first.expose.current?.draft?.data).toMatchObject({ text: "草稿 A" });
+
+    const second = mount(
+      baseOptions({ draftId: "draft-b", entryId: "33333333-3333-4333-8333-333333333333" }),
+    );
+    await advance(120);
+    expect(second.expose.current?.draft?.id).toBe("draft-b");
+    expect(second.expose.current?.draft?.data).toMatchObject({ text: "草稿 B" });
+    expect(stub.requests.filter((request) => request.method === "POST")).toHaveLength(0);
+  });
+
+  it("刷新同一 URL（本机副本较新）：保留本机输入并标 local-only，不覆盖为服务器旧内容", async () => {
+    const entryId = "11111111-1111-4111-8111-111111111111";
+    const key = workDraftLocalCopyKey("owner-1", "moment", null, entryId);
+    window.localStorage.setItem(
+      key,
+      JSON.stringify({
+        data: { text: "本机更新内容" },
+        images: [{ media_id: "media-local", alt: "本机图", position: 0 }],
+        draftId: RESUMED_ID,
+        draftVersion: 1,
+        savedAt: "2026-10-20T00:00:00Z",
+        returnTo: null,
+      }),
+    );
+    stub = stubFetch([resumeGetRoute(), NO_CREATE_ROUTE]);
+    const { expose, container } = mount(baseOptions({ draftId: RESUMED_ID, entryId }));
+    await advance(120);
+
+    expect(stateOf(container)).toBe("local-only");
+    expect(attr(container, "data-hook-recovery")).toContain("已恢复本机未同步的修改");
+    expect(expose.current?.draft?.id).toBe(RESUMED_ID);
+    expect(expose.current?.draft?.data).toMatchObject({ text: "本机更新内容" });
+    expect(expose.current?.localCopy?.data).toMatchObject({ text: "本机更新内容" });
+  });
+
+  it("恢复在途时用户输入：旧响应不覆盖新输入（保留本机内容并等待同步）", async () => {
+    const resolvers: Array<(response: Response) => void> = [];
+    stub = stubFetch([
+      {
+        match: `/admin/work-drafts/${RESUMED_ID}`,
+        method: "GET",
+        respond: () =>
+          new Promise<Response>((resolve) => {
+            resolvers.push(resolve);
+          }),
+      },
+    ]);
+    const { expose, container } = mount(baseOptions({ draftId: RESUMED_ID }));
+    await advance(60);
+    expect(resolvers).toHaveLength(1);
+
+    await actCall(() => expose.current?.update({ data: { text: "恢复期间的用户输入" } }));
+    resolvers[0]?.(jsonResponse(resumedDraft()));
+    await advance(80);
+
+    expect(expose.current?.draft?.data).toMatchObject({ text: "恢复期间的用户输入" });
+    expect(stateOf(container)).not.toBe("synced");
+    expect(expose.current?.localCopy?.data).toMatchObject({ text: "恢复期间的用户输入" });
+  });
+
+  it("404 / 403：state failed + resumeError，不自动新建、后续输入不再发写请求；saveNow 抛 unavailable", async () => {
+    stub = stubFetch([
+      {
+        match: "/admin/work-drafts/missing-draft",
+        method: "GET",
+        respond: () => errorResponse(404, "NOT_FOUND", "工作草稿不存在"),
+      },
+      {
+        match: "/admin/work-drafts/forbidden-draft",
+        method: "GET",
+        respond: () => errorResponse(403, "FORBIDDEN", "无权访问"),
+      },
+      NO_CREATE_ROUTE,
+    ]);
+    const notFound = mount(baseOptions({ draftId: "missing-draft" }));
+    await advance(120);
+    expect(stateOf(notFound.container)).toBe("failed");
+    expect(notFound.expose.current?.resumeError).toContain("不存在");
+    expect(notFound.expose.current?.draft).toBeNull();
+    expect(stub.requests.filter((request) => request.method === "POST")).toHaveLength(0);
+
+    const before = stub.requests.length;
+    await actCall(() => notFound.expose.current?.update({ data: { text: "本机输入" } }));
+    await advance(1200);
+    expect(stub.requests.length).toBe(before); // 已暂停：不再有写请求（也不会自动新建）
+    let failure: unknown;
+    await actCall(async () => {
+      try {
+        await notFound.expose.current?.saveNow();
+      } catch (error) {
+        failure = error;
+      }
+    });
+    expect((failure as WorkDraftSaveError).code).toBe("unavailable");
+
+    const forbidden = mount(
+      baseOptions({ draftId: "forbidden-draft", entryId: "44444444-4444-4444-8444-444444444444" }),
+    );
+    await advance(120);
+    expect(stateOf(forbidden.container)).toBe("failed");
+    expect(forbidden.expose.current?.resumeError).toContain("权限");
+  }, 20000);
+
+  it("类型不匹配 / target 不匹配：state failed + 准确 resumeError（不加载草稿）", async () => {
+    stub = stubFetch([
+      {
+        match: "/admin/work-drafts/wrong-type",
+        method: "GET",
+        respond: () => jsonResponse(resumedDraft({ id: "wrong-type", content_type: "journal" })),
+      },
+      {
+        match: "/admin/work-drafts/has-target",
+        method: "GET",
+        respond: () => jsonResponse(resumedDraft({ id: "has-target", target_id: "existing-moment" })),
+      },
+      {
+        match: "/admin/work-drafts/wrong-target",
+        method: "GET",
+        respond: () => jsonResponse(resumedDraft({ id: "wrong-target", target_id: "other-target" })),
+      },
+      NO_CREATE_ROUTE,
+    ]);
+
+    const wrongType = mount(baseOptions({ draftId: "wrong-type" }));
+    await advance(120);
+    expect(stateOf(wrongType.container)).toBe("failed");
+    expect(wrongType.expose.current?.resumeError).toContain("类型不匹配");
+    expect(wrongType.expose.current?.draft).toBeNull();
+
+    // 新建页拿到「属于已有内容」的草稿：不允许当作新建继续
+    const newPage = mount(
+      baseOptions({ draftId: "has-target", entryId: "55555555-5555-4555-8555-555555555555" }),
+    );
+    await advance(120);
+    expect(newPage.expose.current?.resumeError).toContain("新建页");
+
+    // 编辑页拿到别的 target 的草稿：停止恢复
+    const editPage = mount(
+      baseOptions({
+        targetId: TARGET_ID,
+        draftId: "wrong-target",
+        entryId: "66666666-6666-4666-8666-666666666666",
+      }),
+    );
+    await advance(120);
+    expect(stateOf(editPage.container)).toBe("failed");
+    expect(editPage.expose.current?.resumeError).toContain("target 不匹配");
+    expect(stub.requests.filter((request) => request.method === "POST")).toHaveLength(0);
+  });
+
+  it("编辑已有内容 + 指定草稿（target_id 匹配）：直接 GET 恢复，不重复 POST", async () => {
+    stub = stubFetch([
+      resumeGetRoute(resumedDraft({ target_id: TARGET_ID, data: { text: "编辑页指定草稿" } })),
+      NO_CREATE_ROUTE,
+    ]);
+    const { expose, container } = mount(
+      baseOptions({ targetId: TARGET_ID, draftId: RESUMED_ID }),
+    );
+    await advance(120);
+    expect(stateOf(container)).toBe("synced");
+    expect(expose.current?.draft?.target_id).toBe(TARGET_ID);
+    expect(expose.current?.draft?.data).toMatchObject({ text: "编辑页指定草稿" });
+    expect(stub.requests.filter((request) => request.method === "POST")).toHaveLength(0);
+  });
+
+  it("「另存为新草稿」生成的草稿也能用 draftId 在另一上下文恢复", async () => {
+    stub = stubFetch([
+      {
+        match: "/admin/work-drafts/draft-saved-new",
+        method: "GET",
+        respond: () =>
+          jsonResponse(
+            makeWorkDraft({
+              id: "draft-saved-new",
+              content_type: "moment",
+              target_id: null,
+              data: { text: "要另存的新草稿" },
+              updated_at: "2026-10-19T01:00:00Z",
+            }),
+          ),
+      },
+      {
+        match: "/admin/work-drafts",
+        method: "POST",
+        respond: (request) => {
+          const body = request.body as { target_id?: string; data?: Record<string, unknown> };
+          if (body.target_id) {
+            return jsonResponse(
+              { draft: targetDraft({ data: { text: "OLD SERVER TEXT" } }), reused: true },
+              200,
+            );
+          }
+          return jsonResponse(
+            {
+              draft: makeWorkDraft({
+                id: "draft-saved-new",
+                content_type: "moment",
+                target_id: null,
+                draft_version: 1,
+                data: body.data ?? {},
+                updated_at: "2026-10-19T01:00:00Z",
+              }),
+              reused: false,
+            },
+            201,
+          );
+        },
+      },
+      {
+        match: `/admin/work-drafts/${DRAFT_ID}`,
+        method: "PATCH",
+        respond: () => errorResponse(412, "VERSION_CONFLICT", "草稿版本冲突"),
+      },
+    ]);
+
+    const target = mount(baseOptions({ targetId: TARGET_ID }));
+    await advance(120);
+    await actCall(() => target.expose.current?.update({ data: { text: "要另存的新草稿" } }));
+    await advance(1200);
+    expect(stateOf(target.container)).toBe("conflict");
+    await actCall(() => target.expose.current?.resolveConflict("save-as-new"));
+    await advance(80);
+    expect(target.expose.current?.draft?.id).toBe("draft-saved-new");
+
+    const another = mount(
+      baseOptions({ draftId: "draft-saved-new", entryId: "77777777-7777-4777-8777-777777777777" }),
+    );
+    await advance(120);
+    expect(another.expose.current?.draft?.id).toBe("draft-saved-new");
+    expect(another.expose.current?.draft?.data).toMatchObject({ text: "要另存的新草稿" });
+    expect(stateOf(another.container)).toBe("synced");
+  }, 20000);
 });

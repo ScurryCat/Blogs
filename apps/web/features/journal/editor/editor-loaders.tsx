@@ -19,6 +19,7 @@ import { useEffect, useState, type ReactNode } from "react";
 
 import { getAdminMedia, type PickedImage } from "@/features/media-picker";
 import { SiteLink } from "@/features/runtime/navigation/site-link";
+import { blankContentHref, parseDraftParam } from "@/features/workspace/draft-url";
 import { readReturnTo } from "@/features/workspace/return-context";
 import { useEntryId } from "@/features/workspace/use-entry-id";
 import { useOwnerSession } from "@/features/workspace/session";
@@ -155,16 +156,51 @@ function SessionFailed(): ReactNode {
   );
 }
 
-/** `/admin/journal/new` 的客户端装载器（支持 `?date=YYYY-MM-DD` 与 `?returnTo=`）。 */
+/**
+ * R2：`?draft=` 不是合法 UUID 时的准确状态。
+ *
+ * 不能静默当空白新建（那会让人以为已恢复草稿）；也不为它发一次注定 404 的草稿请求。
+ */
+function BadDraft({ blankHref }: { blankHref: string }): ReactNode {
+  return (
+    <div className={styles.empty} role="status" data-journal-bad-draft>
+      <h1 className={styles.title}>草稿编号不合法</h1>
+      <p>
+        继续编辑链接里的工作草稿 ID 必须是 UUID，这份草稿没有被加载；请回到创作台重新选择，
+        或新建空白内容。
+      </p>
+      <div className={styles.actions}>
+        <SiteLink className={styles.button} href={blankHref} source="top-nav">
+          新建空白内容
+        </SiteLink>
+        <SiteLink
+          className={`${styles.button} ${styles.buttonGhost}`}
+          href="/admin"
+          source="top-nav"
+        >
+          回到创作台
+        </SiteLink>
+      </div>
+    </div>
+  );
+}
+
+/** `/admin/journal/new` 的客户端装载器（支持 `?date=YYYY-MM-DD`、`?draft=` 与 `?returnTo=`）。 */
 export function JournalNewEditor(): ReactNode {
   const params = useSearchParams();
   const session = useOwnerSession();
   // 本机副本的稳定入口 id（C2 `useEntryId`）：写进 URL `?entry=`，刷新后还能恢复本机草稿。
   const entryId = useEntryId();
+  // R2：「继续编辑」指定草稿 → 必须在无 target 的空白新建之前先恢复它。
+  const parsedDraft = parseDraftParam(params);
   const owner = session.status === "owner" && session.session?.user ? session.session : null;
-  const today = useSiteToday(owner !== null);
-  const posts = usePublicPosts(owner !== null);
+  // 非法 draft 参数不加载编辑器相关数据（直接给准确错误状态）。
+  const ready = owner !== null && !parsedDraft.invalid;
+  const today = useSiteToday(ready);
+  const posts = usePublicPosts(ready);
+  const newDraftHref = blankContentHref("/admin/journal/new", params);
 
+  if (parsedDraft.invalid) return <BadDraft blankHref={newDraftHref} />;
   if (session.status === "loading") return <Loading message="正在确认站主身份…" />;
   if (session.status === "anonymous") return <NeedLogin />;
   if (!owner) return <SessionFailed />;
@@ -178,6 +214,7 @@ export function JournalNewEditor(): ReactNode {
 
   return (
     <JournalEditor
+      key={`draft:${parsedDraft.draftId ?? "fresh"}`}
       mode="new"
       entry={null}
       initialDate={initialDate}
@@ -191,6 +228,8 @@ export function JournalNewEditor(): ReactNode {
       timezone={today.value?.timezone ?? null}
       today={today.value?.today ?? null}
       entryId={entryId}
+      draftId={parsedDraft.draftId}
+      newDraftHref={newDraftHref}
     />
   );
 }
@@ -201,6 +240,9 @@ export function JournalEditEditor({ entryId }: { entryId: string }): ReactNode {
   const session = useOwnerSession();
   // 入口 id 只用于本机副本 key 与 URL 展示（key 最后一段仍是 targetId，不会串稿）。
   const editorEntryId = useEntryId();
+  // R2：编辑页也可能带 `?draft=`（指定要恢复的工作副本，要求 target_id === entryId）。
+  const parsedDraft = parseDraftParam(params);
+  const newDraftHref = blankContentHref(`/admin/journal/${encodeURIComponent(entryId)}/edit`, params);
   const owner = session.status === "owner" && session.session?.user ? session.session : null;
   const today = useSiteToday(owner !== null);
   const posts = usePublicPosts(owner !== null);
@@ -212,7 +254,7 @@ export function JournalEditEditor({ entryId }: { entryId: string }): ReactNode {
   >({ status: "loading" });
 
   useEffect(() => {
-    if (!owner) return;
+    if (!owner || parsedDraft.invalid) return;
     let cancelled = false;
     getAdminEntry(entryId)
       .then(async (entry) => {
@@ -239,8 +281,9 @@ export function JournalEditEditor({ entryId }: { entryId: string }): ReactNode {
     return () => {
       cancelled = true;
     };
-  }, [owner, entryId, nonce]);
+  }, [owner, entryId, nonce, parsedDraft.invalid]);
 
+  if (parsedDraft.invalid) return <BadDraft blankHref={newDraftHref} />;
   if (session.status === "loading") return <Loading message="正在确认站主身份…" />;
   if (session.status === "anonymous") return <NeedLogin />;
   if (!owner) return <SessionFailed />;
@@ -284,6 +327,7 @@ export function JournalEditEditor({ entryId }: { entryId: string }): ReactNode {
 
   return (
     <JournalEditor
+      key={`${entryId}:draft:${parsedDraft.draftId ?? "fresh"}`}
       mode="edit"
       entry={load.entry}
       initialDate={load.entry.entry_date}
@@ -297,6 +341,8 @@ export function JournalEditEditor({ entryId }: { entryId: string }): ReactNode {
       timezone={today.value?.timezone ?? null}
       today={today.value?.today ?? null}
       entryId={editorEntryId}
+      draftId={parsedDraft.draftId}
+      newDraftHref={newDraftHref}
     />
   );
 }

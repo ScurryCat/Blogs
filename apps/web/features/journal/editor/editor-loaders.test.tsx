@@ -20,9 +20,13 @@ import { JournalEditEditor, JournalNewEditor } from "./editor-loaders";
 const mockUseWorkDraft = vi.hoisted(() => vi.fn());
 const mockCommitWorkDraft = vi.hoisted(() => vi.fn());
 
-vi.mock("@/features/workspace/use-work-draft", () => ({
-  useWorkDraft: mockUseWorkDraft,
-}));
+vi.mock("@/features/workspace/use-work-draft", async () => {
+  // 只替换 Hook 本身；WorkDraftSaveError 等真实导出继续用（编辑器的失败分类依赖 instanceof）。
+  const actual = await vi.importActual<typeof import("@/features/workspace/use-work-draft")>(
+    "@/features/workspace/use-work-draft",
+  );
+  return { ...actual, useWorkDraft: mockUseWorkDraft };
+});
 
 vi.mock("@/features/workspace/api", () => ({
   commitWorkDraft: mockCommitWorkDraft,
@@ -172,14 +176,17 @@ function workStub() {
     syncMessage: "",
     recoveryNotice: null,
     update: vi.fn(),
-    saveNow: vi.fn(async () => saved),
+    saveNow: vi.fn(async () => ({ draft: saved, contentVersion: 0 })),
+    contentVersion: vi.fn(() => 0),
     discard: vi.fn(async () => undefined),
     resolveConflict: vi.fn(async () => undefined),
     lastSyncedAt: null,
     localCopy: null,
     adoptLocalCopy: vi.fn(),
     discardLocalCopy: vi.fn(),
+    discardLocalCopyIfUnchanged: vi.fn(() => true),
     authExpired: false,
+    resumeError: null,
   };
 }
 
@@ -318,5 +325,97 @@ describe("编辑页", () => {
     // 404 不给「重新读取」按钮（重试也不会变成存在）
     expect(text).not.toContain("重新读取");
     view.unmount();
+  });
+});
+
+describe("R2：?draft= 指定工作草稿（新建页 / 编辑页）", () => {
+  const DRAFT_UUID = "22222222-2222-4222-8222-222222222222";
+
+  it("新建页：合法 draft 参数透传给 useWorkDraft（不被无 target 的空白新建吞掉）", async () => {
+    stubOwnerFetch();
+    navState.search = `draft=${DRAFT_UUID}&date=2026-10-05`;
+    const view = render(<JournalNewEditor />);
+    await advance(60);
+
+    const options = lastWorkOptions();
+    expect(options.targetId).toBeNull();
+    expect(options.draftId).toBe(DRAFT_UUID);
+    expect(view.container.querySelector('[data-editor="journal"]')).not.toBeNull();
+    view.unmount();
+  });
+
+  it("非 UUID draft：显示「草稿编号不合法」，不挂编辑器、不发草稿详情请求", async () => {
+    const fetchMock = vi.fn<FetchLike>(async (url) => {
+      const target = String(url);
+      if (target.includes("/auth/owner-status")) {
+        return json({ authenticated: true, user: SESSION.user });
+      }
+      if (target.includes("/auth/session")) return json(SESSION);
+      if (target.includes("/journal/calendar")) return json(CALENDAR);
+      return json({ items: [], next_cursor: null });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    navState.search = "draft=not-a-uuid";
+    const view = render(<JournalNewEditor />);
+    await advance(60);
+
+    expect(view.container.textContent ?? "").toContain("草稿编号不合法");
+    expect(view.container.querySelector('[data-editor="journal"]')).toBeNull();
+    expect(
+      fetchMock.mock.calls.some(([url]) => String(url).includes("/admin/work-drafts")),
+    ).toBe(false);
+    view.unmount();
+  });
+
+  it("恢复失败（resumeError）：编辑页显示可见错误 + 「新建空白内容」入口（去掉 draft）", async () => {
+    stubOwnerFetch();
+    mockUseWorkDraft.mockReturnValue({
+      ...workStub(),
+      draft: null,
+      state: "failed",
+      resumeError: "工作草稿不存在或已被丢弃（404），没有可恢复的内容。",
+    });
+    navState.search = `draft=${DRAFT_UUID}`;
+    const view = render(<JournalNewEditor />);
+    await advance(60);
+
+    const alert = view.container.querySelector("[data-editor-resume-error]");
+    expect(alert?.getAttribute("role")).toBe("alert");
+    expect(alert?.textContent ?? "").toContain("404");
+    const blank = view.container.querySelector<HTMLAnchorElement>("[data-editor-resume-blank]");
+    expect(blank?.getAttribute("href")).toBe("/admin/journal/new");
+    expect(blank?.getAttribute("href") ?? "").not.toContain("draft=");
+    view.unmount();
+  });
+
+  it("编辑页：draft 参数同样透传给 Hook；非法 draft 不读取正式手记", async () => {
+    stubOwnerFetch();
+    navState.pathname = "/admin/journal/e1/edit";
+    navState.search = `draft=${DRAFT_UUID}`;
+    const view = render(<JournalEditEditor entryId="e1" />);
+    await advance(100);
+    expect(lastWorkOptions().draftId).toBe(DRAFT_UUID);
+    expect(lastWorkOptions().targetId).toBe("e1");
+    view.unmount();
+
+    mockUseWorkDraft.mockClear();
+    const fetchMock = vi.fn<FetchLike>(async (url) => {
+      const target = String(url);
+      if (target.includes("/auth/owner-status")) {
+        return json({ authenticated: true, user: SESSION.user });
+      }
+      if (target.includes("/auth/session")) return json(SESSION);
+      if (target.includes("/journal/calendar")) return json(CALENDAR);
+      return json({ items: [], next_cursor: null });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    navState.search = "draft=bad-id";
+    const invalid = render(<JournalEditEditor entryId="e1" />);
+    await advance(80);
+    expect(invalid.container.textContent ?? "").toContain("草稿编号不合法");
+    expect(
+      fetchMock.mock.calls.some(([url]) => String(url).includes("/admin/journal/entries/")),
+    ).toBe(false);
+    invalid.unmount();
   });
 });

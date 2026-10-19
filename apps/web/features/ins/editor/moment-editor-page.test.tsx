@@ -185,3 +185,100 @@ describe("MomentEditorPage · 编辑已有", () => {
     view.unmount();
   });
 });
+
+describe("MomentEditorPage · R2 ?draft= 指定草稿", () => {
+  const NEW_DRAFT = {
+    id: DRAFT_ID,
+    content_type: "moment",
+    target_id: null,
+    target_version: null,
+    draft_version: 4,
+    status: "active",
+    summary: "",
+    data: { text: "服务器草稿文字", tags: ["校园"], album_links: [] },
+    images: [{ media_id: MEDIA_ID, position: 0, alt: "操场" }],
+    created_at: "2026-10-19T00:00:00Z",
+    updated_at: "2026-10-19T00:00:00Z",
+  };
+
+  it("新建页 ?draft=<uuid>：GET 恢复服务端草稿并回填编辑器，不新建空草稿", async () => {
+    nav.search = `draft=${DRAFT_ID}`;
+    stub = stubFetch([
+      { match: "/auth/owner-status", body: OWNER_STATUS },
+      { match: "/auth/session", body: SESSION },
+      { match: `/admin/work-drafts/${DRAFT_ID}`, method: "GET", body: NEW_DRAFT },
+    ]);
+    const view = render(<MomentEditorPage targetId={null} />);
+    await advance(240);
+
+    expect(view.container.querySelector("[data-editor='moment']")).not.toBeNull();
+    const textarea = view.container.querySelector<HTMLTextAreaElement>("[data-editor-field='text']");
+    expect(textarea?.value).toBe("服务器草稿文字");
+    expect(view.container.querySelector<HTMLInputElement>("[data-editor-tags]")?.value).toBe("校园");
+    expect(view.container.querySelectorAll("[data-editor-image]")).toHaveLength(1);
+    // 指定草稿恢复：GET 一次、不 POST 新建
+    expect(
+      stub.requests.filter(
+        (request) => request.method === "GET" && request.url.includes(`/admin/work-drafts/${DRAFT_ID}`),
+      ),
+    ).toHaveLength(1);
+    expect(
+      stub.requests.filter(
+        (request) => request.method === "POST" && request.url.includes("/admin/work-drafts"),
+      ),
+    ).toHaveLength(0);
+    view.unmount();
+  });
+
+  it("非 UUID 的 draft 参数：显示「草稿编号不合法」，不发草稿请求、不渲染编辑器", async () => {
+    nav.search = "draft=not-a-uuid";
+    stub = stubFetch([
+      { match: "/auth/owner-status", body: OWNER_STATUS },
+      { match: "/auth/session", body: SESSION },
+    ]);
+    const view = render(<MomentEditorPage targetId={null} />);
+    await advance(120);
+
+    expect(view.container.textContent).toContain("草稿编号不合法");
+    expect(view.container.querySelector("[data-editor='moment']")).toBeNull();
+    expect(
+      stub.requests.filter((request) => request.url.includes("/admin/work-drafts")),
+    ).toHaveLength(0);
+    view.unmount();
+  });
+
+  it("draft 404：编辑器显示可见 resumeError 与「新建空白内容」入口（不含 draft），提交被禁止", async () => {
+    nav.search = `draft=${DRAFT_ID}&returnTo=${encodeURIComponent(RETURN_TO)}`;
+    stub = stubFetch([
+      { match: "/auth/owner-status", body: OWNER_STATUS },
+      { match: "/auth/session", body: SESSION },
+      {
+        match: `/admin/work-drafts/${DRAFT_ID}`,
+        method: "GET",
+        status: 404,
+        body: { error: { code: "NOT_FOUND", message: "工作草稿不存在", fields: {} }, request_id: "r" },
+      },
+    ]);
+    const view = render(<MomentEditorPage targetId={null} />);
+    await advance(240);
+
+    const alert = view.container.querySelector("[data-editor-resume-error]");
+    expect(alert?.getAttribute("role")).toBe("alert");
+    expect(alert?.textContent ?? "").toContain("不存在");
+    const blank = view.container.querySelector<HTMLAnchorElement>("[data-editor-resume-blank]");
+    expect(blank?.getAttribute("href") ?? "").not.toContain("draft=");
+    expect(blank?.getAttribute("href") ?? "").toContain("returnTo=");
+    // 不能静默当空白页正常提交
+    const save = view.container.querySelector<HTMLButtonElement>("[data-editor-save]");
+    expect(save?.disabled).toBe(true);
+    click(save);
+    await advance(200);
+    expect(
+      stub.requests.filter(
+        (request) => request.method === "POST" && request.url.includes("/admin/work-drafts"),
+      ),
+    ).toHaveLength(0);
+    expect(view.container.querySelector("[data-editor-success]")).toBeNull();
+    view.unmount();
+  }, 20000);
+});

@@ -30,7 +30,7 @@ import { EditorShell } from "@/features/workspace/editor-shell";
 import { safeInternalPath, withReturnTo } from "@/features/workspace/return-context";
 import { SyncStatus } from "@/features/workspace/sync-status";
 import type { CommitResult, DraftAction } from "@/features/workspace/types";
-import { useWorkDraft } from "@/features/workspace/use-work-draft";
+import { useWorkDraft, WorkDraftSaveError } from "@/features/workspace/use-work-draft";
 
 import { AlbumLinksEditor } from "../admin/album-links-editor";
 import type { UploadedImage } from "../admin/media-uploader";
@@ -68,6 +68,16 @@ export interface MomentEditorProps {
   ownerId: string;
   /** 本次编辑会话的稳定入口 id（URL `?entry=<uuid>`；刷新后本机副本据此恢复）。 */
   entryId: string;
+  /**
+   * 「继续编辑」指定的工作草稿 id（URL `?draft=<uuid>`；R2）。
+   * 新建页用于恢复尚无正式内容的新草稿；编辑页要求草稿的 target_id 与 targetId 匹配。
+   */
+  draftId?: string | null;
+  /**
+   * 指定草稿恢复失败时「新建空白内容」的跳转地址（已去掉 draft 参数）。
+   * 页面在解析 URL 时算好传入；缺省时回落到当前内容类型的官方新建路径。
+   */
+  newDraftHref?: string | null;
   /** 「再发一条」：由页面决定是重置还是跳到 /admin/moments/new。 */
   onStartAnother?: () => void;
 }
@@ -82,6 +92,8 @@ export function MomentEditor({
   csrfToken,
   ownerId,
   entryId,
+  draftId = null,
+  newDraftHref = null,
   onStartAnother,
 }: MomentEditorProps): ReactNode {
   const router = useRouter();
@@ -120,6 +132,7 @@ export function MomentEditor({
     returnTo,
     csrfToken,
     entryId,
+    draftId,
   });
 
   /** 把一份工作草稿 / 本机副本的内容回填到可编辑 state（首次打开与冲突解决后共用）。 */
@@ -145,16 +158,17 @@ export function MomentEditor({
   // 工作草稿 / 本机副本比初始内容新时做一次回填（只回填一次，之后用户输入优先）。
   useEffect(() => {
     if (seededRef.current || touchedRef.current) return;
-    // 编辑已有内容：优先服务端工作草稿（跨设备继续编辑），否则本机副本；
-    // 新建内容：本机副本才是「同一入口的未同步修改」，服务端草稿在首次输入后才创建、
-    // 内容与界面一致，不需要回填（也避免把刚保存在的草稿当成恢复内容覆盖首帧）。
-    const snapshot = targetId ? (workDraft.draft ?? workDraft.localCopy) : workDraft.localCopy;
+    // 编辑已有内容 / 「继续编辑」指定草稿：优先服务端工作草稿（跨设备继续编辑），否则本机副本；
+    // 新建内容（没有指定草稿）：本机副本才是「同一入口的未同步修改」，服务端草稿在首次输入后
+    // 才创建、内容与界面一致，不需要回填（也避免把刚保存在的草稿当成恢复内容覆盖首帧）。
+    const resumed = targetId !== null || draftId !== null;
+    const snapshot = resumed ? (workDraft.draft ?? workDraft.localCopy) : workDraft.localCopy;
     if (!snapshot) return;
     seededRef.current = true;
     /* eslint-disable react-hooks/set-state-in-effect -- 一次性把「服务端工作草稿 / 本机恢复副本」同步进可编辑 state（外部状态 → React state），不是渲染期派生；seededRef 保证只发生一次。 */
     applySnapshotToState(snapshot);
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [targetId, workDraft.draft, workDraft.localCopy]);
+  }, [targetId, draftId, workDraft.draft, workDraft.localCopy]);
 
   /**
    * 412 冲突解决后重新回填（C5 e2e A6 缺陷修复）。
@@ -271,10 +285,18 @@ export function MomentEditor({
    * 新建相册：先**发起**一次 saveNow（不 await，保持用户手势，避免新标签页被浏览器拦截），
    * 再打开现有相册管理页（新标签页）。当前页文字 / 图片顺序 / alt / 收录选择都留在内存与
    * 工作草稿里，返回后可以直接继续。
+   *
+   * R1：`saveNow()` 失败改为抛错 —— 必须 `.catch`，否则会产生 unhandled rejection；
+   * 空编辑器（返回 null）静默，其余失败如实显示错误（不误报已保存）。
    */
   const openAlbumAdmin = (): void => {
-    const saving = workDraft.saveNow();
-    void saving;
+    void workDraft
+      .saveNow()
+      .then(() => undefined)
+      .catch((failure: unknown) => {
+        // 空编辑器启动相册页是正常路径（saveNow 返回 null），只有真失败才提示。
+        setError(saveFailureMessage(failure));
+      });
     if (typeof window !== "undefined") {
       window.open(ALBUM_ADMIN_PATH, "_blank", "noopener,noreferrer");
     }
@@ -287,6 +309,12 @@ export function MomentEditor({
   const publishable = targetStatus !== "published";
   const saveAction: DraftAction = targetStatus === "published" ? "update" : "save";
   const conflict = workDraft.state === "conflict";
+  /** R2：指定草稿恢复失败（404/403/类型或 target 不匹配）时，页面不是「空白新建」。 */
+  const resumeBlocked = Boolean(workDraft.resumeError);
+  const blocked = conflict || resumeBlocked;
+  /** 恢复失败时的「新建空白内容」入口：由页面按 URL 算好（已去掉 draft 参数、换新 entry）。 */
+  const blankHref =
+    newDraftHref ?? (targetId ? `/admin/moments/${targetId}/edit` : "/admin/moments/new");
   /** 全新编辑器空内容时，「保存草稿」不伪造成功，也不强建一份空草稿。 */
   const hasAnyContent =
     text.trim().length > 0 ||
@@ -314,6 +342,11 @@ export function MomentEditor({
     setError(null);
     setNotice(null);
     setFieldErrors({});
+    if (workDraft.resumeError) {
+      // R2：指定草稿没有恢复成功时，页面不是「空白新建」，不能静默继续编辑/提交。
+      setError(workDraft.resumeError);
+      return;
+    }
     if (action === "publish" && blockers.length > 0) {
       setError(`还不能发布：${formatBlockers(blockers)}`);
       return;
@@ -325,23 +358,31 @@ export function MomentEditor({
     setBusy(true);
     try {
       // 先保证工作草稿 = 界面内容（commit 事务里双版本检查的草稿版本必须是最新的）。
-      const draft = await workDraft.saveNow();
-      if (!draft) {
+      // R1：saveNow 在保存失败/412/401/暂停/未就绪时抛错 → 这里直接中止，绝不 commit 旧草稿。
+      const saved = await workDraft.saveNow();
+      if (!saved) {
         setError("草稿还没有同步成功，请检查网络后重试；输入都还在。");
         return;
       }
-      const committed = await commitWorkDraft(csrfToken, draft.id, draft.draft_version, {
-        action,
-        expectedTargetVersion: targetId ? targetVersion : null,
-        commitKey: createCommitKey(action),
-      });
+      const outcome = saved;
+      const committed = await commitWorkDraft(
+        csrfToken,
+        outcome.draft.id,
+        outcome.draft.draft_version,
+        {
+          action,
+          expectedTargetVersion: targetId ? targetVersion : null,
+          commitKey: createCommitKey(action),
+        },
+      );
       commitKeyRef.current = null;
       // 显式提交成功后清掉本机恢复副本：下次打开不会误报「本机有未同步的修改」。
-      // 失败时**不**清（输入要保留），这里只在成功路径调用。
-      workDraft.discardLocalCopy();
+      // 失败时**不**清（输入要保留）；只有内容版本仍等于提交快照的版本才清，
+      // 提交期间用户又输入的全新内容必须保留（R1 关闭条件）。
+      workDraft.discardLocalCopyIfUnchanged(outcome.contentVersion);
       setResult(committed);
     } catch (failure) {
-      setError(describeCommitFailure(failure));
+      setError(saveFailureMessage(failure));
       setFieldErrors(fieldMessages(failure));
     } finally {
       setBusy(false);
@@ -458,7 +499,7 @@ export function MomentEditor({
         className="ws-btn"
         data-editor-save
         data-editor-submit-action={saveAction}
-        disabled={busy || conflict}
+        disabled={busy || blocked}
         onClick={() => void submit(saveAction)}
       >
         {busy ? "提交中…" : submitLabel(saveAction)}
@@ -469,7 +510,7 @@ export function MomentEditor({
           className="ws-btn ws-btn-primary"
           data-editor-publish
           data-editor-submit-action="publish"
-          disabled={busy || conflict}
+          disabled={busy || blocked}
           onClick={() => void submit("publish")}
         >
           {busy ? "提交中…" : submitLabel("publish")}
@@ -520,6 +561,24 @@ export function MomentEditor({
         </p>
       ) : null}
 
+      {resumeBlocked ? (
+        /* R2：指定草稿没有恢复成功 —— 必须可见、不得静默当空白页正常编辑/提交。 */
+        <section className="ins-editor-error" role="alert" data-editor-resume-error>
+          <p>{workDraft.resumeError}</p>
+          <p className="ins-editor-hint">
+            这份草稿没有被加载；新建空白内容会换一份新的编辑会话（不会覆盖原草稿）。
+          </p>
+          <div className="ins-editor-recovery-act">
+            <Link className="ws-btn" href={blankHref} data-editor-resume-blank>
+              新建空白内容
+            </Link>
+            <Link className="ws-btn" href={returnTo ?? "/admin"} data-editor-resume-back>
+              返回创作台
+            </Link>
+          </div>
+        </section>
+      ) : null}
+
       {conflict ? (
         <ConflictNotice
           message={workDraft.syncMessage}
@@ -559,7 +618,7 @@ export function MomentEditor({
             className="ws-btn ws-btn-primary"
             data-media-picker-open
             onClick={() => setPickerOpen(true)}
-            disabled={busy}
+            disabled={busy || resumeBlocked}
           >
             {images.length === 0 ? "选择图片 / 上传新图" : "编辑已选图片（排序 / 替代文本 / 移除）"}
           </button>
@@ -630,7 +689,7 @@ export function MomentEditor({
           onChange={changeAlbumLinks}
           describeError={describeEditorFailure}
           fieldError={fieldErrors.album_links ?? null}
-          disabled={busy || conflict}
+          disabled={busy || blocked}
           onCreateAlbum={openAlbumAdmin}
         />
       ) : (
@@ -725,6 +784,17 @@ export function describeCommitFailure(error: unknown): string {
     return "连不上服务，提交没有完成；输入都还在。重试会复用同一个提交键，不会重复发布。";
   }
   return "提交失败，输入都还在，请稍后重试。";
+}
+
+/**
+ * 保存（`saveNow()`）失败的展示文案（R1）。
+ *
+ * 显式提交前的保存失败与提交失败分开说：`WorkDraftSaveError` 已带准确中文文案
+ * （412→冲突、401→登录失效、断网→本机保留…），其它错误才走提交失败文案。
+ */
+export function saveFailureMessage(error: unknown): string {
+  if (error instanceof WorkDraftSaveError) return error.message;
+  return describeCommitFailure(error);
 }
 
 /** 编辑器内其它读取（相册列表等）失败的文案。 */
