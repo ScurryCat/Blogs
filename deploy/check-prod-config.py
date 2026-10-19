@@ -322,7 +322,7 @@ def check_dockerfiles(report: Report) -> None:
                      "npm ci" in text or "uv sync --frozen" in text)
     web = (DEPLOY / "prod.Dockerfile.web").read_text(encoding="utf-8")
     report.check("web 镜像显式包含 public 与 .next/static（standalone 不会自动带）",
-                 "/srv/web/public" in web and "/.next/static" in web)
+                 "/srv/apps/web/public" in web and "/srv/apps/web/.next/static" in web)
     # D1 隔离验证时发现的构建缺陷（2026-10-19）：music 必须用独立命名构建上下文，
     # 不能 `FROM scratch AS music; COPY . /music/`（会把整个仓库复制进 public/ 并打挂 tsc）。
     release_yml = (REPO_ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
