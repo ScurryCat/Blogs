@@ -39,7 +39,13 @@ export interface WorkDraft {
   target_id: string | null;
   target_version: number | null;
   draft_version: number;
-  status: "active";
+  /**
+   * 服务端草稿状态（`work_drafts.status` 的检查约束：active / committed / discarded）。
+   *
+   * 只有 `active` 可以继续编辑；详情接口按契约对任何状态都返回 200（供审计/详情查看），
+   * 所以「按 id 恢复」的调用方必须自己校验状态，不能把已丢弃/已提交的草稿当可编辑草稿。
+   */
+  status: "active" | "committed" | "discarded";
   /** 服务端派生的一行摘要（≤120 字符），列表展示用。 */
   summary: string;
   /** 按 content_type 校验的编辑数据（moment / journal 的 data 键见契约 §3.3）。 */

@@ -708,7 +708,16 @@ export function useWorkDraft(options: UseWorkDraftOptions): UseWorkDraftResult {
         }
         if (!mountedRef.current) return;
 
-        // 校验草稿归属：类型必须一致；新建页要求 target_id 为空，编辑页要求与 targetId 相同。
+        // 校验草稿归属：状态必须 active（详情接口对 discarded/committed 也返回 200）；
+        // 类型必须一致；新建页要求 target_id 为空，编辑页要求与 targetId 相同。
+        if (resumed.status !== "active") {
+          failResume(
+            resumed.status === "discarded"
+              ? "这份工作草稿已被丢弃，不能继续编辑。请从创作台重新选择，或新建空白内容。"
+              : "这份工作草稿已经提交为正式内容，不能再按工作草稿恢复。请从对应内容的管理页打开。",
+          );
+          return;
+        }
         const typeLabel = contentType === "moment" ? "动态" : "手记";
         if (resumed.content_type !== contentType) {
           const actualLabel = resumed.content_type === "moment" ? "动态" : "手记";

@@ -974,6 +974,58 @@ describe("useWorkDraft · R2 指定草稿恢复（新建内容，不依赖本机
     expect(forbidden.expose.current?.resumeError).toContain("权限");
   }, 20000);
 
+  it("已丢弃 / 已提交的草稿：state failed + 准确 resumeError（不当作可编辑草稿加载）", async () => {
+    stub = stubFetch([
+      {
+        match: "/admin/work-drafts/discarded-draft",
+        method: "GET",
+        respond: () =>
+          jsonResponse(resumedDraft({ id: "discarded-draft", status: "discarded" })),
+      },
+      {
+        match: "/admin/work-drafts/committed-draft",
+        method: "GET",
+        respond: () =>
+          jsonResponse(resumedDraft({ id: "committed-draft", status: "committed" })),
+      },
+      NO_CREATE_ROUTE,
+    ]);
+    // 后端详情接口对任何状态都返回 200（契约如此）；恢复方必须自己拒绝非 active 状态。
+    const discarded = mount(baseOptions({ draftId: "discarded-draft" }));
+    await advance(120);
+    expect(stateOf(discarded.container)).toBe("failed");
+    expect(discarded.expose.current?.draft).toBeNull();
+    expect(discarded.expose.current?.resumeError).toContain("丢弃");
+    expect(stub.requests.filter((request) => request.method === "POST")).toHaveLength(0);
+
+    const committed = mount(
+      baseOptions({
+        draftId: "committed-draft",
+        entryId: "77777777-7777-4777-8777-777777777777",
+      }),
+    );
+    await advance(120);
+    expect(stateOf(committed.container)).toBe("failed");
+    expect(committed.expose.current?.draft).toBeNull();
+    expect(committed.expose.current?.resumeError).toContain("已经提交");
+
+    // 暂停状态：用户继续输入也不会自动新建/写请求，saveNow 抛 unavailable。
+    const before = stub.requests.length;
+    await actCall(() => discarded.expose.current?.update({ data: { text: "本机输入" } }));
+    await advance(1200);
+    expect(stub.requests.length).toBe(before);
+    let failure: unknown;
+    await actCall(async () => {
+      try {
+        await discarded.expose.current?.saveNow();
+      } catch (error) {
+        failure = error;
+      }
+    });
+    expect(failure).toBeInstanceOf(WorkDraftSaveError);
+    expect((failure as WorkDraftSaveError).code).toBe("unavailable");
+  }, 20000);
+
   it("类型不匹配 / target 不匹配：state failed + 准确 resumeError（不加载草稿）", async () => {
     stub = stubFetch([
       {
