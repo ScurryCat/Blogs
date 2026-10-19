@@ -5,10 +5,12 @@
 会话又完成了 13 轮视觉还原/缺陷修复/验收复跑，文档与工具都变了；接手者应该拿到
 **当前状态**的自包含包，而不是在旧包基础上再翻 git 历史。
 
-与原包保持同样的内容口径（便于对照）：
-  - 包含：HANDOFF.md（更新版）+ MANIFEST + SHA256SUMS + docs/agent-deliveries/ +
-    docs/design-references/ + tools/（原包同款的脚本白名单 + 新增的视觉复核种子脚本）
-  - 不包含：源代码（在仓库里）、`.dsh/` 截图与分析产物（工作区外/未入库）、任何凭据。
+与原包保持同样的内容口径（便于对照），P5 起补充交接必需材料：
+  - 包含：HANDOFF.md（更新版 + P5 段）+ MANIFEST + SHA256SUMS + SOURCE-REVISION.md +
+    docs/agent-deliveries/ + docs/design-references/ + **docs/acceptance/** +
+    **docs/handoff/（设计书副本）** + **contracts/openapi.json** + tools/（脚本白名单）+
+    visual-evidence/（本地视觉证据快照，含 P5 关键流程）
+  - 不包含：源代码（在仓库里）、任何凭据、未列入 visual-evidence 的临时分析产物。
 
 用法：
     python3 tools/package-handoff.py                 # 写到默认位置
@@ -44,6 +46,7 @@ TOOL_WHITELIST = [
     "e2e-journal-reading.py",
     "e2e-metanav-palace.py",
     "e2e-phone-scroll.py",
+    "e2e-p5-workspace.py",
     "e2e-seed-journal.py",
     "e2e-seed-palaces.py",
     "e2e-seed-previews.py",
@@ -74,6 +77,21 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 > 另有 WebKit + iPhone 视口 **28/28**、IM 图片 e2e **60/60**、管理端 INS 隔离流程 **19/19**、
 > 参考帧校验 **22/22**。
 >
+> **P5 第一批 · 站主日常创作体验（2026-10-19 实现 + 验收通过）**
+> - 提交：`3b0914e`（实现）→ `9644737`（验收期修复 + 验收报告）→ `84cb75c`（最终交付报告/收口）。
+> - 范围：`/admin` 创作台首页；INS 选图优先独立编辑页；手记独立编辑页（默认私密、保存≠公开、
+>   公开编辑走工作副本）；**服务端工作草稿**（自动保存只写草稿、本机恢复副本、412 版本冲突显式处理、
+>   跨设备恢复、幂等提交/事务/双版本检查）；共享图片选择器；放课后追番/游戏快捷更新；
+>   前台 INS/手记/放课后/勒布朗站主入口与 `returnTo` 来源上下文恢复。
+> - 验收：**A1–A12 全通过**；B1/B3/B4/B5 通过；**B2 真机（触控/软键盘/中文输入法/移动 Safari）
+>   未验证（无设备）**。P5 e2e **219/0**；后端整树 **1025/0**；前端单测 **1123/0**；
+>   隔离 build exit 0（37/37）；迁移 upgrade→downgrade→upgrade + 旧数据保留 PASS；OpenAPI/gen:api 无漂移。
+> - **详细交接**：`docs/agent-deliveries/P5-HANDOFF-2026-10-19.md`（架构/接口/文件地图/复验命令/坑）；
+>   总结 `P5-final-report.md`；逐条证据 `docs/acceptance/P5-acceptance-report.md`；
+>   接口约定 `P5-C0-integration-contract.md`；设计书 `docs/handoff/2026-10-18-p5-creator-workspace-design.md`。
+> - 证据截图：`visual-evidence/p5-*.png`；e2e 脚本：`tools/e2e-p5-workspace.py`。
+> - **边界**：文章编辑器与完整媒体管理属第二/三批，不计入第一批完成声明。
+>
 > **2026-10-19 · 游戏内 IM 聊天界面复刻（6 轮，目标完成）**
 > - 手机宿主内全屏 IM：去掉网页式 App 头，返回键改浮层黑白红方钮；IM 占满手机屏；
 > - 黑底白字 + 红色左条 + 红硬阴影的 IM wordmark；
@@ -100,7 +118,8 @@ UPDATE_BANNER = """<!-- PACKAGE-V2 -->
 > **仍未关闭**：真实设备（软键盘/中文输入法/真机触控/移动 Safari）；整屏逐像素还原；
 > IM 图片消息 Phase 2（AI 选图）/ Phase 3（访客引用相册）未做。
 >
-> 建议阅读顺序：`docs/agent-deliveries/HANDOFF.md` → `P4-acceptance-complete-status.md`
+> 建议阅读顺序：`docs/agent-deliveries/HANDOFF.md` → `P5-HANDOFF-2026-10-19.md`（接 P5 任务必读）
+> → `P5-final-report.md` → `P5-C0-integration-contract.md` → `P4-acceptance-complete-status.md`
 > → `P4-im-game-replica.md` → `P4-final-state.md` → 本包 `handoff/SOURCE-REVISION.md`。
 > 历史文档（v2 fixes、round3 补帧、acceptance-v2-response）已标注适用基线，勿用旧数字拼凑。
 <!-- /PACKAGE-V2 -->
@@ -174,6 +193,26 @@ VISUAL_EVIDENCE = [
     (".dsh/screenshots/velvet-visual/01-velvet.png", "visual-evidence/velvet.png"),
     (".dsh/screenshots/mementos-visual/01-mementos.png", "visual-evidence/mementos.png"),
     (".dsh/screenshots/leisure-visual/01-leisure.png", "visual-evidence/leisure.png"),
+    # P5 第一批（站主创作台）：来自 C5 最终 e2e run（2026-10-19 01:07，105 张中的关键流程）。
+    (".dsh/screenshots/p5-workspace/20261019-010738-workspace-home.png", "visual-evidence/p5-workspace-home.png"),
+    (".dsh/screenshots/p5-workspace/20261019-010738-workspace-start-moment.png", "visual-evidence/p5-workspace-start-moment.png"),
+    (".dsh/screenshots/p5-workspace/20261019-010738-ins-editor-empty.png", "visual-evidence/p5-ins-editor-empty.png"),
+    (".dsh/screenshots/p5-workspace/20261019-010738-ins-editor-synced.png", "visual-evidence/p5-ins-editor-synced.png"),
+    (".dsh/screenshots/p5-workspace/20261019-010738-ins-editor-after-picker.png", "visual-evidence/p5-ins-editor-after-picker.png"),
+    (".dsh/screenshots/p5-workspace/20261019-010738-ins-editor-published.png", "visual-evidence/p5-ins-editor-published.png"),
+    (".dsh/screenshots/p5-workspace/20261019-010738-ins-album-roundtrip.png", "visual-evidence/p5-ins-album-roundtrip.png"),
+    (".dsh/screenshots/p5-workspace/20261019-010738-conflict-notice.png", "visual-evidence/p5-conflict-notice.png"),
+    (".dsh/screenshots/p5-workspace/20261019-010738-journal-saved.png", "visual-evidence/p5-journal-saved-private.png"),
+    (".dsh/screenshots/p5-workspace/20261019-010738-journal-published.png", "visual-evidence/p5-journal-published.png"),
+    (".dsh/screenshots/p5-workspace/20261019-010738-leisure-quick-success.png", "visual-evidence/p5-leisure-quick-success.png"),
+    (".dsh/screenshots/p5-workspace/20261019-010738-leisure-quick-failed.png", "visual-evidence/p5-leisure-quick-failed.png"),
+    (".dsh/screenshots/p5-workspace/20261019-010738-media-picker-selected.png", "visual-evidence/p5-media-picker-selected.png"),
+    (".dsh/screenshots/p5-workspace/20261019-010738-front-ins-new-editor.png", "visual-evidence/p5-front-ins-new-editor.png"),
+    (".dsh/screenshots/p5-workspace/20261019-010738-mobile-390x844-workspace.png", "visual-evidence/p5-mobile-390-workspace.png"),
+    (".dsh/screenshots/p5-workspace/20261019-010738-mobile-390x844-editor.png", "visual-evidence/p5-mobile-390-editor.png"),
+    (".dsh/screenshots/p5-workspace/20261019-010738-mobile-390x844-journal.png", "visual-evidence/p5-mobile-390-journal.png"),
+    (".dsh/screenshots/p5-workspace/20261019-010738-mobile-320x720-editor.png", "visual-evidence/p5-mobile-320-editor.png"),
+    (".dsh/screenshots/p5-workspace/20261019-005908-webkit-390x844-editor.png", "visual-evidence/p5-webkit-390-editor.png"),
 ]
 
 
@@ -191,6 +230,13 @@ def collect() -> list[tuple[Path, str]]:
         add(doc, f"docs/agent-deliveries/{doc.name}")
     for doc in sorted((REPO / "docs" / "design-references").glob("*.md")):
         add(doc, f"docs/design-references/{doc.name}")
+    # P5 起：验收证据（P5-acceptance-*.md）与上游设计书副本也是交接必需材料。
+    for doc in sorted((REPO / "docs" / "acceptance").glob("*.md")):
+        add(doc, f"docs/acceptance/{doc.name}")
+    for doc in sorted((REPO / "docs" / "handoff").glob("*.md")):
+        add(doc, f"docs/handoff/{doc.name}")
+    # API 契约（OpenAPI 导出）让接手者无需先跑后端也能看到完整接口面。
+    add(REPO / "contracts" / "openapi.json", "contracts/openapi.json")
 
     for item in TOOL_WHITELIST:
         target = REPO / "tools" / item
@@ -227,6 +273,14 @@ def source_revision_text() -> str:
         "--",
         "docs",
         "tools",
+        "contracts",
+        "apps/api/app/modules/work_drafts",
+        "apps/web/features/workspace",
+        "apps/web/features/media-picker",
+        "apps/web/features/ins",
+        "apps/web/features/journal",
+        "apps/web/features/leisure",
+        "apps/web/features/leblanc",
         "apps/web/features/messaging",
         "apps/web/features/phone",
         "apps/web/public/assets/legacy/img/app/ai",
@@ -261,10 +315,13 @@ def build(out: Path) -> tuple[int, int, str]:
     manifest = "\n".join(manifest_lines) + "\n"
     manifest += (
         "\n--- 说明 ---\n"
-        "交接包 · 怪盗手机 P5 第二轮 UI（v2，打包后更新版）\n"
+        "交接包 · 怪盗手机（含 P5 第一批站主创作台 + P4 视觉/验收历史）\n"
         f"打包时间 {stamp}；代码状态 HEAD {head}（分支 main，未推送）\n"
-        "内容：HANDOFF.md（v2 更新横幅 + 原文）+ MANIFEST.txt + SHA256SUMS + SOURCE-REVISION.md + "
-        "docs/agent-deliveries/ + docs/design-references/ + tools/ + visual-evidence/（本地视觉证据快照）\n"
+        "内容：HANDOFF.md（更新横幅 + 原文）+ MANIFEST.txt + SHA256SUMS + SOURCE-REVISION.md + "
+        "docs/agent-deliveries/ + docs/design-references/ + docs/acceptance/ + docs/handoff/ + "
+        "contracts/openapi.json + tools/ + visual-evidence/（本地视觉证据快照，含 P5 关键流程）\n"
+        "P5 第一批交接入口：docs/agent-deliveries/P5-HANDOFF-2026-10-19.md；"
+        "逐条验收证据：docs/acceptance/P5-acceptance-report.md；e2e：tools/e2e-p5-workspace.py。\n"
         "未包含（有意）：源代码（在仓库里，见 SOURCE-REVISION.md）、任何凭据；"
         ".dsh/ 下未列入 visual-evidence 的临时分析产物不随包分发。\n"
         f"文件数：{len(entries) + 4}（含 HANDOFF/MANIFEST/SHA256SUMS/SOURCE-REVISION）\n"
