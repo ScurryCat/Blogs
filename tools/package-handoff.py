@@ -66,71 +66,43 @@ TOOL_WHITELIST = [
 ]
 
 UPDATE_BANNER = """<!-- PACKAGE-V2 -->
-> ## ⚠️ 这个包是 v2（打包后更新的版本）
+> ## 当前状态（2026-10-19）
 >
-> 第一版包对应 HEAD `6320861`；本包对应 **HEAD `{head}`**，包含此后的全部增量工作：
-> **B1 视觉还原（9 界面元件级 v1 + 11 类缺陷修复）**、手机桌面应用补登记、
-> 可及性收尾（减少动效 / 触控目标 / WCAG 对比度 / 焦点 / 结构 / 失败态）、
-> 验证环境修复（系统代理绕过、常驻服务与媒体根说明）与全量验收复跑（`--e2e` 7/7 段全绿）。
-> **首页按站主指令**：保持原本布局、去掉「怪盗手记」红底、打开即完整显示人物卡与
-> 左侧 5 个栏目（A/B/C/D 变体已撤回）；底部迷你播放器已按站主要求移除；
-> 9 个视觉还原界面的演示内容与手机 deep link 已在本地分享库中。
+> 代码基线 = 包内 `{head}`；分支/远端状态以 `handoff/SOURCE-REVISION.md` 为准。
+> **全量门禁**：`tools/verify-all.sh --e2e --mobile` **7/7 段全绿**——前端 **1123** 单测、
+> 后端 **1025**、T02 52/52、多视口 11、业务流 4/4、端到端 12（桌面 6 + 移动 6）；
+> 另有 WebKit + iPhone 视口 **28/28**、IM 图片 e2e **60/60**、管理端 INS 隔离流程 **19/19**、
+> 参考帧校验 **22/22**。
 >
-> **当前验收摘要（单一基线，勿再用历史正文数字拼凑）**：
-> 代码基线 = 包内 `{head}`；前端 **1123** 单测、后端 **1025**（`--e2e --mobile` 7/7 段全绿、端到端 12 项；P5 创作台已集成）。
-> 独立验收 v2 结论：**功能阶段通过，完整验收未通过**；逐项回应与证据见
-> `docs/agent-deliveries/acceptance-v2-response.md`；验收报告点名的
-> **F1 / F2 / F3 已返工**（详见 `docs/agent-deliveries/P4-acceptance-v2-fixes.md`）：
-> F1 默认素材入口迁移到 `persona-curated/`（旧库降级离线档案）；
-> F2 桌面接入 2 枚已审核原版图标（metanav 经典红眼 / ins 原版消息标识，其余 8 个仍标适配）；
-> F3 INS 收录相册改 cursor 全量分页 + 列表外已选相册详情补取（仅 404 判删除）。
-> **参考帧补齐（2026-10-18，三批 17 张（R1 后 21 张））**：P5R 6（G2 回复选择 / G1 普通对话 ×2 /
-> IM 完整屏 ×2 / 手机 HUD）+ P5 6（存档/读取 / 手机主屏 / 日历 / 五维状态 / 校内地图 / 东京地图）
-> + 5（天鹅绒房间 / 印象空间 / COOP / 殿堂 / 放课后），
-> `tools/acceptance/verify-reference-frames.py` **21/21**；来源核实见
-> `docs/design-references/reference-frame-sources.md`（官方 3：PS CDN 1 + Steam 2；
-> 可追溯非官方 12；未核实 2=IM 两帧）。整屏参考帧缺口已收口。
-> **移动引擎证据（2026-10-18）**：WebKit + iPhone 视口 28/28（首页/手机/IM/图库灯箱/触控点按），
-> 但**不等于真机**；软键盘/中文输入法/真实触控仍需真机（`P4-mobile-engine-evidence.md`）。
-> **IM 整屏视觉修形（2026-10-18，两轮，站主指令 IM 优先）**：纸白宽消息条 + 白纸黑框拍立得头像 +
-> 放大 IM wordmark + 红点操作提示 + 4:3 大图片卡（`P4-im-visual-refinement.md`；仍部分还原）。
-> **手记整屏视觉修形第一轮（2026-10-18）**：存档列表纸白/深红大槽位 + SAVE DATA 大字；
-> 日历黑底大字网格（周日红/周六青）、记录日红数字+下划线、TODAY 贴纸
-> （`P4-journal-visual-refinement.md`；仍部分还原）。
-> **协助者 COOP 整屏视觉修形第一轮（2026-10-18）**：纸白卡面 + 红黑斜切插画区 + 拍立得头像 +
-> 黑色姓名条 + 深红大序号（`P4-coop-visual-refinement.md`；仍部分还原，RANK 无数据不伪造）。
-> **我的殿堂 Showcase 整屏视觉修形第一轮（2026-10-18）**：暗红/黑斜切宝库墙 + 金色宝箱辉光 +
-> 金色 TREASURE 贴牌 + 纸白宝物卡 + 金色页签（`P4-showcase-visual-refinement.md`；仍部分还原）。
-> **天鹅绒房间整屏视觉修形第一轮（2026-10-18）**：深蓝丝绒条纹 + 冷光 + 金/冰饰线 +
-> 白色登记板技能卡 + REGISTRY 金贴牌（`P4-velvet-visual-refinement.md`；仍部分还原）。
-> **印象空间整屏视觉修形第一轮（2026-10-18）**：黑暗隧道冷光 + 黄黑警示条 + 荧光绿档案箱/号牌 +
-> AWARENESS AREA 贴牌 + 线路牌状态徽标（`P4-mementos-visual-refinement.md`；仍部分还原）。
-> **整屏视觉修形第一轮完成（2026-10-18）**：10 个界面 / 9 轮（IM 两轮，另有手记、COOP、殿堂、
-> 天鹅绒、印象空间、放课后、手机主屏、关于、东京地图），对照表 13 个可映射界面全部覆盖
-> （1 个对象不适用），索引 `P4-visual-refinement-summary.md`；均标「部分还原」。
-> **视觉对照证据（2026-10-18）**：`tools/capture-visual-comparison.py` 把 22 张参考帧与
-> 站点 14 个界面并排对照（含 G2 回复选择），逐项结论见 `P4-visual-comparison-evidence.md`
-> （13 项已完成整屏语言修形第一轮 / 1 项对象不适用（校内楼层图）/ 2 项无对应整屏；
-> **整屏逐像素还原仍未通过**）。
-> **IM 图片消息 Phase 1 已实现（2026-10-18，站主拍板方案 A）**：剧本图片卡
-> （`image`/`album_photo`）+ 白框拍立得 + 灯箱 + 撤回/失效降级；后端 9 / 前端 4 /
-> 浏览器 e2e 8/8（`tools/e2e-im-image-card.py`）；Phase 2 AI 选图 / Phase 3 访客引用相册仍未做。
-> **管理端 INS 隔离全流程（2026-10-18）**：草稿保留 + 新标签建相册 + 图库展示 + 撤回联动，
-> 隔离栈真实浏览器 19/19（`P4-acceptance-complete-admin-flow.md`）。
-> **完整验收 2026-10-18 返工**：R2 灯箱 Escape 不再退出 App、R3 灯箱失败降级（e2e 60/60）；
-> R1 三张错标参考帧已纠正并补正确 P5R 天鹅绒/东京地图/IM 帧；**G2 回复选择帧已由站主提供（22/22）**；
-> §6 旧 AI 位图桌面回退移除；2 原版 + 10 张站主授权的 AI 同风格图标（`ai-app-icons.md`）、
-> 相册 1200 上限提示、pending 中性标题、
-> WebKit 断言增强 28/28；详见 `P4-acceptance-complete-*.md`。
-> 仍未关闭：真实设备（触控/软键盘/移动 Safari）；桌面图标已按站主授权定稿。
-> **管理端 INS 收录 UI 真实浏览器全流程已补齐**：`tools/e2e-ins-album-links-ui.py` 9/9 通过
-> （登录→建相册草稿→建动态→上传→收录→保存→发布→公开页可见）；期间修复了 2 个真实 UI 阻断缺陷：
-> 管理列表 limit=50 超后端上限 30 的 422、画廊写接口 CSRF body 字段导致的 422/500。
-> **请先读 `docs/agent-deliveries/HANDOFF-ADDENDUM-2026-10-17.md`**（状态增量与未完成项），
-> 再读 `docs/agent-deliveries/P4-final-state.md`（一页纸速览）与本文其余部分。
-> 重要：**整屏逐像素还原验收仍未通过**——21 张参考帧已补齐，13 个可映射界面完成
-> 第一轮视觉语言修形，但尺寸/间距/字体尚未逐像素对照；B4 图片消息 Phase 1 已实现，
-> Phase 2 AI 选图 / Phase 3 访客引用相册仍未做。
+> **2026-10-19 · 游戏内 IM 聊天界面复刻（6 轮，目标完成）**
+> - 手机宿主内全屏 IM：去掉网页式 App 头，返回键改浮层黑白红方钮；IM 占满手机屏；
+> - 黑底白字 + 红色左条 + 红硬阴影的 IM wordmark；
+> - 黑底白边粗体消息条、4px 白边、逐条微倾角、头像白纸黑框压边 + 白色三角、右下白色小标记；
+> - 白底黑边箭头回复选项、右对齐、首条红字、紧叠错位；
+> - 底部圆形操作键 `(L) 滚动` / `(✕) 返回`（手机内隐藏自由输入条，独立页保留）；
+> - 收件列表：黑底白边斜切行、IM wordmark、真实会话状态标签与 `last_message_at` 日期标签
+>   （`M/D 周X`，Asia/Shanghai），不伪造游戏 HOLD/NEW；
+> - 证据：`docs/agent-deliveries/P4-im-game-replica.md`、
+>   `visual-evidence/im-game-replica-comparison.png`（游戏帧 ↔ 站点并排）、
+>   `visual-evidence/im-game-replica-conversation.png`、`im-game-replica-inbox.png`。
+> - **边界**：不复制游戏场景/手部；站点是固定桌面手机壳；内容量不同；不宣称逐像素等比。
+>
+> **完整验收 2026-10-18 报告**：可执行返工项已收口——
+> R1 三张错标参考帧已重标并补正确 P5R 帧，**G2 回复选择帧由站主提供（22/22）**；
+> R2 灯箱 Escape 不再退出 App、R3 灯箱失败降级（e2e 60/60）；§6 相册上限提示/中性标题/
+> 历史标注/精选库摘要/IM 阶段边界；§7.4 管理端隔离全流程 19/19；WebKit 断言 28/28。
+> 手机图标：2 枚原版 + 10 枚站主授权的 AI 同风格图标（`ai-app-icons.md`），旧 AI 位图默认回退已移除。
+> 真机验证按站主指示**暂时跳过**；不宣称真机或跨设备逐像素通过。
+>
+> 此前交付（保留在文档中）：B1 九界面视觉修形、IM 图片消息 Phase 1、G2/参考帧补齐、
+> AI 图标、手记/IM 逐像素轮次、P5 创作台集成（工作草稿/自动保存/INS 选图/快捷入口）。
+>
+> **仍未关闭**：真实设备（软键盘/中文输入法/真机触控/移动 Safari）；整屏逐像素还原；
+> IM 图片消息 Phase 2（AI 选图）/ Phase 3（访客引用相册）未做。
+>
+> 建议阅读顺序：`docs/agent-deliveries/HANDOFF.md` → `P4-acceptance-complete-status.md`
+> → `P4-im-game-replica.md` → `P4-final-state.md` → 本包 `handoff/SOURCE-REVISION.md`。
+> 历史文档（v2 fixes、round3 补帧、acceptance-v2-response）已标注适用基线，勿用旧数字拼凑。
 <!-- /PACKAGE-V2 -->
 
 """
@@ -180,6 +152,10 @@ VISUAL_EVIDENCE = [
     (".dsh/screenshots/im-visual-v2/06-wordmark.png", "visual-evidence/im-wordmark-pixel-round3.png"),
     (".dsh/screenshots/journal-visual-v2/01-save-list.png", "visual-evidence/journal-pixel-round2-save-list.png"),
     (".dsh/screenshots/journal-visual-v2/02-calendar.png", "visual-evidence/journal-pixel-round2-calendar.png"),
+    (".dsh/screenshots/im-replica/14-final-conversation.png", "visual-evidence/im-game-replica-conversation.png"),
+    (".dsh/screenshots/im-replica/12-inbox-clean.png", "visual-evidence/im-game-replica-inbox.png"),
+    (".dsh/screenshots/im-replica/comparison-conversation.png", "visual-evidence/im-game-replica-comparison.png"),
+    (".dsh/screenshots/im-replica/10-mobile-v2.png", "visual-evidence/im-game-replica-mobile.png"),
     (".dsh/ai-icons/sheet.jpg", "visual-evidence/ai-app-icons-sheet.jpg"),
     (".dsh/screenshots/im-image-card/01-conversation-image-card.png", "visual-evidence/im-image-card-e2e.png"),
     (".dsh/screenshots/acceptance-complete-r2r3/01-lightbox-open.png", "visual-evidence/im-lightbox-open.png"),
