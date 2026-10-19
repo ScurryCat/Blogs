@@ -59,6 +59,12 @@ apps/web/tools
 apps/web/tests
 apps/web/features/*/tools
 apps/web/**/__snapshots__
+# 组件/单测文件与 tests/ helper 一起排除：生产镜像不需要，也不能让 `next build` 的
+# `tsc` 去类型检查没有 helper 的测试文件（T10 隔离构建时发现：镜像构建只排除了
+# apps/web/tests，feature 目录下 *.test.tsx 仍会被 COPY 进去，构建因找不到
+# `@/tests/helpers/*` 失败）。测试在仓库/CI 里跑，不随镜像发布。
+apps/web/**/*.test.ts
+apps/web/**/*.test.tsx
 # 旧站基线资源与测试（镜像里用的是迁移后的 public/assets/legacy）。
 assets/clip
 tests

@@ -5,6 +5,11 @@
 #       web 不持有 DB 凭据，媒体不作为公开静态目录。迁移只执行一次，成功才启动
 #       依赖新 schema 的服务」。
 #
+# 2026-10-19 D1 修复/验证补全：`grants` 一次性服务在 migrate 成功后给运行账号补权限，
+# api 依赖 migrate + grants 都成功才启动；否则首次部署时 api 因无表权限永远 unhealthy。
+# 同时修正：API healthcheck 期望 `status == "ready"`（与 health.py 一致）、PG18 数据卷
+# 挂载点、生产镜像的 music 构建上下文与 standalone 路径。
+#
 # 网络拓扑：
 #   edge_net : gateway ←→ web / api        （只有 gateway 发布宿主端口）
 #   data_net : api ←→ db                   （internal: true；web 不在这张网里，也没有 DB 凭据）
@@ -48,7 +53,11 @@ services:
       - postgres_migrator_password
       - postgres_app_password
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      # PostgreSQL 18+ 官方镜像把数据目录改到 `/var/lib/postgresql/<major>/docker`，
+      # 推荐挂载 `/var/lib/postgresql`（旧写法 `/var/lib/postgresql/data` 在 18+ 会被
+      # entrypoint 判为「未使用的旧挂载点」并拒绝启动 —— D1 隔离 Compose 验证时实测，
+      # 2026-10-19）。升级到其它大版本前要先按官方方式 pg_upgrade，不能只换 image tag。
+      - pg_data:/var/lib/postgresql
       - ./db/init:/docker-entrypoint-initdb.d:ro
     networks:
       - data_net
@@ -87,6 +96,48 @@ services:
       - data_net
     logging: *default-logging
 
+  grants:
+    # 一次性任务：迁移成功后把运行账号的权限补齐（表是 migrate 新建的，owner 是迁移账号；
+    # 运行账号没有表权限，readiness 的 schema/查询检查会失败）。`grant-runtime.sql` 幂等，
+    # 每次部署都可跑。2026-10-19 D1 隔离 Compose 验证时发现：原流程把这一步留给人工在
+    # release.md 里执行，且文档里的容器内路径不存在 —— 首次 `up` 时 api 会因缺权限一直
+    # unhealthy、gateway 永远等不到。这里做成一次性服务，让编排自身可以完成健康启动；
+    # 人工步骤仍保留为排障兜底，见 docs/operations/release.md。
+    image: ${POSTGRES_IMAGE:-postgres:18-alpine}
+    command:
+      - psql
+      - -v
+      - ON_ERROR_STOP=1
+      - -h
+      - db
+      - -U
+      - ${POSTGRES_MIGRATOR_USER:-pl_migrator}
+      - -d
+      - ${POSTGRES_DB:-pl}
+      - -v
+      - app_user=${POSTGRES_APP_USER:-pl_app}
+      - -f
+      - /grant-runtime.sql
+    restart: "no"
+    environment:
+      # 与 migrate 相同的既有取舍：口令经 --env-file 插值进容器环境变量（见文件尾注释）。
+      PGPASSWORD: ${POSTGRES_MIGRATOR_PASSWORD:?}
+    volumes:
+      # 只读挂载幂等授权 SQL（不在镜像里，跟随仓库版本；不含任何密钥）。
+      - ./db/grant-runtime.sql:/grant-runtime.sql:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - data_net
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging: *default-logging
+
   api:
     image: ${API_IMAGE:?}
     restart: unless-stopped
@@ -109,6 +160,9 @@ services:
       migrate:
         # 迁移成功才启动依赖新 schema 的服务（06 §3）。
         condition: service_completed_successfully
+      grants:
+        # 运行账号权限补齐后才启动（否则 readiness 必然 503）。
+        condition: service_completed_successfully
     volumes:
       # 媒体是**持久卷**，不是网关的公开静态目录（06 §4）。
       - media_data:/var/lib/phantom-log/media
@@ -126,6 +180,11 @@ services:
     healthcheck:
       # readiness 真的查 DB / schema / 媒体可写；未就绪返回 503（06 §3）。
       # 未就绪时容器是 unhealthy，而不是「running 就算好」。
+      #
+      # 契约（D1 修复，2026-10-19）：`GET /api/v1/health/ready` 成功时返回
+      # `{"status": "ready", ...}`（见 apps/api/app/core/health.py 的 STATUS_* / 响应体），
+      # 不是 `"ok"`。这里必须与后端实际响应一致；`deploy/check-prod-config.py` 会做跨文件
+      # 契约断言，避免以后只改一边又出现「永远 unhealthy / 把坏状态当健康」的错配。
       test:
         - CMD
         - python
@@ -137,7 +196,7 @@ services:
                   body = json.load(r)
           except Exception:
               sys.exit(1)
-          sys.exit(0 if body.get("status") == "ok" else 1)
+          sys.exit(0 if body.get("status") == "ready" else 1)
       interval: 15s
       timeout: 10s
       retries: 5

@@ -15,28 +15,43 @@
 # standalone（06 §2）已由 T00 在 `apps/web/next.config.ts` 启用（`output: "standalone"` +
 # `outputFileTracingRoot` 锁到仓库根），runner 见下方。启用后镜像不再需要 `next start`。
 
-# --- 音频来源：只有音频的那份上下文（`music` → 仓库 assets/music/） ---
-FROM scratch AS music
-COPY . /music/
+# --- 音频来源：独立的小构建上下文（CI/release 用 `--build-context music=assets/music`） ---
+#
+# **不要**写成 `FROM scratch AS music; COPY . /music/`：那会把整个仓库上下文复制进
+# `/music`，再塞进 `public/assets/music/`（镜像膨胀，且 tsc 会去类型检查 public/ 下的
+# 重复源码，直接把生产构建打挂）。`assets/music` 被 `.dockerignore` 排除正是为了走这个
+# 独立上下文。构建时必须提供 `--build-context music=assets/music`（CI 见 release.yml；
+# 本机命令见 docs/operations/release.md / T10 交付单）。缺少该上下文时构建会明确报错。
+#
+# 下面的 `COPY --from=music /` 直接复制「music 上下文」的根目录（= 仓库 assets/music/）。
+# `deploy/check-prod-config.py` 会断言 Dockerfile 与 workflow 都确实使用这个命名上下文。
 
 FROM node:26-slim AS builder
 
-WORKDIR /srv/web
+# 必须保留 monorepo 的 `apps/web/` 层级：`next.config.ts` 的
+# `outputFileTracingRoot = path.join(__dirname, "../../")` 以构建时的绝对路径为基准，
+# standalone 会按「追踪根 → 项目」的相对路径产出目录结构。D1 隔离验证实测过两种写法：
+#   - 直接把 apps/web 铺在 /srv/web：__dirname=/srv/web、追踪根=/，产出的
+#     standalone 是 `srv/web/server.js`，Dockerfile 的 COPY/CMD 全部失配（镜像启动即
+#     MODULE_NOT_FOUND）。
+#   - 放在 /srv/apps/web：__dirname=/srv/apps/web、追踪根=/srv，产出的
+#     standalone 是 `apps/web/server.js`，与 runner 的 COPY/CMD 一致。
+WORKDIR /srv
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # 先复制依赖描述以利用层缓存；`npm ci` 严格按锁文件安装。
-COPY apps/web/package.json apps/web/package-lock.json ./
-RUN npm ci --no-audit --no-fund
+COPY apps/web/package.json apps/web/package-lock.json ./apps/web/
+RUN cd apps/web && npm ci --no-audit --no-fund
 
-COPY apps/web/ ./
+COPY apps/web/ ./apps/web/
 
-# 旧站静态音频沿用原路径。本机仓库里音频在根 `assets/music/`，不在 `apps/web/` 下，
-# 所以这一步不会覆盖任何已有的 `public/assets/music/`。
-COPY --from=music /music/ ./public/assets/music/
+# 旧站静态音频沿用原路径。`music` 是独立构建上下文（仓库根 `assets/music/`），
+# 不在 `apps/web/` 下，所以这一步不会覆盖任何已有的 `public/assets/music/`。
+COPY --from=music / ./apps/web/public/assets/music/
 
 # 构建期不需要任何密钥。不传 DEV_API_URL。
-RUN npm run build
+RUN cd apps/web && npm run build
 
 FROM node:26-slim AS runner
 
@@ -53,13 +68,14 @@ RUN useradd --system --uid 10002 --create-home --home-dir /home/phantom phantom
 # 少一层依赖安装、少一份重复的 node_modules，也没有 package-lock 需要在 runner 阶段解析。
 # （T10 原稿在 runner 阶段装生产依赖，那是 `next start` 形态需要的；改用 server.js 后不需要。）
 
-# ⚠️ 路径带 `apps/web/` 前缀：`next.config.ts` 的 `outputFileTracingRoot` 锁定在**仓库根**，
-# 所以 standalone 目录镜像了 monorepo 结构（实测产出 `.next/standalone/apps/web/server.js`）。
-# 这两处必须同时改：追踪根与 COPY 路径不一致时，镜像能构建成功但启动即失败。
-COPY --from=builder --chown=phantom:phantom /srv/web/.next/standalone ./
+# ⚠️ 路径带 `apps/web/` 前缀：重建后的 builder 保持 `/srv/apps/web` 层级，
+# `outputFileTracingRoot` 计算为 `/srv`，standalone 产出 `/srv/apps/web/.next/standalone/apps/web/server.js`。
+# 这两处（builder 的目录层级、runner 的 COPY/CMD 路径）必须同时改：不一致时镜像能构建
+# 成功但启动即 MODULE_NOT_FOUND（D1 隔离验证实测踩过）。
+COPY --from=builder --chown=phantom:phantom /srv/apps/web/.next/standalone ./
 # standalone **不含** `.next/static` 与 `public`（06 §2 记录过这个坑），必须显式带上。
-COPY --from=builder --chown=phantom:phantom /srv/web/.next/static ./apps/web/.next/static
-COPY --from=builder --chown=phantom:phantom /srv/web/public ./apps/web/public
+COPY --from=builder --chown=phantom:phantom /srv/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder --chown=phantom:phantom /srv/apps/web/public ./apps/web/public
 
 ENV HOME=/home/phantom
 

@@ -26,7 +26,9 @@ services:
       TZ: UTC
       PGTZ: UTC
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      # PostgreSQL 18+ 官方镜像的数据目录在 /var/lib/postgresql/<major>/docker，
+      # 必须挂载 /var/lib/postgresql（旧路径 /var/lib/postgresql/data 在 18+ 会拒绝启动）。
+      - pg_data:/var/lib/postgresql
     networks:
       - data_net
     # 刻意不写 ports：数据库不公开监听。

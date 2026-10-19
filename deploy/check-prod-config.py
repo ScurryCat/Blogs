@@ -16,6 +16,14 @@
      6. api / web / gateway 都是非 root 的 read-only 根文件系统 + cap_drop。
      7. 镜像引用不是 `latest`，且 API / WEB 镜像带 digest（生产要求不可变）。
      8. 没有 `down -v` 之类的卷删除动作出现在任何编排 / 脚本里。
+  A2. 健康检查契约与依赖启动（D1 回归保护，2026-10-19）
+     15. db / api / web / gateway 都启用健康检查，且没有 `disable: true`。
+     16. api 健康检查打**真实 readiness** `/api/v1/health/ready`（不是 liveness），
+         且期望的 `status` 与 `apps/api/app/core/health.py` 的成功状态词一致
+         （D1 根因就是这里写死成 `"ok"` 而后端返回 `"ready"`）。
+     17. 依赖启动链：migrate 等 db 健康；grants（运行账号授权）等 migrate 成功；
+         api 等 migrate + grants 成功 + db 健康；web 等 api 健康；
+         gateway 等 web + api 健康（06 §3 / D1 隔离验证补全）。
   B. Caddyfile
      9. 用真实 Caddy 二进制（若提供 `--caddy`）做 `caddy validate`；
         没有二进制时退回结构断言，并在输出里明确标注「结构断言，不是 validate」。
@@ -23,6 +31,8 @@
     11. 没有把 `Host` 改写成上游地址、没有删 `Origin`（那会破坏同源校验）。
   C. Dockerfile / 环境变量示例
     12. 生产 Dockerfile 里没有 `ARG`/`ENV` 形式的密钥，没有 `dev` 阶段的源码挂载。
+    14b. web 镜像的音频必须走独立命名构建上下文 `music=assets/music`（D1 隔离验证时
+         发现旧写法会把整个仓库复制进 public/ 并打挂生产构建）。
     13. `.env` 示例文件里没有看起来像真实密钥的值。
     14. `.dockerignore` 没有排除镜像真正需要的输入路径。
 
@@ -98,8 +108,8 @@ def load_yaml(path: Path) -> dict:
 def check_compose(report: Report, cfg: dict, source: str) -> None:
     services = cfg.get("services") or {}
     print(f"== A. 生产编排（{source}）==")
-    report.check("编排里有 gateway / web / api / db / migrate",
-                 {"gateway", "web", "api", "db", "migrate"} <= set(services),
+    report.check("编排里有 gateway / web / api / db / migrate / grants",
+                 {"gateway", "web", "api", "db", "migrate", "grants"} <= set(services),
                  ",".join(sorted(services)))
 
     publishers = {name: svc.get("ports") for name, svc in services.items() if svc.get("ports")}
@@ -155,6 +165,104 @@ def check_compose(report: Report, cfg: dict, source: str) -> None:
     for name in ("api", "web"):
         report.check(f"{name} 镜像按 digest 固定", "@sha256:" in images.get(name, ""),
                      images.get(name, "")[:70])
+
+
+HEALTH_READY_PATH = "/api/v1/health/ready"
+
+
+def _healthcheck_test(service: dict) -> str:
+    """把渲染后的 healthcheck.test（list 或 str）折成一段可搜索的文本。"""
+    healthcheck = service.get("healthcheck") or {}
+    test = healthcheck.get("test")
+    if isinstance(test, list):
+        return " ".join(str(part) for part in test)
+    return str(test or "")
+
+
+def _depends_conditions(service: dict) -> dict[str, str | None]:
+    deps = service.get("depends_on") or {}
+    out: dict[str, str | None] = {}
+    for name, spec in deps.items():
+        out[name] = spec.get("condition") if isinstance(spec, dict) else None
+    return out
+
+
+def check_health_and_dependencies(report: Report, cfg: dict) -> None:
+    """D1 回归保护：健康检查契约必须与后端 readiness 实际响应一致，依赖链必须显式。"""
+    print("== A2. 健康检查契约与依赖启动（D1）==")
+    services = cfg.get("services") or {}
+
+    health_py = (REPO_ROOT / "apps/api/app/core/health.py").read_text(encoding="utf-8")
+    match = re.search(
+        r'"status"\s*:\s*"([a-z_]+)"\s+if\s+ready\s+else\s+"([a-z_]+)"', health_py
+    )
+    report.check("能从 health.py 读到 readiness 成功/未就绪状态词", match is not None)
+    ready_word = match.group(1) if match else ""
+    not_ready_word = match.group(2) if match else ""
+    report.check("readiness 成功状态词是 ready", ready_word == "ready", ready_word or "未找到")
+
+    # 长驻服务必须启用健康检查；禁用健康检查属于「绕过问题」，不接受。
+    for name in ("db", "api", "web", "gateway"):
+        svc = services.get(name) or {}
+        healthcheck = svc.get("healthcheck") or {}
+        report.check(
+            f"{name}: 启用健康检查（未 disable）",
+            bool(healthcheck) and not bool(healthcheck.get("disable")),
+            f"healthcheck={healthcheck}",
+        )
+
+    api_test = _healthcheck_test(services.get("api") or {})
+    report.check(
+        "api 健康检查调用真实 readiness /api/v1/health/ready（不是 liveness）",
+        HEALTH_READY_PATH in api_test,
+    )
+    expected = re.search(r'body\.get\("status"\)\s*==\s*"([a-z_]+)"', api_test)
+    report.check(
+        "api 健康检查期望的 status 与后端 readiness 成功状态词一致（D1：不能写死 ok）",
+        expected is not None and expected.group(1) == ready_word,
+        f"healthcheck={expected.group(1) if expected else None!r} backend={ready_word!r}",
+    )
+    report.check(
+        "api 健康检查没有把未就绪状态词当成功",
+        expected is not None and expected.group(1) != not_ready_word,
+        f"not_ready={not_ready_word!r}",
+    )
+
+    migrate_deps = _depends_conditions(services.get("migrate") or {})
+    grants_deps = _depends_conditions(services.get("grants") or {})
+    api_deps = _depends_conditions(services.get("api") or {})
+    web_deps = _depends_conditions(services.get("web") or {})
+    gateway_deps = _depends_conditions(services.get("gateway") or {})
+
+    report.check(
+        "migrate 等 db 健康后执行",
+        migrate_deps.get("db") == "service_healthy",
+        str(migrate_deps),
+    )
+    report.check(
+        "grants 等 migrate 成功 + db 健康后才执行（运行账号授权）",
+        grants_deps.get("migrate") == "service_completed_successfully"
+        and grants_deps.get("db") == "service_healthy",
+        str(grants_deps),
+    )
+    report.check(
+        "api 等 migrate + grants 成功 + db 健康后才启动",
+        api_deps.get("migrate") == "service_completed_successfully"
+        and api_deps.get("grants") == "service_completed_successfully"
+        and api_deps.get("db") == "service_healthy",
+        str(api_deps),
+    )
+    report.check(
+        "web 等 api 健康后才启动",
+        web_deps.get("api") == "service_healthy",
+        str(web_deps),
+    )
+    report.check(
+        "gateway 等 web + api 都健康后才启动",
+        gateway_deps.get("web") == "service_healthy"
+        and gateway_deps.get("api") == "service_healthy",
+        str(gateway_deps),
+    )
 
 
 def check_caddy(r: Report, caddy_binary: str | None) -> None:
@@ -215,6 +323,22 @@ def check_dockerfiles(report: Report) -> None:
     web = (DEPLOY / "prod.Dockerfile.web").read_text(encoding="utf-8")
     report.check("web 镜像显式包含 public 与 .next/static（standalone 不会自动带）",
                  "/srv/web/public" in web and "/.next/static" in web)
+    # D1 隔离验证时发现的构建缺陷（2026-10-19）：music 必须用独立命名构建上下文，
+    # 不能 `FROM scratch AS music; COPY . /music/`（会把整个仓库复制进 public/ 并打挂 tsc）。
+    release_yml = (REPO_ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+    report.check(
+        "web Dockerfile 用命名构建上下文引用 music（而非复制整个主上下文）",
+        "COPY --from=music /" in web
+        and re.search(r"^FROM\s+scratch\s+AS\s+music", web, re.MULTILINE) is None,
+    )
+    report.check(
+        "web 构建保留 apps/web 层级且 CMD 与 standalone 路径一致（否则启动即 MODULE_NOT_FOUND）",
+        "WORKDIR /srv\n" in web
+        and "COPY apps/web/ ./apps/web/" in web
+        and 'CMD ["node", "apps/web/server.js"]' in web,
+    )
+    report.check("release workflow 传入 music=assets/music 构建上下文",
+                 "music=assets/music" in release_yml)
 
     for env_name in ("prod.env.example", "dev.env.example"):
         path = DEPLOY / "env" / env_name
@@ -252,6 +376,9 @@ def check_dockerfiles(report: Report) -> None:
     report.check(".dockerignore 排除了 node_modules 与 .venv",
                  any("node_modules" in pattern for pattern in patterns)
                  and any(".venv" in pattern for pattern in patterns))
+    report.check(".dockerignore 排除了前端测试文件（否则镜像内 tsc 会因缺 tests/ helper 失败）",
+                 any(pattern.endswith("*.test.ts") for pattern in patterns)
+                 and any(pattern.endswith("*.test.tsx") for pattern in patterns))
 
 
 def strip_docstrings_and_comments(text: str, suffix: str) -> str:
@@ -306,6 +433,7 @@ def main() -> int:
     config_path = Path(args.compose_config)
     cfg = load_yaml(config_path)
     check_compose(report, cfg, str(config_path))
+    check_health_and_dependencies(report, cfg)
     check_caddy(report, args.caddy or shutil.which("caddy"))
     check_dockerfiles(report)
     check_no_down_v(report, Path(args.compose_file))

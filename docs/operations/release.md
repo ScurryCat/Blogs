@@ -96,26 +96,28 @@ COMPOSE="docker compose -f deploy/compose.prod.yaml --env-file $ENV_FILE"
    失败 → **停止发布**；不要用「上一次的备份」凑合。
    同时进入维护窗口：停止接受内容写入（站点提示维护中），保证快照一致。
 
-3. **只跑一次迁移**（migrate 一次性服务；失败则不启动依赖新 schema 的服务）
+3. **只跑一次迁移 + 运行账号授权**（migrate / grants 都是一次性服务；失败则不启动依赖新 schema 的服务）
    ```bash
    $COMPOSE up -d db
    $COMPOSE run --rm migrate            # alembic upgrade head，成功即退出
+   $COMPOSE run --rm grants             # grant-runtime.sql：给运行账号补表/序列权限（幂等）
    ```
    失败 → 保持旧应用在线、**不要**执行 downgrade、保留现场；按 §4 回退。
-   成功 → 立刻补运行账号权限（表是新建的）：
-   ```bash
-   $COMPOSE exec -T db psql -U "$POSTGRES_ADMIN_USER" -d "$POSTGRES_DB" \
-     -v app_user="$POSTGRES_APP_USER" -f /docker-entrypoint-initdb.d/../grant-runtime.sql
-   ```
-   > 注：这个路径依赖镜像里的 initdb 目录挂载位置；如果用不了，直接从仓库执行
-   > `psql ... -f deploy/db/grant-runtime.sql`。本机已实测该 SQL 幂等可用。
+   > 2026-10-19 D1 隔离 Compose 验证补全：`grants` 是编排里的一键式服务（postgres 镜像 +
+   > 只读挂载 `deploy/db/grant-runtime.sql`），API 的 `depends_on` 已包含
+   > `grants: service_completed_successfully`；直接 `$COMPOSE up -d` 时 compose 也会按依赖
+   > 自动完成 migrate → grants → api。人工排障仍可在 db 容器内执行：
+   > `$COMPOSE exec -T db psql -U "$POSTGRES_ADMIN_USER" -d "$POSTGRES_DB" -v app_user=... -f /grant-runtime.sql`
+   > （该 SQL 已随编排只读挂载到 db 容器的 `/grant-runtime.sql`）。本机已实测该 SQL 幂等可用。
 
 4. **启动新镜像并等就绪**
    ```bash
-   $COMPOSE up -d api web gateway
-   $COMPOSE ps                       # migrate 应为 Exited(0)，其余 healthy
+   $COMPOSE up -d api web gateway    # 首次全新库也可直接 `$COMPOSE up -d`（migrate/grants 自动完成）
+   $COMPOSE ps                       # db/api/web/gateway healthy；migrate/grants 为 Exited(0)
    curl -fsS https://<域名>/api/v1/health/ready   # 必须返回 {"status":"ready",...}
    ```
+   > D1 隔离 Compose 验证（2026-10-19）实测：API healthcheck 期望 `status == "ready"`
+   > 与 `apps/api/app/core/health.py` 一致；db 停止后 api 会变 unhealthy，db 恢复后自动回 healthy。
    失败 → `docker compose logs api`；**不要**靠 `restart` 反复重启掩盖未就绪。
    DB / schema / 媒体任何一项不就绪，readiness 就是 503（本机已用真实进程验证五种故障形态）。
 
