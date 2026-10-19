@@ -1,0 +1,11 @@
+# isolated production build
+# isolated build provenance
+timestamp: 2026-10-19T08:52:22+08:00
+repo_head_at_build: 8b826c93a3618056492dae905140c1f7c48b86d6
+build_dir: /tmp/p5-rework-build (rsync of Blogs worktree at above HEAD; apps/web worktree clean at commit time)
+build_id: saPw1tf0nfpULa2_uuztT
+exit: 0 (37/37 static pages, Compiled successfully in 9.1s)
+
+## log highlights
+✓ Compiled successfully in 9.1s
+✓ Generating static pages using 9 workers (37/37) in 867ms

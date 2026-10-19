@@ -1,0 +1,8 @@
+# after full frontend vitest (2026-10-19T08:57:49+08:00)
+repo head: 7a19eb2e3566af739f1f1fef88112c5621bb6c18
+ Test Files  113 passed (113)
+      Tests  1182 passed (1182)
+   Duration  54.45s (environment 65%, tests 28%, import 4%, transform 2%, worker 1%)
+exit: 0
+
+## note: one transient flake observed in an intermediate run before 7a19eb2 (tests/runtime/showcase-intent.test.tsx), rerun passed; final run above is clean.

@@ -23,6 +23,11 @@
 > P5 e2e 219 断言通过 / 0 失败；后端 1025/0；前端 1123/0；隔离 build exit 0；迁移 round-trip PASS。
 > **先读**：`P5-final-report.md`（总结与复验命令）→ `../acceptance/P5-acceptance-report.md`（逐条证据）
 > → `P5-C0-integration-contract.md`（接口约定）。文章编辑器与完整媒体管理属第二/三批，本轮未做。
+>
+> **⚠️ 勘误（2026-10-19 独立验收后）**：上面「验收通过 / A1–A12 全通过」是原验收范围的历史结论，
+> 独立验收在基线 `9917890` 上确认 **R1/R2/R3** 三项功能缺陷，已返工修复并复验
+> （提交 `afafdf8` / `8b826c9` / `7a19eb2`，证据见 `../acceptance/P5-rework-verification-2026-10-19.md`）；
+> D1 Docker 健康检查错配未修（单列上线遗留项）；B2 真机仍未验证。交接以新报告和当前 HEAD 为准。
 
 ---
 

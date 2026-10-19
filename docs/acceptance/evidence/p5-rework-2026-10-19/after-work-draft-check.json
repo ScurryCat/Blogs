@@ -1,0 +1,45 @@
+{
+  "source_head": "7a19eb2e3566af739f1f1fef88112c5621bb6c18",
+  "method": "real-source React hook; mocked API/session; in-memory DOM; no business data writes",
+  "results": [
+    {
+      "id": "R2-new-draft-resume",
+      "expected": "Load the requested server draft without local storage",
+      "actual": {
+        "getCalls": 1,
+        "state": "synced",
+        "draft": {
+          "id": "draft-1",
+          "content_type": "moment",
+          "target_id": null,
+          "draft_version": 1,
+          "base_target_version": null,
+          "data": {
+            "text": "SERVER DRAFT"
+          },
+          "images": [],
+          "status": "active",
+          "updated_at": "2026-10-19T00:00:00Z"
+        }
+      },
+      "pass": true
+    },
+    {
+      "id": "R1-failed-save-must-not-return-stale-draft",
+      "expected": "Reject or return null after failed PATCH; preserve latest local input",
+      "actual": {
+        "updateCalls": 1,
+        "state": "failed",
+        "rejected": true,
+        "returnedText": null,
+        "localText": "LATEST UNSAVED TEXT"
+      },
+      "pass": true
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 0
+  },
+  "scope_note": "Passing this probe does not verify editor commit guards, workspace links, browser behavior, or full acceptance."
+}

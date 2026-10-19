@@ -1,0 +1,870 @@
+{
+  "tool": "tools/e2e-p5-rework.py",
+  "script_sha256": "463ba1190393ad9ab2bf3c6281a70324f0e200e9c7d24f617bb856cc6ce7e7bd",
+  "phase": "baseline",
+  "base": "http://127.0.0.1:3130",
+  "api": "http://127.0.0.1:3130/api/v1",
+  "timestamp": "2026-10-19T08:49:09+0800",
+  "duration_seconds": 356,
+  "environment_error": false,
+  "source": {
+    "repo": "/Users/学习/blog/Blogs",
+    "head": "9917890f001ac055280c48c31d50671821e7c929",
+    "dirty": true,
+    "dirty_files": [
+      "M apps/web/app/globals.css",
+      " M apps/web/features/ins/editor/moment-editor-page.test.tsx",
+      " M apps/web/features/ins/editor/moment-editor-page.tsx",
+      " M apps/web/features/ins/editor/moment-editor.test.tsx",
+      " M apps/web/features/ins/editor/moment-editor.tsx",
+      " M apps/web/features/journal/editor/editor-loaders.test.tsx",
+      " M apps/web/features/journal/editor/editor-loaders.tsx",
+      " M apps/web/features/journal/editor/journal-editor.test.tsx",
+      " M apps/web/features/journal/editor/journal-editor.tsx",
+      " M apps/web/features/messaging/composer.tsx",
+      " M apps/web/features/messaging/conversation-view.tsx",
+      " M apps/web/features/messaging/views.test.tsx",
+      " M apps/web/features/phone/phone-host.tsx",
+      " M apps/web/features/workspace/use-work-draft.test.tsx",
+      " M apps/web/features/workspace/use-work-draft.ts",
+      " M apps/web/features/workspace/workspace-home.test.tsx",
+      " M apps/web/features/workspace/workspace-home.tsx",
+      " M apps/web/tests/phone/phone-host.test.tsx",
+      "?? apps/web/features/journal/editor/journal-editor-work-draft.test.tsx",
+      "?? apps/web/features/messaging/messaging-phone-css.test.ts"
+    ],
+    "isolated_workdir": "/tmp/pl-e2e-stack",
+    "build_id": "uzuVcJcrRD8VZLXC34j0j",
+    "build_time": "2026-10-19T05:32:45",
+    "source_newer_than_build": true,
+    "source_newer_example": "/Users/学习/blog/Blogs/apps/web/features/journal/editor/editor-loaders.tsx",
+    "build_provenance": {
+      "modified_web_files": [
+        "apps/web/features/ins/editor/moment-editor-page.test.tsx",
+        "apps/web/features/ins/editor/moment-editor-page.tsx",
+        "apps/web/features/ins/editor/moment-editor.test.tsx",
+        "apps/web/features/ins/editor/moment-editor.tsx",
+        "apps/web/features/journal/editor/editor-loaders.test.tsx",
+        "apps/web/features/journal/editor/editor-loaders.tsx",
+        "apps/web/features/journal/editor/journal-editor.test.tsx",
+        "apps/web/features/journal/editor/journal-editor.tsx",
+        "apps/web/features/messaging/composer.tsx",
+        "apps/web/features/messaging/conversation-view.tsx",
+        "apps/web/features/messaging/views.test.tsx",
+        "apps/web/features/phone/phone-host.tsx",
+        "apps/web/features/workspace/use-work-draft.test.tsx",
+        "apps/web/features/workspace/use-work-draft.ts",
+        "apps/web/features/workspace/workspace-home.test.tsx",
+        "apps/web/features/workspace/workspace-home.tsx",
+        "apps/web/tests/phone/phone-host.test.tsx"
+      ],
+      "untracked_web_files": [
+        "apps/web/features/journal/editor/journal-editor-work-draft.test.tsx",
+        "apps/web/features/messaging/messaging-phone-css.test.ts",
+        "apps/web/features/phone/expand-target.ts",
+        "apps/web/features/workspace/draft-url.ts",
+        "apps/web/tests/phone/expand-target.test.ts"
+      ],
+      "build_copy_checks": [
+        {
+          "file": "apps/web/features/ins/editor/moment-editor-page.test.tsx",
+          "present_in_build": true,
+          "build_copy_matches_head": true
+        },
+        {
+          "file": "apps/web/features/ins/editor/moment-editor-page.tsx",
+          "present_in_build": true,
+          "build_copy_matches_head": true
+        },
+        {
+          "file": "apps/web/features/ins/editor/moment-editor.test.tsx",
+          "present_in_build": true,
+          "build_copy_matches_head": true
+        },
+        {
+          "file": "apps/web/features/ins/editor/moment-editor.tsx",
+          "present_in_build": true,
+          "build_copy_matches_head": true
+        },
+        {
+          "file": "apps/web/features/journal/editor/editor-loaders.test.tsx",
+          "present_in_build": true,
+          "build_copy_matches_head": true
+        },
+        {
+          "file": "apps/web/features/journal/editor/editor-loaders.tsx",
+          "present_in_build": true,
+          "build_copy_matches_head": true
+        },
+        {
+          "file": "apps/web/features/journal/editor/journal-editor.test.tsx",
+          "present_in_build": true,
+          "build_copy_matches_head": true
+        },
+        {
+          "file": "apps/web/features/journal/editor/journal-editor.tsx",
+          "present_in_build": true,
+          "build_copy_matches_head": true
+        },
+        {
+          "file": "apps/web/features/messaging/composer.tsx",
+          "present_in_build": true,
+          "build_copy_matches_head": true
+        },
+        {
+          "file": "apps/web/features/messaging/conversation-view.tsx",
+          "present_in_build": true,
+          "build_copy_matches_head": true
+        },
+        {
+          "file": "apps/web/features/messaging/views.test.tsx",
+          "present_in_build": true,
+          "build_copy_matches_head": true
+        },
+        {
+          "file": "apps/web/features/phone/phone-host.tsx",
+          "present_in_build": true,
+          "build_copy_matches_head": true
+        },
+        {
+          "file": "apps/web/features/workspace/use-work-draft.test.tsx",
+          "present_in_build": true,
+          "build_copy_matches_head": true
+        },
+        {
+          "file": "apps/web/features/workspace/use-work-draft.ts",
+          "present_in_build": true,
+          "build_copy_matches_head": true
+        },
+        {
+          "file": "apps/web/features/workspace/workspace-home.test.tsx",
+          "present_in_build": true,
+          "build_copy_matches_head": true
+        },
+        {
+          "file": "apps/web/features/workspace/workspace-home.tsx",
+          "present_in_build": true,
+          "build_copy_matches_head": true
+        },
+        {
+          "file": "apps/web/tests/phone/phone-host.test.tsx",
+          "present_in_build": true,
+          "build_copy_matches_head": true
+        }
+      ],
+      "build_has_only_head_web_sources": true
+    },
+    "build_note": "隔离构建 BUILD_ID=uzuVcJcrRD8VZLXC34j0j（2026-10-19T05:32:45）；构建副本 vs git HEAD 逐文件核对：全部一致 → 该构建来自基线源码"
+  },
+  "stack": {
+    "command": "tools/e2e-stack.sh status",
+    "output": "集群: 127.0.0.1:55434 - accepting connections\n  API: 200\n  前端: 200",
+    "ports": {
+      "web": 3130,
+      "api": 8130,
+      "postgres": 55434
+    },
+    "workdir": "/tmp/pl-e2e-stack"
+  },
+  "browser": {
+    "engine": "chromium",
+    "version": "148.0.7778.96",
+    "headless": true,
+    "viewports": [
+      "1440x1000",
+      "390x844",
+      "320x700"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "r1-ins",
+      "status": "FAIL",
+      "passed": 5,
+      "failed": 9,
+      "skipped": 0
+    },
+    {
+      "id": "r1-journal",
+      "status": "FAIL",
+      "passed": 9,
+      "failed": 6,
+      "skipped": 0
+    },
+    {
+      "id": "r2-moment",
+      "status": "FAIL",
+      "passed": 16,
+      "failed": 10,
+      "skipped": 0
+    },
+    {
+      "id": "r2-journal",
+      "status": "FAIL",
+      "passed": 12,
+      "failed": 11,
+      "skipped": 0
+    },
+    {
+      "id": "r3-phone",
+      "status": "FAIL",
+      "passed": 8,
+      "failed": 14,
+      "skipped": 0
+    }
+  ],
+  "summary": {
+    "pass": 52,
+    "fail": 50,
+    "skip": 0,
+    "environment_error": false,
+    "exit_code": 1
+  },
+  "checks": [
+    {
+      "scenario": "global",
+      "label": "环境：站主单次登录成功（cookie 供全部场景复用）",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/admin"
+    },
+    {
+      "scenario": "global",
+      "label": "环境：登录后 /auth/session 为站主会话",
+      "ok": true,
+      "detail": "{\"authenticated\": true, \"user\": {\"id\": \"1166ebd2-356c-41ac-81b1-bc217ffb8e5f\", \"username\": \"owner\"}, \"csrf_token\": \"2fa8a596f30371f1a585cbf6c068f94aedbef308146c0bd2a79b6803dc4cbfcb\", \"expires_at\": \"20"
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "准备：发布一条已有动态（产生已有 target）",
+      "ok": true,
+      "detail": "99eb82e4-8a54-4a4d-a6ae-d46f2682b335"
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "已发布动态编辑页可用（data-editor=moment）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "准备：旧版本内容已同步到工作草稿",
+      "ok": true,
+      "detail": "sync_state=synced"
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "准备：服务端存在该 target 的工作草稿",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "故障注入确实命中了 PATCH（moment）",
+      "ok": true,
+      "detail": "PATCH 次数=1"
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "PATCH 失败后点保存，commit 请求次数为 0（moment）",
+      "ok": false,
+      "detail": "commit 次数=1，URL=['http://127.0.0.1:3130/api/v1/admin/work-drafts/37442312-d27d-4ac8-aa55-afce947b755e/commit']"
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "PATCH 失败后没有显示成功提示（moment）",
+      "ok": false,
+      "detail": "data-editor-success=可见"
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "最新输入仍保留在编辑器（moment）",
+      "ok": false,
+      "detail": "编辑器正文=''"
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "本机恢复副本包含最新输入、未被清除（moment）",
+      "ok": false,
+      "detail": "localStorage keys=[]"
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "正式内容未被旧草稿覆盖（PATCH 失败期间）（moment）",
+      "ok": false,
+      "detail": "正式内容='p5rw-r1-ins-stale-20261019-084313-cba17969'，期望='p5rw-r1-ins-anchor-20261019-084313-d32165bb'"
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "解除阻断后可以重试「更新正式内容」",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "解除阻断后重试 commit 成功（data-editor-success）",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "重试时确实发出了 commit 请求",
+      "ok": false,
+      "detail": "commit 次数 1→1"
+    },
+    {
+      "scenario": "r1-ins",
+      "label": "重试后正式内容等于最新输入（不是旧服务端内容）",
+      "ok": false,
+      "detail": "正式内容='p5rw-r1-ins-stale-20261019-084313-cba17969'"
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "准备：新手记工作草稿已同步",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "准备：保存正式手记草稿成功",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "准备：管理端能查到刚保存的手记",
+      "ok": true,
+      "detail": "67450420-73e8-4a85-9a59-453bc1d56f61"
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "已有手记编辑页可用",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "准备：旧版本内容已同步到工作草稿",
+      "ok": true,
+      "detail": "sync_state=synced"
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "故障注入确实命中了 PATCH（journal）",
+      "ok": true,
+      "detail": "PATCH 次数=1"
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "PATCH 失败后点保存，commit 请求次数为 0（journal）",
+      "ok": false,
+      "detail": "commit 次数=1，URL=['http://127.0.0.1:3130/api/v1/admin/work-drafts/b542bce4-5178-4ee4-9eae-58ec2cfa63d7/commit']"
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "PATCH 失败后没有显示成功提示（journal）",
+      "ok": false,
+      "detail": "data-editor-success=可见"
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "最新输入仍保留在编辑器（journal）",
+      "ok": true,
+      "detail": "编辑器正文='p5rw-r1-journal-latest-20261019-084313-d44d9afe'"
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "本机恢复副本包含最新输入、未被清除（journal）",
+      "ok": false,
+      "detail": "localStorage keys=[]"
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "正式内容未被旧草稿覆盖（PATCH 失败期间）（journal）",
+      "ok": false,
+      "detail": "正式内容='p5rw-r1-journal-stale-20261019-084313-50b4a54c'，期望='p5rw-r1-journal-official-20261019-084313-8bc7f8bf'"
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "解除阻断后可以重试保存",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "解除阻断后重试保存成功（data-editor-success）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "重试时确实发出了 commit 请求",
+      "ok": false,
+      "detail": "commit 次数 1→1"
+    },
+    {
+      "scenario": "r1-journal",
+      "label": "重试后正式内容等于最新输入（不是旧服务端内容）",
+      "ok": false,
+      "detail": "正式内容='p5rw-r1-journal-stale-20261019-084313-50b4a54c'"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 A：新动态编辑页可用",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "准备：API 创建并公开测试相册（收录选择断言用）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 A：上传并选中 2 张图（含替代文本）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 A：自动保存到达 synced",
+      "ok": true,
+      "detail": "sync_state=synced"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 A：synced 文案说明可跨设备继续（「另一设备」）",
+      "ok": true,
+      "detail": "跳到正文\nP\nPHANTOMLOG\n文章\n情报档案\n生活\n勒布朗\n作品\n我的殿堂\n地图\n东京漫游\n关于\n人物档案\n2026 年 10 月 19 日\n10/19\nMON\nMORNING\n♪\n\n// ADMIN\n\n怪盗手记 · 管理\n创作台\n动"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "服务端出现无 target 的新动态工作草稿",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "服务端草稿图片顺序 = 编辑器顺序（顺序即发布顺序）",
+      "ok": true,
+      "detail": "['72d77a18-01f0-4fcc-8d81-0b38b3f15978', '79aa3dc4-de0a-44f5-a23d-a541a64307f2'] vs ['72d77a18-01f0-4fcc-8d81-0b38b3f15978', '79aa3dc4-de0a-44f5-a23d-a541a64307f2']"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "服务端草稿保留替代文本",
+      "ok": true,
+      "detail": "['p5rw-r2-alt-one-20261019-084313-3357e9b6', 'p5rw-r2-alt-two-20261019-084313-00e2601d']"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 A：动态草稿可添加「同时收录到相册」选择",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 A：服务端草稿 data.album_links 反映收录选择",
+      "ok": true,
+      "detail": "[{'album_id': '96787329-22ec-40d6-89f0-5e552a042d01', 'media_ids': ['72d77a18-01f0-4fcc-8d81-0b38b3f15978']}]"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 A：第二份新动态草稿已同步",
+      "ok": true,
+      "detail": "sync_state=synced"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "服务端出现第二份无 target 新动态草稿",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：新 context 本机缓存为空（localStorage 无本机副本）",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：创作台「继续编辑」列出该新草稿",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "「继续编辑」链接唯一标识所选工作草稿（href 带 draft=<id>）",
+      "ok": false,
+      "detail": "href=/admin/moments/new"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：点该草稿进入编辑器",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/admin/moments/new?entry=d0173080-b8b7-4f46-8906-343b43c76d0b"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：URL 带所选草稿 ID（?draft=）",
+      "ok": false,
+      "detail": "url=http://127.0.0.1:3130/admin/moments/new?entry=d0173080-b8b7-4f46-8906-343b43c76d0b"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：恢复设备 A 的正文（无本机缓存）",
+      "ok": false,
+      "detail": "编辑器正文=''"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：恢复图片数量与顺序",
+      "ok": false,
+      "detail": "[] vs ['72d77a18-01f0-4fcc-8d81-0b38b3f15978', '79aa3dc4-de0a-44f5-a23d-a541a64307f2']"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：恢复图片替代文本",
+      "ok": false,
+      "detail": "[]"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：恢复「同时收录到相册」选择",
+      "ok": false,
+      "detail": "links=0"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：刷新指定草稿 URL 后仍恢复内容（无本机缓存）",
+      "ok": false,
+      "detail": "http://127.0.0.1:3130/admin/moments/new?entry=d0173080-b8b7-4f46-8906-343b43c76d0b"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：刷新后 URL 仍带草稿 ID",
+      "ok": false,
+      "detail": "http://127.0.0.1:3130/admin/moments/new?entry=d0173080-b8b7-4f46-8906-343b43c76d0b"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "设备 B：打开第二份新草稿",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "同类两份草稿不串稿：点第二份恢复第二份",
+      "ok": false,
+      "detail": "正文=''"
+    },
+    {
+      "scenario": "r2-moment",
+      "label": "同类两份草稿不串稿：点第一份恢复第一份",
+      "ok": false,
+      "detail": "正文=''"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 A：新手记默认状态 draft / 私密",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 A：新手记已上传 1 张图（含替代文本）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 A：自动保存到达 synced",
+      "ok": true,
+      "detail": "sync_state=synced"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "服务端出现无 target 的新手记工作草稿",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "服务端手记草稿保留日期字段",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：新 context 本机缓存为空",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：创作台列出该新手记草稿",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "新手记「继续编辑」链接带 draft=<id>",
+      "ok": false,
+      "detail": "href=/admin/journal/new"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：点该手记草稿进入编辑器",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/admin/journal/new?entry=9d90bce8-0700-45ec-8632-f502d978112b"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：URL 带所选手记草稿 ID（?draft=）",
+      "ok": false,
+      "detail": "http://127.0.0.1:3130/admin/journal/new?entry=9d90bce8-0700-45ec-8632-f502d978112b"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：恢复标题",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：恢复正文",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：恢复手记日期",
+      "ok": false,
+      "detail": "2026-10-19"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：恢复图片数量与顺序",
+      "ok": false,
+      "detail": "[] vs ['4a3d3718-25b6-4a38-bdca-caca65d1c429']"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：恢复图片替代文本",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：恢复默认私密（不因普通恢复变公开）",
+      "ok": true,
+      "detail": "private"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "设备 B：无缓存刷新指定草稿 URL 后仍恢复标题",
+      "ok": false,
+      "detail": "http://127.0.0.1:3130/admin/journal/new?entry=9d90bce8-0700-45ec-8632-f502d978112b"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "跨内容类型草稿 ID 给出准确错误提示（不静默空白新建）",
+      "ok": false,
+      "detail": "提示='公开前还需要：还没有标题\\n公开前还需要：还没有正文'"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "跨类型错误时不把另一类型内容加载进手记编辑器",
+      "ok": true,
+      "detail": "未泄露 moment 草稿正文"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "不存在的草稿 ID 给出准确错误提示（不静默空白新建）",
+      "ok": false,
+      "detail": "提示='公开前还需要：还没有标题\\n公开前还需要：还没有正文'"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "准备：丢弃测试用工作草稿（204）",
+      "ok": true,
+      "detail": "HTTP 204"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "已丢弃草稿给出准确错误提示（不静默空白新建）",
+      "ok": false,
+      "detail": "提示='公开前还需要：还没有标题\\n公开前还需要：还没有正文'"
+    },
+    {
+      "scenario": "r2-journal",
+      "label": "已丢弃草稿不会把旧正文当新内容加载",
+      "ok": true,
+      "detail": "正文=''"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面：手机 launcher（.pw-tab）可见",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面：点击手机 launcher 打开手机宿主",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面：从手机桌面进入 INS 应用",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/?phone=ins"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面：INS 内有「消息」入口且可到达角色列表",
+      "ok": true,
+      "detail": "tabs=True"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面：点角色后进入手机内会话（screen=conversation）",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/?phone=ins&screen=conversation&item=futaba"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面：会话 URL 带角色 ID（item=<character>）",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/?phone=ins&screen=conversation&item=futaba"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面手机内：自由聊天输入区 .msg-composer 可见",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面手机内：「展开查看」入口 .pw-expand 可见",
+      "ok": false,
+      "detail": "href=/apps/ins"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面手机内：「展开查看」href 指向当前会话 canonical",
+      "ok": false,
+      "detail": "href=/apps/ins，期望=/apps/ins/messages/futaba"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面手机内：「自己说一句」入口可见",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面手机内：点「自己说一句」后 textarea 可见",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "桌面手机内：自由聊天用量提示 .msg-usage 可见（初始或展开后）",
+      "ok": false,
+      "detail": "初始=False，当前=False"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "390×844：手机内会话可打开",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/?phone=ins&screen=conversation&item=futaba"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "390×844：自由聊天输入区 .msg-composer 可见",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "390×844：折叠态「自己说一句」入口默认可见可点",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "390×844：点「自己说一句」后 textarea 可见",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "390×844：用量提示 .msg-usage 可见（初始或展开后）",
+      "ok": false,
+      "detail": "初始=False，当前=False"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "320×700：手机内会话可打开",
+      "ok": true,
+      "detail": "http://127.0.0.1:3130/?phone=ins&screen=conversation&item=futaba"
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "320×700：自由聊天输入区 .msg-composer 可见",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "320×700：折叠态「自己说一句」入口默认可见可点",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "320×700：点「自己说一句」后 textarea 可见",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "scenario": "r3-phone",
+      "label": "320×700：用量提示 .msg-usage 可见（初始或展开后）",
+      "ok": false,
+      "detail": "初始=False，当前=False"
+    }
+  ],
+  "skips": [],
+  "info": [
+    {
+      "scenario": "r3-phone",
+      "text": "角色 ID — futaba"
+    }
+  ],
+  "screenshots": [
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/baseline/r1-ins--blocked-save.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/baseline/r1-ins--recovered.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/baseline/r1-journal--blocked-save.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/baseline/r1-journal--recovered.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/baseline/r2-moment--device-a-draft1.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/baseline/r2-moment--device-b-draft1.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/baseline/r2-moment--device-b-draft2.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/baseline/r2-journal--device-a-draft.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/baseline/r2-journal--device-b-draft.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/baseline/r3-phone--desktop-phone-home.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/baseline/r3-phone--desktop-story-state.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/baseline/r3-phone--desktop-no-input.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/baseline/r3-phone--small-390x844-story.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/baseline/r3-phone--small-390x844-no-input.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/baseline/r3-phone--small-320x700-story.png",
+    "/Users/学习/blog/.dsh/screenshots/p5-rework/baseline/r3-phone--small-320x700-no-input.png"
+  ],
+  "unverified": [
+    "真机 / iOS / Android 浏览器：未验证（本脚本只有桌面 chromium，390/320 只是视口，不是真机）",
+    "中文输入法组合过程（composition）不会因快捷键误发送：未验证（只验证了 Enter 换行、按钮发送的可用性）",
+    "R1 的 412 / 401 / 暂停状态旁路提交、相册新建 saveNow 调用方、提交期间更晚输入不被清：未覆盖（本脚本只做 PATCH 500 故障注入）",
+    "R2「另存为新草稿」生成的草稿跨设备恢复：未覆盖（脚本覆盖新建动态/新手记、多个同类不串稿、错误 ID/类型/已丢弃）",
+    "R3 草稿在 App 内切换/返回/展开后的保留、发送失败重试、限额耗尽提示：仅部分覆盖（脚本验证入口、输入、发送与展开 href）",
+    "R3 音乐继续播放与软键盘遮挡：未验证（无真机、无软键盘）"
+  ]
+}

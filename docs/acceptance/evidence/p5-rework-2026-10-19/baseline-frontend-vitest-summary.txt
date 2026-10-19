@@ -1,0 +1,6 @@
+# baseline full frontend vitest (2026-10-19T08:57:49+08:00)
+repo: /Users/学习/blog/Blogs @ 7a19eb2
+ Test Files  110 passed (110)
+      Tests  1123 passed (1123)
+   Duration  34.48s (environment 64%, tests 29%, import 4%, transform 1%, worker 1%)
+exit: 0

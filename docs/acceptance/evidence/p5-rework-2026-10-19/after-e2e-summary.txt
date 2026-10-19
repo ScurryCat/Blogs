@@ -1,0 +1,22 @@
+# after e2e 关键摘要（来自 after-e2e-p5-rework.json）
+phase: after
+summary: {"pass": 124, "fail": 0, "skip": 0, "environment_error": false, "exit_code": 0}
+source.head: 7a19eb2e3566af739f1f1fef88112c5621bb6c18
+build_id: x46VxuFXLS83Km5gubNnP
+build_time: 2026-10-19T08:59:57
+browser: {"engine": "chromium", "version": "148.0.7778.96", "headless": true, "viewports": ["1440x1000", "390x844", "320x700"]}
+scenario r1-ins PASS 14/0/0
+scenario r1-journal PASS 15/0/0
+scenario r2-moment PASS 26/0/0
+scenario r2-journal PASS 23/0/0
+scenario r3-phone PASS 44/0/0
+regression.p5_workspace: 219 pass / 0 fail, exit 0
+regression.six_scripts: [('tools/e2e-phone-scroll.py', 0), ('tools/e2e-journal-reading.py', 0), ('tools/e2e-ins-tag.py', 0), ('tools/e2e-ins-conversation.py', 0), ('tools/e2e-metanav-palace.py', 0), ('tools/e2e-im-draft.py', 0)]
+regression.album_links_ui: 9 pass / 0 fail
+unverified:
+ - 真机 / iOS / Android 浏览器：未验证（本脚本只有桌面 chromium，390/320 只是视口，不是真机）
+ - 中文输入法组合过程（composition）不会因快捷键误发送：未验证（只验证了 Enter 换行、按钮发送的可用性）
+ - R1 的 412 / 401 / 暂停状态旁路提交、相册新建 saveNow 调用方、提交期间更晚输入不被清：未覆盖（本脚本只做 PATCH 500 故障注入）
+ - R2「另存为新草稿」生成的草稿跨设备恢复：未覆盖（脚本覆盖新建动态/新手记、多个同类不串稿、错误 ID/类型/已丢弃）
+ - R3 草稿在 App 内切换/返回/展开后的保留、发送失败重试、限额耗尽提示：仅部分覆盖（脚本验证入口、输入、发送与展开 href）
+ - R3 音乐继续播放与软键盘遮挡：未验证（无真机、无软键盘）

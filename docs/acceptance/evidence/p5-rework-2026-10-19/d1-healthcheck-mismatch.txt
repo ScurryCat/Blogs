@@ -1,0 +1,13 @@
+# D1 Docker healthcheck mismatch (still present, not fixed)
+
+## deploy/compose.prod.yaml
+85:        condition: service_healthy
+108:        condition: service_healthy
+136:              with urllib.request.urlopen("http://127.0.0.1:8000/api/v1/health/ready", timeout=5) as r:
+140:          sys.exit(0 if body.get("status") == "ok" else 1)
+156:        condition: service_healthy
+197:        condition: service_healthy
+199:        condition: service_healthy
+
+## apps/api/app/core/health.py
+134:        "status": "ready" if ready else "not_ready",

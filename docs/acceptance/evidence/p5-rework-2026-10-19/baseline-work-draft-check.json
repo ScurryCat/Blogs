@@ -1,0 +1,33 @@
+{
+  "source_head": "9917890f001ac055280c48c31d50671821e7c929",
+  "method": "real-source React hook; mocked API/session; in-memory DOM; no business data writes",
+  "results": [
+    {
+      "id": "R2-new-draft-resume",
+      "expected": "Load the requested server draft without local storage",
+      "actual": {
+        "getCalls": 0,
+        "state": "idle",
+        "draft": null
+      },
+      "pass": false
+    },
+    {
+      "id": "R1-failed-save-must-not-return-stale-draft",
+      "expected": "Reject or return null after failed PATCH; preserve latest local input",
+      "actual": {
+        "updateCalls": 1,
+        "state": "failed",
+        "rejected": false,
+        "returnedText": "OLD SERVER TEXT",
+        "localText": "LATEST UNSAVED TEXT"
+      },
+      "pass": false
+    }
+  ],
+  "summary": {
+    "passed": 0,
+    "failed": 2
+  },
+  "scope_note": "Passing this probe does not verify editor commit guards, workspace links, browser behavior, or full acceptance."
+}

@@ -1,0 +1,12 @@
+# shared environment check 2026-10-19T08:51:57+08:00
+postgres 14164 [::1]:55432
+postgres 14164 127.0.0.1:55432
+Python 18631 127.0.0.1:8100
+Python 19294 127.0.0.1:8000
+node 50666 127.0.0.1:3100
+postgres 77248 [::1]:55434
+postgres 77248 127.0.0.1:55434
+Python 77595 127.0.0.1:8130
+node 77649 127.0.0.1:3130
+
+## expected shared pids at session start: postgres 14164:55432, Python 18631:8100, Python 19294:8000, node 50666:3100

@@ -1,0 +1,70 @@
+{
+  "build_used": {
+    "head": "7a19eb2e3566af739f1f1fef88112c5621bb6c18",
+    "build_id": "x46VxuFXLS83Km5gubNnP",
+    "build_time": "2026-10-19 08:59 (BUILD_ID mtime)",
+    "note": "7a19eb2 提交后 down→up 全新建库+重建；跑回归前 DB 为种子后的干净状态"
+  },
+  "p5_workspace": {
+    "script": "tools/e2e-p5-workspace.py",
+    "command": "P5_E2E_READY=1 python3 tools/e2e-p5-workspace.py http://127.0.0.1:3130",
+    "log": "/Users/学习/blog/rework-evidence/after/regression-p5-workspace.log",
+    "exit_code": 0,
+    "pass": 219,
+    "fail": 0,
+    "skip": 0,
+    "note": "在 7a19eb2 全新 down→up 构建上首次运行即 219/219；此前 08:56 旧构建上的 217/2 失败经查是本脚本前序 E2E 留下工作草稿导致 workspace-home 空态断言失败 + 媒体库已有数据导致 picker 选择口径偏差（media-picker 在 9917890..HEAD 未改动，非本返工引入）；全新 DB 上复跑 219/219 通过。"
+  },
+  "six_scripts": [
+    {
+      "script": "tools/e2e-phone-scroll.py",
+      "log": "/Users/学习/blog/rework-evidence/after/regression-e2e-phone-scroll.log",
+      "exit_code": 0,
+      "verdict": "判定：✓ 滚动位置已恢复"
+    },
+    {
+      "script": "tools/e2e-journal-reading.py",
+      "log": "/Users/学习/blog/rework-evidence/after/regression-e2e-journal-reading.log",
+      "exit_code": 0,
+      "verdict": "判定：✓ 正文在手机内打开，手机未关闭"
+    },
+    {
+      "script": "tools/e2e-ins-tag.py",
+      "log": "/Users/学习/blog/rework-evidence/after/regression-e2e-ins-tag.log",
+      "exit_code": 0,
+      "verdict": "判定：✓ 标签筛选在手机内，手机未关闭"
+    },
+    {
+      "script": "tools/e2e-ins-conversation.py",
+      "log": "/Users/学习/blog/rework-evidence/after/regression-e2e-ins-conversation.log",
+      "exit_code": 0,
+      "verdict": "判定：✓ 会话在手机内，手机未关闭"
+    },
+    {
+      "script": "tools/e2e-metanav-palace.py",
+      "log": "/Users/学习/blog/rework-evidence/after/regression-e2e-metanav-palace.log",
+      "exit_code": 0,
+      "verdict": "判定：✓ 殿堂正文在手机内打开，手机未关闭"
+    },
+    {
+      "script": "tools/e2e-im-draft.py",
+      "log": "/Users/学习/blog/rework-evidence/after/regression-e2e-im-draft.log",
+      "exit_code": 0,
+      "verdict": "判定：✓ 草稿仍在"
+    }
+  ],
+  "album_links_ui": {
+    "script": "tools/e2e-ins-album-links-ui.py",
+    "command": "E2E_ADMIN_USER=owner E2E_ADMIN_PASSWORD=e2e-password-123 E2E_SHOTS_DIR=/Users/学习/blog/.dsh/screenshots/p5-rework/after python3 tools/e2e-ins-album-links-ui.py http://127.0.0.1:3130",
+    "log": "/Users/学习/blog/rework-evidence/after/regression-e2e-ins-album-links-ui.log",
+    "exit_code": 0,
+    "pass": 9,
+    "fail": 0
+  },
+  "r2_journal_discarded_draft_fix_evidence": {
+    "check": "已丢弃草稿给出准确错误提示（不静默空白新建）",
+    "pass": true,
+    "detail": "提示='这份工作草稿已被丢弃，不能继续编辑。请从创作台重新选择，或新建空白内容。\\n\\n这份草稿没有被加载；新建空白内容会打开一份新的编辑会话（不会覆盖原草稿）。\\n\\n新建空白内容\\n返回创作台 | 公开前还需要：还没有标题\\n公开前还需要：还没有正文 | 这份工作草稿已被丢弃，不能继续编辑。请从创作台重新选择，或新建空白内容。'"
+  },
+  "caveat": "六项脚本按 lead 指定顺序在全新库上运行；e2e-p5-workspace 会创建测试内容，故先跑它、再跑六项/相册、最后跑返工 e2e（返工脚本不依赖空态）。"
+}
