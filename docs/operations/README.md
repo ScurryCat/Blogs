@@ -1,64 +1,53 @@
-# PHANTOM LOG 运维文档（T10）
+# 部署与运维入口
 
-这些文档面向**接手部署的人**，不是设计说明。每条命令都标注了「本机是否实测过」：
-本机（macOS，无 Docker daemon）能实测的是备份 / 恢复 / 迁移 / 健康检查 / 反向代理形态；
-**容器构建与容器内启动没有被实测过**，文档里逐条标出。
+本页用于核对运行和发布条件，不表示已授权部署。新版应用使用 Next.js、FastAPI、PostgreSQL 与 Caddy；本地开发先读 [开发指南](../development/README.md)，不要使用旧静态站的发布命令。
 
-| 文档 | 内容 |
+## 当前证据与边界
+
+截至 2026-10-19，已有生产镜像及全栈的**本地隔离 Compose** 验证记录；不能继续笼统写“没有 Docker daemon、从未测试容器”。但该记录不等于生产服务器、真实域名 HTTPS、远端 CI 或真实手机全部验收完成。
+
+| 资料 | 代表什么 |
 | --- | --- |
-| [release.md](release.md) | 发布清单、镜像与 schema 版本、发布步骤、回退路径、失败停止条件 |
-| [backup-restore.md](backup-restore.md) | 成对备份、校验清单、隔离恢复、恢复后撤销会话、RPO / RTO 现状 |
-| [runbook.md](runbook.md) | 日常运维：健康判断、日志、磁盘、证书、常见故障处置 |
-| [limitations.md](limitations.md) | 本次发布的**限制与未验证项**（不粉饰，逐条给原因） |
-| [trial-runbook.md](trial-runbook.md) | 受限试用（M1A）：最小配置层、网关访问保护、启动/升级/停止/回退、备份前置与远端实施单 |
+| [D1 Compose 验证](../acceptance/P5-D1-compose-healthcheck-2026-10-19.md) | 指定版本的本地隔离镜像、依赖链、健康检查及故障恢复证据 |
+| [返工验证记录](../acceptance/P5-rework-verification-2026-10-19.md) | 当前收口工作的验证记录及范围 |
+| [发布与回退](release.md) | T10 历史快照与发布流程；执行前必须重建当前发布清单 |
+| [备份与恢复](backup-restore.md) | 数据库和媒体配套备份、隔离恢复、会话撤销 |
+| [运行手册](runbook.md) | 健康、日志、磁盘、证书与故障处理；先检查路径和环境 |
+| [限制与未验证项](limitations.md) | 历史限制与 D1 增量；不能将所有旧项直接当成当前状态 |
+| [受限试用手册](trial-runbook.md) | 新增 M1A 配置层、访问保护、运行及回退步骤、远端实施前置；本轮文档整理未独立复验其运行结论 |
 
-## 事实基线（2026-10-16）
+历史手册中的本机路径、测试账号、端口、表数和迁移 head 只是记录时点的信息。不要连接那些地址去“复现生产”，也不要把历史报告的“已重签”当作当前版本的发布批准。
 
-```text
-仓库         /Users/学习/blog/Blogs   分支 main
-发布快照     git HEAD（追踪文件）→ /tmp/pl-release-snapshot（本地验收用）
-迁移 head    528a38f23614（20261016_2155，T09 skills and exploration；单一 head，34 张表）
-本机 PostgreSQL 18.6 @ 127.0.0.1:55432（用户 pl，trust）
-Node 26.8.1 / npm 11.19.0 / Python 3.13.5 / uv 0.9.18
-Docker CLI 29.8.2 / Compose v5.6.0 —— **daemon 可用**（Docker Desktop；2026-10-19 D1 验证时实测）
-Caddy 二进制 2.10.2（仅用于把 Caddyfile validate 跑实，未长期驻留）
-```
+## 发布前需要重新确认
 
-> 2026-10-19 更新：站主授权处理 D1 后，已在**隔离 Compose**（项目 `pl-d1-verify`，端口 18080/18443）
-> 实测生产镜像构建、全栈启动、健康检查联动与 migrate/grants 一次性服务；生产部署/TLS/真实域名仍未验证。
-> 详见 `../acceptance/P5-D1-compose-healthcheck-2026-10-19.md`。
+1. 来源提交、工作区差异、镜像 digest、API 契约与实际迁移 head 对应同一版本。
+2. 目标主机、域名、端口、Compose 项目和卷的归属已确认，获得本次远端操作授权。
+3. 生产配置、数据库角色、secret 文件、网关和可信代理设置已检查；不能照抄开发账号。
+4. 数据库与媒体有一致的配套备份、异机副本和隔离恢复证据；回退步骤可执行。
+5. 真实域名下的 TLS、Cookie、CSRF、公开媒体权限与受限访问边界已验证。
+6. 本轮功能、iOS／Android 真机、素材使用范围及尚未关闭的问题已明确签收。
+7. 记录实际发布结果；镜像发布、容器启动、服务可用和生产验收是不同状态。
 
-## 三条硬规则
+当前“受限个人试用”与“完全公开发布”有不同门槛。试用保护需要覆盖页面、API、媒体及静态资源，不是只加 noindex 或隐藏入口。
 
-1. **不要在生产维护流程里用 `docker compose down -v`**。它会删掉卷（数据库、媒体、证书）。
-   仓库里所有脚本都刻意不含这个动作，`deploy/check-prod-config.py` 会把出现它的脚本判失败。
-2. **恢复备份后必须撤销旧会话**（`python -m app.commands.revoke_sessions --all`）。
-   备份早于「登出」时，恢复会把 `revoked_at` 覆盖回 NULL，持有旧 Cookie 的人重新获得站主
-   访问权 —— 这是实测出来的（`tests/e2e/integration/verify-backup-restore.py` 第 7b 步）。
-3. **不要为了「让检查通过」改业务规则**。发布检查失败时，改的是部署方式或如实登记限制。
+## 安全操作原则
 
-## 一键自检
+- 不在生产维护中使用删卷操作处理故障；卷内可能包含数据库、媒体和证书。
+- 不在共享实例运行会重建临时库的测试。部分脚本硬编码原开发机路径或端口，执行前逐项审查。
+- 恢复历史数据库后，按恢复手册撤销旧会话，避免恢复已经失效的凭据状态。
+- 环境变量、渲染后的 Compose、容器 inspect 和日志可能含敏感信息；不直接提交或贴入公开 Issue。
+- 配置静态审查通过只证明所覆盖的规则，不证明实际容器、真实证书或目标服务器已通过。
+
+## 检查入口
+
+以下只读命令可以先确认代码与工作流结构，从仓库根执行：
 
 ```bash
-cd /Users/学习/blog/Blogs
-export UV_CACHE_DIR=/Users/学习/blog/.dsh/uv-cache
-export npm_config_cache=/Users/学习/blog/.dsh/npm-cache
-export TEST_DATABASE_URL="postgresql+psycopg://pl@127.0.0.1:55432/pl_test"
-export PG_BIN=/opt/homebrew/opt/postgresql@18/bin
-
-# 1) 生产编排 + Caddyfile + Dockerfile + 环境变量示例的静态审查（不需要 daemon）
-mkdir -p /tmp/pl-secrets && for n in admin migrator app; do printf 'x\n' > /tmp/pl-secrets/$n; done
-docker compose -f deploy/compose.prod.yaml --env-file deploy/env/prod.env.example config >/dev/null  # 会因占位符失败，属预期
-docker compose -f deploy/compose.prod.yaml --env-file /tmp/pl-prod.env config > /tmp/prod.yaml
-python3 deploy/check-prod-config.py --compose-config /tmp/prod.yaml
+git rev-parse HEAD
+git status --short
 python3 deploy/check-ci-workflows.py
-
-# 2) 备份 / 恢复隔离演练（真实 PostgreSQL，会自建并清理临时库与目录）
-python3 tests/e2e/integration/verify-backup-restore.py
-
-# 3) 健康与迁移失败演练（真实 uvicorn + 真实库）
-python3 tests/e2e/integration/verify-health-drills.py
-
-# 4) 反向代理形态的同源读写（真实 Chromium，需要先有生产构建）
-python3 tests/e2e/integration/verify-proxy-same-origin.py
 ```
+
+需要渲染配置时使用**独立示例凭据**，不要把真实 secret 展开到可公开的报告。生产静态审查入口是 `deploy/check-prod-config.py`，具体参数与准备流程参考 [CI 配置](../../.github/workflows/ci.yml)。不要使用已过期的固定 `/tmp/pl-prod.env` 或他人的测试数据库。
+
+后续容器构建、迁移、故障演练和恢复都可能改变状态，必须先明确隔离资源和清理范围，再按当轮任务执行。开发编排的 `web` 服务另有端口／公开资源限制，见 [开发指南](../development/README.md#6-常见问题)；这不应与已经有隔离证据的生产镜像混为一谈。

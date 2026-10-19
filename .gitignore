@@ -3,7 +3,8 @@ assets/clip/
 
 # 音频：按站点所有者要求入库（Beneath the Mask / -rain- / 星と僕らと）。
 # 这三首是 Lyn 演唱、©ATLUS 的商业发行曲，公开仓库等于公开分发，
-# 若要撤下：删掉 assets/music/*.mp3 并改写历史（filter-repo / BFG）。
+# 如需调整分发范围，先核对引用、备份及历史影响，另行制定方案。
+# 忽略规则不会让已跟踪的资源自动退出版本管理。
 # assets/music/*.mp3
 
 # 系统垃圾
@@ -23,9 +24,17 @@ version.json
 # 本地环境变量文件：只提交 .env.example，绝不提交真实密钥
 .env
 .env.local
+.env.*
+!.env.example
+!**/.env.example
 deploy/.env
+deploy/env/*.env
 apps/api/.env
 apps/web/.env
+
+# 本地秘密和备份目录；示例配置仍入库
+deploy/secrets/
+deploy/backups/
 
 # 前端构建产物与依赖（T00 引入 Next.js 后新增）
 node_modules/
@@ -40,3 +49,19 @@ next-env.d.ts
 # 本地媒体根（开发期由 MEDIA_ROOT 指向这里；T09 建议，T00 采纳）。
 # 内容是本机上传的验证素材，不该进仓库。
 apps/api/var/
+
+# 本地工具状态与验证缓存，不依赖某台机器的 .git/info/exclude
+.dsh/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage/
+apps/web/playwright-report/
+apps/web/test-results/
+
+# 新交接 ZIP 默认作为本地产物；既有已跟踪快照保持不变
+docs/handoff-package-*.zip
+docs/handoff/*.zip
