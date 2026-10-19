@@ -126,7 +126,10 @@ export function ConversationView({
   const hasChoices = node !== null && node.choices.length > 0 && !paused && !finished;
 
   return (
-    <div className="msg-app">
+    // `msg-app-conversation` 是手机宿主的布局锚点：手机上的会话视图要把消息区
+    // 撑满剩余高度、把自由输入区固定在底部（见 app/globals.css 的 ins 段）。
+    // 独立页用同一套组件，这个类不影响桌面布局。
+    <div className="msg-app msg-app-conversation">
       <header className="msg-thread-bar">
         {/* IM 应用标识：原版 SNS / IM 的「IM」字样（参考帧里的左上角 logo 语言）。 */}
         <span className="msg-logo" aria-hidden="true">

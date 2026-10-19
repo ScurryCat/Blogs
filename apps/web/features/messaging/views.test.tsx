@@ -480,6 +480,59 @@ describe("输入区", () => {
     expect(onSend).toHaveBeenCalledTimes(1);
     ui.unmount();
   });
+
+  it("中文输入法组合期间 Ctrl/Cmd + Enter 不发送，单独 Enter 仍只换行", () => {
+    const onSend = vi.fn();
+    const ui = render(
+      <Composer
+        value="nihao"
+        onChange={() => undefined}
+        onSend={onSend}
+        canSend
+        maxCodepoints={1000}
+        sending={false}
+      />,
+    );
+    click(ui.container.querySelector(".msg-btn-say"));
+    const textarea = ui.container.querySelector("textarea");
+    expect(textarea).not.toBeNull();
+
+    // 1) 标准 isComposing：组合中的 Ctrl+Enter 不得触发发送。
+    textarea?.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "Enter",
+        ctrlKey: true,
+        isComposing: true,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    expect(onSend).not.toHaveBeenCalled();
+
+    // 2) 旧 WebKit 用 keyCode 229 标记 IME 组合，也不能发送。
+    const legacyIme = new KeyboardEvent("keydown", {
+      key: "Enter",
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    Object.defineProperty(legacyIme, "keyCode", { value: 229 });
+    textarea?.dispatchEvent(legacyIme);
+    expect(onSend).not.toHaveBeenCalled();
+
+    // 3) 单独的 Enter 允许换行，保持手机上「回车不误发」的既有语义。
+    textarea?.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+    );
+    expect(onSend).not.toHaveBeenCalled();
+
+    // 4) 组合结束后的 Ctrl+Enter 恢复发送。
+    textarea?.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", ctrlKey: true, bubbles: true, cancelable: true }),
+    );
+    expect(onSend).toHaveBeenCalledTimes(1);
+    ui.unmount();
+  });
 });
 
 describe("角色列表", () => {
@@ -586,6 +639,96 @@ describe("手机视图", () => {
     await advance(20);
     expect(ui.container.querySelector(".msg-phone-hint")).not.toBeNull();
     expect(props.host.audio.isPlaying).toBeTypeOf("function");
+    ui.unmount();
+  });
+});
+
+describe("手机内自由聊天（R3）", () => {
+  function phoneConversation(
+    local: ConversationController,
+    limits: Limits = LIMITS,
+  ): ReturnType<typeof render> {
+    return render(
+      <ConversationView
+        controller={local}
+        characterName="双叶"
+        characterHandle="futaba_okumura"
+        avatar="/a.png"
+        avatarAlt="头像"
+        storyVersion="1.0.0"
+        limits={limits}
+        linkSource="phone-internal"
+      />,
+    );
+  }
+
+  it("phone-internal 会话渲染折叠输入条、选择提示与用量（不是只有隐藏 DOM）", () => {
+    const local = controller(viewPayload());
+    const ui = phoneConversation(local);
+
+    // 手机布局锚点：app/globals.css 只在 .msg-app-conversation 下恢复这些控件。
+    expect(ui.container.querySelector(".msg-app-conversation")).not.toBeNull();
+    // 默认（未展开）就能看到「自己说一句」，不需要先展开才有入口。
+    const say = ui.container.querySelector(".msg-btn-say");
+    expect(say?.textContent).toContain("自己说一句");
+    expect(ui.container.querySelector(".msg-composer")).not.toBeNull();
+    expect(ui.container.querySelector(".msg-usage")?.textContent).toContain("今天已用");
+    expect(ui.container.querySelector(".msg-usage")?.textContent).toContain("20");
+    expect(ui.container.querySelector(".msg-choices-hint")?.textContent).toContain("自己说一句");
+    // 剧情选项仍在（不能为了输入区把预设选项删掉）。
+    expect(ui.container.querySelectorAll(".msg-choice")).toHaveLength(2);
+    ui.unmount();
+  });
+
+  it("展开后 textarea 带出会话草稿，发送按钮把输入交给 controller", () => {
+    // 草稿由 features/messaging/drafts.ts 按角色持久化（已有 drafts.test.ts /
+    // use-conversation.test.tsx 覆盖跨挂载保留）；这里确认手机内渲染能把它带回输入框。
+    const local = controller(viewPayload(), { draft: "想问一下博客的事" });
+    const ui = phoneConversation(local);
+
+    click(ui.container.querySelector(".msg-btn-say"));
+    const textarea = ui.container.querySelector<HTMLTextAreaElement>("textarea");
+    expect(textarea).not.toBeNull();
+    expect(textarea?.value).toBe("想问一下博客的事");
+    // 首次展开必须说明会发送什么（不因手机布局省略解释）。
+    expect(ui.container.textContent).toContain("会发送给模型服务");
+    expect(ui.container.textContent).toContain("预设选项不会发送");
+
+    click(ui.container.querySelector(".msg-btn-send"));
+    expect(local.send).toHaveBeenCalledTimes(1);
+    ui.unmount();
+  });
+
+  it("限额 / 不可发送 / 失败反馈都保留在手机会话里", () => {
+    const view = viewPayload({
+      usage: {
+        requests_today: 20,
+        daily_limit: 20,
+        remaining: 0,
+        site_settled_units: 1,
+        site_daily_units: 2000,
+        inflight: 0,
+      },
+    });
+    const local = controller(view, {
+      canSend: false,
+      notice: {
+        tone: "warn",
+        text: "自由聊天今天已经用过 20 次，明天再来。预设剧情仍然可以继续。",
+      },
+    });
+    const ui = phoneConversation(local);
+
+    // 额度用尽的原因照常显示，不做视觉省略。
+    expect(ui.container.querySelector(".msg-usage")?.textContent).toContain("额度已经用完");
+    expect(ui.container.querySelector('[data-testid="msg-notice"]')?.textContent).toContain(
+      "预设剧情仍然可以继续",
+    );
+    // 预设剧情仍然可选；发送按钮即使展开也必须是禁用态。
+    expect(ui.container.querySelectorAll(".msg-choice").length).toBeGreaterThan(0);
+    click(ui.container.querySelector(".msg-btn-say"));
+    const send = ui.container.querySelector<HTMLButtonElement>(".msg-btn-send");
+    expect(send?.disabled).toBe(true);
     ui.unmount();
   });
 });

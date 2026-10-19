@@ -328,6 +328,35 @@ describe("前台应用", () => {
     expect(view.container.querySelector(".pw-expand")?.getAttribute("href")).toBe("/apps/demo");
   });
 
+  it("INS 会话的展开查看保留当前角色，并仍通过 phone-link 打开 canonical 会话页", async () => {
+    const ins: PhoneAppManifest = {
+      ...TEST_APP,
+      id: "ins",
+      name: "INS",
+      subtitle: "图文动态",
+      order: 10,
+      canonical_path: "/apps/ins",
+      loader: async () => ({
+        default: () => <p data-ins-view>ins</p>,
+        screens: ["feed", "detail", "saved", "tagged", "messages", "conversation"],
+      }),
+    };
+    search = "phone=ins&screen=conversation&item=futaba";
+    const view = mount(createPhoneRegistry([ins]));
+    await advance();
+    await advance();
+
+    const expand = view.container.querySelector<HTMLAnchorElement>(".pw-expand");
+    expect(expand).not.toBeNull();
+    // a11y：真实 href 指向当前会话的 canonical 页（可中键 / 新标签打开）。
+    expect(expand?.getAttribute("href")).toBe("/apps/ins/messages/futaba");
+
+    // 左键仍然交给宿主 openSiteContent({source:"phone-link"})，保留过场与历史。
+    click(expand);
+    await advance(600);
+    expect(pushMock.mock.calls.at(-1)?.[0]).toBe("/apps/ins/messages/futaba");
+  });
+
   it("非法 screen 回退桌面，不执行任意路径", async () => {
     search = "phone=demo&screen=../../etc";
     const view = mount(registry());

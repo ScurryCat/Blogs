@@ -13,6 +13,7 @@
 
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
+import { expandDestination } from "./expand-target";
 import { PhoneAppView } from "./phone-app-view";
 import { PhoneDesktop } from "./phone-desktop";
 import { usePhone } from "./phone-provider";
@@ -45,6 +46,9 @@ export function PhoneHost(): ReactNode {
 
   const onDesktop = !state || state.phone === "home";
   const manifest = state && state.phone !== "home" ? registry.find(state.phone) : undefined;
+  // 展开查看要保留手机里的当前内容：INS 会话展开到同一段角色的 canonical 页，
+  // 不是笼统回到应用首页（纯函数，见 ./expand-target）。
+  const expandHref = manifest ? expandDestination(manifest, state) : "";
 
   const close = useCallback(() => host.close(), [host]);
   const back = useCallback(() => host.back(), [host]);
@@ -193,10 +197,10 @@ export function PhoneHost(): ReactNode {
                   </p>
                   <a
                     className="pw-expand"
-                    href={manifest.canonical_path}
+                    href={expandHref}
                     onClick={(event) => {
                       event.preventDefault();
-                      host.openSiteContent({ destination: manifest.canonical_path, source: "phone-link" });
+                      host.openSiteContent({ destination: expandHref, source: "phone-link" });
                     }}
                   >
                     展开查看 ▸

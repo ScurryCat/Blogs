@@ -101,6 +101,10 @@ export function Composer({
         aria-invalid={overLimit}
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={(event) => {
+          // 中文/日文输入法组合过程中，Enter 只用来确认候选词：
+          // 组合中的 Ctrl/Cmd+Enter 也不能当成发送，否则会误发半截拼音或候选字。
+          // 229 是部分浏览器在 IME 组合期间给 keyCode 的哨兵值（旧 WebKit）。
+          if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return;
           // Ctrl / Cmd + Enter 发送；单独的 Enter 允许换行（手机上更安全）。
           if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
             event.preventDefault();

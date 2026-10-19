@@ -994,9 +994,46 @@ html.ov-lock body {
   pointer-events: none;
 }
 
-.pw-appview[data-phone-app="ins"] .pw-appbar .pw-appname,
-.pw-appview[data-phone-app="ins"] .pw-appbar .pw-expand {
+.pw-appview[data-phone-app="ins"] .pw-appbar .pw-appname {
   display: none;
+}
+
+/* 「展开查看」恢复显示（R3）：黑底白框红影的 IM 按钮，浮在右上角。
+   桌面斜屏的机身关闭键在左侧，右上只有它；≤620px 全屏时收起键在右上，
+   按钮左移让开（见文件末尾媒体查询）。触控目标 44×44。 */
+.pw-appview[data-phone-app="ins"] .pw-appbar .pw-expand {
+  pointer-events: auto;
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 10px;
+  background: var(--msg-ink, #101014);
+  color: var(--msg-paper, #f4f1ea);
+  border: 2px solid var(--msg-paper, #f4f1ea);
+  box-shadow: 3px 3px 0 var(--msg-red, #e5191c);
+  font: 700 12px/1 var(--f-cjk, sans-serif);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  text-decoration: none;
+  transform: skewX(-6deg) rotate(-1.5deg);
+  touch-action: manipulation;
+}
+
+.pw-appview[data-phone-app="ins"] .pw-appbar .pw-expand:hover,
+.pw-appview[data-phone-app="ins"] .pw-appbar .pw-expand:focus-visible {
+  background: var(--msg-red, #e5191c);
+  color: var(--msg-paper, #f4f1ea);
+  border-color: var(--msg-paper, #f4f1ea);
+}
+
+.pw-appview[data-phone-app="ins"] .pw-appbar .pw-expand:focus-visible {
+  outline: 3px solid var(--msg-paper, #f4f1ea);
+  outline-offset: 2px;
 }
 
 .pw-appview[data-phone-app="ins"] .pw-appbar .pw-back {
@@ -1023,12 +1060,13 @@ html.ov-lock body {
   display: none;
 }
 
+/* 会话头：右侧留白给「展开查看」按钮，确保它不会压住右上角的「详情」。 */
 .pw-appview[data-phone-app="ins"] .msg-thread-bar {
   display: flex;
   align-items: center;
   gap: 8px;
   min-height: 44px;
-  padding: 2px 8px 2px 48px;
+  padding: 2px 118px 2px 48px;
   background: transparent;
   border: 0;
   box-shadow: none;
@@ -1066,6 +1104,7 @@ html.ov-lock body {
 }
 
 .pw-appview[data-phone-app="ins"] .msg-details-btn {
+  min-height: 44px;
   padding: 4px 8px;
   background: var(--msg-paper);
   color: var(--msg-ink);
@@ -1074,51 +1113,131 @@ html.ov-lock body {
   font-size: 11px;
 }
 
-/* IM 复刻：手机宿主内去掉自由聊天输入条/用量，把操作提示压到底部（参考帧底部 Scroll/Close），
-   消息区占满剩余高度。独立页仍保留完整自由聊天与用量。 */
-.pw-appview[data-phone-app="ins"] .msg-app {
+/* ==========================================================================
+   R3 手机内自由聊天恢复（2026-10-19 独立验收返工）
+   上一版为了贴近参考帧把 `.msg-composer` / `.msg-usage` / `.msg-choices-hint`
+   在手机宿主里 `display: none`，等于删掉了自由聊天入口。这里恢复为：
+   - 会话视图 `msg-app-conversation` 撑满手机屏幕，消息列表 `flex: 1` 占满剩余高度；
+   - 底部按 DOM 顺序依次是操作提示 / 剧情选择 / 自定义输入 / 用量提示，互不遮挡；
+   - 折叠输入条（“自己说一句”）与展开后的 textarea、发送按钮都可见可用；
+   - 剧情选择空间不够时自己滚动，不把输入区顶出屏幕；软键盘用 safe-area 与
+     scroll-margin 留出余量（真机行为仍需实测，见交接说明）。
+   ========================================================================== */
+
+.pw-appview[data-phone-app="ins"] .msg-app-conversation {
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
+  gap: 8px;
+  overflow: hidden;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom));
 }
 
-.pw-appview[data-phone-app="ins"] .msg-list {
+/* 消息区占满剩余高度：不再用固定 vh 把输入区挤出屏幕。 */
+.pw-appview[data-phone-app="ins"] .msg-app-conversation > .msg-list {
   flex: 1 1 auto;
   min-height: 0;
+  max-height: none;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
-.pw-appview[data-phone-app="ins"] .msg-composer,
-.pw-appview[data-phone-app="ins"] .msg-usage,
-.pw-appview[data-phone-app="ins"] .msg-choices-hint {
-  display: none;
+/* 会话头、状态提示、操作提示、输入条、用量：固定高度，不参与拉伸。 */
+.pw-appview[data-phone-app="ins"] .msg-app-conversation > .msg-thread-bar,
+.pw-appview[data-phone-app="ins"] .msg-app-conversation > .msg-notice,
+.pw-appview[data-phone-app="ins"] .msg-app-conversation > .msg-paused,
+.pw-appview[data-phone-app="ins"] .msg-app-conversation > .msg-op-hints,
+.pw-appview[data-phone-app="ins"] .msg-app-conversation > .msg-composer,
+.pw-appview[data-phone-app="ins"] .msg-app-conversation > .msg-usage {
+  flex: 0 0 auto;
 }
 
-.pw-appview[data-phone-app="ins"] .msg-choices {
-  order: 10;
+/* 剧情选择：给选项留位置，高度不够时自己滚动（不遮住输入区）。 */
+.pw-appview[data-phone-app="ins"] .msg-app-conversation > .msg-choices {
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: 38%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding-bottom: 4px;
 }
 
-.pw-appview[data-phone-app="ins"] .msg-op-hints {
-  order: 20;
+/* 自定义输入：折叠条与展开态都必须是 IM 的黑/白/红体系。 */
+.pw-appview[data-phone-app="ins"] .msg-app-conversation .msg-composer {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   gap: 8px;
-  margin: 0;
-  padding: 5px 8px 6px;
+  padding-top: 8px;
   border-top: 2px solid var(--msg-ink);
-  background: var(--msg-paper);
-  color: var(--msg-ink);
-  font-size: 11px;
+}
+
+.pw-appview[data-phone-app="ins"] .msg-app-conversation .msg-btn-say {
+  min-height: 44px;
+  padding: 10px 14px;
+  background: var(--msg-ink);
+  color: var(--msg-paper);
+  border: 2px dashed var(--msg-paper);
+  box-shadow: 3px 3px 0 var(--msg-red);
+  font: 700 13px/1 var(--f-cjk, sans-serif);
   letter-spacing: 0.08em;
 }
 
-@media (max-width: 520px) {
-  .pw-appview[data-phone-app="ins"] .msg-details {
-    margin-right: 34px;
-  }
+.pw-appview[data-phone-app="ins"] .msg-app-conversation .msg-btn-say:hover,
+.pw-appview[data-phone-app="ins"] .msg-app-conversation .msg-btn-say:focus-visible {
+  background: var(--msg-red);
+  border-color: var(--msg-paper);
+  color: var(--msg-paper);
+}
 
+.pw-appview[data-phone-app="ins"] .msg-app-conversation .msg-composer-note,
+.pw-appview[data-phone-app="ins"] .msg-app-conversation .msg-composer-label,
+.pw-appview[data-phone-app="ins"] .msg-app-conversation .msg-counter,
+.pw-appview[data-phone-app="ins"] .msg-app-conversation .msg-usage,
+.pw-appview[data-phone-app="ins"] .msg-app-conversation .msg-choices-hint {
+  color: rgba(244, 241, 234, 0.82);
+}
+
+.pw-appview[data-phone-app="ins"] .msg-app-conversation .msg-composer-note {
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.pw-appview[data-phone-app="ins"] .msg-app-conversation .msg-composer-actions {
+  gap: 8px;
+}
+
+.pw-appview[data-phone-app="ins"] .msg-app-conversation .msg-btn-send {
+  min-width: 84px;
+  min-height: 44px;
+}
+
+/* 用量提示恢复显示：自由聊天次数 / 每日额度必须在手机里能看到。 */
+.pw-appview[data-phone-app="ins"] .msg-app-conversation .msg-usage {
+  display: block;
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* 选择区提示恢复显示：让用户知道「选一条，或者自己说一句」。 */
+.pw-appview[data-phone-app="ins"] .msg-app-conversation .msg-choices-hint {
+  display: block;
+  margin: 0 0 2px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+/* 软键盘遮挡：聚焦输入控件时给滚动留余量（iOS visualViewport 行为真机待验证）。 */
+.pw-appview[data-phone-app="ins"] .msg-app-conversation .msg-input,
+.pw-appview[data-phone-app="ins"] .msg-app-conversation .msg-btn-send,
+.pw-appview[data-phone-app="ins"] .msg-app-conversation .msg-composer {
+  scroll-margin-bottom: calc(140px + env(safe-area-inset-bottom));
+}
+
+@media (max-width: 520px) {
   .pw-appview[data-phone-app="ins"] .msg-details-btn {
     padding: 3px 6px;
     font-size: 10px;
@@ -1166,5 +1285,27 @@ html.ov-lock body {
 @media (max-width: 520px) {
   .pw-appview[data-phone-app="ins"] .msg-thread-bar .msg-logo {
     margin-top: -4px;
+  }
+}
+
+/* ==========================================================================
+   ≤620px 全屏手机：收起键（✕）固定在右上，展开按钮左移让开；
+   会话内容整体下移一条 appbar 的高度，返回/展开不压住消息头与「详情」。
+   输入区仍在底部，并按 safe-area 留出最后一行的可点高度。
+   ========================================================================== */
+@media (max-width: 620px) {
+  .pw-appview[data-phone-app="ins"] .pw-appbar .pw-expand {
+    top: 8px;
+    right: 68px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+
+  .pw-appview[data-phone-app="ins"] .msg-app-conversation {
+    padding-top: 56px;
+  }
+
+  .pw-appview[data-phone-app="ins"] .msg-thread-bar {
+    padding-right: 10px;
   }
 }
