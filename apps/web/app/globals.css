@@ -845,6 +845,18 @@ html.ov-lock body {
   }
 }
 
+/* ---------- 15.5 手机首页人物画高度修复（2026-10-19） ----------
+   HomeHero 的 <img> 带 HTML height="900"；旧 CSS 只设 width/aspect-ratio，
+   窄屏下浏览器仍按 900px 渲染，首屏被一张图撑爆。这里只在手机/平板把图片
+   恢复到 CSS 约定的 6:5 比例；桌面 15.4 的限高规则不动。 */
+@media (max-width: 960px) {
+  .hero-art .art-frame img {
+    height: auto;
+    aspect-ratio: 6 / 5;
+    object-fit: cover;
+  }
+}
+
 /* ---------- 16. 「我的殿堂」异世界短过场（第三轮 N5 · 任务书 §6.3）----------
    容器结构与旧站 `.clip`（VP9+alpha 抠像视频 + 纯色底衬）同思路，但独立成 `.isekai`：
    底衬用本站主题红，alpha 视频只负责红/黑墨迹层。这样即使浏览器不解码 alpha，
