@@ -29,6 +29,8 @@
         没有二进制时退回结构断言，并在输出里明确标注「结构断言，不是 validate」。
     10. API 与音频两条 `handle` 都在兜底 `handle {}` 之前（Caddyfile 里的顺序决定匹配）。
     11. 没有把 `Host` 改写成上游地址、没有删 `Origin`（那会破坏同源校验）。
+     11b. M1A（2026-10-19）：Caddyfile 有 `import access/*.caddy` 扩展点；生产片段为空规则，
+          受限试用片段存在且含 basic_auth（由 deploy/check-trial-config.py 做完整审查）。
   C. Dockerfile / 环境变量示例
     12. 生产 Dockerfile 里没有 `ARG`/`ENV` 形式的密钥，没有 `dev` 阶段的源码挂载。
     14b. web 镜像的音频必须走独立命名构建上下文 `music=assets/music`（D1 隔离验证时
@@ -115,6 +117,13 @@ def check_compose(report: Report, cfg: dict, source: str) -> None:
     publishers = {name: svc.get("ports") for name, svc in services.items() if svc.get("ports")}
     report.check("只有 gateway 发布宿主端口", set(publishers) == {"gateway"},
                  f"发布了端口: {sorted(publishers)}")
+
+    # D1 复验（2026-10-19）发现：grants 复用 postgres 镜像会为镜像 VOLUME 建匿名卷，
+    # `compose down` 不删，反复部署会累积。要求显式 tmpfs 覆盖该路径。
+    grants_tmpfs = (services.get("grants") or {}).get("tmpfs")
+    report.check("grants 用 tmpfs 覆盖 postgres 镜像 VOLUME（避免部署泄漏匿名卷）",
+                 bool(grants_tmpfs) and any("/var/lib/postgresql" in str(item) for item in grants_tmpfs),
+                 str(grants_tmpfs))
 
     db_networks = set((services.get("db") or {}).get("networks") or {})
     api_networks = set((services.get("api") or {}).get("networks") or {})
@@ -290,6 +299,18 @@ def check_caddy(r: Report, caddy_binary: str | None) -> None:
     r.check("没有删除 Origin 的指令", "-Origin" not in text and "header_up -Origin" not in text)
     r.check("明确标注不做业务限流（06 §1）", "速率限制" in text or "rate" in text.lower())
 
+    # M1A（2026-10-19）：网关访问控制片段扩展点。生产为空规则占位（不改变生产行为），
+    # 受限试用由 compose.trial.yaml 覆盖为 access/trial（basic_auth）。
+    r.check("Caddyfile 有访问控制扩展点（import access/*.caddy）",
+            "import access/*.caddy" in text)
+    prod_access = DEPLOY / "gateway" / "access" / "prod"
+    trial_access = DEPLOY / "gateway" / "access" / "trial"
+    r.check("生产访问片段存在（空规则占位）",
+            prod_access.is_dir() and any(prod_access.glob("*.caddy")))
+    r.check("受限试用访问片段存在（含 basic_auth）",
+            trial_access.is_dir()
+            and any("basic_auth" in p.read_text(encoding="utf-8") for p in trial_access.glob("*.caddy")))
+
     if not caddy_binary:
         r.check("caddy validate（未提供 --caddy，只做了结构断言）", True,
                 "结构断言已执行；validate 需要 Caddy 二进制")
@@ -299,6 +320,11 @@ def check_caddy(r: Report, caddy_binary: str | None) -> None:
         # 把持久化路径换到临时目录：本机对 /data 没有写权限，而这只影响日志输出目录。
         sandbox.write_text(text.replace("/data", str(Path(tmp) / "data")), encoding="utf-8")
         Path(tmp, "data").mkdir(exist_ok=True)
+        # Caddyfile 用 `import access/*.caddy` 引入访问控制片段；沙箱需要同样的相对目录，
+        # 否则 validate 会因找不到 import 文件失败。生产片段是空规则，validate 结果与线上一致。
+        access_src = DEPLOY / "gateway" / "access" / "prod"
+        if access_src.is_dir():
+            shutil.copytree(access_src, Path(tmp) / "access")
         result = subprocess.run([caddy_binary, "validate", "--config", str(sandbox),
                                  "--adapter", "caddyfile"], capture_output=True, text=True)
         version = subprocess.run([caddy_binary, "version"], capture_output=True, text=True).stdout.strip()

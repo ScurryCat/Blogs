@@ -1,0 +1,22 @@
+# PHANTOM LOG 受限试用覆盖层（M1A）。
+#
+# 设计：**不复制**全量 compose，只在 deploy/compose.prod.yaml 之上叠加最小差异；
+# 项目名、数据卷、网络由 `-p <project>` / COMPOSE_PROJECT_NAME 隔离（卷名自动带项目前缀）。
+#
+# 用法（完整步骤见 docs/operations/trial-runbook.md）：
+#   docker compose -f deploy/compose.prod.yaml -f deploy/compose.trial.yaml \
+#     -p phantom-log-trial --env-file <trial env> up -d
+#
+# 与生产编排的差异只有两处：
+#   1. 网关把 deploy/gateway/access/trial 覆盖挂载到 /etc/caddy/access：
+#      全站 Basic Auth（网关层独立访问认证，覆盖页面 / API / 媒体 / 静态资源）；
+#   2. 注入 TRIAL_AUTH_USER / TRIAL_AUTH_HASH（bcrypt 哈希；明文口令不进入编排与镜像）。
+# 不新增服务、不改端口、不放宽权限、不改变数据库 / 卷类型。
+services:
+  gateway:
+    environment:
+      TRIAL_AUTH_USER: ${TRIAL_AUTH_USER:?受限试用必须提供访问用户名，见 deploy/env/trial.env.example}
+      TRIAL_AUTH_HASH: ${TRIAL_AUTH_HASH:?受限试用必须提供 bcrypt 口令哈希（caddy hash-password），见运行手册}
+    volumes:
+      # 与生产同目标路径的覆盖挂载：Compose 按 target 合并，试用目录替换生产 noop 目录。
+      - ./gateway/access/trial:/etc/caddy/access:ro

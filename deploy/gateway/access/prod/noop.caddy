@@ -1,0 +1,8 @@
+# 生产访问控制片段占位（没有任何规则）。
+#
+# deploy/compose.prod.yaml 把本目录只读挂载到网关容器的 /etc/caddy/access；
+# deploy/gateway/Caddyfile 在 site 块里用 `import access/*.caddy` 引入该目录下所有片段。
+# 生产默认不在网关加额外认证；页面与 API 的访问控制仍由站主登录、CSRF 与媒体权限负责。
+#
+# 受限试用不修改本文件，而是由 deploy/compose.trial.yaml 覆盖挂载
+# deploy/gateway/access/trial（全局 Basic Auth 片段）。

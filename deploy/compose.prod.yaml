@@ -136,6 +136,11 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    # postgres 基础镜像声明了 VOLUME /var/lib/postgresql；grants 只用 psql 客户端、不写数据，
+    # 但 Docker 仍会为每次 `up` 创建匿名卷且 `compose down` 不删（2026-10-19 D1 复验实测：
+    # 单次验证泄漏 1 个匿名卷）。显式 tmpfs 覆盖该路径，避免试用 / 生产部署累积匿名卷。
+    tmpfs:
+      - /var/lib/postgresql
     logging: *default-logging
 
   api:
@@ -262,6 +267,9 @@ services:
       - "${GATEWAY_HTTPS_HOST_PORT:-443}:443"
     volumes:
       - ./gateway/Caddyfile:/etc/caddy/Caddyfile:ro
+      # 访问控制片段扩展点（M1A 受限试用）：生产是只有注释的空规则片段；
+      # 试用覆盖层 deploy/compose.trial.yaml 会把同一 target 换成 access/trial。
+      - ./gateway/access/prod:/etc/caddy/access:ro
       # 证书与 ACME 状态必须持久化，否则每次重启重新签发（06 §1）。
       - caddy_data:/data
       - caddy_config:/config

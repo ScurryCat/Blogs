@@ -1,0 +1,13 @@
+# 受限试用访问控制片段（只在 deploy/compose.trial.yaml 覆盖层中挂载）。
+#
+# 目的：在网关层增加**独立**的 Basic Auth，覆盖页面、API、媒体与静态资源；
+# 它不替代、也不绕过站主登录 / CSRF / 媒体权限（这些在 Basic Auth 之后照常生效）。
+#
+# 唯一例外是 /gateway-healthz：它是网关容器自身的 Docker healthcheck 目标
+# （容器内 loopback 请求）；api / web 的健康检查在各自容器内部直连，不经过网关，
+# 因此不需要为它们放行。除该探针外没有其它免认证路径。
+@trial_protected not path /gateway-healthz
+
+basic_auth @trial_protected {
+	{$TRIAL_AUTH_USER} {$TRIAL_AUTH_HASH}
+}

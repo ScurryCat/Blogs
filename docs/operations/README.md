@@ -10,6 +10,7 @@
 | [backup-restore.md](backup-restore.md) | 成对备份、校验清单、隔离恢复、恢复后撤销会话、RPO / RTO 现状 |
 | [runbook.md](runbook.md) | 日常运维：健康判断、日志、磁盘、证书、常见故障处置 |
 | [limitations.md](limitations.md) | 本次发布的**限制与未验证项**（不粉饰，逐条给原因） |
+| [trial-runbook.md](trial-runbook.md) | 受限试用（M1A）：最小配置层、网关访问保护、启动/升级/停止/回退、备份前置与远端实施单 |
 
 ## 事实基线（2026-10-16）
 

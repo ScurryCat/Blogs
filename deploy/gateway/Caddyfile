@@ -36,6 +36,11 @@
 #   本机冒烟   SITE_ADDRESS=http://127.0.0.1:8080
 #   生产       SITE_ADDRESS=blog.example.com（自动 HTTPS）
 {$SITE_ADDRESS:http://127.0.0.1:8080} {
+
+	# 访问控制扩展点（M1A 受限试用）：生产挂载 access/prod 的空规则片段；
+	# 受限试用由 deploy/compose.trial.yaml 覆盖挂载 access/trial（全局 Basic Auth）。
+	# 相对路径相对本 Caddyfile 所在目录（容器内 /etc/caddy），静态校验沙箱可直接复制目录。
+	import access/*.caddy
 	# 全站请求体上限；上传图片另有更严格的单文件限制（API 侧 8 MiB）。
 	request_body {
 		max_size 12MB
