@@ -9,8 +9,7 @@
  *  - 幂等回放不冒充「又保存了一次」。
  */
 
-import { describe, expect, it } from "vitest";
-
+import { describe, expect, it, vi } from "vitest";
 import {
   ACTION_LABELS,
   CONTENT_MAX_CODEPOINTS,
@@ -242,10 +241,27 @@ describe("关联文章与幂等键", () => {
     expect(options.map((option) => option.id)).toEqual(["p1", "p2"]);
   });
 
-  it("commit_key 每次重新生成且不重复", () => {
+  it("commit_key 每次重新生成、不重复，且是服务端可接受的 UUID", () => {
     const first = newCommitKey();
     const second = newCommitKey();
     expect(first).not.toBe(second);
-    expect(first.length).toBeGreaterThan(8);
+    // 非安全上下文（HTTP 公网 IP）没有 crypto.randomUUID 时也必须是合法 UUID。
+    expect(first).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  });
+
+  it("没有 crypto.randomUUID 时 commit_key 仍是合法 UUID", () => {
+    vi.stubGlobal("crypto", {
+      getRandomValues: (bytes: Uint8Array) => {
+        for (let i = 0; i < bytes.length; i += 1) bytes[i] = (i * 53 + 7) % 256;
+        return bytes;
+      },
+    });
+    try {
+      expect(newCommitKey()).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

@@ -23,6 +23,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { ApiClientError, ApiTransportError } from "@/lib/api/client";
+import { newUuid } from "@/lib/ids";
 import { MediaPickerDialog, MediaThumb, getAdminMedia, type PickedImage } from "@/features/media-picker";
 import { commitWorkDraft } from "@/features/workspace/api";
 import { ConflictNotice } from "@/features/workspace/conflict-notice";
@@ -325,14 +326,9 @@ export function MomentEditor({
   const createCommitKey = (action: DraftAction): string => {
     const existing = commitKeyRef.current;
     if (existing && existing.action === action) return existing.key;
-    let key = "";
-    try {
-      const cryptoApi = globalThis.crypto as Crypto | undefined;
-      if (cryptoApi && typeof cryptoApi.randomUUID === "function") key = cryptoApi.randomUUID();
-    } catch {
-      key = "";
-    }
-    if (!key) key = `commit-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    // 服务端要求 UUID：非安全上下文（HTTP IP）没有 crypto.randomUUID，
+    // 必须回落到合法 UUID v4 形状，不能是 `commit-...`（否则 422）。
+    const key = newUuid();
     commitKeyRef.current = { key, action };
     return key;
   };

@@ -13,6 +13,7 @@
  * 这种纯逻辑去挂载整个编辑器（也就不会把 workspace 的 Hook 拖进来）。
  */
 
+import { newUuid } from "@/lib/ids";
 import { isValidCalendarDate, publishBlockers, validateDraft } from "../failure";
 import type { JournalAdminEntry } from "../types";
 
@@ -193,15 +194,12 @@ export function expectedTargetVersion(entry: JournalAdminEntry | null): number |
 
 /**
  * 幂等提交键：同一次提交（含网络重试）复用同一个 key，避免生成重复正式内容。
- * `crypto.randomUUID` 在非安全上下文/旧浏览器可能不存在，退回时间+随机串。
+ *
+ * 服务端 `work_drafts.commit_key` 是 UUID；`crypto.randomUUID` 在非安全上下文
+ * （HTTP 公网 IP）不存在，回落必须仍是合法 UUID v4（不能是 `ck-...`）。
  */
 export function newCommitKey(): string {
-  const cryptoObject = globalThis.crypto as Crypto | undefined;
-  if (cryptoObject && typeof cryptoObject.randomUUID === "function") {
-    return cryptoObject.randomUUID();
-  }
-  const random = Math.random().toString(16).slice(2).padEnd(12, "0");
-  return `ck-${Date.now().toString(16)}-${random.slice(0, 12)}`;
+  return newUuid();
 }
 
 /** 已公开手记的辅助提示：明确「更新前访客仍看到原版本」（设计书 §2.4）。 */
